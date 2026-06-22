@@ -3,8 +3,9 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-22 — session: tech-stack review + scaffold + handover workflow
-**Branch:** scaffold is merged to `main` (`6c39a55`). Start Phase 0 on a new branch.
+**Last updated:** 2026-06-22 — session: tech-stack review + scaffold + quality bar + harness
+**Trunk:** `main` is the integrated foundation — scaffold, LOCKED stack, quality bar, full agentic
+harness, and the supply-chain security fix are all on it. Start Phase 0 on a fresh branch off `main`.
 
 ## Verified state
 - ✅ Full **production gate suite** green: `format:check`, `pnpm audit --audit-level=high`

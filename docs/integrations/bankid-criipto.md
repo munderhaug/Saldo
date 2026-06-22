@@ -10,3 +10,7 @@
   Phase 0 hardens (open decision, spec §18).
 - **Notes:** validate `state`/`nonce`, use PKCE, set `HttpOnly`/`Secure`/`SameSite` cookies. The one
   unavoidable non-OSS dependency (ADR 0008).
+
+## Sources
+- Criipto / Signicat OIDC documentation for BankID / Vipps Login. Raw: db/reference/auth/ (capture the
+  current authorize/token endpoints + scopes). verify-by: 2026-12-31

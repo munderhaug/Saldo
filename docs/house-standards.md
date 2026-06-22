@@ -26,6 +26,13 @@ harness-design knowledge base; deviations from its defaults are noted with a rea
 - Skills use progressive disclosure, one default + escape hatch (never a menu of equals). The
   load-bearing skills (`new-vat-scenario`, `saft-validate`) get trigger + with/without-skill evals
   before they're trusted.
+- **Evidence before done.** Every load-bearing skill ends with a **Rationalizations** table
+  (excuse → reality), **Red flags — STOP**, and **Done means (evidence required)** — so a task can't be
+  claimed done without the listed proof (tests green, validator passed, reviewer run).
+- **Knowledge is cited & dated, never from memory.** Regulatory/integration facts live in
+  `docs/regulatory/` + `docs/integrations/` with a `## Sources` section + `verify-by:` date, grounded in
+  raw captures under `db/reference/`. `pnpm lint:repo` enforces this and link integrity. Use the
+  `regulatory-update` skill. (Adapted from the "LLM wiki" pattern.)
 
 ### Consistency: match each concern to the cheapest mechanism
 Secure consistency with the cheapest mechanism that works; reserve subagents for substantive review.

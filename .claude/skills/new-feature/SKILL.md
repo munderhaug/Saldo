@@ -22,3 +22,18 @@ Follow the workflow loop; keep the domain pure and the integrity in SQL.
 ## Invariants to honor
 Money is Øre · ledger append-only · gapless invoice numbers via counter · MVA-status fork ·
 AI proposes only · client authoritative for nothing.
+
+## Rationalizations (don't)
+| Excuse | Reality |
+|---|---|
+| "I'll validate on the client." | Client validation is UX only; the action + SQL are authoritative. |
+| "Tests later." | Domain logic is test-first. "Later" is how a stub ships as "done". |
+| "Quick refactor while I'm here." | Surgical changes only (engineering-discipline rule). |
+
+## Red flags — STOP
+- A loader/action that trusts client input without a Zod contract. Business logic in the route instead
+  of `@saldo/domain`. A new screen that fails jsx-a11y or has English-only copy.
+
+## Done means (evidence required — see docs/quality-bar.md)
+- [ ] typecheck + lint + format + test green · [ ] new behavior covered by tests
+- [ ] relevant reviewer subagent run · [ ] STATUS.md updated · [ ] lands via a reviewed PR

@@ -23,3 +23,18 @@ Every VAT/posting change is test-first in the pure core.
 - [ ] non-deductible cases (representasjon, vehicle, private use) handled
 - [ ] reverse charge posts BOTH legs
 - [ ] voucher balances
+
+## Rationalizations (don't)
+| Excuse | Reality |
+|---|---|
+| "Small rate change, skip the property test." | Rates feed every invoice; an exhaustive case is not enough — add the fast-check invariant. |
+| "I know the SAF-T code." | Load it from the committed lists; memory drifts and the code list is versioned. |
+| "Net cash is zero on reverse charge, one leg is fine." | Both legs must appear on the MVA-melding. Post both. |
+
+## Red flags — STOP
+- A conditional on MVA status outside the single posting function. A hardcoded VAT/account number.
+  A voucher that doesn't balance. Output VAT on an `under_threshold`/`unntatt` org.
+
+## Done means (evidence required)
+- [ ] `pnpm --filter @saldo/domain test` green, incl. a fast-check property for the invariant
+- [ ] `vat-reviewer` subagent run with no violations

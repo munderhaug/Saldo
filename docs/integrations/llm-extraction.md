@@ -9,3 +9,8 @@
 - **Flow:** image → extraction → Zod-validated structured fields → **rules engine** (`@saldo/domain`)
   → proposed voucher → human confirms → posted. The model never writes to the ledger.
 - **Phase:** 2. The data-sovereignty default (local) is decided here.
+
+## Sources
+- Ollama, OpenAI-compatible API reference. Raw: db/reference/llm/ (capture the `/v1/chat/completions`
+  vision contract). verify-by: 2026-12-31
+- Qwen2.5-VL model card. Raw: db/reference/llm/. verify-by: 2026-12-31

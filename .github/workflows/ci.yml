@@ -36,6 +36,7 @@ jobs:
       - run: pnpm audit --audit-level=high # supply-chain gate
       - run: pnpm typecheck
       - run: pnpm lint
+      - run: pnpm lint:repo # .claude harness + cited-docs + link integrity
       - run: pnpm format:check
       - run: pnpm test
       - run: pnpm db:migrate # migration check against real Postgres

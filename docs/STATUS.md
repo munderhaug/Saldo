@@ -32,6 +32,10 @@ Pre–Phase 0. Scaffold complete; next is Phase 0 foundation (build-spec §16).
 - Established the **quality bar / Definition of Done** (`docs/quality-bar.md`, wired into CLAUDE.md +
   house-standards), governance (CONTRIBUTING, SECURITY, CODEOWNERS, Dependabot), hardened deps to a
   clean audit, and tightened CI (audit + format:check + introspect gates).
+- **Agentic-harness improvements** (reviewed external sources): always-on `engineering-discipline` rule
+  (Karpathy principles); "evidence-before-done" convention added to load-bearing skills; `regulatory-update`
+  skill + cited/dated `docs/regulatory/` (LLM-wiki discipline); `tools/repo-lint.mjs` (.claude frontmatter
+  + doc-link integrity + Sources/verify-by) wired into CI as `pnpm lint:repo`.
 
 ## In progress
 - (nothing mid-change)

@@ -16,6 +16,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint:repo": "node tools/repo-lint.mjs",
     "db:migrate": "dbmate up",
     "db:migrate:new": "dbmate new",
     "db:rollback": "dbmate down",

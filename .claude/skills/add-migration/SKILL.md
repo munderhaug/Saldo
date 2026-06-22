@@ -20,3 +20,18 @@ Integrity lives in SQL, not the ORM. The Drizzle schema is generated, never hand
 - `bigint` for all money (øre). Every business table needs `organization_id`.
 - Always provide a working `-- migrate:down`.
 - If unsure of the SQL, delegate a draft to the `migration-author` subagent, then review and apply it yourself.
+
+## Rationalizations (don't)
+| Excuse | Reality |
+|---|---|
+| "I'll add the constraint in app code." | Integrity is SQL, not the ORM. App code is not a guarantee. |
+| "A SEQUENCE is simpler for numbering." | Sequences leave gaps on rollback. Use the per-org counter (ADR 0007). |
+| "I'll edit schema.ts directly." | It's generated; edit the SQL and re-introspect. A hook blocks it. |
+
+## Red flags — STOP
+- A migration with no `-- migrate:down`. RLS not enabled on a new tenant-scoped table. A ledger change
+  with no Testcontainers test proving the trigger blocks the bad case.
+
+## Done means (evidence required)
+- [ ] `pnpm db:migrate` up AND down both work · [ ] `pnpm db:introspect` regenerated the schema
+- [ ] a Testcontainers test asserts the constraint/trigger actually blocks the violation

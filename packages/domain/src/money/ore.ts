@@ -36,7 +36,7 @@ export function subØre(a: Øre, b: Øre): Øre {
 }
 
 export function negØre(a: Øre): Øre {
-  return øre(-a);
+  return øre(-(a as number));
 }
 
 export function sumØre(values: readonly Øre[]): Øre {
@@ -71,4 +71,15 @@ export function isZeroØre(a: Øre): boolean {
 
 export function eqØre(a: Øre, b: Øre): boolean {
   return a === b;
+}
+
+/**
+ * Presentation boundary: format øre as Norwegian kroner (e.g. 12550 → "125,50").
+ * Float division is acceptable HERE (display only) and nowhere else.
+ */
+export function formatKr(amount: Øre): string {
+  return (amount / 100).toLocaleString('nb-NO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }

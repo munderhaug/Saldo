@@ -1,10 +1,12 @@
-import { mulRate, rate, øre } from '@saldo/domain';
+import { addØre, formatKr, mulRate, rate, øre } from '@saldo/domain';
 
 // Demonstrates the shared pure domain core running in a loader (it also runs in the browser).
+// All money math uses the domain helpers — no raw arithmetic on Øre (enforced by lint).
 export function loader() {
   const net = øre(10000); // 100,00 kr
   const vat = mulRate(net, rate(0.25)); // 25% MVA
-  return { net, vat, gross: net + vat };
+  const gross = addØre(net, vat);
+  return { net: formatKr(net), vat: formatKr(vat), gross: formatKr(gross) };
 }
 
 export function meta() {
@@ -24,18 +26,18 @@ export default function Home({ loaderData }: { loaderData: ReturnType<typeof loa
         <tbody>
           <tr>
             <td>Net</td>
-            <td style={{ textAlign: 'right' }}>{(net / 100).toFixed(2)} kr</td>
+            <td style={{ textAlign: 'right' }}>{net} kr</td>
           </tr>
           <tr>
             <td>MVA (25%)</td>
-            <td style={{ textAlign: 'right' }}>{(vat / 100).toFixed(2)} kr</td>
+            <td style={{ textAlign: 'right' }}>{vat} kr</td>
           </tr>
           <tr>
             <td>
               <strong>Gross</strong>
             </td>
             <td style={{ textAlign: 'right' }}>
-              <strong>{(gross / 100).toFixed(2)} kr</strong>
+              <strong>{gross} kr</strong>
             </td>
           </tr>
         </tbody>

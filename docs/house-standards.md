@@ -27,6 +27,20 @@ harness-design knowledge base; deviations from its defaults are noted with a rea
   load-bearing skills (`new-vat-scenario`, `saft-validate`) get trigger + with/without-skill evals
   before they're trusted.
 
+### Consistency: match each concern to the cheapest mechanism
+Secure consistency with the cheapest mechanism that works; reserve subagents for substantive review.
+- **Hooks / lint / tests** (deterministic) — money rule, jsx-a11y, typecheck/lint gates, property tests.
+- **Path-scoped rules** (always-on constraints) — money, ledger-integrity, vat, frontend, pwa-native,
+  integrations, **data-handling (GDPR)**, **accessibility**, **design-system**.
+- **Read-only subagents** (isolated review) — `vat-reviewer`, `privacy-reviewer`, `a11y-reviewer`,
+  `integration-auditor`, plus `explore` / `migration-author` / `test-runner`.
+- **Skills** (procedural) — add-migration, new-vat-scenario, saft-validate, new-feature, html-report,
+  **design-review**.
+
+Do NOT create subagents for "repo structure", "app design", or "accounting rules" — those are
+constraints (rules/docs/tests/ADRs), not recurring reviews. Add a new subagent only on a demonstrated
+need, and pair it with a deterministic backstop.
+
 ## 4. Security always/never
 - NEVER commit secrets; never read `.env*`/`secrets/**` (denied in settings). Never let the domain
   core call the network. Never auto-`git push` (it's an `ask`).

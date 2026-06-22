@@ -2,6 +2,7 @@
 // guardrails below can reason about the `Øre` branded type.
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 import saldo from './tools/eslint-plugin-saldo/index.js';
 
 export default tseslint.config(
@@ -40,6 +41,14 @@ export default tseslint.config(
         'error',
         { object: 'Math', property: 'round', message: 'Use roundØre() from @saldo/domain for money.' },
       ],
+    },
+  },
+  // ── Accessibility backstop (deterministic; the a11y-reviewer covers the rest) ──
+  {
+    files: ['apps/web/app/**/*.{tsx,jsx}'],
+    plugins: { 'jsx-a11y': jsxA11y },
+    rules: {
+      ...jsxA11y.flatConfigs.recommended.rules,
     },
   },
 );

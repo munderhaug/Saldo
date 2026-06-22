@@ -1,0 +1,9 @@
+node_modules
+dist
+build
+.turbo
+.react-router
+coverage
+pnpm-lock.yaml
+db/reference/saf-t
+*.md

@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+/* shadcn/ui base tokens live here once `npx shadcn init` is run. */
+
+:root {
+  /* Accounting figures must align in columns — tabular numerals are a domain requirement. */
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* A utility for figure cells/columns. */
+@utility tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/* Native-feel baseline (see .claude/rules/pwa-native.md). */
+body {
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}

@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgres://saldo:saldo@localhost:5432/saldo"
+      ],
+      "_comment": "READ-ONLY against the LOCAL dev database only. Never point at production."
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "_comment": "Version-correct library docs — essential given RR7's thinner training corpus."
+    },
+    "brreg": {
+      "command": "npx",
+      "args": ["-y", "brreg-mcp"],
+      "_comment": "Enhetsregisteret (Brønnøysund) company lookups during development."
+    }
+  }
+}

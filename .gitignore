@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# React Router / Vite
+.react-router/
+.vite/
+
+# Test / coverage
+coverage/
+playwright-report/
+test-results/
+
+# Env & secrets — NEVER commit
+.env
+.env.*
+!.env.example
+secrets/
+
+# Local data (compose volumes)
+.data/
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Claude Code local
+.claude/settings.local.json

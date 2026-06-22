@@ -1,0 +1,67 @@
+# Tech Stack — LOCKED
+
+> Status: **Locked** (2026-06-22). Supersedes the stack discussion in
+> `saldo-build-specification.md` §6. Changes require an ADR in `docs/decisions/`.
+>
+> Three principles drove every choice: **(1) open-source & self-hostable** — so no
+> vendor can pull the rug on a 10-year system of record; **(2) local-LLM capable** —
+> the smart layer must run fully on-prem in the final product; **(3) agent-legible** —
+> the repo and its surfaces are optimized for Claude Code / agentic engineering, which
+> favors semantic-HTML-first UI, in-repo components, deterministic guardrails, and a
+> documented harness.
+
+## Decision table
+
+| Concern | Locked choice | OSS | Notes / rationale |
+|---|---|---|---|
+| Language | **TypeScript (strict)**, Node.js 22 LTS | ✅ | `noUncheckedIndexedAccess`, no `any`. Load-bearing for money/VAT correctness. |
+| Monorepo | **pnpm workspaces + Turborepo** | ✅ | One app + one pure domain package; the only hard boundary is pure-vs-impure. |
+| Web framework | **React Router 7 (framework mode)** on Vite | ✅ | HTML-first loaders/actions/`<Form>`; server-authoritative; progressive enhancement. Reinforced by the "HTML effectiveness" argument. |
+| UI components | **shadcn/ui** (Radix + Tailwind v4) | ✅ | Own-every-pixel — required for the native-feel PWA, and more agent-legible (component code in-repo). Replaces Mantine. |
+| Forms | **React Hook Form + Zod resolver** | ✅ | Reuses the Zod contracts; huge agent corpus. |
+| Tables | **TanStack Table** (headless) + shadcn styling | ✅ | Ledgers, reskontro, drill-downs. Tabular-nums everywhere figures appear. |
+| Native PWA | **Motion** (gestures/springs), **Vaul** (sheets), **View Transitions API**, **vite-plugin-pwa** (Workbox) | ✅ | Native feel layered on a semantic-HTML substrate, never replacing it. |
+| Offline | **Dexie** (IndexedDB) outbox | ✅ | Receipt-capture queues offline; postings stay online (ADR 0001). |
+| Native escape hatch | **Capacitor** (held in reserve) | ✅ | Same codebase → App Store/Play with native camera/haptics/biometric if iOS PWA limits bite. |
+| Data viz | **Recharts** (workhorse) + **visx** (bespoke) | ✅ | Standard business charts + native-feel mobile sparklines. Keep one chart family. |
+| Database | **PostgreSQL** (self-hostable) | ✅ | Relational integrity, triggers, constraints, RLS — the entire architecture. |
+| Queries | **Drizzle ORM** | ✅ | Typed queries. **Schema source of truth = raw SQL migrations**; Drizzle schema generated via `drizzle-kit introspect` → no drift. |
+| Migrations | **dbmate** (SQL-first) | ✅ | Plain `.sql` up/down. All integrity (triggers/RLS/constraints/invoice-counter) lives here, not the ORM. |
+| Object storage | **MinIO** / **Garage** (S3-compatible) | ✅ | Documents (receipts/PDF/SAF-T), 5-year retention, EU-resident. |
+| CI ephemeral DB | **Testcontainers** | ✅ | Real Postgres per run — tests the actual triggers. Replaces Neon branching. |
+| Money | branded integer **`Øre`** + custom ESLint rule | ✅ | No `decimal.js`. Integer-only; round half-away-from-zero at boundaries only. |
+| Validation | **Zod** at every boundary | ✅ | Single source of truth for shapes; infer types from schemas. |
+| Auth | **`openid-client` + `oslo` + Postgres sessions** | ✅ | BankID/Vipps via **Criipto/Signicat** broker (the one unavoidable non-OSS dep). ID-porten scoped to Altinn only. Zitadel/Keycloak optional OSS IdP later. |
+| Tenancy | app-layer org filter **+ Postgres RLS** via `SET LOCAL app.current_org` | ✅ | Defense-in-depth; GUC pattern (not `auth.uid()`). |
+| Background jobs | **graphile-worker** | ✅ | Runs on our Postgres; payloads never leave the DB. Replaces Inngest. |
+| Email | **nodemailer** (provider-agnostic SMTP) | ✅ | EU provider behind a swappable interface. |
+| PDF | **`@react-pdf/renderer`** | ✅ | Invoice PDFs in React/TS, no headless browser. |
+| E-invoice | typed **UBL builder** + **VEFA validator** | ✅ | EHF/PEPPOL BIS 3.0; validate locally. |
+| LLM / OCR | **OpenAI-compatible abstraction** → **Ollama/vLLM** serving **Qwen2.5-VL** | ✅ | Local-first; hosted is just another base URL. OCR fallback: **Surya/docTR**. **Propose-only.** |
+| LLM observability | **Langfuse** (self-hosted) | ✅ | Traces, evals, cost. |
+| App observability | **OpenTelemetry** + **SigNoz** (or Grafana) ; **GlitchTip** for errors; **pino** logs | ✅ | Fully self-hostable, vendor-independent. |
+| Testing | **Vitest**, **fast-check**, **Testing Library**, **Playwright**, **Testcontainers** | ✅ | Property tests on accounting invariants are the core safety net. |
+| Lint/format | **typescript-eslint + Prettier** (+ custom money rule) | ✅ | ESLint kept over Biome specifically for the typed custom rule. |
+| Deploy | **Docker + Kamal** (or Coolify) on **Hetzner EU** | ✅ | Persistent Node server (OAuth/Altinn/PDF/SAF-T/jobs, near a local LLM). Fly.io EU as non-OSS shortcut. |
+| SAF-T reference | committed copy of `Skatteetaten/saf-t` | ✅ | Codes/accounts/XSD never hardcoded from memory. |
+
+## The one knowingly-accepted risk
+**React Router 7 framework mode** has a thinner training corpus than Next.js. We accept
+this because its HTML-first loader/action model produces fewer agent-error modes than RSC,
+and we mitigate with **Context7 MCP pinned to the exact version**. See ADR 0005.
+
+## Agentic-repo layer (third constraint)
+Per the harness-design knowledge base, the repo follows the documented method:
+- **Single-agent loop is the default**; subagents are an escalation on demonstrated need.
+- Build order **CLAUDE.md → hooks → skills → plugins → MCP**.
+- `CLAUDE.md` hand-written, lean, stable prefix (prompt-cache friendly).
+- **Hooks carry all determinism** (typecheck/lint/affected-tests after edits; block edits to
+  generated files; deny `.env`/secret reads).
+- **Skills** use progressive disclosure, one default + escape hatch, and the load-bearing ones
+  get trigger + with/without-skill evals.
+- Skill scripts are **Node/`tsx`** (house-standard deviation from the KB's Python default) so
+  they can import the real `@saldo/domain`.
+- An **`html-report` skill** emits self-contained HTML artifacts for anything you'll review
+  (VAT-scenario matrices, SAF-T summaries, ER diagrams) — per the "HTML effectiveness" argument.
+
+See `docs/house-standards.md` and `.claude/` for the concrete configuration.

@@ -1,7 +1,10 @@
 import { existsSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TransactionSql } from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import { type LedgerDb, seedOrg, startLedgerDb } from './db-harness.js';
+import * as schema from '../../app/db/schema.js';
+import { withOrgTx } from '../../app/auth/middleware.js';
 
 // Needs a Docker daemon (Testcontainers). Skip gracefully where unavailable so `pnpm test` still
 // runs the pure suites; CI has Docker and runs this for real.
@@ -170,5 +173,24 @@ describe.skipIf(!dockerAvailable)('RLS tenant isolation (non-owner app role)', (
       return [Number(first!.n), Number(second!.n)];
     });
     expect(numbers).toEqual([1, 2]);
+  });
+
+  it('enforces RLS through the Drizzle app path (withOrgTx middleware)', async () => {
+    const a = await seedOrg(db.sql);
+    await seedOrg(db.sql); // a second tenant that must stay invisible
+
+    // The real app primitive: a Drizzle client on the app-role connection, scoped via SET LOCAL.
+    const appDb = drizzle(db.appSql, { schema });
+    const orgs = await withOrgTx(appDb, a.orgId, (tx) => tx.select().from(schema.organization));
+    expect(orgs.map((o) => o.id)).toEqual([a.orgId]);
+
+    // And a write outside the tenant is still rejected through the ORM path.
+    await expect(
+      withOrgTx(appDb, a.orgId, (tx) =>
+        tx
+          .insert(schema.account)
+          .values({ organizationId: orgs[0]!.id, number: '8000', name: 'ok', type: 'expense' }),
+      ),
+    ).resolves.toBeDefined();
   });
 });

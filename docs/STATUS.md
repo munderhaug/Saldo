@@ -3,63 +3,74 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-22 — session: tech-stack review + scaffold + quality bar + harness
-**Trunk:** `main` is the integrated foundation — scaffold, LOCKED stack, quality bar, full agentic
-harness, and the supply-chain security fix are all on it. Start Phase 0 on a fresh branch off `main`.
+**Last updated:** 2026-06-22 — session: Phase 0 foundation (steps 1–4)
+**Branch:** `claude/phase-0-foundation-gej8rk` (off `main`). HEAD `2dd3e55`. Lands via reviewed PR —
+no direct pushes to `main`.
 
 ## Verified state
-- ✅ Full **production gate suite** green: `format:check`, `pnpm audit --audit-level=high`
-  (**no known vulnerabilities**), `typecheck`, `lint` (custom money rule + jsx-a11y), `test`
-  (25 domain tests incl. fast-check). Web build OK.
-- ✅ Supply chain hardened: drizzle-orm → 0.45 (SQL-injection advisory fixed), vitest → 3, vite → 6,
-  esbuild override ≥0.25.
-- ⚠️ Workflow change: `main` should be **branch-protected**; all work from here lands via reviewed PRs
-  (see CONTRIBUTING.md / docs/quality-bar.md). No more direct pushes to main.
-- Commits are **unsigned locally** (this env has no signing key — 0-byte placeholder); they should show
-  Verified once pushed through the git proxy. Committer email is correct (`noreply@anthropic.com`).
+- ✅ Full **production gate suite** green at HEAD `2dd3e55`: `typecheck`, `lint`, `lint:repo`,
+  `format:check`, `pnpm audit --audit-level=high` (**no known vulnerabilities**), `test`
+  (**90 domain** incl. fast-check + **9 Testcontainers** integration), web `build`.
+- ✅ **Local ledger DB live + introspected:** `infra/compose.yaml` Postgres up; `pnpm db:migrate`
+  applied the core ledger; `pnpm db:introspect` generated the real `apps/web/app/db/schema.ts`
+  (+ `relations.ts`). Generated Drizzle output is now treated as generated (gitignored journal,
+  Prettier/ESLint-ignored) so hand-formatting never fights the generator.
+- ✅ **SQL integrity is PROVEN, not asserted:** Testcontainers tests in
+  `apps/web/test/integrity/` spin up real Postgres and show each guarantee blocks the bad case —
+  imbalance (deferred trigger at commit), posted-voucher/posting mutation, locked-period posting,
+  and gapless `allocate_invoice_number` across a rolled-back tx.
+- ✅ Dev-only `testcontainers` added; its vulnerable transitives pinned via pnpm overrides
+  (`undici >=6.27.0`, `uuid >=11.1.1`) — audit stays clean.
 
 ## Active phase
-Pre–Phase 0. Scaffold complete; next is Phase 0 foundation (build-spec §16).
+**Phase 0 (Foundation) — in progress.** Steps 1–4 of the mission done; steps 5–6 next.
 
-## Done (this session)
-- Revised the build spec; **locked the tech stack** (`docs/tech-stack.md`) with ADRs 0001–0011.
-- Scaffolded the monorepo: `apps/web` (RR7 + shadcn/Tailwind v4 + PWA), `packages/domain` (pure core
-  with tested Øre / ids / voucher-balance), `tools/eslint-plugin-saldo`, `db/migrations` core ledger
-  SQL (4 integrity guarantees + RLS), infra, CI.
-- Agentic harness: CLAUDE.md, path-scoped rules, subagents, skills, hooks, `.mcp.json`.
-- Extended harness: data-handling / accessibility / design-system rules, privacy & a11y reviewer
-  subagents, jsx-a11y lint backstop, design-review skill.
-- Added this handover workflow (STATUS.md + handover skill + SessionStart hook).
-- Established the **quality bar / Definition of Done** (`docs/quality-bar.md`, wired into CLAUDE.md +
-  house-standards), governance (CONTRIBUTING, SECURITY, CODEOWNERS, Dependabot), hardened deps to a
-  clean audit, and tightened CI (audit + format:check + introspect gates).
-- **Agentic-harness improvements** (reviewed external sources): always-on `engineering-discipline` rule
-  (Karpathy principles); "evidence-before-done" convention added to load-bearing skills; `regulatory-update`
-  skill + cited/dated `docs/regulatory/` (LLM-wiki discipline); `tools/repo-lint.mjs` (.claude frontmatter
-  + doc-link integrity + Sources/verify-by) wired into CI as `pnpm lint:repo`.
+## Done (this session) — Phase 0 steps 1–4
+- **(1) Infra + schema:** brought up Postgres, migrated, introspected the Drizzle schema. `88c4bea`.
+- **(2) Integrity tests:** Testcontainers proofs of the four SQL guarantees. `8884f07`.
+- **(3) SAF-T reference data (cited):** vendored the official Skatteetaten SAF-T Financial XSD,
+  Standard Tax Codes, and GL Standard Accounts under `db/reference/saf-t/` (provenance + Regnskap
+  Norge licensing in `SOURCE.md`); dated raw capture of Skatteetaten's VAT rates under
+  `db/reference/mva/`; cited `docs/regulatory/mva-rates.md` mapping rate-category → 2026 rate. `77504f3`.
+- **(4) Domain VAT engine, test-first:** `@saldo/domain` now has pure parsers for the SAF-T tax
+  codes (deriving rate category / direction / a **reverseCharge** marker) and standard accounts,
+  a cited rate-category→`Rate` map, and **the input-VAT fork** (`posting/derive.ts`):
+  `derivePurchase` branches on MVA status AND explicit deductibility; `deriveSales` charges output
+  VAT only when registered and hard-blocks otherwise. Exhaustive + fast-check tests. Reviewed by
+  the vat-reviewer (deductibility made explicit; reverse-charge flagged + deferred). `2dd3e55`.
 
 ## In progress
-- (nothing mid-change)
+- (nothing mid-change — clean tree at `2dd3e55`)
 
-## Next up (ordered) — Phase 0 (build-spec §16)
-Branch off main: `git checkout -b claude/phase-0-foundation`. Don't commit to main directly.
-1. `docker compose -f infra/compose.yaml up -d`; `pnpm db:migrate`; `pnpm db:introspect` (generates the
-   real `apps/web/app/db/schema.ts`).
-2. **Testcontainers integrity tests**: prove the SQL triggers block imbalance, mutation of a posted
-   voucher, posting into a locked period, and that `allocate_invoice_number` stays gapless across a
-   rolled-back transaction.
-3. Commit **SAF-T reference data** under `db/reference/saf-t`; load codes/accounts from it.
-4. Expand `@saldo/domain`: VAT code/account model wired to SAF-T; begin posting-derivation + rules
-   engine (input-VAT fork by MVA status), test-first (exhaustive + fast-check).
-5. Scaffold OIDC auth (openid-client + oslo + Postgres sessions) and the `app.current_org` GUC
-   middleware; wire Enhetsregisteret lookup. Keep CI green.
+## Next up (ordered) — Phase 0 steps 5–6 (build-spec §16)
+5. **Auth + tenancy.** eID broker = **Criipto** (decided). Build generic OIDC with `openid-client` +
+   `oslo` (PKCE, state, nonce, session rotation) + **server-side Postgres sessions**, and request
+   middleware that runs `SET LOCAL app.current_org` so RLS applies. ⚠️ **RLS gap to close here:** the
+   policies `ENABLE` but don't `FORCE` RLS, and Postgres **exempts the table owner** — so the app must
+   connect as a **non-owner role** (or add `FORCE ROW LEVEL SECURITY`), and `organization`/INSERT
+   policies need a `WITH CHECK` story. Add a migration + a Testcontainers RLS-isolation test (the 5th
+   guarantee) as part of this. The integrity-test harness currently connects as owner by design.
+6. **Enhetsregisteret lookup** (org autofill) under `app/integrations`; honor rate limits; run the
+   integration-auditor. Keep CI green.
+- Then Phase 1 (org & contacts onboarding).
+- Phase-2 carry-overs surfaced by the vat-reviewer: reverse-charge **dual-leg** derivation (branch on
+  the `reverseCharge` flag) and the non-deductible rules (representasjon / vehicle / private-use).
 
 ## Open decisions (need the human — build-spec §18)
-- eID broker: Criipto vs Signicat — before Phase 0 hardens.
+- eID broker — **DECIDED: Criipto** (this session).
+- Database — **recommended: Neon** (ADR 0013 default; per-PR branching for agentic CI; Supabase's
+  Auth+Storage value is unused since identity is BankID + object store is MinIO/Garage). Self-hosted
+  Postgres is the sovereignty fallback (ADR 0008). **Awaiting human confirmation** before step 5
+  hardens the session store + RLS connection role.
 - Hosted LLM vs local default — before Phase 4 (default is local).
+- Persistent server (Fly.io/Hetzner) vs serverless; transactional email provider — see §18.
 - Working name "Saldo" (placeholder).
 
 ## Known issues / to verify
-- `package.json` dependency versions are best-guess latest; `pnpm install` may adjust them.
-- The custom `saldo/no-money-arithmetic` ESLint rule is heuristic (type-text match) — confirm it fires
-  on a real `Øre + Øre` once deps are installed.
+- **RLS owner-bypass** (see step 5) — tenancy is not yet enforced at runtime; the policies exist but
+  need a non-owner app role / FORCE RLS to bite. Highest-priority Phase-0 correctness item.
+- `saft:validate` is still a scaffold (returns 0). The XSD is now committed; implement SAF-T
+  generation + XSD validation in Phase 8 (or sooner) and wire it green.
+- Local commits are **unsigned** (no signing key in this env); they verify on push through the proxy.
+- The custom `saldo/no-money-arithmetic` ESLint rule is heuristic — confirm it fires on a real
+  `Øre + Øre`.

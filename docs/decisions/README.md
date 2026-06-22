@@ -16,6 +16,7 @@ Changing a locked stack choice (`docs/tech-stack.md`) requires a new ADR superse
 | 0009 | Local-first LLM via an OpenAI-compatible abstraction | Accepted |
 | 0010 | graphile-worker (in-Postgres jobs) over a hosted workflow SaaS | Accepted |
 | 0011 | Drizzle queries with SQL as schema source of truth (introspection) | Accepted |
+| 0012 | Tenant isolation: FORCE RLS + a non-owner application role | Accepted |
 
 ADRs 0001–0004 restate decisions from `saldo-build-specification.md` §17; 0005–0011 capture the
 stack-shaping calls from the tech-stack review.

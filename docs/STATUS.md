@@ -3,9 +3,9 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-22 — session: Phase 0 foundation (steps 1–4)
-**Branch:** `claude/phase-0-foundation-gej8rk` (off `main`). HEAD `2dd3e55`. Lands via reviewed PR —
-no direct pushes to `main`.
+**Last updated:** 2026-06-22 — session: Phase 0 step 5 (RLS tenancy hardening)
+**Branch:** `claude/upbeat-darwin-hepsel` (off `main`, which now includes Phase 0 steps 1–4 via
+PR #6 + Neon MCP via PR #8). Lands via reviewed PR — no direct pushes to `main`.
 
 ## Verified state
 - ✅ Full **production gate suite** green at HEAD `2dd3e55`: `typecheck`, `lint`, `lint:repo`,
@@ -21,6 +21,11 @@ no direct pushes to `main`.
   and gapless `allocate_invoice_number` across a rolled-back tx.
 - ✅ Dev-only `testcontainers` added; its vulnerable transitives pinned via pnpm overrides
   (`undici >=6.27.0`, `uuid >=11.1.1`) — audit stays clean.
+- ✅ **RLS tenancy now bites at runtime (ADR 0012).** Migration `20260622225726_tenancy_force_rls_app_role`
+  adds a non-owner `saldo_app` role, `FORCE ROW LEVEL SECURITY` + explicit `WITH CHECK` on all tenant
+  tables (incl. the previously-unprotected `invoice_counter`), and makes `allocate_invoice_number`
+  `SECURITY DEFINER`. A **5th Testcontainers guarantee** (`rls-tenancy.integration.test.ts`, app-role
+  harness) proves an org reads/writes only its own rows; up+down both apply; schema re-introspected.
 
 ## Active phase
 **Phase 0 (Foundation) — in progress.** Steps 1–4 of the mission done; steps 5–6 next.
@@ -40,16 +45,17 @@ no direct pushes to `main`.
   the vat-reviewer (deductibility made explicit; reverse-charge flagged + deferred). `2dd3e55`.
 
 ## In progress
-- (nothing mid-change — clean tree at `2dd3e55`)
+- Phase 0 step 5 **auth** (Criipto OIDC + Postgres sessions + `SET LOCAL app.current_org` middleware)
+  and step 6 **Enhetsregisteret lookup** are the next work on this branch.
 
 ## Next up (ordered) — Phase 0 steps 5–6 (build-spec §16)
-5. **Auth + tenancy.** eID broker = **Criipto** (decided). Build generic OIDC with `openid-client` +
-   `oslo` (PKCE, state, nonce, session rotation) + **server-side Postgres sessions**, and request
-   middleware that runs `SET LOCAL app.current_org` so RLS applies. ⚠️ **RLS gap to close here:** the
-   policies `ENABLE` but don't `FORCE` RLS, and Postgres **exempts the table owner** — so the app must
-   connect as a **non-owner role** (or add `FORCE ROW LEVEL SECURITY`), and `organization`/INSERT
-   policies need a `WITH CHECK` story. Add a migration + a Testcontainers RLS-isolation test (the 5th
-   guarantee) as part of this. The integrity-test harness currently connects as owner by design.
+5a. **RLS tenancy gap — ✅ DONE this session (ADR 0012).** FORCE RLS + non-owner `saldo_app` role +
+   `WITH CHECK` + 5th Testcontainers guarantee. Proven on local PG and on a non-superuser-owner
+   reproduction of Neon (real Neon was egress-blocked — see Known issues).
+5b. **Auth (Criipto OIDC) — TODO.** Generic OIDC with `openid-client` + `oslo` (PKCE, state, nonce,
+   session rotation) + **server-side Postgres sessions**, then request middleware that runs
+   `SET LOCAL app.current_org` per request so the now-FORCEd RLS applies. App must connect as
+   `saldo_app` (not the owner). Secrets from server env only; Zod-validate inputs; run privacy-reviewer.
 6. **Enhetsregisteret lookup** (org autofill) under `app/integrations`; honor rate limits; run the
    integration-auditor. Keep CI green.
 - Then Phase 1 (org & contacts onboarding).
@@ -69,8 +75,14 @@ no direct pushes to `main`.
 - Working name "Saldo" (placeholder).
 
 ## Known issues / to verify
-- **RLS owner-bypass** (see step 5) — tenancy is not yet enforced at runtime; the policies exist but
-  need a non-owner app role / FORCE RLS to bite. Highest-priority Phase-0 correctness item.
+- ~~**RLS owner-bypass**~~ — ✅ RESOLVED this session (ADR 0012; FORCE RLS + `saldo_app`).
+- **Real Neon validation is pending** — this environment's network egress allowlist blocks Neon's
+  hosts (`*.neon.tech` → 403), so the migration was validated against a local **non-superuser-owner**
+  database that mirrors Neon's role model instead. Re-run the migration + isolation checks against an
+  actual Neon branch from an env with Neon egress (the Neon MCP needs `NEON_API_KEY` + host allowlist).
+- **App connection role** — production `DATABASE_URL` must point at `saldo_app` (not the owner);
+  migrations/admin use an owner URL. `saldo_app`'s login secret is provisioned per-env (not in SQL).
+  Wire this into `app/db/client.ts` + `.env.example` during the auth step.
 - `saft:validate` is still a scaffold (returns 0). The XSD is now committed; implement SAF-T
   generation + XSD validation in Phase 8 (or sooner) and wire it green.
 - Local commits are **unsigned** (no signing key in this env); they verify on push through the proxy.

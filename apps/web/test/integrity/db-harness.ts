@@ -25,15 +25,32 @@ function upMigrationSql(): string {
     .join('\n');
 }
 
+/** The non-owner application role created by the tenancy migration. */
+const APP_ROLE = 'saldo_app';
+/** Test-only password for the app role (set after migrating; never used in production). */
+const APP_ROLE_PASSWORD = 'saldo_app_test';
+
 export interface LedgerDb {
+  /**
+   * Owner connection (the Testcontainers superuser). Bypasses RLS even under FORCE, so it is the
+   * seed/admin path: use it to set up fixtures and to exercise the triggers/constraints, which
+   * apply to every role.
+   */
   readonly sql: Sql;
+  /**
+   * Application connection as the non-owner `saldo_app` role. RLS is enforced for it (it is neither
+   * the owner nor a superuser, and FORCE is on), so it is the harness for the tenancy-isolation
+   * tests — mirroring how the running app connects and runs `SET LOCAL app.current_org` per request.
+   */
+  readonly appSql: Sql;
   readonly stop: () => Promise<void>;
 }
 
 /**
- * Start a throwaway Postgres in a container, apply the real migrations, and return a
- * client. The connection role owns the schema, so RLS (which exempts owners) does not
- * interfere — these tests exercise the triggers/constraints, which apply to all roles.
+ * Start a throwaway Postgres in a container, apply the real migrations, and return two clients:
+ * an owner (superuser) connection for seeding/triggers, and a non-owner `saldo_app` connection for
+ * RLS tenancy tests. The migrations create `saldo_app` without a password; we set a throwaway one
+ * here so it can connect over TCP.
  */
 export async function startLedgerDb(): Promise<LedgerDb> {
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
@@ -45,9 +62,25 @@ export async function startLedgerDb(): Promise<LedgerDb> {
   });
   // Simple protocol so the multi-statement script (incl. `$$ ... $$` bodies) runs as one batch.
   await sql.unsafe(upMigrationSql()).simple();
+
+  // Give the migration-created app role a login secret, then open a connection as it. APP_ROLE and
+  // APP_ROLE_PASSWORD are fixed constants (no untrusted input), so the inlined literal is safe.
+  await sql.unsafe(`ALTER ROLE ${APP_ROLE} WITH PASSWORD '${APP_ROLE_PASSWORD}'`);
+  const appSql = postgres({
+    host: container.getHost(),
+    port: container.getPort(),
+    database: container.getDatabase(),
+    username: APP_ROLE,
+    password: APP_ROLE_PASSWORD,
+    prepare: false,
+    onnotice: () => {},
+  });
+
   return {
     sql,
+    appSql,
     stop: async () => {
+      await appSql.end({ timeout: 5 });
       await sql.end({ timeout: 5 });
       await container.stop();
     },

@@ -1,4 +1,4 @@
-import { pgTable, varchar, foreignKey, uuid, bigint, unique, pgPolicy, check, char, text, timestamp, numeric, integer, date, index } from "drizzle-orm/pg-core"
+import { pgTable, varchar, foreignKey, pgPolicy, uuid, bigint, unique, integer, date, timestamp, check, text, index, char, numeric } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -17,51 +17,7 @@ export const invoiceCounter = pgTable("invoice_counter", {
 			foreignColumns: [organization.id],
 			name: "invoice_counter_organization_id_fkey"
 		}),
-]);
-
-export const organization = pgTable("organization", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgNr: char("org_nr", { length: 9 }).notNull(),
-	name: text().notNull(),
-	mvaStatus: text("mva_status").notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	unique("organization_org_nr_key").on(table.orgNr),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(id = (current_setting('app.current_org'::text, true))::uuid)` }),
-	check("organization_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
-]);
-
-export const account = pgTable("account", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	organizationId: uuid("organization_id").notNull(),
-	number: text().notNull(),
-	name: text().notNull(),
-	type: text().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.organizationId],
-			foreignColumns: [organization.id],
-			name: "account_organization_id_fkey"
-		}),
-	unique("account_organization_id_number_key").on(table.organizationId, table.number),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)` }),
-]);
-
-export const vatCode = pgTable("vat_code", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	organizationId: uuid("organization_id").notNull(),
-	code: text().notNull(),
-	rate: numeric({ precision: 5, scale:  4 }).notNull(),
-	direction: text().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.organizationId],
-			foreignColumns: [organization.id],
-			name: "vat_code_organization_id_fkey"
-		}),
-	unique("vat_code_organization_id_code_key").on(table.organizationId, table.code),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)` }),
-	check("vat_code_direction_check", sql`direction = ANY (ARRAY['output'::text, 'input'::text, 'none'::text])`),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 ]);
 
 export const fiscalPeriod = pgTable("fiscal_period", {
@@ -78,7 +34,7 @@ export const fiscalPeriod = pgTable("fiscal_period", {
 			name: "fiscal_period_organization_id_fkey"
 		}),
 	unique("fiscal_period_organization_id_year_starts_on_key").on(table.organizationId, table.year, table.startsOn),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)` }),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 ]);
 
 export const voucher = pgTable("voucher", {
@@ -105,7 +61,7 @@ export const voucher = pgTable("voucher", {
 			foreignColumns: [table.id],
 			name: "voucher_reverses_voucher_id_fkey"
 		}),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)` }),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("voucher_type_check", sql`type = ANY (ARRAY['sales'::text, 'purchase'::text, 'manual'::text, 'bank'::text, 'reversal'::text])`),
 ]);
 
@@ -141,8 +97,53 @@ export const posting = pgTable("posting", {
 			foreignColumns: [vatCode.id],
 			name: "posting_vat_code_id_fkey"
 		}),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)` }),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("posting_debit_ore_check", sql`debit_ore >= 0`),
 	check("posting_credit_ore_check", sql`credit_ore >= 0`),
 	check("posting_check", sql`(debit_ore = 0) <> (credit_ore = 0)`),
+]);
+
+export const organization = pgTable("organization", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgNr: char("org_nr", { length: 9 }).notNull(),
+	name: text().notNull(),
+	mvaStatus: text("mva_status").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	unique("organization_org_nr_key").on(table.orgNr),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("organization_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
+]);
+
+export const account = pgTable("account", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	number: text().notNull(),
+	name: text().notNull(),
+	type: text().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "account_organization_id_fkey"
+		}),
+	unique("account_organization_id_number_key").on(table.organizationId, table.number),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+]);
+
+export const vatCode = pgTable("vat_code", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	code: text().notNull(),
+	rate: numeric({ precision: 5, scale:  4 }).notNull(),
+	direction: text().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "vat_code_organization_id_fkey"
+		}),
+	unique("vat_code_organization_id_code_key").on(table.organizationId, table.code),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("vat_code_direction_check", sql`direction = ANY (ARRAY['output'::text, 'input'::text, 'none'::text])`),
 ]);

@@ -7,3 +7,7 @@ coverage
 pnpm-lock.yaml
 db/reference/saf-t
 *.md
+
+# Generated Drizzle introspection output (source of truth: db/migrations/*.sql)
+apps/web/app/db/schema.ts
+apps/web/app/db/relations.ts

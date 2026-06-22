@@ -16,6 +16,7 @@ Skatteetaten/Altinn. Adapted from the "LLM wiki" pattern (see `.claude/skills/re
 | Page | Topic | verify-by |
 |---|---|---|
 | `mva-registration-threshold.md` | 50k rolling-12-month MVA registration threshold | see page |
+| `mva-rates.md` | MVA rates (2026) mapped to the SAF-T rate categories | 2026-12-31 |
 
 Integration-specific knowledge (auth, endpoints, rate limits) lives in `docs/integrations/` under the
 same Sources/verify-by convention.

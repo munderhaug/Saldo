@@ -5,7 +5,7 @@ build
 .react-router
 coverage
 pnpm-lock.yaml
-db/reference/saf-t
+db/reference
 *.md
 
 # Generated Drizzle introspection output (source of truth: db/migrations/*.sql)

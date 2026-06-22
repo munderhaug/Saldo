@@ -10,8 +10,17 @@
       "_comment": "READ-ONLY against the LOCAL dev database only. Never point at production."
     },
     "context7": {
+      "type": "http",
       "url": "https://mcp.context7.com/mcp",
       "_comment": "Version-correct library docs — essential given RR7's thinner training corpus."
+    },
+    "neon": {
+      "type": "http",
+      "url": "https://mcp.neon.tech/mcp",
+      "headers": {
+        "Authorization": "Bearer ${NEON_API_KEY}"
+      },
+      "_comment": "Neon control-plane MCP (EU project 'Saldo', aws-eu-central-1). Auth via NEON_API_KEY env secret — NEVER commit the raw key. Set it in the Claude Code environment settings."
     },
     "brreg": {
       "command": "npx",

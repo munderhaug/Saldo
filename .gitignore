@@ -33,5 +33,11 @@ secrets/
 .vscode/*
 !.vscode/extensions.json
 
+# Drizzle-kit introspection artifacts — schema.ts + relations.ts are the kept outputs;
+# the migration journal/SQL dump are drizzle-kit's own bookkeeping (our source of truth is
+# db/migrations/*.sql via dbmate, ADR 0011), so they are not committed.
+apps/web/app/db/meta/
+apps/web/app/db/[0-9]*.sql
+
 # Claude Code local
 .claude/settings.local.json

@@ -13,6 +13,9 @@ export default tseslint.config(
       '**/.react-router/**',
       '**/coverage/**',
       'db/reference/saf-t/**',
+      // Generated Drizzle introspection output (source of truth: db/migrations/*.sql).
+      'apps/web/app/db/schema.ts',
+      'apps/web/app/db/relations.ts',
       // Config + tooling files have no tsconfig project; exclude from type-aware linting.
       '**/*.config.{ts,mts,cts,js,cjs,mjs}',
       'eslint.config.mjs',

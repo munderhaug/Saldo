@@ -165,14 +165,22 @@ describe.skipIf(!dockerAvailable)('RLS tenant isolation (non-owner app role)', (
     ).rejects.toThrow(/row-level security/i);
   });
 
-  it('lets the app role allocate gapless invoice numbers for its own tenant', async () => {
+  it('lets the app role allocate gapless invoice numbers for its own tenant, never another', async () => {
     const a = await seedOrg(db.sql);
+    const b = await seedOrg(db.sql);
+
     const numbers = await asOrg(a.orgId, async (tx) => {
       const [first] = await tx<{ n: string }[]>`SELECT allocate_invoice_number(${a.orgId}) AS n`;
       const [second] = await tx<{ n: string }[]>`SELECT allocate_invoice_number(${a.orgId}) AS n`;
       return [Number(first!.n), Number(second!.n)];
     });
     expect(numbers).toEqual([1, 2]);
+
+    // The SECURITY DEFINER function refuses to allocate for a foreign org while scoped to A — the
+    // arg-vs-GUC guard makes this hold on every topology, not only where the owner is non-superuser.
+    await expect(
+      asOrg(a.orgId, (tx) => tx`SELECT allocate_invoice_number(${b.orgId})`),
+    ).rejects.toThrow(/not the current tenant/i);
   });
 
   it('enforces RLS through the Drizzle app path (withOrgTx middleware)', async () => {

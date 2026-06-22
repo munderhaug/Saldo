@@ -80,13 +80,19 @@ CREATE POLICY org_isolation ON invoice_counter
 
 -- ── 5. allocate_invoice_number runs with definer rights ──────────────────────
 -- SECURITY DEFINER lets the least-privileged app role allocate numbers (the function owns the write
--- to invoice_counter) without granting it direct DML on the counter. When the owner is NOT a
--- superuser (Neon), the function is still subject to invoice_counter's RLS, so an allocation for a
--- foreign org (org <> app.current_org) is rejected by WITH CHECK — tenant isolation holds even here.
--- search_path is pinned (SECURITY DEFINER hardening).
+-- to invoice_counter) without granting it direct DML on the counter. search_path is pinned (SECURITY
+-- DEFINER hardening). Cross-tenant defense: when a tenant context is set (the app path), the requested
+-- org MUST equal app.current_org — this blocks a cross-tenant allocation on EVERY topology, including
+-- a superuser owner where the definer context would otherwise bypass invoice_counter's RLS. The
+-- seed/owner path leaves the GUC unset and passes the org explicitly.
 CREATE OR REPLACE FUNCTION allocate_invoice_number(org uuid) RETURNS bigint AS $$
-DECLARE n bigint;
+DECLARE
+  n   bigint;
+  ctx text := current_setting('app.current_org', true);
 BEGIN
+  IF ctx IS NOT NULL AND ctx <> '' AND org <> ctx::uuid THEN
+    RAISE EXCEPTION 'allocate_invoice_number: org % is not the current tenant', org;
+  END IF;
   INSERT INTO invoice_counter (organization_id, next) VALUES (org, 1)
     ON CONFLICT (organization_id) DO UPDATE SET next = invoice_counter.next + 1
     RETURNING next INTO n;

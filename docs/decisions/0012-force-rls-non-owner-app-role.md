@@ -32,9 +32,10 @@ Harden tenancy in SQL (migration `20260622225726_tenancy_force_rls_app_role`):
    to the current tenant, not just reads.
 4. **`invoice_counter` brought under the same RLS regime** (it was missed originally).
 5. **`allocate_invoice_number` made `SECURITY DEFINER`** (search_path pinned) so the least-privileged
-   app role can allocate numbers without holding direct DML on the gapless counter. When the owner is
-   not a superuser (Neon), the function is still subject to the counter's RLS, so a cross-tenant
-   allocation is rejected by `WITH CHECK` — isolation holds even there.
+   app role can allocate numbers without holding direct DML on the gapless counter. It also guards its
+   argument against the GUC — when `app.current_org` is set (the app path), `org` must equal it — so a
+   cross-tenant allocation is rejected on **every** topology, not only where the owner is non-superuser
+   (there the counter's `WITH CHECK` catches it too). The seed/owner path leaves the GUC unset.
 
 **Org-insert bootstrap.** A new organization is created by the app generating the org id, running
 `SET LOCAL app.current_org = <new id>`, then inserting that id — so `WITH CHECK (id = current_org)`
@@ -52,6 +53,12 @@ created without a password (a secret); the login secret is provisioned per envir
   owner-connection no longer silently disables isolation (FORCE covers it).
 - Every **new tenant-scoped table** must, in the same migration, enable+force RLS, add a
   `USING`+`WITH CHECK` policy, and grant `saldo_app` (captured in `.claude/rules/ledger-integrity.md`).
+- **Grant model (deliberate):** policies are `TO public` (not `TO saldo_app`) so they bite for *any*
+  non-superuser role, not just the app role — defense-in-depth. `saldo_app` holds `DELETE` on `voucher`
+  /`posting`, which is safe: the immutability triggers block deleting *posted* rows for all roles, so
+  only unposted drafts are deletable (the legitimate erasure surface). Column-level write control on
+  `organization` (`org_nr`, `mva_status` are tenant-mutable today) is deferred to the org-settings
+  feature (Phase 1), where those changes get their own validation/audit.
 - Real-Neon validation was done via a local non-superuser-owner reproduction because this build
   environment's network egress allowlist blocks Neon's hosts; the Testcontainers test is the CI gate.
 

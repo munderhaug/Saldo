@@ -58,10 +58,12 @@ no direct pushes to `main`.
 
 ## Open decisions (need the human — build-spec §18)
 - eID broker — **DECIDED: Criipto** (this session).
-- Database — **recommended: Neon** (ADR 0013 default; per-PR branching for agentic CI; Supabase's
-  Auth+Storage value is unused since identity is BankID + object store is MinIO/Garage). Self-hosted
-  Postgres is the sovereignty fallback (ADR 0008). **Awaiting human confirmation** before step 5
-  hardens the session store + RLS connection role.
+- Database — **DECIDED: Neon** (this session; confirms ADR 0013's default). Per-PR branching for
+  agentic CI; Supabase's Auth+Storage value is unused since identity is BankID + object store is
+  MinIO/Garage. Single-user cost ≈ **$0 (Free tier)**; only heavy-CI months tip into Launch
+  pay-as-you-go (a few $/mo). Self-hosted Postgres remains the sovereignty fallback (ADR 0008) and
+  the cleanest place to enforce FORCE-RLS via a non-owner role. Step 5 targets Neon (EU region) for
+  the session store + RLS connection role; verify Neon EU + custom-role RLS when wiring it.
 - Hosted LLM vs local default — before Phase 4 (default is local).
 - Persistent server (Fly.io/Hetzner) vs serverless; transactional email provider — see §18.
 - Working name "Saldo" (placeholder).

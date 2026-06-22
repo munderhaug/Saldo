@@ -7,9 +7,13 @@
 **Branch:** scaffold is merged to `main` (`6c39a55`). Start Phase 0 on a new branch.
 
 ## Verified state
-- ✅ Toolchain **green** at commit time: `pnpm install` (lockfile committed), `pnpm typecheck`
-  (domain + web), `pnpm lint` (custom `saldo/no-money-arithmetic` rule confirmed firing + jsx-a11y),
-  and `pnpm test` (25 domain tests incl. fast-check pass; web `--passWithNoTests`).
+- ✅ Full **production gate suite** green: `format:check`, `pnpm audit --audit-level=high`
+  (**no known vulnerabilities**), `typecheck`, `lint` (custom money rule + jsx-a11y), `test`
+  (25 domain tests incl. fast-check). Web build OK.
+- ✅ Supply chain hardened: drizzle-orm → 0.45 (SQL-injection advisory fixed), vitest → 3, vite → 6,
+  esbuild override ≥0.25.
+- ⚠️ Workflow change: `main` should be **branch-protected**; all work from here lands via reviewed PRs
+  (see CONTRIBUTING.md / docs/quality-bar.md). No more direct pushes to main.
 - Commits are **unsigned locally** (this env has no signing key — 0-byte placeholder); they should show
   Verified once pushed through the git proxy. Committer email is correct (`noreply@anthropic.com`).
 
@@ -25,6 +29,9 @@ Pre–Phase 0. Scaffold complete; next is Phase 0 foundation (build-spec §16).
 - Extended harness: data-handling / accessibility / design-system rules, privacy & a11y reviewer
   subagents, jsx-a11y lint backstop, design-review skill.
 - Added this handover workflow (STATUS.md + handover skill + SessionStart hook).
+- Established the **quality bar / Definition of Done** (`docs/quality-bar.md`, wired into CLAUDE.md +
+  house-standards), governance (CONTRIBUTING, SECURITY, CODEOWNERS, Dependabot), hardened deps to a
+  clean audit, and tightened CI (audit + format:check + introspect gates).
 
 ## In progress
 - (nothing mid-change)

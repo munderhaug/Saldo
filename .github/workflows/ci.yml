@@ -33,9 +33,12 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level=high # supply-chain gate
       - run: pnpm typecheck
       - run: pnpm lint
+      - run: pnpm format:check
       - run: pnpm test
       - run: pnpm db:migrate # migration check against real Postgres
+      - run: pnpm db:introspect # schema generation stays in sync with migrations
       - run: pnpm build
       - run: pnpm saft:validate # SAF-T XSD validation

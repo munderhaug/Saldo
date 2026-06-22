@@ -43,7 +43,11 @@ export default tseslint.config(
       'no-restricted-globals': ['error', 'parseFloat'],
       'no-restricted-properties': [
         'error',
-        { object: 'Math', property: 'round', message: 'Use roundØre() from @saldo/domain for money.' },
+        {
+          object: 'Math',
+          property: 'round',
+          message: 'Use roundØre() from @saldo/domain for money.',
+        },
       ],
     },
   },

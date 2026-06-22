@@ -16,23 +16,15 @@
       "Glob",
       "Grep"
     ],
-    "ask": [
-      "Bash(git push:*)",
-      "Bash(pnpm deploy:*)",
-      "Bash(kamal:*)",
-      "Bash(dbmate down:*)"
-    ],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./**/.env*)",
-      "Read(./secrets/**)"
-    ]
+    "ask": ["Bash(git push:*)", "Bash(pnpm deploy:*)", "Bash(kamal:*)", "Bash(dbmate down:*)"],
+    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./**/.env*)", "Read(./secrets/**)"]
   },
   "hooks": {
     "SessionStart": [
       {
-        "hooks": [{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }]
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }
+        ]
       }
     ],
     "PreToolUse": [

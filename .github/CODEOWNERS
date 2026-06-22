@@ -1,0 +1,8 @@
+# Default owner — every PR requires review (enable branch protection requiring CODEOWNERS review).
+* @munderhaug
+
+# Integrity-critical areas warrant extra scrutiny.
+/packages/domain/      @munderhaug
+/db/migrations/        @munderhaug
+/.claude/              @munderhaug
+/docs/decisions/       @munderhaug

@@ -20,7 +20,8 @@ export default function Home({ loaderData }: { loaderData: ReturnType<typeof loa
       <h1>Saldo</h1>
       <p>Accounting &amp; invoicing for small Norwegian enkeltpersonforetak.</p>
       <p>
-        Scaffold is in place. The pure <code>@saldo/domain</code> core computes 25% MVA on 100,00 kr:
+        Scaffold is in place. The pure <code>@saldo/domain</code> core computes 25% MVA on 100,00
+        kr:
       </p>
       <table className="tabular">
         <tbody>
@@ -42,7 +43,9 @@ export default function Home({ loaderData }: { loaderData: ReturnType<typeof loa
           </tr>
         </tbody>
       </table>
-      <p style={{ color: '#666' }}>Next: run Phase 0 (see docs/saldo-build-specification.md §16).</p>
+      <p style={{ color: '#666' }}>
+        Next: run Phase 0 (see docs/saldo-build-specification.md §16).
+      </p>
     </main>
   );
 }

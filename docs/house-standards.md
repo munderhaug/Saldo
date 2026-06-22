@@ -41,6 +41,10 @@ Do NOT create subagents for "repo structure", "app design", or "accounting rules
 constraints (rules/docs/tests/ADRs), not recurring reviews. Add a new subagent only on a demonstrated
 need, and pair it with a deterministic backstop.
 
+## 3a. Definition of Done
+Every change meets `docs/quality-bar.md` before merge — world-class, production-ready, enforced by CI
+required checks + hooks, not by reminders. No stub is "done"; no merge past a red check.
+
 ## 4. Security always/never
 - NEVER commit secrets; never read `.env*`/`secrets/**` (denied in settings). Never let the domain
   core call the network. Never auto-`git push` (it's an `ask`).

@@ -4,7 +4,7 @@
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
 **Last updated:** 2026-06-22 — session: tech-stack review + scaffold + handover workflow
-**Branch:** `claude/tech-stack-review-kspak0`
+**Branch:** scaffold is merged to `main` (`6c39a55`). Start Phase 0 on a new branch.
 
 ## Verified state
 - ✅ Toolchain **green** at commit time: `pnpm install` (lockfile committed), `pnpm typecheck`
@@ -29,13 +29,18 @@ Pre–Phase 0. Scaffold complete; next is Phase 0 foundation (build-spec §16).
 ## In progress
 - (nothing mid-change)
 
-## Next up (ordered)
-1. Push the branch (pending user authorization); confirm commits show **Verified** on GitHub.
-2. Begin Phase 0: commit the SAF-T reference lists under `db/reference/saf-t`; expand the ledger schema
-   + Testcontainers integrity tests (verify the triggers actually block bad mutations); scaffold OIDC
-   auth and the `app.current_org` GUC middleware.
-3. Run the core ledger migration against the compose Postgres (`pnpm db:migrate`) and `pnpm db:introspect`
-   to generate the real Drizzle schema.
+## Next up (ordered) — Phase 0 (build-spec §16)
+Branch off main: `git checkout -b claude/phase-0-foundation`. Don't commit to main directly.
+1. `docker compose -f infra/compose.yaml up -d`; `pnpm db:migrate`; `pnpm db:introspect` (generates the
+   real `apps/web/app/db/schema.ts`).
+2. **Testcontainers integrity tests**: prove the SQL triggers block imbalance, mutation of a posted
+   voucher, posting into a locked period, and that `allocate_invoice_number` stays gapless across a
+   rolled-back transaction.
+3. Commit **SAF-T reference data** under `db/reference/saf-t`; load codes/accounts from it.
+4. Expand `@saldo/domain`: VAT code/account model wired to SAF-T; begin posting-derivation + rules
+   engine (input-VAT fork by MVA status), test-first (exhaustive + fast-check).
+5. Scaffold OIDC auth (openid-client + oslo + Postgres sessions) and the `app.current_org` GUC
+   middleware; wire Enhetsregisteret lookup. Keep CI green.
 
 ## Open decisions (need the human — build-spec §18)
 - eID broker: Criipto vs Signicat — before Phase 0 hardens.

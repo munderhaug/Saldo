@@ -38,6 +38,9 @@ secrets/
 # db/migrations/*.sql via dbmate, ADR 0011), so they are not committed.
 apps/web/app/db/meta/
 apps/web/app/db/[0-9]*.sql
+# dbmate writes a consolidated schema dump after each migrate/rollback; the migrations are the
+# source of truth (ADR 0011), so the dump is bookkeeping and is not committed.
+db/schema.sql
 
 # Claude Code local
 .claude/settings.local.json

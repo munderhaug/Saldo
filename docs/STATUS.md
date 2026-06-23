@@ -3,16 +3,45 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: regulatory foundation (VAT granularity + capture-not-RAG + § 3-7)
-**Branch:** `claude/blixai-saldo-relevance-j1dsdj` (off `main` at PR #16 / `70410e5` — Enhetsregisteret).
+**Last updated:** 2026-06-23 — session: `vat-line-level-model` (per-line VAT engine, ADR 0027 → code)
+**Branch:** `claude/upbeat-maxwell-l7f5tb` (off `main` at PR #17 / `1753fe2` — VAT-granularity + § 3-7 docs).
 Lands via a reviewed PR — never a direct push to `main`. (Trust `git log` over any hash here.)
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
-> not configured here. **This session HAD outbound egress** — Lovdata returned `mval § 3-7` verbatim and
-> Skatteetaten search worked (the håndbok blocks verbatim quoting — summarise + cite). Don't assume egress
-> next session — verify it. Local Postgres / Testcontainers stand in for DB work.
+> not configured here. **This session HAD outbound egress** (verified: Lovdata, Skatteetaten, data.brreg
+> all reachable) but did not need it — `vat-line-level-model` is pure domain logic over the already-
+> committed SAF-T list. Don't assume egress next session — verify it. Local Postgres / Testcontainers
+> stand in for DB work.
 
-## This session — regulatory foundation: VAT granularity, capture-not-RAG, § 3-7 (doc-only)
+## This session — `vat-line-level-model`: per-line VAT in @saldo/domain (ADR 0027 → engine code)
+Turned the freshly-merged **ADR 0027** into engine code: VAT treatment is now a property of the
+**voucher/invoice line** (its SAF-T tax code), validated against the org's `mva_status` (which stays the
+registration/default state — **no migration**; `posting.vat_code_id` has carried per-line codes since
+Phase 0). **Domain-only**; full gate green (typecheck, lint, format, `test` **126 domain** incl. fast-check,
+`lint:repo` 57/7/0). **Two `vat-reviewer` passes** (maker≠judge); the second clean.
+- **`vat/line-treatment.ts`** — `deriveVatTreatment(code)` classifies a committed SAF-T code into a posting
+  treatment (`output-vat | zero-rated-output | exempt | input-deductible | reverse-charge | no-treatment`),
+  **derived** from the list's `direction`/`rateCategory`/`reverseCharge` + the `utenfor merverdiavgiftsloven`
+  description — never the code number. `checkVatLine(status, code)` is the registration gate, built on the
+  cited `chargesOutputVat`/`deductsInputVat` predicates (the same fork `posting/derive.ts` uses).
+- **The § 3-7 expressiveness (the point):** output-VAT/fritatt/input-deduction codes require registration;
+  **exempt (code 6) + no-treatment are valid for ANY status** — so a `registered_standard` musician posts a
+  code-6 *unntatt* performance line beside a code-3 taxable teaching line in one voucher. No apportionment
+  (forholdsmessig fradrag) — that stays `vat-mixed-activity`, **now unblocked**.
+- **Reverse-charge boundary (honest, not fake-green):** RC codes (51, 81–92, import family incl. 20) are a
+  **non-blocking advisory** pointing at `vat-reverse-charge` — EXCEPT the one dimension decidable today: a
+  "med fradragsrett" RC code (81/83/86/88/91) **claims an input deduction**, so it's **blocked for an
+  unregistered org** (it must use the "uten fradragsrett" 87/89). A `vat-reviewer` catch.
+- **`rules/vat-line.ts`** — `vatLineRule({status, codes})` wraps the gate into the `Rule` contract; runs via
+  `runRules`. Unknown code → error; blocked combo → error (fail-closed fallback); RC → warning; uncoded
+  lines ignored.
+- **Tests:** `line-treatment.test.ts` (exhaustive **30 codes × 4 statuses** vs. a hand-derived oracle
+  independent of the SUT + 4 fast-check properties) and `vat-line.test.ts` (the § 3-7 mixed voucher, the
+  block/advisory/unknown cases, `runRules` integration). **25 new tests.**
+- **Next:** capture the Tier-1 sources (tidfesting / tap på krav / uttak / justering / EHF-Peppol / the ENK
+  personal-tax layer for `feat-tax-estimate`), or encode `vat-sectoral-exemptions` (mval kap. 3) on this gate.
+
+## Previous session — regulatory foundation: VAT granularity, capture-not-RAG, § 3-7 (doc-only)
 A **strategy + decision** session (no engine code) prompted by two product questions: a sustainable AI
 posture, and the under-served **cultural-sector ENK** VAT problem (no settled trade convention — people
 guess). Outcome: two gating ADRs + the first source-grounded cultural-VAT page. **Gate green** (typecheck,

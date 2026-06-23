@@ -257,8 +257,11 @@
       "effort": "M",
       "phase": "P6",
       "depends_on": [],
-      "notes": "50k threshold rule is documented but not enforced at runtime; no handling of the mid-period cutover (treatment of already-issued invoices). Source: docs/regulatory/mva-registration-threshold.md.",
-      "refs": ["docs/regulatory/mva-registration-threshold.md"]
+      "notes": "50k threshold rule is documented but not enforced at runtime; no handling of the mid-period cutover (treatment of already-issued invoices). Source: docs/regulatory/mva-registration-threshold.md. Threshold now SOURCE-GROUNDED: mval § 2-1 captured verbatim (db/reference/mva/2026-06-23-mval-2-1-registreringsplikt.md); the watcher's inclusion rule is 'omsetning og uttak omfattet av loven' (unntatt turnover excluded).",
+      "refs": [
+        "docs/regulatory/mva-registration-threshold.md",
+        "db/reference/mva/2026-06-23-mval-2-1-registreringsplikt.md"
+      ]
     },
     {
       "id": "bokforingslov-doc",
@@ -473,13 +476,24 @@
     {
       "id": "docs-consolidate-build-spec",
       "title": "Consolidate saldo-build-specification.md (stale tree + inlined harness copies)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1",
       "depends_on": [],
-      "notes": "Spec is the vision doc but has drifted: 14 repo tree shows app/ (real: apps/web/app) and 5/5/4 rules/agents/skills (real 12/7/10); 15 inlines now-stale full copies of CLAUDE.md/settings/rules (CLAUDE.md is now a thin @AGENTS.md import). Delete the inlined copies (link instead), fix the tree, collapse the 3 stacked revision banners into one. Reframe as PRD-only (the 'what'); architecture/ADRs own the 'how'.",
+      "notes": "DONE (consistency-remediation session): §14 tree replaced by a pointer to git + architecture.md; §15 inlined CLAUDE.md/settings.json/.mcp.json/rules/agents removed (link to the live files); §6 stack + §17/§18 decisions condensed to pointers (tech-stack.md / decisions README / STATUS / roadmap); the 3 stacked revision banners collapsed to one. Spec dropped ~650→~424 lines.",
       "refs": ["docs/saldo-build-specification.md", "AGENTS.md"]
+    },
+    {
+      "id": "docs-consistency-remediation",
+      "title": "Repo-wide consistency audit + remediation (voice, state-a-fact-once, staleness, grounding)",
+      "status": "done",
+      "value": "high",
+      "effort": "L",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "Owner-requested audit of the whole repo vs AGENTS.md, then fixed end-to-end: P0 correctness (bokføringsplikt vs the 50k MVA threshold; LLM default; deploy docs→ADR 0015; CI-step order; auth ADR ref); neutral-voice sweep (roadmap 'You chose', ADR 'we/our') + a repo-lint voice gate (check I) so it can't recur; 'state a fact once' condensation (build-spec §4.2/§6/§14/§15/§17/§18, domain-model, decisions/README, tech-stack, house-standards); STATUS de-staling; dead integration refs→'(planned)'; status banners; ADR supersession reciprocity; settings.json (db:lint allow / db:rollback gate); mval § 2-1 grounding. See docs/repo-consistency-audit-2026-06-23.md.",
+      "refs": ["docs/repo-consistency-audit-2026-06-23.md", "tools/repo-lint.mjs"]
     },
     {
       "id": "docs-dedup-invariants-deep",

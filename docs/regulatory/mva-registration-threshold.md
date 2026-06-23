@@ -23,5 +23,5 @@ deducts no input VAT.
   Raw: db/reference/mva/ (capture the current Skatteetaten page before relying on this). verify-by: 2026-12-31
 - Merverdiavgiftsloven § 2-1. Raw: db/reference/mva/ (commit the lovdata text). verify-by: 2026-12-31
 
-> ⚠️ Capture the cited primary sources into `db/reference/mva/` via the `regulatory-update` skill — this
-> page currently states the well-established rule but the raw captures are not yet committed.
+> **Note:** Capture the cited primary sources into `db/reference/mva/` via the `regulatory-update`
+> skill — this page states the well-established rule, but the raw captures are not yet committed.

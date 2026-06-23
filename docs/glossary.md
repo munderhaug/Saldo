@@ -1,5 +1,7 @@
 # Glossary (Norwegian accounting terms)
 
+> Status: **Current** (2026-06-23).
+
 Treat these as precise domain terms, not approximate translations. The authoritative table lives in
 `docs/saldo-build-specification.md` §3; the high-frequency subset is below for quick reference.
 

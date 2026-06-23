@@ -1,5 +1,7 @@
 # Overview
 
+> Status: **Current** (2026-06-23).
+
 Saldo is a **compliance-grade financial system of record** for Norwegian sole proprietorships
 (*enkeltpersonforetak*, "ENK") with **under 500,000 NOK in annual revenue** — a deliberately
 simple alternative to Fiken/Conta tailored to one life stage of a business.

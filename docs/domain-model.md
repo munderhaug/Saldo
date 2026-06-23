@@ -1,5 +1,7 @@
 # Domain model & business rules
 
+> Status: **Current** (2026-06-23).
+
 This is the correctness contract. The full, canonical text is `docs/saldo-build-specification.md`
 §4–§5; this file is the working reference and will be expanded as the model is implemented. Path-
 scoped rules in `.claude/rules/` (money, ledger-integrity, vat) carry the day-to-day constraints.

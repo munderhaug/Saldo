@@ -20,6 +20,8 @@
     "type-coverage": "type-coverage",
     "knip": "knip",
     "backlog": "node tools/backlog.mjs",
+    "status:refresh": "node tools/status-block.mjs",
+    "status:check": "node tools/status-block.mjs --check",
     "db:lint": "node tools/migrations-up.mjs | pnpm dlx squawk-cli@2.58.0 --config squawk.toml --stdin-filepath migrations-up.sql",
     "db:migrate": "dbmate up",
     "db:migrate:new": "dbmate new",

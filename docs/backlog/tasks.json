@@ -4,6 +4,8 @@
     {
       "id": "pr3-gates",
       "title": "Mechanical gates & supply-chain hardening",
+      "implements_adr": ["0014", "0017"],
+      "touches": ["tools/repo-lint.mjs", ".github/workflows/ci.yml"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -15,6 +17,8 @@
     {
       "id": "pr4-ledger-integrity",
       "title": "Close four ledger-integrity gaps in SQL",
+      "implements_adr": ["0003", "0012", "0018"],
+      "touches": ["apps/web/test/integrity"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -26,6 +30,8 @@
     {
       "id": "meta-agentic-memory",
       "title": "Agentic memory: committed task graph + rejected-approaches log",
+      "implements_adr": ["0019"],
+      "touches": ["tools/backlog.mjs", "docs/backlog/tasks.json", "docs/decisions/rejected.md"],
       "status": "done",
       "value": "medium",
       "effort": "S",
@@ -37,6 +43,7 @@
     {
       "id": "pr5-auth",
       "title": "Identity & session foundation (auth) — the missing first lock",
+      "implements_adr": ["0020"],
       "status": "done",
       "value": "high",
       "effort": "L",
@@ -48,6 +55,7 @@
     {
       "id": "pr6-observability",
       "title": "Observability baseline (pino + redaction + request-id)",
+      "implements_adr": ["0021"],
       "status": "done",
       "value": "medium",
       "effort": "S",
@@ -70,6 +78,7 @@
     {
       "id": "feat-honest-number",
       "title": "Honest-number domain feature (spendable = income - VAT held - estimated tax)",
+      "touches": ["packages/domain/src/honest-number"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -84,6 +93,12 @@
     {
       "id": "feat-tax-estimate",
       "title": "Norwegian ENK income-tax estimation (source-grounded)",
+      "implements_adr": ["0029"],
+      "touches": [
+        "packages/domain/src/tax/income-estimate.ts",
+        "packages/domain/src/tax/params.ts"
+      ],
+      "sources": ["db/reference/skatt", "docs/regulatory/skatt-enk-personskatt.md"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -114,6 +129,8 @@
     {
       "id": "feat-keyed-microcopy",
       "title": "Norwegian-first keyed microcopy system",
+      "implements_adr": ["0024"],
+      "touches": ["apps/web/app/copy"],
       "status": "done",
       "value": "medium",
       "effort": "M",
@@ -129,6 +146,11 @@
     {
       "id": "feat-enhetsregisteret",
       "title": "Enhetsregisteret (brreg) org lookup",
+      "touches": [
+        "apps/web/app/integrations/enhetsregisteret/client.server.ts",
+        "apps/web/app/routes/oppslag.tsx"
+      ],
+      "sources": ["db/reference/brreg", "docs/integrations/enhetsregisteret.md"],
       "status": "done",
       "value": "medium",
       "effort": "M",
@@ -184,6 +206,7 @@
     {
       "id": "mva-kunst-sectoral-doc",
       "title": "Cited regulatory page: mval § 3-7 artistic/cultural exemption (unntatt)",
+      "sources": ["db/reference/mva", "docs/regulatory/mva-kunstneriske-tjenester.md"],
       "status": "done",
       "value": "high",
       "effort": "S",
@@ -198,6 +221,12 @@
     {
       "id": "vat-line-level-model",
       "title": "Per-line VAT treatment in @saldo/domain (ADR 0027 accepted)",
+      "implements_adr": ["0027", "0028"],
+      "touches": [
+        "packages/domain/src/vat/line-treatment.ts",
+        "packages/domain/src/rules/vat-line.ts"
+      ],
+      "sources": ["docs/regulatory/mva-kunstneriske-tjenester.md"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -226,6 +255,9 @@
     {
       "id": "vat-sectoral-exemptions",
       "title": "Rules-engine knowledge of sectoral VAT exemptions (mval kap. 3)",
+      "implements_adr": ["0030"],
+      "touches": ["packages/domain/src/vat/activity.ts"],
+      "sources": ["db/reference/mva", "docs/regulatory/mva-sektorunntak.md"],
       "status": "done",
       "value": "medium",
       "effort": "L",
@@ -280,12 +312,14 @@
     {
       "id": "harness-doc-freshness",
       "title": "Derive repo-status from the task graph + gate it (kill doc staleness at the root)",
-      "status": "todo",
+      "implements_adr": ["0031"],
+      "touches": ["tools/status-block.mjs", "tools/repo-lint.mjs"],
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P1",
       "depends_on": [],
-      "notes": "A of the owner-decided A→B plan. Root cause of recurring staleness: STATUS/roadmap RESTATE facts that live in tasks.json (the DAG, ADR 0019) / git / ADRs, so they rot (violates AGENTS.md 'state once, link, don't restate'). Fix: tools/status-block.mjs generates the volatile facts (ADR count+range; backlog total/done/todo + highest-value ready task) from committed sources into an AUTOGEN block in docs/STATUS.md; repo-lint --check fails on drift. Export load/readyTasks from backlog.mjs (GUARD its CLI-runs-on-import first). Add status:refresh/status:check scripts; update the handover skill. Full plan + gotchas in the 'Next session (assigned)' brief in docs/STATUS.md. Land with an ADR (/new-adr).",
+      "notes": "DONE (ADR 0031), A of the owner-decided A→B plan. tools/status-block.mjs generates the volatile facts (ADR count+range; backlog total/done/todo + highest-value ready task) from committed sources into the AUTOGEN:repo-status block in docs/STATUS.md (pnpm status:refresh); repo-lint check J fails on drift (whitespace-normalized so format can't false-fail). Exports load/readyTasks from backlog.mjs (its CLI is now guarded with import.meta.url). status:refresh/status:check scripts added; handover skill updated; hand-typed counts in STATUS replaced by the block.",
       "refs": [
         "docs/STATUS.md",
         "tools/repo-lint.mjs",
@@ -296,12 +330,14 @@
     {
       "id": "harness-knowledge-graph",
       "title": "Enrich the task graph with typed links + evidence-based drift checks",
-      "status": "todo",
+      "implements_adr": ["0031"],
+      "touches": ["tools/repo-lint.mjs", "tools/backlog.mjs", "docs/backlog/tasks.json"],
+      "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1",
       "depends_on": ["harness-doc-freshness"],
-      "notes": "B of A→B. Add typed edges to tasks.json (implements_adr, touches[files/globs], sources[db/reference|regulatory]) and verify status against EVIDENCE in repo-lint/backlog: a 'done' task whose touches/refs are gone; an ADR file with no implementing task; a regulatory page past verify-by with dependents. This 'verified status' is the quality alternative to blind auto-flip (C). See the 'Next session (assigned)' brief in docs/STATUS.md.",
+      "notes": "DONE (ADR 0031), B of A→B. Added optional typed edges to tasks.json (implements_adr, touches[globs], sources) — backlog validate type-checks their shapes; repo-lint check K verifies against the repo: implements_adr resolves to a real ADR, stale-done (a done/in_progress task whose touches are gone = error), orphan-ADR (an ADR no task implements/references = one warning; foundational ADRs accepted). The regulatory-page-past-verify-by-with-dependents check is deferred to a later increment.",
       "refs": ["docs/backlog/tasks.json", "tools/repo-lint.mjs"]
     },
     {

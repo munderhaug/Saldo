@@ -12,11 +12,16 @@ forward-looking state ("where we are, what's next"); git history is the record (
 2. **Verify and record** the result: `pnpm typecheck && pnpm lint && pnpm test` — note pass/fail + the
    commit hash in STATUS.md.
 3. **Update `docs/STATUS.md`**: verified state · done · in-progress (exact file + next step) · next up ·
-   open decisions · known issues.
+   open decisions · known issues. **Current-status facts are generated or pointered, never restated** —
+   ADR count+range and backlog totals live only in the `AUTOGEN:repo-status` block (ADR 0031); a dated
+   session block keeps its own snapshot numbers (those are a point-in-time record, not live state).
 4. **Update the task graph** (`docs/backlog/tasks.json`): flip finished tasks to `done`, add new tasks
-   + dependencies, run `pnpm backlog validate`. Append any **abandoned approach** to
-   `docs/decisions/rejected.md` (the `/backlog` skill) — it's the cheapest way to stop the next session
-   re-walking a dead end.
+   + dependencies (and optional `implements_adr` / `touches` / `sources` edges), run
+   `pnpm backlog validate`. Append any **abandoned approach** to `docs/decisions/rejected.md` (the
+   `/backlog` skill) — it's the cheapest way to stop the next session re-walking a dead end.
+4a. **Refresh the generated status block**: `pnpm status:refresh` (re-renders the `AUTOGEN:repo-status`
+   block from the ADRs + the task graph). `pnpm lint:repo` FAILS if it's stale, so run it after any
+   `tasks.json`/ADR edit.
 5. **Update docs if a decision or invariant changed**: ADRs (supersede, don't edit), domain-model /
    build-spec, house-standards recurring-corrections. CLAUDE.md changes stay rare and structural.
 6. **Push** the branch (only if authorized).

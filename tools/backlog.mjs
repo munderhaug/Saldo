@@ -18,7 +18,7 @@ const VALUE = { high: 3, medium: 2, low: 1 };
 const EFFORT = { S: 1, M: 2, L: 3 };
 const DONE = new Set(['done', 'cancelled']);
 
-function load() {
+export function load() {
   const data = JSON.parse(readFileSync(FILE, 'utf8'));
   return data.tasks ?? [];
 }
@@ -43,6 +43,18 @@ export function validateBacklog() {
     if (!Array.isArray(t.depends_on)) errors.push(`${t.id}: depends_on must be an array`);
     if (t.status === 'cancelled' && !t.cancelled_reason)
       errors.push(`${t.id}: cancelled tasks need a cancelled_reason`);
+    // Optional typed edges (the knowledge graph, ADR 0031): shapes only — ADR existence,
+    // touches-evidence, and orphan detection are verified against the repo in tools/repo-lint.mjs.
+    if ('implements_adr' in t) {
+      if (!Array.isArray(t.implements_adr)) errors.push(`${t.id}: implements_adr must be an array`);
+      else
+        for (const a of t.implements_adr)
+          if (typeof a !== 'string' || !/^\d{4}$/.test(a))
+            errors.push(`${t.id}: implements_adr entry "${a}" must be a 4-digit ADR number`);
+    }
+    for (const key of ['touches', 'sources'])
+      if (key in t && (!Array.isArray(t[key]) || t[key].some((s) => typeof s !== 'string')))
+        errors.push(`${t.id}: ${key} must be an array of strings`);
   }
   // Dangling dependencies.
   for (const t of tasks)
@@ -90,7 +102,7 @@ function rank(unblocks) {
     a.id.localeCompare(b.id);
 }
 
-function readyTasks() {
+export function readyTasks() {
   const tasks = load();
   const byId = new Map(tasks.map((t) => [t.id, t]));
   return tasks.filter((t) => isReady(t, byId)).sort(rank(unblockCount(tasks)));
@@ -100,48 +112,52 @@ function fmt(t) {
   return `  ${t.id}  [${t.value}/${t.effort}]  ${t.title}`;
 }
 
-const cmd = process.argv[2] ?? 'next';
-if (cmd === 'validate') {
-  const errors = validateBacklog();
-  if (errors.length) {
-    for (const e of errors) console.error('error: ' + e);
-    console.error(`\nbacklog: FAILED with ${errors.length} error(s).`);
-    process.exit(1);
-  }
-  console.log(`backlog: OK — ${load().length} tasks, graph is acyclic and fully resolved.`);
-} else if (cmd === 'next') {
-  const ready = readyTasks();
-  if (!ready.length) {
-    console.log('backlog: nothing ready — every todo is blocked or the graph is complete.');
-  } else {
-    console.log('Next (highest-value ready task):');
-    console.log(fmt(ready[0]));
-    if (ready.length > 1)
-      console.log(`\n(${ready.length - 1} more ready — 'backlog ready' to see all.)`);
-  }
-} else if (cmd === 'ready') {
-  const ready = readyTasks();
-  console.log(ready.length ? 'Ready tasks (best first):' : 'Nothing ready.');
-  for (const t of ready) console.log(fmt(t));
-} else if (cmd === 'list') {
-  const tasks = load();
-  const byId = new Map(tasks.map((t) => [t.id, t]));
-  for (const s of STATUS) {
-    const group = tasks.filter((t) => t.status === s);
-    if (!group.length) continue;
-    console.log(`\n${s.toUpperCase()} (${group.length})`);
-    for (const t of group) {
-      const blockers = (t.depends_on ?? []).filter((d) => !DONE.has(byId.get(d)?.status));
-      const tag =
-        t.status === 'todo'
-          ? blockers.length
-            ? ` ⛔ blocked by ${blockers.join(', ')}`
-            : ' ✅ ready'
-          : '';
-      console.log(fmt(t) + tag);
+// Run the CLI only when invoked directly — NOT when imported (status-block.mjs / repo-lint.mjs
+// import load + readyTasks; a top-level dispatch would fire on import).
+if (resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const cmd = process.argv[2] ?? 'next';
+  if (cmd === 'validate') {
+    const errors = validateBacklog();
+    if (errors.length) {
+      for (const e of errors) console.error('error: ' + e);
+      console.error(`\nbacklog: FAILED with ${errors.length} error(s).`);
+      process.exit(1);
     }
+    console.log(`backlog: OK — ${load().length} tasks, graph is acyclic and fully resolved.`);
+  } else if (cmd === 'next') {
+    const ready = readyTasks();
+    if (!ready.length) {
+      console.log('backlog: nothing ready — every todo is blocked or the graph is complete.');
+    } else {
+      console.log('Next (highest-value ready task):');
+      console.log(fmt(ready[0]));
+      if (ready.length > 1)
+        console.log(`\n(${ready.length - 1} more ready — 'backlog ready' to see all.)`);
+    }
+  } else if (cmd === 'ready') {
+    const ready = readyTasks();
+    console.log(ready.length ? 'Ready tasks (best first):' : 'Nothing ready.');
+    for (const t of ready) console.log(fmt(t));
+  } else if (cmd === 'list') {
+    const tasks = load();
+    const byId = new Map(tasks.map((t) => [t.id, t]));
+    for (const s of STATUS) {
+      const group = tasks.filter((t) => t.status === s);
+      if (!group.length) continue;
+      console.log(`\n${s.toUpperCase()} (${group.length})`);
+      for (const t of group) {
+        const blockers = (t.depends_on ?? []).filter((d) => !DONE.has(byId.get(d)?.status));
+        const tag =
+          t.status === 'todo'
+            ? blockers.length
+              ? ` ⛔ blocked by ${blockers.join(', ')}`
+              : ' ✅ ready'
+            : '';
+        console.log(fmt(t) + tag);
+      }
+    }
+  } else {
+    console.error(`unknown command "${cmd}" — use validate | next | ready | list`);
+    process.exit(2);
   }
-} else {
-  console.error(`unknown command "${cmd}" — use validate | next | ready | list`);
-  process.exit(2);
 }

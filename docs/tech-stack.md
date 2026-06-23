@@ -1,6 +1,6 @@
-# Tech Stack — LOCKED
+# Tech Stack — CURRENT
 
-> Status: **Locked** (2026-06-22). Supersedes the stack discussion in
+> Status: **Current** (2026-06-23; revisable via an ADR). Supersedes the stack discussion in
 > `saldo-build-specification.md` §6. Changes require an ADR in `docs/decisions/`.
 >
 > Three principles drove every choice: **(1) open-source & self-hostable** — so no
@@ -12,7 +12,7 @@
 
 ## Decision table
 
-| Concern | Locked choice | OSS | Notes / rationale |
+| Concern | Current choice | OSS | Notes / rationale |
 |---|---|---|---|
 | Language | **TypeScript (strict)**, Node.js 22 LTS | ✅ | `noUncheckedIndexedAccess`, no `any`. Load-bearing for money/VAT correctness. |
 | Monorepo | **pnpm workspaces + Turborepo** | ✅ | One app + one pure domain package; the only hard boundary is pure-vs-impure. |
@@ -24,14 +24,14 @@
 | Offline | **Dexie** (IndexedDB) outbox | ✅ | Receipt-capture queues offline; postings stay online (ADR 0001). |
 | Native escape hatch | **Capacitor** (held in reserve) | ✅ | Same codebase → App Store/Play with native camera/haptics/biometric if iOS PWA limits bite. |
 | Data viz | **Recharts** (workhorse) + **visx** (bespoke) | ✅ | Standard business charts + native-feel mobile sparklines. Keep one chart family. |
-| Database | **PostgreSQL** (self-hostable) | ✅ | Relational integrity, triggers, constraints, RLS — the entire architecture. |
+| Database | **PostgreSQL** — hosted on **Neon** (EU; ADR 0013), self-host fallback | ✅ | Relational integrity, triggers, constraints, RLS — the entire architecture. |
 | Queries | **Drizzle ORM** | ✅ | Typed queries. **Schema source of truth = raw SQL migrations**; Drizzle schema generated via `drizzle-kit introspect` → no drift. |
 | Migrations | **dbmate** (SQL-first) | ✅ | Plain `.sql` up/down. All integrity (triggers/RLS/constraints/invoice-counter) lives here, not the ORM. |
-| Object storage | **MinIO** / **Garage** (S3-compatible) | ✅ | Documents (receipts/PDF/SAF-T), 5-year retention, EU-resident. |
-| CI ephemeral DB | **Testcontainers** | ✅ | Real Postgres per run — tests the actual triggers. Replaces Neon branching. |
+| Object storage | **Cloudflare R2** (EU jurisdiction; S3-compatible) | 🟡 | Documents (receipts/PDF/SAF-T), 5-year retention, EU-resident (ADR 0015). S3 API keeps it portable; **MinIO/Garage** is the OSS self-host fallback. |
+| CI ephemeral DB | **Testcontainers** | ✅ | Real Postgres per run — tests the actual triggers. Replaces Neon branching (ADR 0014). |
 | Money | branded integer **`Øre`** + custom ESLint rule | ✅ | No `decimal.js`. Integer-only; round half-away-from-zero at boundaries only. |
 | Validation | **Zod** at every boundary | ✅ | Single source of truth for shapes; infer types from schemas. |
-| Auth | **`openid-client` + `oslo` + Postgres sessions** | ✅ | BankID/Vipps via **Criipto/Signicat** broker (the one unavoidable non-OSS dep). ID-porten scoped to Altinn only. Zitadel/Keycloak optional OSS IdP later. |
+| Auth | **`openid-client` v6 + `@oslojs/*` + Postgres sessions** | ✅ | BankID/Vipps via **Criipto/Signicat** broker (the one unavoidable non-OSS dep). `oslo` umbrella deprecated → `@oslojs/crypto`/`encoding`. ID-porten scoped to Altinn only. |
 | Tenancy | app-layer org filter **+ Postgres RLS** via `SET LOCAL app.current_org` | ✅ | Defense-in-depth; GUC pattern (not `auth.uid()`). |
 | Background jobs | **graphile-worker** | ✅ | Runs on our Postgres; payloads never leave the DB. Replaces Inngest. |
 | Email | **nodemailer** (provider-agnostic SMTP) | ✅ | EU provider behind a swappable interface. |
@@ -42,7 +42,7 @@
 | App observability | **OpenTelemetry** + **SigNoz** (or Grafana) ; **GlitchTip** for errors; **pino** logs | ✅ | Fully self-hostable, vendor-independent. |
 | Testing | **Vitest**, **fast-check**, **Testing Library**, **Playwright**, **Testcontainers** | ✅ | Property tests on accounting invariants are the core safety net. |
 | Lint/format | **typescript-eslint + Prettier** (+ custom money rule) | ✅ | ESLint kept over Biome specifically for the typed custom rule. |
-| Deploy | **Docker + Kamal** (or Coolify) on **Hetzner EU** | ✅ | Persistent Node server (OAuth/Altinn/PDF/SAF-T/jobs, near a local LLM). Fly.io EU as non-OSS shortcut. |
+| Deploy | **Persistent Node on an EU PaaS** (Railway/Render/Fly EU) + **Cloudflare** edge/CDN + **R2** | 🟡 | Standard-Node host for OAuth/Altinn/PDF/SAF-T/in-process jobs (ADR 0015). Self-host **Docker + Kamal** on Hetzner EU retained as the OSS sovereignty fallback. |
 | SAF-T reference | committed copy of `Skatteetaten/saf-t` | ✅ | Codes/accounts/XSD never hardcoded from memory. |
 
 ## The one knowingly-accepted risk

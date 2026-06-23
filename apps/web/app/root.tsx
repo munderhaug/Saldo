@@ -1,4 +1,12 @@
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
+import {
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useRouteError,
+} from 'react-router';
 import type { LinksFunction } from 'react-router';
 import './app.css';
 
@@ -14,7 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="bg-background text-foreground antialiased">
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -25,4 +33,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return <Outlet />;
+}
+
+// Root error boundary: a thrown loader/action error or an unmatched route renders here inside Layout.
+export function ErrorBoundary() {
+  const error = useRouteError();
+  const heading = isRouteErrorResponse(error)
+    ? `${error.status} ${error.statusText}`
+    : 'Noe gikk galt';
+  const message = isRouteErrorResponse(error)
+    ? typeof error.data === 'string'
+      ? error.data
+      : 'Forespørselen kunne ikke fullføres.'
+    : error instanceof Error
+      ? error.message
+      : 'En ukjent feil oppstod.';
+
+  return (
+    <main className="mx-auto grid max-w-xl gap-3 p-6 sm:p-10">
+      <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
+      <p className="text-muted-foreground">{message}</p>
+    </main>
+  );
 }

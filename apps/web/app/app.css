@@ -1,25 +1,139 @@
 @import 'tailwindcss';
 
-/* shadcn/ui base tokens live here once `npx shadcn init` is run. */
+/* Dark mode via a `.dark` class on <html> (toggled later; OS preference can drive it). */
+@custom-variant dark (&:is(.dark *));
 
+/*
+ * Design tokens (see .claude/rules/design-system.md). Components reference these via Tailwind
+ * utilities — `bg-background`, `text-foreground`, `text-credit`, `border` — never hardcoded hex.
+ * Restrained financial UI: neutral base + one trustworthy accent. The semantic state colors
+ * (debit / credit / paid / overdue) are a fixed, named set, always paired with text/icon — never
+ * colour alone (see the accessibility rule). debit/credit are distinct neutral hues (they are
+ * ledger sides, not good/bad); green/red are reserved for paid/overdue, which do carry valence.
+ */
 :root {
-  /* Accounting figures must align in columns — tabular numerals are a domain requirement. */
-  font-variant-numeric: tabular-nums lining-nums;
+  --radius: 0.625rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.205 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.42 0.1 256);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.42 0.1 256);
+
+  --debit: oklch(0.45 0.12 256);
+  --debit-foreground: oklch(0.985 0 0);
+  --credit: oklch(0.46 0.08 200);
+  --credit-foreground: oklch(0.985 0 0);
+  --paid: oklch(0.52 0.13 150);
+  --paid-foreground: oklch(0.985 0 0);
+  --overdue: oklch(0.55 0.2 25);
+  --overdue-foreground: oklch(0.985 0 0);
 }
 
-/* A utility for figure cells/columns. */
+.dark {
+  --background: oklch(0.205 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.245 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.245 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.72 0.09 256);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.27 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.27 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.27 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.72 0.09 256);
+
+  --debit: oklch(0.72 0.11 256);
+  --debit-foreground: oklch(0.205 0 0);
+  --credit: oklch(0.73 0.08 200);
+  --credit-foreground: oklch(0.205 0 0);
+  --paid: oklch(0.73 0.13 150);
+  --paid-foreground: oklch(0.205 0 0);
+  --overdue: oklch(0.72 0.17 25);
+  --overdue-foreground: oklch(0.205 0 0);
+}
+
+/* Expose the tokens to Tailwind so `bg-*`, `text-*`, `border-*`, `rounded-*` resolve to the vars. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-debit: var(--debit);
+  --color-debit-foreground: var(--debit-foreground);
+  --color-credit: var(--credit);
+  --color-credit-foreground: var(--credit-foreground);
+  --color-paid: var(--paid);
+  --color-paid-foreground: var(--paid-foreground);
+  --color-overdue: var(--overdue);
+  --color-overdue-foreground: var(--overdue-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* Figure cells/columns — accounting numerals must align (tabular). A domain requirement. */
 @utility tabular {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-html,
-body {
-  height: 100%;
-}
-
-/* Native-feel baseline (see .claude/rules/pwa-native.md). */
-body {
-  min-height: 100dvh;
-  overscroll-behavior-y: none;
-  -webkit-tap-highlight-color: transparent;
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-variant-numeric: tabular-nums lining-nums;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
 }

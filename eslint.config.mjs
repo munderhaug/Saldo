@@ -66,6 +66,16 @@ export default tseslint.config(
     plugins: { 'jsx-a11y': jsxA11y },
     rules: {
       ...jsxA11y.flatConfigs.recommended.rules,
+      // Design-system gate: no inline styles — use Tailwind tokens / shadcn components.
+      // See .claude/rules/design-system.md. Tokens live in app/app.css.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "JSXAttribute[name.name='style']",
+          message:
+            'No inline styles — use Tailwind token utilities / shadcn components (.claude/rules/design-system.md).',
+        },
+      ],
     },
   },
 );

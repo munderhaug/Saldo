@@ -2,9 +2,11 @@
 ### Accounting & invoicing system for small Norwegian enkeltpersonforetak
 
 > **Working name:** Saldo *(placeholder — rename freely)*.
-> **Audience of this document:** Claude Code (and the human steering it). This is the canonical build bible. It is the source of truth for *what* to build, *how* it must behave, *what stack* to use, and *how the repository and agents are configured*. When this document and an offhand instruction conflict, this document wins until it is explicitly revised.
+> **Audience of this document:** Claude Code (and the human steering it). This is the **vision / build bible** — the source of truth for *what* to build and *how it must behave*. For the **stack and hosting**, the canonical sources are [`docs/tech-stack.md`](tech-stack.md) and the ADRs in [`docs/decisions/`](decisions/); where this document ever diverges from them, **those are current and win**. Status labels used across the repo: **Current** (in effect now, revisable via an ADR) · **Intended** (planned, not yet built) · **Superseded** (replaced by a later ADR).
 
 > **Revision note (tech-stack review):** This copy incorporates corrections from a stack/spec review. Changed since the original draft: invoice numbering uses a serialized counter-row, not a Postgres `SEQUENCE` (§4.2/§5.2/§5.4); Neon is now the default database (§6.3/§18); background jobs default to an in-Postgres queue for data-residency coherence (§6.5/§17); OCR defaults to vision-model-direct (§6.6); a transactional email provider is added (§6.5/§9); KID/OrgNr validation is made explicit (§4.2/§13); and the RR7 rationale is reworded honestly (§6.1). Architecture and domain model are unchanged — they were already correct.
+
+> **Refresh 2026-06-23 (current decisions, ADRs 0013–0015):** UI is **shadcn/ui** + Tailwind v4, not Mantine (ADR 0006); CI uses **Testcontainers**, not Neon branching (ADR 0014); **Neon EU** is the hosted database (ADR 0013); deploy is a **persistent Node server on an EU PaaS with Cloudflare edge/CDN + R2**, not Fly.io or self-host-everything (ADR 0015, revising ADR 0008); background jobs stay **graphile-worker** in-process (ADR 0010); sessions use **`@oslojs/*`** (the `oslo` umbrella is deprecated). The §6 prose is refreshed to match; if anything still diverges, `tech-stack.md` and the ADRs are canonical.
 
 ---
 
@@ -223,13 +225,13 @@ Chosen for *this* system — a forms/mutations/server-authoritative financial ap
 
 ### 6.2 Language & UI
 - **TypeScript (strict)** — `noUncheckedIndexedAccess`, no `any`. Load-bearing for money/VAT correctness.
-- **Mantine** as the component library — ships strong **data tables, form hooks, number inputs, and date pickers** out of the box, which is most of this app's surface, so we build less. (shadcn/ui is the alternative if owning every component matters more than batteries-included.)
+- **shadcn/ui** (Radix + Tailwind v4) as the component library — own-every-pixel components in `app/components/ui`, required for the native-feel PWA and more agent-legible than a black-box kit (ADR 0006). The table/form/number-input layer is built on **TanStack Table** + **React Hook Form** rather than inherited from a batteries-included kit.
 - **Typography:** a font with **tabular (lining) numerals** is mandatory — accounting figures must align in columns. Use `font-variant-numeric: tabular-nums` with Inter / IBM Plex Sans or similar. This is a domain requirement, independent of branding.
 - **Palette:** a fresh, restrained neutral with one trustworthy accent, plus **semantic colors for debit / credit / paid / overdue**. Not a mood-driven brand palette.
 
 ### 6.3 Data & persistence
 - **PostgreSQL** — non-negotiable; relational integrity, constraints, triggers are exactly what a ledger needs.
-- **Neon** (default) — Postgres in an **EU region**, chosen specifically for **database branching**: ephemeral per-PR databases pair beautifully with agentic CI, which this build leans on heavily. Pair Neon with an **EU-region S3-compatible object store** (e.g. Cloudflare R2 EU, Scaleway, AWS S3 eu-*) for `document` storage. **Supabase** is the named alternative — but note that this design does **not** use Supabase Auth (identity is BankID via Criipto/Signicat, §6.4) and uses RLS via a GUC rather than `auth.uid()`, so most of Supabase's bundled value would go unused; Neon's branching is the deciding factor. Either way, see the §18 open decision.
+- **Neon** (EU region) — the hosted Postgres (ADR 0013). CI does **not** use database branching; it spins up a real Postgres per run with **Testcontainers** (ADR 0014). Documents live in **Cloudflare R2** (EU jurisdiction; S3-compatible; ADR 0015). **Supabase** was the named alternative, but this design does **not** use Supabase Auth (identity is BankID via Criipto/Signicat, §6.4) and uses RLS via a GUC rather than `auth.uid()`, so most of its bundled value would go unused. Self-hosted Postgres is the sovereignty fallback (ADR 0008/0015).
 - **Drizzle ORM** for application queries + inferred types (TS-native, coexists with raw SQL).
 - **Raw SQL migrations** for the hard integrity — triggers, constraints, RLS, the invoice-counter mechanism. **Ledger integrity lives in SQL, not the ORM.**
 - **Money:** branded integer-øre type (§4.2). `decimal.js` *optional*, for VAT-rate multiplication only — integer-only VAT math (`net_øre × rate`, rounded once via the øre helper) is sufficient and is the simpler default; keep `decimal.js` only if a reviewer prefers its explicitness. Amounts always stay integer øre.
@@ -241,7 +243,7 @@ Chosen for *this* system — a forms/mutations/server-authoritative financial ap
 - **Tenancy:** enforced **primarily at the app layer** — every Drizzle query is filtered by `organization_id` from the authenticated session. **Defense-in-depth:** Postgres **RLS** policies referencing a per-transaction GUC (`SET LOCAL app.current_org = …`) set at request start. (Note: because we are not using Supabase Auth JWTs as the identity layer, `auth.uid()`-based RLS does **not** apply; use the GUC pattern instead.)
 
 ### 6.5 Background jobs & integrations runtime
-- **Default: an in-Postgres durable queue** — **`pg-boss`** or **`graphile-worker`**, running inside the persistent Fly.io Node process (§6.8). This keeps recurring-invoice generation, reminder/purring cadences, the OCR→propose pipeline, the 50k-threshold watcher, and MVA-term reminders **inside our own EU-resident Postgres** — coherent with the §11 data-residency stance and one fewer external vendor. A hosted workflow engine (**Inngest** / **Trigger.dev**) is an option *only if* EU-region processing of payloads is confirmed; their DX is nice but not load-bearing here, and receipt/invoice payloads passing through a US SaaS is a residency question we avoid by default.
+- **Default: an in-Postgres durable queue** — **`graphile-worker`** (ADR 0010), running inside the persistent EU-region Node process (§6.8). This keeps recurring-invoice generation, reminder/purring cadences, the OCR→propose pipeline, the 50k-threshold watcher, and MVA-term reminders **inside our own EU-resident Postgres** — coherent with the §11 data-residency stance and one fewer external vendor. A hosted workflow engine (**Inngest** / **Trigger.dev**) is an option *only if* EU-region processing of payloads is confirmed; their DX is nice but not load-bearing here, and receipt/invoice payloads passing through a US SaaS is a residency question we avoid by default.
 - **Inbound webhooks** (bank/PSD2, Vipps, PEPPOL) → thin RR7 routes (or a small serverless function) → enqueue jobs.
 - **Transactional email** (invoice delivery, purring/reminders): an **EU-compatible provider** — e.g. **Postmark EU**, **AWS SES (eu-*)**, or **Scaleway TEM**. Required for §8.4; data-residency-checked like every other integration.
 - `pg_cron` (or the queue's own scheduler) only for trivial periodic pokes.
@@ -258,9 +260,9 @@ Chosen for *this* system — a forms/mutations/server-authoritative financial ap
 ### 6.8 Quality, observability, ops
 - **Testing:** **Vitest** (unit), **fast-check** (property-based tests on accounting invariants), **Playwright** (e2e), **Testing Library** (components).
 - **Lint/format:** `typescript-eslint` + Prettier + a **custom ESLint rule banning `number`/float for money**.
-- **Observability:** **Sentry** (errors, EU region), **pino** (structured logs), **Langfuse** (LLM).
-- **CI:** GitHub Actions — typecheck → lint → test → build → migration check → **SAF-T XSD validation**. Per-PR ephemeral DB via Neon branching.
-- **Deploy:** the RR7 app as a persistent Node server on **Fly.io** (EU region) — warm process for OAuth/Altinn flows, SAF-T/PDF generation, the in-Postgres job worker, and integration work. Neon for DB; an EU object store for documents.
+- **Observability:** **pino** (structured logs, with redaction), **OpenTelemetry** + **SigNoz/Grafana** (traces/metrics), **GlitchTip** (errors, EU-resident), **Langfuse** (LLM). Start with pino; layer the rest in as the app grows.
+- **CI:** GitHub Actions — typecheck → lint → test → build → migration check → **SAF-T XSD validation**. The integration suite runs against a real Postgres via **Testcontainers** (ADR 0014), not Neon branching.
+- **Deploy:** the RR7 app as a **persistent Node server on an EU-region PaaS** (Railway/Render/Fly EU), with **Cloudflare** as edge/CDN + WAF and **R2** for documents (ADR 0015) — a warm process for OAuth/Altinn flows, SAF-T/PDF generation, the in-Postgres job worker, and integration work. **Neon EU** for the database (ADR 0013), via Hyperdrive when fronted by Cloudflare.
 
 ### 6.9 Repo tooling
 - **pnpm workspaces + Turborepo.** Lean monorepo: **one full-stack app** plus **one pure domain-core package** (the single hard internal boundary). `db`, `contracts`, `ui`, and `integrations` live inside the app as modules — fewer seams to reason about, while preserving the one boundary that matters (pure vs impure).
@@ -273,7 +275,7 @@ Chosen for *this* system — a forms/mutations/server-authoritative financial ap
 Browser (RR7 client)
   │  renders forms/tables; re-runs @saldo/domain for instant feedback; authoritative for NOTHING
   ▼
-RR7 server (loaders/actions on Fly.io)   ── session (BankID via Criipto/Signicat) ──┐
+RR7 server (loaders/actions; persistent Node on an EU PaaS, Cloudflare in front) ── session (BankID via Criipto/Signicat) ──┐
   │  validates via @saldo/domain → persists via Drizzle → enqueues jobs             │
   │                                                                                  │
   ├── @saldo/domain  (PURE TS: money, VAT, posting, rules engine — no I/O)           │
@@ -286,7 +288,7 @@ RR7 server (loaders/actions on Fly.io)   ── session (BankID via Criipto/Sign
   │                 Altinn 3 / ID-porten · PEPPOL access point · GoCardless/camt.054 │
   │                 · Vipps · email (Postmark EU/SES) · OCR+LLM (Langfuse)           │
   │                                                                                  │
-  └── In-Postgres jobs (pg-boss): recurring invoices, reminders, extraction, watchers┘
+  └── In-Postgres jobs (graphile-worker): recurring invoices, reminders, extraction, watchers┘
 ```
 
 Key properties: the **domain core is pure and shared** (runs in actions and in the browser); **integrity is enforced in the database**; **the server is the single source of truth** (online-first — see §17); the **AI layer only proposes**.
@@ -447,11 +449,11 @@ saldo/
 │       └── *.test.ts               # exhaustive + fast-check property tests
 ├── app/                            # the React Router 7 application
 │   ├── routes/                     # loaders/actions = the typed client↔server boundary
-│   ├── components/                 # Mantine-based UI
+│   ├── components/                 # shadcn/ui (Radix + Tailwind v4)
 │   ├── db/                         # Drizzle schema + queries (NOT integrity)
 │   ├── contracts/                  # Zod schemas (shared with domain where useful)
 │   ├── integrations/               # enhetsregisteret / skatteetaten / altinn / peppol / banking / email / ocr
-│   ├── jobs/                       # in-Postgres queue (pg-boss) functions
+│   ├── jobs/                       # in-Postgres queue (graphile-worker) functions
 │   ├── auth/                       # Criipto/Signicat OIDC + sessions
 │   └── root.tsx, routes.ts
 └── db/
@@ -468,7 +470,7 @@ The mental model: **context is a budget, and each knowledge store draws on it at
 ```md
 # Saldo — accounting/invoicing for small Norwegian enkeltpersonforetak
 
-TypeScript monorepo (pnpm + Turborepo). React Router 7 (framework mode) + Mantine + PostgreSQL (Neon, EU).
+TypeScript monorepo (pnpm + Turborepo). React Router 7 (framework mode) + shadcn/ui (Tailwind v4) + PostgreSQL (Neon, EU).
 
 ## Architecture (full map: docs/architecture.md)
 - packages/domain (@saldo/domain) — PURE accounting core (money, VAT, posting, rules, id validation).
@@ -591,7 +593,7 @@ Model routing: **Opus** for the domain core, VAT edge cases, integrity migration
 
 Dependency-ordered. Each phase ends with the tests in §12 green for that surface.
 
-**Phase 0 — Foundation.** Monorepo scaffold (pnpm + Turborepo); RR7 app skeleton + Mantine + tabular-numeral typography; `@saldo/domain` package with the **`Øre` type, helpers, rounding, and `OrgNr`/`Kid` validation** (fully tested first); Drizzle + the **core ledger schema and SQL integrity** (voucher/posting/account, balance trigger, immutability trigger, period lock, per-org invoice-counter, RLS GUC); BankID-via-Criipto OIDC + sessions; tenancy; Enhetsregisteret lookup; committed SAF-T code lists; CI (typecheck/lint/test/migration/SAF-T XSD, Neon per-PR branch); the `.claude/` config above.
+**Phase 0 — Foundation.** Monorepo scaffold (pnpm + Turborepo); RR7 app skeleton + shadcn/ui (Tailwind v4) + tabular-numeral typography; `@saldo/domain` package with the **`Øre` type, helpers, rounding, and `OrgNr`/`Kid` validation** (fully tested first); Drizzle + the **core ledger schema and SQL integrity** (voucher/posting/account, balance trigger, immutability trigger, period lock, per-org invoice-counter, RLS GUC); BankID-via-Criipto OIDC + sessions; tenancy; Enhetsregisteret lookup; committed SAF-T code lists; CI (typecheck/lint/test/migration/SAF-T XSD, Testcontainers Postgres); the `.claude/` config above.
 
 **Phase 1 — Organization & contacts.** Onboarding (org setup, MVA-status, opening balances); contacts with autofill + MVA status; products/services.
 
@@ -623,14 +625,14 @@ Dependency-ordered. Each phase ends with the tests in §12 green for that surfac
 4. **Integrity in SQL**, not the ORM.
 5. **React Router 7 over Next.js** — simpler server/client model, fewer agent-error modes. We accept RR7's thinner training corpus as a conscious trade against Next.js's RSC complexity, and offset it with Context7-pinned docs.
 6. **No separate API / no tRPC** — loaders/actions are the boundary.
-7. **Mantine over shadcn** for this data-dense surface — batteries-included tables/forms/inputs.
+7. **shadcn/ui over Mantine** — own-every-pixel components for the native-feel PWA and agent legibility; the table/form layer is built on TanStack Table + React Hook Form (ADR 0006).
 8. **BankID via Criipto/Signicat** as production identity; ID-porten scoped to Altinn filing.
 9. **EU data residency**, with a self-hosted extraction path available for sovereignty.
 10. **Lean monorepo** — one app + one pure domain package; the only hard boundary is pure-vs-impure.
 11. **Defer the heavy filing/PEPPOL/Vipps onboarding** until paying users exist; ship manual-portal filing first.
 12. **Gapless invoice numbering via a per-org counter row**, not a Postgres `SEQUENCE` — sequences are non-transactional and leave gaps on rollback, which violates the bokføringsforskrift expectation of consecutive numbering.
-13. **Neon as default database** for per-PR branching (agentic CI); Supabase Auth's value is unused because identity is BankID-over-OIDC, so its bundling no longer tips the choice.
-14. **Background jobs run in-Postgres** (pg-boss/graphile-worker) by default rather than a hosted US workflow SaaS, keeping payloads EU-resident and removing a vendor; a hosted engine is allowed only if EU processing is confirmed.
+13. **Neon (EU) as the hosted database** (ADR 0013); CI uses Testcontainers, not branching (ADR 0014). Supabase Auth's value is unused because identity is BankID-over-OIDC, so its bundling does not tip the choice.
+14. **Background jobs run in-Postgres** via **graphile-worker** (ADR 0010) rather than a hosted US workflow SaaS, keeping payloads EU-resident and removing a vendor; a hosted engine is allowed only if EU processing is confirmed.
 
 ---
 
@@ -638,10 +640,10 @@ Dependency-ordered. Each phase ends with the tests in §12 green for that surfac
 
 These need a call before or during the relevant phase — flag them rather than guessing:
 
-- **Neon vs Supabase.** Default is now **Neon** (per-PR database branching for agentic CI; Supabase Auth would be unused since identity is BankID-over-OIDC). Choose Supabase instead only if you specifically want its bundled Storage access-control over wiring a separate EU object store. Decide before Phase 0 hardens.
-- **In-Postgres jobs vs hosted engine.** Default is an in-Postgres queue (pg-boss/graphile-worker) on the Fly.io process, for EU-residency coherence. Choose Inngest/Trigger.dev only if their EU-region payload processing is confirmed and the orchestration DX is worth the extra vendor.
+- **Database — DECIDED: Neon (EU)** (ADR 0013). CI uses Testcontainers, not branching (ADR 0014). Supabase Auth/Storage would be unused (identity is BankID-over-OIDC; documents live in R2), so it does not tip the choice. Self-hosted Postgres is the sovereignty fallback (ADR 0008/0015).
+- **Background jobs — DECIDED: graphile-worker** in-process on the persistent EU Node host (ADR 0010), for EU-residency coherence. A hosted engine (Inngest/Trigger.dev) only if its EU-region payload processing is confirmed and the DX is worth the extra vendor.
 - **Hosted LLM vs self-hosted Qwen** for extraction (§11) — the data-residency call. Decide before Phase 4.
-- **Persistent server (Fly.io) vs fully-inside-one-platform.** Default is Fly.io (warm process for OAuth/SAF-T/PDF/the job worker). Going serverless-only trades cold-start latency and job-orchestration ergonomics for one-platform simplicity. This changes `app/jobs` and the integrations runtime — decide before Phase 0 hardens.
+- **Hosting — DECIDED: persistent Node on an EU-region PaaS** (Railway/Render/Fly EU) with **Cloudflare** edge/CDN + R2 (ADR 0015, revising ADR 0008). Cloudflare Workers-native was assessed and kept as the documented runner-up; self-host Hetzner/Kamal is the sovereignty fallback. The app's compute is server-shaped and single-country, so a global edge runtime is a poor fit.
 - **Transactional email provider** (Postmark EU / AWS SES eu-* / Scaleway TEM) — pick before Phase 3; verify EU region and deliverability.
 - **PEPPOL access-point provider** (Storecove / Tickstar / other) — pick before Phase 9; verify current pricing.
 - **eID broker** (Criipto vs Signicat) — pick before Phase 0; both do BankID/Vipps Login over OIDC.

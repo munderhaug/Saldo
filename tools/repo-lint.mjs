@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Repo hygiene gate: validates the .claude/ harness frontmatter, internal doc-link integrity, the
-// cited-&-dated convention for regulatory/integration pages, and the no-contradiction invariants
-// (ADR cross-references resolve, no "Locked" status label, cited db/reference paths exist).
+// cited-&-dated convention for regulatory/integration pages, neutral documentation voice (no
+// reader-addressing second person), and the no-contradiction invariants (ADR cross-references
+// resolve, no "Locked" status label, cited db/reference paths exist).
 // Dependency-free. Run via `pnpm lint:repo`.
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname, resolve, relative } from 'node:path';
@@ -129,6 +130,27 @@ for (const f of [...docFiles, join(root, 'AGENTS.md')].filter(existsSync)) {
     warnings.push(
       `${rel(f)}:${i + 1}: marketing slop "${lines[i].match(slopRe)[0]}" — prefer plain language`,
     );
+}
+
+// I) neutral documentation voice — no reader-addressing second person in the doc corpus.
+// The product's own voice (how the app speaks to the user) lives in experience-principles.md; the
+// audit report quotes findings verbatim. Quoted "…"/'…'/`…` spans are stripped first so a UI-copy
+// example ("You're caught up") does not trip the gate.
+const voiceAllow = new Set([
+  'docs/experience-principles.md',
+  'docs/repo-consistency-audit-2026-06-23.md',
+]);
+const stripSpans = (s) => s.replace(/"[^"]*"/g, '').replace(/'[^']*'/g, '').replace(/`[^`]*`/g, '');
+const secondPersonRe = /\byou(r|'ll|'ve|'d|'re)?\b/i;
+for (const f of docFiles) {
+  if (voiceAllow.has(rel(f))) continue;
+  const lines = read(f).split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (secondPersonRe.test(stripSpans(lines[i])))
+      errors.push(
+        `${rel(f)}:${i + 1}: reader-addressing second person ("you/your") — use neutral documentation voice`,
+      );
+  }
 }
 
 for (const w of warnings) console.warn('warn: ' + w);

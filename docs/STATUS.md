@@ -3,115 +3,103 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: world-class review + PR 1 (decisions & consistency sweep)
-**Branch:** `claude/vigilant-curie-gydm6s` (off `main`, which includes Phase 0 steps 1–5 via
-PR #6/#8/#9). Lands via reviewed PR — no direct pushes to `main`. (HEAD moves each commit — trust
-`git log` over any hash written here.)
+**Last updated:** 2026-06-23 — session: world-class review + foundation hardening (PRs 1, 2, 2.5)
+**Branch:** `claude/vigilant-curie-gydm6s` (off `main`). Lands via reviewed PR — never a direct push to
+`main`. (HEAD moves each commit — trust `git log` over any hash written here.)
 
-> ⚠️ **This environment blocks ALL external network egress except the npm registry.** Neon
-> (`*.neon.tech`), Criipto, and Brønnøysund (`data.brreg.no`) all return 403 "Host not in allowlist",
-> and the `brreg`/Neon MCP servers fail for the same reason. Local Postgres 16 (run via `initdb`/
-> `pg_ctl`, since Docker is also unavailable) stood in for migrate/introspect/RLS verification. This
-> is why step-5 auth's live OIDC and step-6 Enhetsregisteret could not be built+validated here.
+> ⚠️ **Live external integrations are not exercised in these sessions.** The Neon control plane,
+> Criipto OIDC, and Brønnøysund (`data.brreg.no`) are not reachable/configured here, so auth and
+> Enhetsregisteret **live** work is deferred to an env with egress + real tenants. (Web search/fetch,
+> the npm registry, and Cloudflare docs MCP were available this session; local Postgres + Testcontainers
+> stand in for DB work.)
 
-## Verified state
-- ✅ Full **production gate suite** green at HEAD `014f38c`: `typecheck`, `lint`, `lint:repo`,
-  `format:check`, `pnpm audit --audit-level=high` (**no known vulnerabilities**), `test`
-  (**90 domain** incl. fast-check + **17 Testcontainers** integration, of which 8 are the new RLS
-  suite), web `build`. (Testcontainers needs Docker; absent here so they skip locally — they run in CI.)
-- ✅ **Local ledger DB live + introspected:** `infra/compose.yaml` Postgres up; `pnpm db:migrate`
-  applied the core ledger; `pnpm db:introspect` generated the real `apps/web/app/db/schema.ts`
-  (+ `relations.ts`). Generated Drizzle output is now treated as generated (gitignored journal,
-  Prettier/ESLint-ignored) so hand-formatting never fights the generator.
-- ✅ **SQL integrity is PROVEN, not asserted:** Testcontainers tests in
-  `apps/web/test/integrity/` spin up real Postgres and show each guarantee blocks the bad case —
-  imbalance (deferred trigger at commit), posted-voucher/posting mutation, locked-period posting,
-  and gapless `allocate_invoice_number` across a rolled-back tx.
-- ✅ Dev-only `testcontainers` added; its vulnerable transitives pinned via pnpm overrides
-  (`undici >=6.27.0`, `uuid >=11.1.1`) — audit stays clean.
-- ✅ **RLS tenancy now bites at runtime (ADR 0012).** Migration `20260622225726_tenancy_force_rls_app_role`
-  adds a non-owner `saldo_app` role, `FORCE ROW LEVEL SECURITY` + explicit `WITH CHECK` on all tenant
-  tables (incl. the previously-unprotected `invoice_counter`), and makes `allocate_invoice_number`
-  `SECURITY DEFINER` (now also rejects an org arg ≠ `app.current_org`). The **5th Testcontainers
-  guarantee** (`rls-tenancy.integration.test.ts`, separate app-role harness `db.appSql`) proves an org
-  reads/writes only its own rows and cannot bypass; up+down both apply; schema re-introspected.
-- ✅ **Tenancy middleware** `withOrgTx(db, orgId, fn)` (`app/auth/middleware.ts`) — per-request
-  `SET LOCAL app.current_org` in a transaction; proven to scope RLS through the real Drizzle path.
-- ✅ **Privacy-reviewer** ran on the branch: no blockers; its findings folded in (the allocate
-  arg-vs-GUC guard) or recorded in ADR 0012 (the `TO public` and DELETE-grant rationale).
-- ✅ Verified beyond local PG: the migration applies and isolates correctly on a **non-superuser-owner
-  database** built to mirror Neon's role model (FORCE RLS bites the owner; cross-tenant allocate
-  blocked via `WITH CHECK`).
+## Verified state (this session — full production gate green)
+- ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (40 docs,
+  0 warnings), `format:check`, `test` (**90 domain** incl. fast-check; Testcontainers skip locally
+  without Docker — they run in CI), web `build` (**React 19** SSR + **Tailwind v4** token CSS compiles).
+- ✅ **Ledger integrity proven (unchanged):** Testcontainers prove balance / immutability / period-lock /
+  gapless-counter + RLS tenant isolation against real Postgres (`apps/web/test/integrity/`).
+- ✅ **Zero contradictions, now ENFORCED:** `tools/repo-lint.mjs` fails CI if an `ADR NNNN` cross-ref
+  doesn't resolve, a "Locked" status label reappears, or a cited `db/reference/<dir>` is missing.
+- ✅ **No inline CSS, ENFORCED:** ESLint bans the JSX `style` prop in `apps/web/app/**` (negative-tested).
 
 ## Active phase
-**Phase 0 (Foundation) — in progress.** Steps 1–4 merged to `main`. Step 5 RLS/tenancy DONE this
-session; step-5 auth (OIDC + sessions) and step-6 Enhetsregisteret remain (blocked from live build
-here by the egress allowlist — see top banner + Known issues).
+**Phase 0 (Foundation) — hardening.** Prior sessions delivered steps 1–5 (ledger schema, SQL-integrity
+proofs, SAF-T reference data, VAT engine, RLS tenancy + `withOrgTx`). This session: a full world-class
+review + the foundation-hardening PRs 1 / 2 / 2.5. Next: the remaining hardening PRs 3–6, then the
+feature track (auth → Enhetsregisteret → Phase 1).
 
-## Merged to `main` (prior session, PR #6/#8) — Phase 0 steps 1–4
-- (1) infra + introspected schema; (2) Testcontainers proofs of the 4 SQL guarantees; (3) cited SAF-T
-  reference data + 2026 MVA rates; (4) domain VAT engine with the input-VAT fork. (90 domain + 9
-  integration tests.)
-
-## Done (this session) — Phase 0 step 5 (tenancy)
-- **RLS hardening** — `2c9ee52` (migration + 5th Testcontainers guarantee + ADR 0012 + rule + STATUS).
-- **Tenancy middleware** `withOrgTx` — `a579627` (`app/auth/middleware.ts` + ORM-path Testcontainers test).
-- **Privacy-review hardening** — `014f38c` (allocate arg-vs-GUC guard + ADR 0012 notes).
+## Done (this session)
+- **World-class roadmap** — `docs/world-class-roadmap.md` (architecture decision, hardening plan, the
+  24-item contradiction kill-list, master backlog).
+- **PR 1 — decisions & consistency.** Option 2 architecture (**ADR 0015** persistent Node on an EU PaaS
+  + Cloudflare edge/CDN + R2; **ADR 0013** Neon EU; **ADR 0014** Testcontainers). Eliminated all 24
+  cross-doc contradictions; "Locked"→Current/Intended/Superseded; `oslo`→`@oslojs/*`; SECURITY.md
+  truthed-up; created `db/reference/{brreg,llm,auth}/`; the **repo-lint contradiction gate**; `AGENTS.md`;
+  the exemplar-sibling rule line.
+- **PR 2 — frontend foundation.** Tailwind v4 `@theme` tokens (light/dark + debit/credit/paid/overdue);
+  shadcn `components/ui` **Card + Table** (React 19 ref-as-prop); `home.tsx` rewritten with **zero inline
+  styles**; root `ErrorBoundary`; **React 18.3 → 19**; the **inline-`style` ESLint ban**.
+- **PR 2.5 — experience principles + design ADRs.** `docs/experience-principles.md` (source of truth) +
+  `.claude/rules/experience-voice.md`; **ADR 0016** (adaptive two-surface design system); **ADR 0002
+  refined** to the grace-window confirmation model (+ matching CLAUDE.md invariant).
 
 ## In progress
-- (nothing mid-change — clean tree at `014f38c`)
+- (nothing mid-change — clean tree after the handover/STATUS commit)
 
-## Next up (ordered) — Phase 0 steps 5–6 (build-spec §16)
-5a. **RLS tenancy gap — ✅ DONE this session (ADR 0012).** FORCE RLS + non-owner `saldo_app` role +
-   `WITH CHECK` + middleware + 5th Testcontainers guarantee.
-5b. **Auth (Criipto OIDC) — TODO (needs an env with egress + a Criipto tenant).** Build it on the
-   tenancy primitive already in place (`withOrgTx`). Grounding gathered this session:
-   - Use **`openid-client` v6** (the modern functional API; v5's `Issuer`/`Client` classes are gone).
-   - **`oslo` is DEPRECATED** — use **`@oslojs/crypto` + `@oslojs/encoding`** for the session token
-     (random token → store its SHA-256 hash; the Lucia pattern) instead. Update the `auth/README` line.
-   - Pieces: `oidc.ts` (discovery, authorize URL w/ PKCE+state+nonce, callback exchange + iss/nonce
-     checks), `session.ts` (server-side Postgres sessions: new `app_user` + `user_session` tables via a
-     migration — NOT org-RLS'd since they're looked up pre-org by token/subject; grant `saldo_app`),
-     routes `/auth/login` `/auth/callback` `/auth/logout`. Cookies `HttpOnly`/`Secure`/`SameSite=Lax`;
-     rotate on login. Validate the callback params with Zod. Then resolve user→org and call `withOrgTx`.
-   - App must connect as `saldo_app`; wire `DATABASE_URL`=app-role + a separate owner URL for migrate
-     into `app/db/client.ts` + `.env.example`. Run privacy-reviewer. BankID provider is onboarding-gated
-     (Phase 1 per `docs/integrations/bankid-criipto.md`); email/password is the acceptable early-dev path.
-6. **Enhetsregisteret lookup — TODO (needs egress to `data.brreg.no`).** `app/integrations/enhetsregisteret/`:
-   `GET https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}` (open API, no auth), validate orgnr
-   via `@saldo/domain` `OrgNr` (mod11) first, Zod-parse the response (capture a raw sample to
-   `db/reference/brreg/` per the doc's Sources), surface `registrertIMvaregisteret` for MVA status,
-   cache results, handle 404 (absent org) + errors gracefully. The `brreg` MCP is available for dev
-   lookups once egress is open. Run the integration-auditor.
-- Then Phase 1 (org & contacts onboarding) — where the user→org membership model + org-settings
-  (org_nr/mva_status write control) land.
-- Phase-2 carry-overs surfaced by the vat-reviewer: reverse-charge **dual-leg** derivation (branch on
-  the `reverseCharge` flag) and the non-deductible rules (representasjon / vehicle / private-use).
+## Next up (ordered) — remaining P0 hardening, then the feature track
+**PR 3 — Mechanical gates & continuous-improvement (Layers 1–2):**
+- **`Stop` hook = green-bar gate** (typecheck + lint + affected tests at turn-end — the top harness keeper).
+- **Fail-closed hook fixes:** `precommit-check.sh` must not silently `exit 0` when `node_modules` is
+  missing; `block-generated.sh` must fail-**closed** on a JSON parse error.
+- **PostToolUse `lint:repo`** after edits to `docs/**` / `.claude/**`.
+- **CI tooling:** `knip` (unused files/exports/deps), `dependency-cruiser` (enforce `domain ↛ web`),
+  `type-coverage`, `squawk` (migration linter), **gitleaks**, **CodeQL**, **CycloneDX SBOM**, **SHA-pin**
+  all Actions. A scheduled **freshness/health** workflow (verify-by + audit + knip → one rolling issue).
+  The **`/new-adr`** skill. Wire **`/verify`** into the new-feature loop (maker≠judge).
+**PR 4 — Ledger integrity gaps** (each with a Testcontainers proof of the bad case):
+- **Period-lock hole (real bug):** the lock trigger fires on `voucher`, not `posting`, so postings can be
+  added to an existing *unposted* voucher in a now-locked period. Add a posting-side check.
+- `posted ⇒ ≥2 postings & balanced` (forbid empty / dangling / half-posted vouchers).
+- `EXCLUDE` (btree_gist) so a tenant's `fiscal_period` ranges can't overlap; same-org `period_id` FK.
+- **RLS-coverage gate:** a test asserting *every* `public` table has ENABLE+FORCE RLS + a policy + grants.
+**PR 5 — Identity & session foundation (auth)** — the missing *first* lock (RLS is a strong 2nd lock with
+no 1st lock today). `app_user` / `user_session` / `membership` migration (opaque token → SHA-256 via
+`@oslojs/*`; session tables NOT org-RLS'd; grant `saldo_app`); `HttpOnly`/`Secure`/`SameSite=Lax` cookies,
+rotate on login; **openid-client v6** provider interface (PKCE + state + nonce) + a dev email/password
+provider (argon2id); Zod **`env.ts`** (owner + `saldo_app` URLs); `requireUser` → `withOrgTx`; routes
+`/auth/login|callback|logout`; an ADR (session & identity model). Point `DATABASE_URL` at `saldo_app`.
+**PR 6 — Observability baseline** — `pino` + redaction + request-id (OTel later).
+**Then the feature track (Phase 1+):** Enhetsregisteret lookup; org & contacts onboarding (the user→org
+membership UI); the **honest-number domain feature** (spendable = income − VAT held − estimated tax —
+pure + exhaustively tested) + its reveal; the Norwegian-first **keyed microcopy** system; the **mobile
+companion** surface (`components/mobile`, per ADR 0016, built per feature); reverse-charge dual-leg +
+non-deductible VAT rules (Phase 2 carry-overs).
+**Continuous-improvement Layer-3 (a small "PR 3.5" when ready):** a monthly refactor pass
+(`/code-review` + `/simplify` on one rotating module) + a quarterly tech-radar (`/deep-research` →
+dated ADOPT/MINE/SKIP, adoption gated by an ADR) + a `docs/improvements.md` ledger.
 
-## Open decisions (need the human — build-spec §18)
-- eID broker — **DECIDED: Criipto** (this session).
-- Database — **DECIDED: Neon** (this session; confirms ADR 0013's default). Per-PR branching for
-  agentic CI; Supabase's Auth+Storage value is unused since identity is BankID + object store is
-  MinIO/Garage. Single-user cost ≈ **$0 (Free tier)**; only heavy-CI months tip into Launch
-  pay-as-you-go (a few $/mo). Self-hosted Postgres remains the sovereignty fallback (ADR 0008) and
-  the cleanest place to enforce FORCE-RLS via a non-owner role. Step 5 targets Neon (EU region) for
-  the session store + RLS connection role; verify Neon EU + custom-role RLS when wiring it.
-- Hosted LLM vs local default — before Phase 4 (default is local).
-- Persistent server (Fly.io/Hetzner) vs serverless; transactional email provider — see §18.
-- Working name "Saldo" (placeholder).
+## Open decisions (most now decided this session)
+- **Architecture/hosting — DECIDED: Option 2** (persistent Node on an EU PaaS + Cloudflare edge/CDN + R2;
+  Neon EU via Hyperdrive) — ADR 0015. Workers-native is the documented runner-up.
+- **Database — DECIDED: Neon (EU)** (ADR 0013). **CI DB — DECIDED: Testcontainers** (ADR 0014).
+- **UI — DECIDED: shadcn + Tailwind v4 tokens, React 19** (ADR 0006 + PR 2).
+- **Design system — DECIDED: adaptive two-surface** (ADR 0016). **Confirm model — DECIDED: grace-window
+  passive confirm** (ADR 0002 refined). **eID broker — DECIDED: Criipto.**
+- **Still open:** Cloudflare **EU DPA + Worker/edge residency** confirm before go-live; **LLM hosting**
+  (Phase 4; default local); **transactional email** provider (before Phase 3); **PEPPOL access point +
+  Altinn onboarding** (Phase 9); **product name** ("Saldo" is a working name).
 
 ## Known issues / to verify
-- ~~**RLS owner-bypass**~~ — ✅ RESOLVED this session (ADR 0012; FORCE RLS + `saldo_app`).
-- **Egress allowlist blocks every external service here** (see top banner): real-Neon validation,
-  live Criipto OIDC, and `data.brreg.no` could not be exercised. Neon was substituted with a local
-  non-superuser-owner reproduction; auth/ER live work is deferred to an env with egress. To validate
-  Neon later: `NEON_API_KEY` is set, but `mcp.neon.tech`/`console.neon.tech` must be allowlisted, then
-  create a branch DB, apply both migrations, set the `saldo_app` password, and re-run the isolation checks.
-- **App connection role** — the `withOrgTx` middleware is in place, but production `DATABASE_URL` must
-  still be pointed at `saldo_app` (not the owner) with a separate owner URL for migrations; wire this
-  into `app/db/client.ts` + `.env.example` during the auth step. `saldo_app`'s login secret is per-env.
-- `saft:validate` is still a scaffold (returns 0). The XSD is now committed; implement SAF-T
-  generation + XSD validation in Phase 8 (or sooner) and wire it green.
-- Local commits are **unsigned** (no signing key in this env); they verify on push through the proxy.
-- The custom `saldo/no-money-arithmetic` ESLint rule is heuristic — confirm it fires on a real
-  `Øre + Øre`.
+- **No auth yet** — tenancy RLS is the *second* lock; the *first* (authn + user→org authz) lands in PR 5.
+  Until then `withOrgTx` trusts a caller-supplied org id.
+- **Period-lock SQL hole** (above) — open until PR 4.
+- **Live integrations deferred** — verify Neon EU + custom-role RLS, and that **Hyperdrive preserves
+  `SET LOCAL`**, when wiring auth/DB live (needs egress + tenants).
+- `saft:validate` is still a **scaffold** (returns 0) — implement SAF-T generation + XSD validation.
+- **Unused frontend deps** (motion, vaul, recharts, lucide-react, react-hook-form, @hookform/resolvers,
+  @tanstack/react-table) remain in `apps/web/package.json` — wire or prune per feature (RHF + TanStack
+  are imminent; `knip` in PR 3 tracks this).
+- `home.tsx` is a **throwaway scaffold** — the real home is "You're caught up" + the honest-number
+  reveal, not a ledger (experience-principles §4.2 / §6).
+- Local commits are **unsigned** (no signing key here); they verify on push through the proxy.

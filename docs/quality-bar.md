@@ -6,7 +6,7 @@
 
 ## Definition of Done — every change
 A change is "done" only when ALL of the following hold:
-- ✅ `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm format:check`, and `pnpm audit` are green.
+- ✅ `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm format:check`, and `pnpm audit --audit-level=high` are green.
 - ✅ New behavior is covered by tests. Domain (money/VAT/posting): **exhaustive + fast-check property**
   tests. UI: component/interaction tests for non-trivial logic.
 - ✅ Ledger-touching change has a **Testcontainers integration test** proving the SQL trigger/constraint
@@ -34,7 +34,7 @@ A change is "done" only when ALL of the following hold:
 | **i18n / locale** | NO/EN; `nb-NO` number/date formatting; **Europe/Oslo** time zone handling for periods. |
 | **Observability** | OpenTelemetry traces, pino structured logs, error tracking, health/readiness endpoints. |
 | **Supply chain** | Lockfile committed; deps audited; Dependabot; pinned CI actions; reproducible builds. |
-| **CI/CD** | typecheck → lint → format → test → migrate → build → audit → SAF-T XSD, all required; protected `main`; PR review. |
+| **CI/CD** | audit → typecheck → lint → lint:repo → format:check → type-coverage → test → db:lint → migrate → introspect → build → saft:validate, all required; protected `main`; PR review. |
 | **Documentation** | ADRs for decisions; living STATUS; runbook; per-integration docs; lean CLAUDE.md + path-scoped rules. |
 
 ## Explicitly NOT acceptable

@@ -19,7 +19,7 @@ pnpm dev                      # RR7 dev server on http://localhost:3000
 |---|---|
 | Dev server | `pnpm dev` |
 | Unit/property tests | `pnpm test` |
-| Typecheck · Lint · Format | `pnpm typecheck` · `pnpm lint` · `pnpm format` |
+| Typecheck · Lint · Format | `pnpm typecheck` · `pnpm lint` · `pnpm format:check` (write: `pnpm format`) |
 | Repo hygiene · migration lint | `pnpm lint:repo` · `pnpm db:lint` |
 | Backlog (what's next) | `pnpm backlog` (`ready` · `list` · `validate`) |
 | New migration | `pnpm db:migrate:new <name>` then edit, then `pnpm db:migrate` |
@@ -41,7 +41,8 @@ Hetzner/Kamal is retained only as the sovereignty fallback (ADR 0008/0015). Secr
 server/CI environment only, never in the repo.
 
 ## CI (GitHub Actions)
-`ci.yml` gates on `typecheck → lint → lint:repo → format:check → type-coverage → db:lint → test →
-build → saft:validate` against an ephemeral Postgres (Testcontainers). Separate workflows:
+`ci.yml` gates on `audit → typecheck → lint → lint:repo → backlog validate → format:check →
+type-coverage → test → db:lint → db:migrate → db:introspect → build → saft:validate` against an
+ephemeral Postgres service (the integrity suite uses Testcontainers). Separate workflows:
 `codeql.yml` (SAST), `security.yml` (gitleaks + CycloneDX SBOM), `freshness.yml` (weekly cron),
 `deploy-migrate.yml`. See `.github/workflows/`.

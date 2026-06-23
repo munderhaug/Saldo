@@ -156,7 +156,7 @@ The defect is **not** that 30 ADRs are mislabelled. It's that the harness *descr
 - `[STRUCTURE] house-standards.md:27-31,44` — load-bearing-skill ambiguity + 6/10 inventory + 3/10 conformance (Theme E).
 - `[STALE] pwa-native.md:7-8` — self-flagged "dirs don't exist yet" note left standing in the rule.
 - `[LANGUAGE] design-system.md:13,21` — mild brand-ish phrasing ("carnival", "vibrant"); defensible (ADR 0025) but lean.
-- **Clean & confirmed current:** `integrations.md:10` `openid-client` v6 + `@oslojs/*` matches `package.json` (6.8.4 / 1.0.1 / 1.1.0) — **not** the stale `oslo` the roadmap once flagged; all ADR refs resolve; the 4 `saldo/*` eslint rules exist and are wired; no "world-class-roadmap" references remain.
+- **Clean & confirmed current:** `integrations.md:10` `openid-client` v6 + `@oslojs/*` matches `package.json` (6.8.4 / 1.0.1 / 1.1.0) — **not** the stale `oslo` the roadmap once flagged; all ADR refs resolve; the 4 `saldo/*` eslint rules exist and are wired; no references to the roadmap's pre-rename filename remain.
 
 ### 4.7 Config / CI / tools
 - **Clean:** all GitHub Actions SHA-pinned (confirms roadmap PR3); every workflow script resolves; Node 22 / pnpm 9 consistent across `.nvmrc`/`engines`/`packageManager`/AGENTS.md/CI; prettier vs editorconfig non-conflicting; Markdown is intentionally outside prettier's `--check` (`.prettierignore:9`).

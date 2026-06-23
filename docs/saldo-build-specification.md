@@ -67,7 +67,7 @@ Claude Code must treat these as precise domain terms, not approximate translatio
 | Term | Meaning |
 |---|---|
 | **Enkeltpersonforetak (ENK)** | Sole proprietorship; the target legal form. Owner is personally liable; not an employee of the business. |
-| **Bokføringsplikt** | Statutory bookkeeping obligation (kicks in above 50,000 NOK turnover). |
+| **Bokføringsplikt** | Statutory bookkeeping obligation — arises from the duty to submit annual accounts and/or income statements (næringsoppgave) or a VAT return, **not** the 50,000 NOK MVA-registration threshold (that is *Merverdiavgiftsregisteret*, below). Full statutory grounding tracked as `bokforingslov-doc`. |
 | **Regnskapsplikt** | Statutory annual-accounts obligation (ENK only above 20M assets / 20 årsverk). **Out of scope.** |
 | **MVA / merverdiavgift** | Value-added tax (VAT). |
 | **Merverdiavgiftsregisteret** | The VAT register. Registration is mandatory above 50,000 NOK taxable turnover (rolling 12 months). |
@@ -250,7 +250,7 @@ Chosen for *this* system — a forms/mutations/server-authoritative financial ap
 
 ### 6.6 AI / smart-accounting layer
 - **OCR / extraction — vision-model-direct by default.** Feed the receipt/invoice image straight to a vision-capable model; modern vision LLMs outperform a Tesseract/PaddleOCR pre-processing step on real-world receipts and are simpler. Classical OCR (Tesseract / PaddleOCR) is a **cost-driven fallback only**.
-- **Extraction model — a genuine data-sovereignty decision** (see §11): hosted **Anthropic API** (quality/reliability) **vs** self-hosted **Qwen vision** (data never leaves the jurisdiction). Either way: **propose-only**, every output validated by the rules engine before a human commits.
+- **Extraction model (ADR 0009):** an **OpenAI-compatible abstraction**, **local-first** — self-hosted **Qwen vision** by default (data never leaves the jurisdiction); a hosted endpoint is a base-URL swap, with the specific provider a **data-sovereignty call deferred to Phase 4** (see §11 and §18). Either way: **propose-only**, every output validated by the rules engine before a human commits.
 - **Langfuse** for traces, evals, and cost tracking on the extraction layer.
 
 ### 6.7 Documents

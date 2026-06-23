@@ -1,4 +1,5 @@
-# Multi-stage build for the RR7 app (persistent Node server). Deployed via Kamal to Hetzner EU.
+# Multi-stage build for the RR7 app (persistent Node server). Runs on an EU-region container host
+# (ADR 0015); the Hetzner/Kamal self-host is the ADR 0008 sovereignty fallback.
 FROM node:22-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"

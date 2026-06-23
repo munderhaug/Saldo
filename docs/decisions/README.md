@@ -28,6 +28,11 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0021 | Observability baseline: pino with redaction | Accepted |
 | 0022 | EU AI Act posture: not high-risk; transparency + provenance on AI features | Accepted |
 | 0023 | Saldo's own code is proprietary (the stack stays OSS + self-hostable) | Accepted |
+| 0024 | Keyed microcopy: Norwegian-first, single-locale, type-safe | Accepted |
+| 0025 | Playful, guided experience direction (companion + the Torpedo) | Accepted |
+| 0026 | Typography: Fraunces + IBM Plex Sans, weights ≤450, self-hosted | Accepted |
+| 0027 | VAT-treatment granularity: per-line/per-project, apportionment sequenced | Accepted |
+| 0028 | Regulatory knowledge: capture-and-encode, not runtime RAG | Accepted |
 
 ADRs 0001–0004 restate decisions from `saldo-build-specification.md` §17; 0005–0011 capture the
 stack-shaping calls from the tech-stack review; 0012–0016 harden tenancy and record the hosting,
@@ -37,4 +42,7 @@ gaps (posting-side period lock, posted-completeness, period non-overlap, cross-o
 adds the committed task graph + rejected-approaches log; 0020 adds the auth/identity first lock; 0021
 adds the pino observability baseline; 0022 records the EU AI Act classification + compliance posture
 (sharpening 0002); 0023 records that Saldo's own code is proprietary (the stack stays OSS +
-self-hostable per 0008). Approaches we **rejected** live in `rejected.md` (the anti-ADR).
+self-hostable per 0008); 0024–0026 establish the copy, experience, and typography foundations of the UI;
+0027 lifts VAT treatment to the line (revenue-side now, delt-virksomhet apportionment sequenced); 0028
+fixes the regulatory architecture (deterministic engine over captured sources; AI explains, never
+decides — sharpening 0002/0022). Approaches we **rejected** live in `rejected.md` (the anti-ADR).

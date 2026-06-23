@@ -3,16 +3,45 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: Enhetsregisteret (brreg) org lookup — first integration + UI surface
-**Branch:** `claude/clever-darwin-swpvyf` (off `main` at PR #15 / `5128eae` — typography ADR 0026).
+**Last updated:** 2026-06-23 — session: regulatory foundation (VAT granularity + capture-not-RAG + § 3-7)
+**Branch:** `claude/blixai-saldo-relevance-j1dsdj` (off `main` at PR #16 / `70410e5` — Enhetsregisteret).
 Lands via a reviewed PR — never a direct push to `main`. (Trust `git log` over any hash here.)
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
-> not configured here. **This session HAD outbound egress** — `data.brreg.no` returned live data (200)
-> and a `brreg` MCP was present — so `feat-enhetsregisteret` was built + verified live this session.
-> Don't assume egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
+> not configured here. **This session HAD outbound egress** — Lovdata returned `mval § 3-7` verbatim and
+> Skatteetaten search worked (the håndbok blocks verbatim quoting — summarise + cite). Don't assume egress
+> next session — verify it. Local Postgres / Testcontainers stand in for DB work.
 
-## This session — Enhetsregisteret (brreg) org lookup (`feat-enhetsregisteret`, done)
+## This session — regulatory foundation: VAT granularity, capture-not-RAG, § 3-7 (doc-only)
+A **strategy + decision** session (no engine code) prompted by two product questions: a sustainable AI
+posture, and the under-served **cultural-sector ENK** VAT problem (no settled trade convention — people
+guess). Outcome: two gating ADRs + the first source-grounded cultural-VAT page. **Gate green** (typecheck,
+lint, `lint:repo` 57 docs / 7 sourced / 0 warn, `test`, `backlog validate`).
+- **ADR 0027 (Accepted) — VAT treatment is per-line, not solely the org `mva_status`.** Revenue-side
+  per-line classification (its SAF-T code) is in scope; **delt-virksomhet input-VAT apportionment (§ 8-2)
+  is accepted in principle but SEQUENCED** as a source-gated increment (`vat-mixed-activity`), keeping the
+  build-spec's "apportionment unsupported" line honest until that task lands. Org enum stays (no migration).
+- **ADR 0028 (Accepted) — regulatory knowledge is capture-and-encode, not runtime RAG.** Deterministic
+  rules engine over committed, dated sources decides postings; an LLM may *explain* a rule (read-only,
+  AI-assisted, ADR 0022) but never *be* it. Keeps the engine a non-AI system (AI Act Recital 12) + the
+  ledger auditable; pairs with the AI cost posture (compute the rule once, not per-transaction tokens).
+- **Source-grounded § 3-7** — `db/reference/mva/2026-06-23-mval-3-7-kunst-kultur.md` (verbatim statute +
+  håndbok M-3-7.4 summary) + cited `docs/regulatory/mva-kunstneriske-tjenester.md`. **Debunks the "whole
+  supply chain is exempt" folklore**: the exemption is service-by-service, tied to the *performance*
+  (lyd/lys/scenerigg/streaming inside; vakthold/servering/garderobe/reklame out). KMVA 8220: incorporating
+  (ENK→AS) can forfeit § 3-7(4).
+- **A user-supplied deep-research VAT/bokføring catalogue was reviewed** (not committed — it's research
+  input). Identified Tier-1 gaps to capture next: **tidfesting/advance-invoicing, tap på krav (§ 4-7),
+  uttak, justering (kap. 9), the EHF/Peppol B2G mandate**, and the **ENK personal-tax layer** (feeds
+  `feat-tax-estimate`). A delta-research prompt for these was drafted (in chat).
+- **Backlog:** `mva-kunst-sectoral-doc` (done) + `vat-line-level-model`, `vat-mixed-activity`,
+  `vat-sectoral-exemptions`, `vat-threshold-watcher`, `bokforingslov-doc` (todo). ADR index brought current
+  (0024–0028 were stale). **Next:** run the delta-research → capture Tier-1 sources → encode
+  `vat-line-level-model` (per-line VAT in `@saldo/domain`, exhaustive + property tests).
+- **Aside:** evaluated **blixai.com** — a Norway-hosted open-LLM inference API; relevant later as a
+  data-resident option at the Phase-4 LLM-hosting decision, not now.
+
+## Previous session — Enhetsregisteret (brreg) org lookup (`feat-enhetsregisteret`, done, PR #16)
 The **first real integration + the first real UI surface.** A read-only `/oppslag` page that searches the
 Brønnøysund open-data register by **org number or company name** and shows name / form / address / NACE /
 **MVA-register status** — exercising the carnival tokens, the type system, and `~/copy` together for the

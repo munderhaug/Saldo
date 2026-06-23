@@ -8,8 +8,9 @@ voice register table (§8). The spine: **playful, simple, safe** — safety make
 simplicity keeps it from becoming clutter.
 
 - **Calm in behavior, warm in voice.** The product runs itself and asks little; when it does speak,
-  it's a sharp, competent, friendly "I" talking to "you". Calm is not cold. Never corporate, never a
-  mascot, never condescending.
+  it's a sharp, competent, friendly "I" talking to "you" — which may be **embodied as a friendly
+  companion** (a guide, never a gimmicky mascot — ADR 0025). Calm is not cold. Never corporate, never
+  condescending. **Prime directive: no user ever feels stupid**, whatever their financial literacy.
 - **Playful in the ordinary (~95%), sober in the consequential (~5%).** Drop ALL playfulness — plain,
   clear, no jokes/flourish — at the three §5.5 moments: **money leaving**, **filing to the
   authorities**, and a **genuine ambiguity the user must resolve**. Warmth may return right after.
@@ -23,11 +24,12 @@ simplicity keeps it from becoming clutter.
   the user never sees konto/debit/credit on the everyday surface (ledger is depth-on-demand). The
   honest-number reveal ("what's actually yours") is framed as permission/relief, never a tax warning.
 - **Copy:** Norwegian-first, written as original work (EN is reference). One idea per sentence; no
-  jargon the user didn't choose (formal terms are tap-to-explain, never pushed). Strings are keyed
+  jargon the user didn't choose (formal terms are tap-to-explain in the user's own numbers / trade
+  analogies, never pushed). Strings are keyed
   microcopy via `t()` from `~/copy` (ADR 0024), never ad-hoc literals — enforced by
   `saldo/no-unkeyed-jsx-text`.
 - **The Feeling Test:** does this make the user feel competent, in control, at ease — or managed,
-  stupid, anxious? Anti-patterns (never ship): points/badges/levels/mascots, confetti on routine
+  stupid, anxious? Anti-patterns (never ship): gamification (points/badges/levels/streaks/leaderboards), confetti on routine
   actions, guilt/streaks, manufactured urgency, engagement-driving notifications, jargon walls.
 - Accessibility still applies (see `accessibility.md`): warmth never overrides semantic markup,
   perceivable state (not colour/buzz alone), or WCAG 2.2 AA.

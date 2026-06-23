@@ -3,8 +3,8 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: keyed microcopy system (`feat-keyed-microcopy`)
-**Branch:** `claude/gallant-tesla-gv4zsp` (off `main` at PR #12 / `0dc15c9`). Lands via a reviewed PR —
+**Last updated:** 2026-06-23 — session: playful experience direction + carnival design tokens (ADR 0025)
+**Branch:** `claude/playful-experience` (off `main` at PR #13 / `ac30ae0`). Lands via a reviewed PR —
 never a direct push to `main`. (Trust `git log` over any hash here.)
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
@@ -13,26 +13,39 @@ never a direct push to `main`. (Trust `git log` over any hash here.)
 > taken this session (microcopy is the higher-leverage, egress-independent foundation). Don't assume
 > egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
 
-## This session — keyed microcopy system (`feat-keyed-microcopy` → done)
-Built the foundational microcopy layer the experience-voice + a11y rules already mandate (*"strings are
-keyed microcopy, not ad-hoc literals"*; *"content translatable NO/EN"*), and migrated every existing UI
-surface onto it. **Full gate green:** typecheck, lint, `lint:repo` (52 docs, **0 warnings**), `format:check`,
-`test` (**101 domain + 10 web unit** incl. 6 new copy tests; 34 integration skipped cleanly — no DB here),
-`db:lint`, `build`, `backlog validate` (30 tasks). **Independently verified by SSR:** the built server
-rendered `/` and `/auth/login` with the keyed Norwegian copy and **no leaked `{placeholder}`/keys** (`lang="nb"`).
-- **The system (`apps/web/app/copy`, ADR 0024):** a flat dotted-key catalog — `nb` is shipped (original
-  work), `en` is a **reference** (not runtime-selectable) pinned to `nb`'s key set by `satisfies` and to
-  its placeholders by a parity test. `t(key, params?)` is pure (runs server + browser like `@saldo/domain`):
-  **typed keys** (typo = compile error) and **placeholder-typed params** (missing/extra param = compile error).
-  Single-locale by design — **no i18n framework** (rejected `R-0008`); money formatting stays in `formatKr`.
-- **Mechanical gate:** new ESLint rule `saldo/no-unkeyed-jsx-text` (positive+negative tested) flags ad-hoc
-  user-facing JSX text in `apps/web/app/**` (ignores `{expr}` + `code`/`pre`/`kbd`/`samp`), wired in `eslint.config.mjs`.
-- **Migrated:** `home.tsx`, `auth.login.tsx`, `root.tsx` (ErrorBoundary). Fixed two **English** strings in a
-  NB-first product (`'OIDC is not configured'`, `'Password login is disabled'` → Norwegian).
-- **Docs:** ADR 0024, `rejected.md` R-0008, experience-voice pointer, backlog marked done (unblocks
-  `feat-honest-number-surface`, which depends on it).
-- **Next:** egress was available, so `feat-enhetsregisteret` (brreg) is a strong pick if egress persists;
-  otherwise `feat-tax-estimate` (source-grounded) or the `docs-*` cleanups. Other UI surfaces now key via `~/copy`.
+## This session — playful experience direction + carnival design tokens (ADR 0025)
+Set the product's experiential direction with the product owner and made it real in the design tokens.
+**Full gate green:** typecheck, lint, `lint:repo` (53 docs, **0 warnings**), `format:check`, `test`
+(**101 domain + 10 web unit**; 34 integration skipped — no DB here), `db:lint`, `build` (OKLCH CSS
+compiles), `backlog validate` (35 tasks).
+- **Direction (ADR 0025):** Saldo is deliberately *untraditional* for accounting software — playful,
+  warm, and above all **understandable/doable by anyone** regardless of financial literacy, while staying
+  lawful. **Prime directive: no user ever feels stupid.** Revises the old "no mascots/avatars" ban → **no
+  *gamification*** (points/badges/streaks/leaderboards stay out), but a **friendly companion/guide** is
+  now welcome (the embodied warm "I"), plus characterful **agents** — the **Torpedo** late-payment chaser,
+  aimed *outward* at late payers via propose→confirm. Trade-specific analogies for comprehension. The
+  §5.5 sober rule is unchanged and sacrosanct.
+- **Carnival design tokens (`app/app.css`, done):** ten **12-step OKLCH scales** (neutral +
+  electric/grape/candy/sky/lilac/mint/green/amber/red) as primitives → mapped onto shadcn + domain
+  semantic tokens, **light + dark, AA-verified per step**. Brand roles: **primary = electric, secondary =
+  grape, tertiary = candy**; soft register = sky/lilac/mint; state = **paid (green) · overdue (red) ·
+  heads-up (amber, NEW)**. Base = cold-white `neutral-1` (#f1f7ff) with **plum-ink** `neutral-12`
+  (#262130); money is always neutral ink on cold-white. No gradients (flat). Generator: scratchpad
+  `gencss.mjs` (re-run to retune); the visual spike artifacts live in gitignored `reports/`.
+- **Docs aligned:** ADR 0025 (committed earlier) + `rejected.md` R-0009; `experience-principles.md`
+  (prime directive §2.5, companion §2.2/§5.1/§8, analogies §4.3, anti-patterns §9/§10), the enforced
+  `experience-voice.md`, and `.claude/rules/design-system.md` (the carnival palette) all reconciled — the
+  "no mascots" contradiction is gone.
+- **Backlog:** `design-tokens-carnival` (done); queued `design-visual-spike`, `feat-companion`,
+  `feat-trade-analogies`, `feat-torpedo`.
+- **Next:** the visual spike (type/illustration/the companion's look on these tokens), then the first
+  real UI surface (`feat-enhetsregisteret` → `feat-org-onboarding`) which puts the palette + `~/copy` to
+  work. Honest-number reveal still needs `feat-tax-estimate` (source-grounded).
+
+## Previous session — keyed microcopy (`feat-keyed-microcopy`, PR #13 merged)
+`apps/web/app/copy` (ADR 0024): typed `t()` over a flat nb/en catalog (nb shipped, en reference pinned by
+`satisfies` + a parity test), the `saldo/no-unkeyed-jsx-text` gate, existing surfaces migrated, two
+English strings fixed to NB. (Detail in ADR 0024 / `git log`.)
 
 ## Previous session — EU AI Act compliance + repo-standards consolidation (PR #12, merged)
 ADR 0022 (EU AI Act posture) + `docs/regulatory/eu-ai-act.md` + `.claude/rules/ai-act.md`; proprietary

@@ -25,14 +25,17 @@ Confidence is playful; anxiety is stiff. The product is warm because the risk ha
 **2.1 Calm in behavior, warm in voice.**
 The product is calm and ambient in *what it does* — rare contact, runs itself, asks almost nothing of the user's attention — and playful and warm in *how it feels and speaks* when contact does happen. Calm is not cold.
 
-**2.2 Playful means personality and delight, not games.**
-Playfulness here is voice, warmth, and well-placed delight. It is not points, badges, levels, mascots, streaks, leaderboards, or manufactured urgency. The product serves people doing serious work in short, infrequent sessions; the warmth has to land in seconds and must never feel like a game.
+**2.2 A friendly companion and personality — but never a game (ADR 0025).**
+Playfulness is voice, warmth, a friendly **companion** (a guide that explains and does jobs for you — e.g. the _Torpedo_ that chases late payers on your behalf), and well-placed delight. It is **not** gamification: no points, badges, XP, levels, streaks, leaderboards, or manufactured urgency. The companion's job is comprehension and confidence, not engagement; the product serves people doing serious work in short, infrequent sessions, so warmth must land in seconds, it must never feel like a game, and _"earn irrelevance"_ (§7.1) still governs.
 
 **2.3 Simplicity and safety license the playfulness.**
 Playfulness reads as unserious only when the user fears they can break something. Because mistakes are structurally impossible (§3), a relaxed tone becomes reassuring rather than risky — it signals that everything is handled.
 
 **2.4 Playful in the ordinary, sober in the consequential.**
 Warm and light in the roughly 95% of moments that are easy and low-stakes; plain, clear, and serious in the roughly 5% that carry real consequence (§5.5). A product that is playful everywhere reads as unserious. A product that is playful and visibly knows when to stop reads as confident. This contrast is mandatory.
+
+**2.5 The prime directive — no one ever feels stupid (ADR 0025).**
+Saldo's job is to make invoicing and accounting low-hassle, genuinely fun, and **understandable and doable by anyone** — whatever their education or financial literacy — while they stay safe within Norwegian law. Above every other rule: no interaction may leave a person feeling stupid, managed, or anxious. Fault and doubt always sit with the software (§3.4), never the user. This is the headline of the Feeling Test (§9).
 
 ---
 
@@ -52,7 +55,7 @@ Safety is enforced in the data model, not promised in copy.
 
 1. **Speak events, not entries.** The primary input is "what happened?" in the user's own words — a photo, a forwarded email, a sentence, an auto-imported bank line. The user never translates reality into debits, credits, or VAT codes.
 2. **Accounting is an output, never an input.** The double-entry books exist as plumbing: generated automatically, handed to the tax authority, available to the curious and to an auditor — but never required and never the default view. A person can run the business and file taxes without ever seeing the word *konto*.
-3. **Categories live in the user's world.** "Gear," "materials," "travel" — learned from how the user actually talks — mapped silently to the formal chart of accounts underneath.
+3. **Categories live in the user's world.** "Gear," "materials," "travel" — learned from how the user actually talks — mapped silently to the formal chart of accounts underneath. Concepts are explained with **analogies from the user's own trade** — a hairdresser hears "the part of each cut that's Skatteetaten's," not "utgående merverdiavgift" — and formal terms stay tap-to-explain (§8), never pushed.
 4. **Zero-config, smart defaults.** The product works correctly out of the box for a small sole proprietorship. Defaults are pre-chosen for this exact user; configuration is optional depth, not a gate.
 5. **Progressive disclosure.** The home surface shows one thing. Depth — the ledger, the breakdown, the reasoning — is always one tap away and never front-loaded. Controls that don't apply to a given user (for example, VAT controls for a user who isn't VAT-registered) are hidden.
 6. **Ninety percent done on arrival.** Everything possible is prefilled from the bank feed, captured receipts, and the authorities' own data. The user's job is to review and confirm, never to enter from scratch.
@@ -62,10 +65,10 @@ Safety is enforced in the data model, not promised in copy.
 
 ## 5. Playful — the texture, and where it stops
 
-Playfulness is expressed in four places. None of them appear at the consequential moments in §5.5.
+Playfulness lives in five places — voice, delight, the honest-number reveal, effortlessness, and a friendly companion. None of them appear at the consequential moments in §5.5.
 
 **5.1 Voice is the highest-impact lever.**
-The product talks like a sharp, funny, genuinely competent friend. Warm, brief, plain-spoken, occasionally cheeky. Full guide in §7.
+The product talks like a sharp, funny, genuinely competent friend. Warm, brief, plain-spoken, occasionally cheeky. Full guide in §8. The voice can be **embodied as a friendly companion** — a competent guide that explains in your own terms and does jobs for you (the _Torpedo_ agent, aimed outward at late payers, is one such character) — present in the everyday flow, gone at the §5.5 moments, never a gamified mascot (ADR 0025).
 
 **5.2 Delight is earned and placed after the work.**
 A small, genuinely satisfying flourish at the moments that matter — an invoice marked paid, a filing completed — never in the way of the task. People remember an experience by its most intense moment and its ending, so the rare peak moments are made to land.
@@ -113,7 +116,7 @@ The product is built for a low-frequency, low-attention user — someone for who
 
 The production voice ships in **Norwegian first** — a warm, direct register that Norwegian financial products have shown users trust. The English below is reference; the personality must survive translation, and the Norwegian copy should be written as original work, not as a translation pass.
 
-**Personality:** a sharp, funny, genuinely competent friend. Warm, brief, plain-spoken, occasionally cheeky. Never corporate, never condescending, never a mascot, never trying too hard.
+**Personality:** a sharp, funny, genuinely competent friend. Warm, brief, plain-spoken, occasionally cheeky. Never corporate, never condescending, never trying too hard. The personality may be **embodied as a friendly companion** — a competent guide, never a gimmicky mascot (ADR 0025).
 
 **Register shifts by moment** (this table is the operational core):
 
@@ -146,8 +149,10 @@ Apply to every design decision:
 
 > **Does this make the user feel more competent, in control, and at ease — or does it make them feel managed, stupid, or anxious?**
 
-Mastery, closure, honest numbers, warmth, "I'm ahead of this," "I can't break it" → ship it.
-Points, badges, levels, mascots, confetti on everything, punishing streaks, public ranking, urgency countdowns, blame-shaped errors, jargon walls, anything that drives engagement for its own sake → do not ship it, however appealing it looks in isolation.
+**Prime directive (ADR 0025): never make the user feel stupid** — it overrides everything below.
+
+Mastery, closure, honest numbers, warmth, a helpful companion, "I'm ahead of this," "I can't break it" → ship it.
+Gamification (points, badges, levels, streaks, leaderboards), confetti on everything, public ranking, urgency countdowns, blame-shaped errors, jargon walls, anything that drives engagement for its own sake → do not ship it, however appealing it looks in isolation.
 
 Second test, for tone specifically: **is this one of the three consequential moments (§5.5)?** If yes, drop all playfulness and be sober and clear. If no, be warm.
 
@@ -155,7 +160,7 @@ Second test, for tone specifically: **is this one of the three consequential mom
 
 ## 10. Anti-patterns — what the product does not ship
 
-- No points, badges, XP, levels, mascots, or avatars.
+- No **gamification**: points, badges, XP, levels, streaks, or leaderboards. (A friendly companion/guide is welcome — ADR 0025 — provided it never becomes a game or a nag.)
 - No confetti or celebration on routine actions (reserved for genuine peaks, and even then restrained).
 - No streaks that reset or guilt the user for a lapse.
 - No public or competitive ranking of income or profit.
@@ -178,6 +183,7 @@ Each rule serves a specific purpose; understanding the purpose prevents well-mea
 - **Acting by default for routine work** (§7.3) exists to spend the user's scarce attention only where it is genuinely required.
 - **Calm, peripheral, minimal communication** (§7) keeps the product in the background — but always with a warm voice, never a cold one.
 - **Reaching empty / reaching done** (the glance queue, the deadline) provides genuine closure, used gently and never to manufacture anxiety.
+- **The companion is a guide, not a growth hack** (§2.2, ADR 0025): it exists to make the work understandable and to do jobs for the user, never to manufacture engagement, streaks, or check-ins. If it starts nagging or scoring, it has become the thing we rejected.
 
 ---
 

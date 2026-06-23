@@ -24,7 +24,8 @@ simplicity keeps it from becoming clutter.
   honest-number reveal ("what's actually yours") is framed as permission/relief, never a tax warning.
 - **Copy:** Norwegian-first, written as original work (EN is reference). One idea per sentence; no
   jargon the user didn't choose (formal terms are tap-to-explain, never pushed). Strings are keyed
-  microcopy, not ad-hoc literals.
+  microcopy via `t()` from `~/copy` (ADR 0024), never ad-hoc literals — enforced by
+  `saldo/no-unkeyed-jsx-text`.
 - **The Feeling Test:** does this make the user feel competent, in control, at ease — or managed,
   stupid, anxious? Anti-patterns (never ship): points/badges/levels/mascots, confetti on routine
   actions, guilt/streaks, manufactured urgency, engagement-driving notifications, jargon walls.

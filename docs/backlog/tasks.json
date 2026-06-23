@@ -112,13 +112,17 @@
     {
       "id": "feat-keyed-microcopy",
       "title": "Norwegian-first keyed microcopy system",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": [],
-      "notes": "Keyed strings (not ad-hoc literals), Norwegian as original work. Foundational for every UI surface.",
-      "refs": [".claude/rules/experience-voice.md"]
+      "notes": "Keyed strings (not ad-hoc literals), Norwegian as original work. Foundational for every UI surface. Done: apps/web/app/copy (typed t() + nb/en parity), existing surfaces migrated, saldo/no-unkeyed-jsx-text gate.",
+      "refs": [
+        ".claude/rules/experience-voice.md",
+        "docs/decisions/0024-keyed-microcopy.md",
+        "apps/web/app/copy/"
+      ]
     },
     {
       "id": "feat-enhetsregisteret",

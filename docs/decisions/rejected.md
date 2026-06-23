@@ -87,3 +87,15 @@ Template:
   (drizzle results, SAF-T parsing), blocking unrelated work.
 - **Instead:** `atLeast: 97` — comfortable headroom, still catches a real regression. Ratchet up later.
 - **Refs:** ADR 0017; `package.json`.
+
+## R-0008 — An i18n framework (i18next / LinguiJS / FormatJS) for microcopy
+- **Date:** 2026-06-23
+- **Context:** Building the keyed microcopy system (feat-keyed-microcopy → ADR 0024).
+- **Tried:** Reaching for an established i18n library to hold the strings.
+- **Rejected because:** Saldo is single-locale (Norwegian *enkeltpersonforetak*); a framework adds
+  runtime locale negotiation, ICU parsing, and message-extraction tooling we don't need, and it pulls
+  copy out of type-checked source into extracted catalogs (losing compile-time key/param safety).
+- **Instead:** A tiny in-repo catalog (`apps/web/app/copy`) with a typed `t()` accessor and `{name}`
+  interpolation; `en` is a reference pinned to `nb` by `satisfies` + a parity test; a future locale
+  promotes `en` and adds a locale arg to `t` — a separate decision, not pre-built.
+- **Refs:** ADR 0024; `apps/web/app/copy/`.

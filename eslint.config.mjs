@@ -113,6 +113,9 @@ export default tseslint.config(
       ],
       'saldo/no-arbitrary-tailwind': 'error',
       'saldo/no-raw-color-utility': 'error',
+      // Keyed microcopy gate (.claude/rules/experience-voice.md, ADR 0024): user-facing JSX text must
+      // come from t() (~/copy), never an ad-hoc literal — Saldo is Norwegian-first and translatable.
+      'saldo/no-unkeyed-jsx-text': 'error',
     },
   },
 );

@@ -65,7 +65,7 @@
       "phase": "P1",
       "depends_on": ["pr4-ledger-integrity"],
       "notes": "Random sequences of post/reverse/lock against the invariants — the highest-value test for a system of record.",
-      "refs": ["docs/world-class-roadmap.md"]
+      "refs": ["docs/roadmap.md"]
     },
     {
       "id": "feat-honest-number",
@@ -173,7 +173,7 @@
       "phase": "P1",
       "depends_on": ["pr3-gates"],
       "notes": "PR template requiring linked ADR/tests; a CI check that a migration PR also touches test/integrity/.",
-      "refs": ["docs/world-class-roadmap.md"]
+      "refs": ["docs/roadmap.md"]
     },
     {
       "id": "test-e2e-axe",
@@ -184,7 +184,7 @@
       "phase": "P1",
       "depends_on": ["pr5-auth"],
       "notes": "e2e for the auth + first-invoice flow; axe gate once UI lands.",
-      "refs": ["docs/world-class-roadmap.md"]
+      "refs": ["docs/roadmap.md"]
     },
     {
       "id": "ops-dr-runbook",

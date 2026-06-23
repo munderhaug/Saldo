@@ -35,7 +35,7 @@ TypeScript monorepo (pnpm + Turborepo). React Router 7 (framework mode) + shadcn
 pnpm dev · pnpm test · pnpm typecheck · pnpm lint · pnpm db:migrate · pnpm saft:validate
 
 ## Quality bar (NON-NEGOTIABLE — full text: docs/quality-bar.md)
-World-class, production-ready — never a vibe-coded MVP. A change is DONE only when typecheck, lint,
+Production-ready, held to a high bar — not a throwaway MVP. A change is DONE only when typecheck, lint,
 format, test, and audit are green; new behavior is tested (domain: exhaustive + property); ledger
 changes have a Testcontainers integrity test; UI meets WCAG 2.2 AA; inputs are Zod-validated and
 tenancy honored; an ADR + STATUS are updated; and it lands via a reviewed PR — never a direct push to

@@ -22,7 +22,7 @@ only the LLM features are AI systems (Art 3(1)/Recital 12); **not** prohibited (
 (renumbered from a draft 0017 to avoid colliding with main's 0017), the `.claude/rules/ai-act.md` gate, a
 CLAUDE.md invariant, and the `aia-*` backlog tasks (`compliance-eu-ai-act` → **done**). A
 **repo-standards consolidation** (LICENSE, kill stale `runbook.md`, AGENTS.md-canonical, make `knip`
-bite, de-dup invariants, strip slop) is **in progress** on this branch (world-class field-guide review).
+bite, de-dup invariants, strip slop) is **in progress** on this branch (field-guide review).
 
 ## Verified state (PR #11 — merged to `main`)
 - ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (**47 docs**,
@@ -117,7 +117,7 @@ with Enhetsregisteret + org-onboarding ahead.
   active next session.
 
 ## Done (prior session — PRs 1 / 2 / 2.5)
-- **World-class roadmap** — `docs/world-class-roadmap.md` (architecture decision, hardening plan, the
+- **Roadmap** — `docs/roadmap.md` (architecture decision, hardening plan, the
   24-item contradiction kill-list, master backlog).
 - **PR 1 — decisions & consistency.** Option 2 architecture (**ADR 0015** persistent Node on an EU PaaS
   + Cloudflare edge/CDN + R2; **ADR 0013** Neon EU; **ADR 0014** Testcontainers). Eliminated all 24
@@ -137,7 +137,7 @@ with Enhetsregisteret + org-onboarding ahead.
 ## Next up (ordered)
 **EU AI Act — DONE this session** (ADR 0022 + `docs/regulatory/eu-ai-act.md`; `compliance-eu-ai-act`
 marked done; forward work tracked as the `aia-*` tasks). **Current focus: repo-standards consolidation**
-(against the world-class field-guide review) — LICENSE (proprietary), kill the stale `runbook.md`,
+(against the field-guide review) — LICENSE (proprietary), kill the stale `runbook.md`,
 AGENTS.md-canonical, make `knip` bite + prune unused deps, de-dup invariants, strip slop, add Vale.
 
 **Then the feature track:** `pnpm backlog next` (`pnpm backlog ready`/`list` for the rest). Pending:

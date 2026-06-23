@@ -7,7 +7,7 @@ flat doc can't: _what is the highest-value task that is actually ready to start 
 This complements, not replaces, the other surfaces:
 
 - **STATUS.md** — narrative "where we are / what's next" for a human reading in.
-- **world-class-roadmap.md** — the reasoning and the master plan.
+- **roadmap.md** — the reasoning and the master plan.
 - **tasks.json** — the machine-checkable graph (order, dependencies, readiness).
 - **decisions/** — ADRs (decisions kept) + **rejected.md** (approaches tried and abandoned).
 

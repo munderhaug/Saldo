@@ -1,6 +1,6 @@
 # Quality bar — Definition of Done
 
-> Saldo is a **world-class, production-ready financial system of record** — not a vibe-coded MVP.
+> Saldo is a **production-ready financial system of record, held to a high bar** — not a throwaway MVP.
 > Every change meets this bar before it merges. The bar is enforced **mechanically** (CI required
 > checks, hooks, custom lint, tests) wherever possible — quality is a gate, not an aspiration.
 
@@ -23,7 +23,7 @@ A change is "done" only when ALL of the following hold:
 ## Quality dimensions (the standard, concretely)
 | Dimension | Bar |
 |---|---|
-| **Correctness** | Domain is the crown jewel: exhaustively + property-tested. Integrity proven in SQL and in tests. |
+| **Correctness** | The domain core is the most correctness-critical layer: exhaustively + property-tested. Integrity proven in SQL and in tests. |
 | **Type safety** | Strict TS, `noUncheckedIndexedAccess`, **no `any`**, no unjustified `as`. Branded domain primitives. |
 | **Testing** | Unit + property (Vitest/fast-check) · integration vs real Postgres (Testcontainers) · e2e critical flows (Playwright) · SAF-T XSD + EHF/VEFA in CI. Coverage thresholds on `@saldo/domain`. |
 | **Security** | OWASP-aware: validated inputs, parameterized queries, authz + RLS, OIDC done right (PKCE, state/nonce, session rotation), CSP/security headers, rate limiting, secret hygiene. Clean `pnpm audit`. |

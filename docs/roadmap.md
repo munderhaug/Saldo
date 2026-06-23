@@ -1,9 +1,9 @@
-# Saldo — Roadmap to a World-Class Repo
+# Saldo — Repo Roadmap
 
 > **Type:** planning report (living). **Created:** 2026-06-23. **Owner:** @munderhaug.
 > This is the full, prioritized plan to take Saldo from an excellent Phase-0 foundation to a
-> truly world-class system of record — both the work to do **now** and the discipline to stay
-> world-class **going forward**. It supersedes the ad-hoc review notes from this session.
+> a durable system of record — both the work to do **now** and the discipline to stay
+> high-quality **going forward**. It supersedes the ad-hoc review notes from this session.
 >
 > **Status vocabulary** (replaces "Locked", per this session's decision):
 > **Current** = active choice, in effect now (revisable via ADR) · **Intended** = planned, not
@@ -32,9 +32,9 @@ fork, because today's docs describe a *persistent Node server* with *in-process 
 LLM*, and a *self-hostable everywhere* principle (ADR 0008/0009/0010). Resolve this first — it
 cascades into the tech stack, several ADRs, and the residency story.
 
-### The good news: your crown jewels are portable
+### The good news: the hard parts are portable
 
-The genuinely hard, genuinely excellent work is **architecture-independent**:
+The hard, high-value work is **architecture-independent**:
 
 - The pure `@saldo/domain` core — runs anywhere.
 - The SQL integrity layer (balance/immutability/period-lock triggers, gapless counter, **FORCE
@@ -105,7 +105,7 @@ solo-maintained, agent-built, 10-year horizon).
 |---|---|---|---|
 | Language / types | TS strict, branded `Øre` | **Keep — best-in-class** | The branded-money + custom-ESLint approach is exactly right. |
 | Domain purity | pure `@saldo/domain` | **Keep** | The one hard boundary; zero client/server drift. Don't touch. |
-| DB + integrity | Postgres, SQL-first migrations, triggers, FORCE RLS | **Keep — crown jewel** | Portable across hosts. World-class as-is. |
+| DB + integrity | Postgres, SQL-first migrations, triggers, FORCE RLS | **Keep — core asset** | Portable across hosts. Strong as-is. |
 | ORM | Drizzle (introspected from SQL) | **Keep** | Right call; schema generated, integrity in SQL. |
 | Web framework | React Router 7 framework mode | **Keep** | First-class Cloudflare support confirms the bet (ADR 0005). |
 | UI | shadcn/ui + Tailwind v4 | **Keep, but build it** | Currently documented, not implemented. See P0-2. |
@@ -149,7 +149,7 @@ Eliminate all **24 contradictions** (Part 4) and make recurrence impossible.
 - [ ] **Extend `tools/repo-lint.mjs`** (the durable gate): every `ADR NNNN` reference resolves to
       a file; no `db/reference/**` path is cited unless it exists; the word "Locked" is banned as
       a status label; (optional) STATUS HEAD matches `git rev-parse`. CI then fails on any new
-      contradiction. **This is what makes "absolutely none" a guarantee, not a promise.**
+      contradiction. **This is what makes "no contradictions" a guarantee, not a promise.**
 
 ### P0-2 (PR 2) — Frontend foundation (tokens, shadcn, no inline CSS) · **M**
 Make `frontend.md`/`design-system.md` true.
@@ -219,7 +219,7 @@ Make the quality bar deterministic, not honor-system.
 
 ---
 
-## Part 3 — GOING FORWARD: sustaining world-class (P1 / P2)
+## Part 3 — GOING FORWARD: sustaining quality (P1 / P2)
 
 ### Make the quality bar mechanical (P1)
 The 21 "Definition of Done" criteria are mostly honor-system today. Convert the high-value ones to

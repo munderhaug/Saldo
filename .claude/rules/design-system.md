@@ -12,7 +12,7 @@ A restrained, trustworthy financial UI — not a mood-driven brand. Consistency 
   depth-on-demand ledger** (accountant/auditor view) — the everyday surface never shows
   konto/debit/credit (experience-principles §4.2).
 - **Palette:** neutral base + one trustworthy accent. No decorative gradients in data views.
-- **No AI-design "tells."** Default-shadcn-looking screens read as vibe-coded (CLAUDE.md: never that).
+- **No AI-design "tells."** Default-shadcn-looking screens read as generic AI output, never ship that.
   Ship customized tokens/spacing/type — not stock components. Specifically avoid: the un-themed shadcn
   default look, "AI-purple" violet gradients, gradient hero text, unprompted neon glows, emoji used as
   UI icons (use a real icon set), and the centered-hero-plus-three-cards layout. Distinctive and

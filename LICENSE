@@ -1,0 +1,23 @@
+Saldo — Proprietary Software License
+
+Copyright (c) 2026 Martin Underhaug. All rights reserved.
+
+This repository and its contents (the "Software") are proprietary and
+confidential and are the exclusive property of the copyright holder.
+
+No license or right is granted to any person or entity to use, copy, modify,
+merge, publish, distribute, sublicense, create derivative works of, or sell any
+part of the Software, except under the terms of a separate written agreement
+signed by the copyright holder. Unauthorized use, reproduction, or distribution
+of the Software, in whole or in part, by any means, is strictly prohibited.
+
+The Software incorporates third-party open-source components, each of which
+remains governed by its own license. This license applies only to the original
+source code authored for Saldo in this repository.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

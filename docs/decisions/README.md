@@ -27,6 +27,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0020 | Session & identity model (the first lock) | Accepted |
 | 0021 | Observability baseline: pino with redaction | Accepted |
 | 0022 | EU AI Act posture: not high-risk; transparency + provenance on AI features | Accepted |
+| 0023 | Saldo's own code is proprietary (the stack stays OSS + self-hostable) | Accepted |
 
 ADRs 0001–0004 restate decisions from `saldo-build-specification.md` §17; 0005–0011 capture the
 stack-shaping calls from the tech-stack review; 0012–0016 harden tenancy and record the hosting,
@@ -35,4 +36,5 @@ CI-database, deployment, and design-system decisions; 0017 makes the quality bar
 gaps (posting-side period lock, posted-completeness, period non-overlap, cross-org period FK); 0019
 adds the committed task graph + rejected-approaches log; 0020 adds the auth/identity first lock; 0021
 adds the pino observability baseline; 0022 records the EU AI Act classification + compliance posture
-(sharpening 0002). Approaches we **rejected** live in `rejected.md` (the anti-ADR).
+(sharpening 0002); 0023 records that Saldo's own code is proprietary (the stack stays OSS +
+self-hostable per 0008). Approaches we **rejected** live in `rejected.md` (the anti-ADR).

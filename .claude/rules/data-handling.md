@@ -6,8 +6,8 @@ paths: ["apps/web/app/db/**", "apps/web/app/integrations/**", "apps/web/app/jobs
 This is financial + personal data. Treat privacy as a first-class constraint (spec §11).
 
 ## Residency
-- All personal + financial data stays in the **EU/EEA**: Postgres EU, MinIO/Garage EU, EU email
-  provider, in-Postgres jobs (no payloads to a non-EU SaaS). If using a hosted LLM, confirm EU
+- All personal + financial data stays in the **EU/EEA**: Postgres EU (Neon), Cloudflare R2 (EU
+  jurisdiction), EU email provider, in-Postgres jobs (no payloads to a non-EU SaaS). If using a hosted LLM, confirm EU
   handling — otherwise use the local Ollama/vLLM path. Never send personal data to a non-EU endpoint.
 
 ## Classification

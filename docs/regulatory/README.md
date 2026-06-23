@@ -19,6 +19,7 @@ Adapted from the "LLM wiki" pattern (see `.claude/skills/regulatory-update`).
 | `mva-registration-threshold.md` | 50k rolling-12-month MVA registration threshold | see page |
 | `mva-rates.md` | MVA rates (2026) mapped to the SAF-T rate categories | 2026-12-31 |
 | `mva-kunstneriske-tjenester.md` | mval § 3-7 — artistic/cultural exemption (*unntatt*) and its reach | 2026-12-31 |
+| `skatt-enk-personskatt.md` | ENK personal income tax (trinnskatt + trygdeavgift + 22 % alminnelig inntekt, 2026) | 2026-12-31 |
 | `eu-ai-act.md` | EU AI Act (Reg 2024/1689) — classification, obligations, timeline | 2026-12-31 |
 
 Integration-specific knowledge (auth, endpoints, rate limits) lives in `docs/integrations/` under the

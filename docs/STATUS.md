@@ -3,17 +3,55 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: `vat-line-level-model` (per-line VAT engine, ADR 0027 → code)
-**Branch:** `claude/upbeat-maxwell-l7f5tb` (off `main` at PR #17 / `1753fe2` — VAT-granularity + § 3-7 docs).
+**Last updated:** 2026-06-23 — session: `feat-tax-estimate` (source-grounded ENK income-tax estimate, ADR 0029)
+**Branch:** `claude/practical-edison-20f9p6` (off `main` at PR #18 / `3e86e1b` — per-line VAT engine).
 Lands via a reviewed PR — never a direct push to `main`. (Trust `git log` over any hash here.)
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
-> not configured here. **This session HAD outbound egress** (verified: Lovdata, Skatteetaten, data.brreg
-> all reachable) but did not need it — `vat-line-level-model` is pure domain logic over the already-
-> committed SAF-T list. Don't assume egress next session — verify it. Local Postgres / Testcontainers
-> stand in for DB work.
+> not configured here. **This session HAD outbound egress and USED it** (verified + fetched: Lovdata
+> statute text fetches verbatim; Skatteetaten reachable for cross-confirm; data.brreg reachable). Don't
+> assume egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
 
-## This session — `vat-line-level-model`: per-line VAT in @saldo/domain (ADR 0027 → engine code)
+## This session — `feat-tax-estimate`: source-grounded ENK income-tax estimate (ADR 0029)
+Grounded the **ENK personal-tax layer** and encoded it, taking the honest-number's `estimatedTax` from
+**INJECTED** to **source-grounded**. A full vertical slice: capture verbatim primaries → distil a cited
+page → pure domain estimator (exhaustive + property tests) → ADR. **Domain-only, no migration.** Full gate
+green (typecheck, lint, format, `test` **145 domain** / 23 web incl. fast-check, `lint:repo` 59 docs / 8
+sourced / 0 warn). **Independent maker≠judge review: SHIP** (recomputed the oracle + every constant vs. the
+captures; clean on all 7 axes).
+- **Captured verbatim from Lovdata** (statute is not copyrighted — åndsverkloven § 14) into
+  `db/reference/skatt/`: Stortingets skattevedtak 2026 (FOR-2025-12-18-2747 — trinnskatt § 3-1, fellesskatt
+  § 3-2, kommune/fylke § 3-8, personfradrag § 6-3, minstefradrag § 6-1) + avgifter til folketrygden 2026
+  (FOR-2025-12-18-2748 — trygdeavgift §§ 6–8) + folketrygdloven § 23-3 (nedre grense / 25 % opptrapping).
+  Cross-confirmed 2026 figures against Skatteetaten (summarised, not reproduced). Distilled into
+  **`docs/regulatory/skatt-enk-personskatt.md`** (cited, verify-by 2026-12-31).
+- **Two facts pinned that are widely gotten wrong:** a *person's* 22 % alminnelig inntekt = fellesskatt
+  8,25 + kommune 11,35 + fylke 2,40 (the § 3-3 "22 %" is the **company** rate, not an ENK owner's); and
+  **minstefradrag does NOT apply to næringsinntekt**. Personfradrag 2026 = **114 540 kr** (a websearch
+  summary claimed 45 000 — wrong; verbatim § 6-3 settled it). Trygdeavgift næring **10,8 %** with a **99 650
+  kr** floor and a **25 %** phase-in cap (binds ≈ 99 650 → 175 440 kr, then flat 10,8 %).
+- **`packages/domain/src/tax/`** — `params.ts` (the cited 2026 rate table, keyed by year, **fail-closed**
+  for un-captured years; same pattern as `saft/rates.ts`) + `income-estimate.ts`:
+  `estimateEnkIncomeTax(profit, year)` → `{ alminneligInntektSkatt, trinnskatt, trygdeavgift, total }`.
+  Pure, integer-øre (marginal-bracket + floor/cap math via `mulRate`/`subØre`, rounded once). A **loss → 0**.
+- **The estimate is honest, not fake-precise (ADR 0029):** a conservative forskuddsskatt-style "set aside"
+  on a single input (estimated annual profit), with stated assumptions — single income source; beregnet
+  personinntekt ≈ alminnelig næringsinntekt ≈ profit (no skjermingsfradrag); klasse 1, full-year, **mainland**
+  (Finnmark 18,5 % out of scope); no formuesskatt. Biased to set aside slightly too much.
+- **Tests:** `income-estimate.test.ts` — **19 tests**: a hand-computed oracle (exact øre at 11 income points
+  across all 3 trygde regimes + all 5 trinn bands, independent of the SUT) + fail-closed-year cases + 5
+  fast-check properties (non-negativity, total = Σ components, total ≤ profit, monotonic, trygde floor/cap).
+- **Integration boundary unchanged:** `honest-number.ts` still **takes** `estimatedTax` as input (no edit);
+  the future aggregation layer (`feat-honest-number-surface`) calls `estimateEnkIncomeTax(...).total`.
+- **Files:** new — `db/reference/skatt/{2026-06-23-stortingets-skattevedtak-2026.md, 2026-06-23-trygdeavgift-2026.md, SOURCE.md}`,
+  `docs/regulatory/skatt-enk-personskatt.md`, `docs/decisions/0029-enk-income-tax-estimate.md`,
+  `packages/domain/src/tax/{params.ts, income-estimate.ts, income-estimate.test.ts}`; edited —
+  `packages/domain/src/index.ts`, `docs/regulatory/README.md`, `docs/decisions/README.md`, `docs/backlog/tasks.json`.
+- **Next:** wire `feat-honest-number-surface` (aggregation query + the reveal UI — now has a real number to
+  show); or continue the regulatory foundation — `vat-sectoral-exemptions` (mval kap. 3, on the new gate) or
+  the VAT/bokføring Tier-1 gaps (tidfesting / tap på krav / uttak / justering / EHF-Peppol; `bokforingslov-doc`).
+
+## Previous session — `vat-line-level-model`: per-line VAT in @saldo/domain (ADR 0027 → engine code)
 Turned the freshly-merged **ADR 0027** into engine code: VAT treatment is now a property of the
 **voucher/invoice line** (its SAF-T tax code), validated against the org's `mva_status` (which stays the
 registration/default state — **no migration**; `posting.vat_code_id` has carried per-line codes since

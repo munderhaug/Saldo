@@ -33,6 +33,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0026 | Typography: Fraunces + IBM Plex Sans, weights ≤450, self-hosted | Accepted |
 | 0027 | VAT-treatment granularity: per-line/per-project, apportionment sequenced | Accepted |
 | 0028 | Regulatory knowledge: capture-and-encode, not runtime RAG | Accepted |
+| 0029 | ENK income-tax estimate: model and stated assumptions | Accepted |
 
 ADRs 0001–0004 restate decisions from `saldo-build-specification.md` §17; 0005–0011 capture the
 stack-shaping calls from the tech-stack review; 0012–0016 harden tenancy and record the hosting,
@@ -45,4 +46,6 @@ adds the pino observability baseline; 0022 records the EU AI Act classification 
 self-hostable per 0008); 0024–0026 establish the copy, experience, and typography foundations of the UI;
 0027 lifts VAT treatment to the line (revenue-side now, delt-virksomhet apportionment sequenced); 0028
 fixes the regulatory architecture (deterministic engine over captured sources; AI explains, never
-decides — sharpening 0002/0022). Approaches we **rejected** live in `rejected.md` (the anti-ADR).
+decides — sharpening 0002/0022); 0029 grounds the honest-number's income-tax estimate in the captured
+2026 rates with explicit, conservative assumptions. Approaches we **rejected** live in `rejected.md`
+(the anti-ADR).

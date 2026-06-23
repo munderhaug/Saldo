@@ -84,14 +84,16 @@
     {
       "id": "feat-tax-estimate",
       "title": "Norwegian ENK income-tax estimation (source-grounded)",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": [],
-      "notes": "The injected estimatedTax for honestNumber. MUST be grounded in a committed Skatteetaten source (regulatory-update skill) — trygdeavgift + trinnskatt + 22% alminnelig inntekt for an ENK; NEVER rates from memory. Needs egress/committed source.",
+      "notes": "DONE (ADR 0029). Captured 2026 rates verbatim from Lovdata (Stortingets skattevedtak FOR-2025-12-18-2747; avgifter til folketrygden FOR-2025-12-18-2748; folketrygdloven § 23-3) into db/reference/skatt/, distilled docs/regulatory/skatt-enk-personskatt.md. Pure estimateEnkIncomeTax(profit, year) in packages/domain/src/tax/: 22% alminnelig inntekt (after personfradrag 114540) + 5-step trinnskatt + trygdeavgift 10.8% with nedre grense 99650 / 25% opptrapping. 19 tests (hand oracle + fast-check). Conservative; mainland/klasse-1/single-source assumptions documented. Still INJECTED into honestNumber by the caller — wiring is feat-honest-number-surface.",
       "refs": [
-        ".claude/skills/regulatory-update/SKILL.md",
+        "docs/decisions/0029-enk-income-tax-estimate.md",
+        "docs/regulatory/skatt-enk-personskatt.md",
+        "packages/domain/src/tax/income-estimate.ts",
         "packages/domain/src/honest-number/honest-number.ts"
       ]
     },

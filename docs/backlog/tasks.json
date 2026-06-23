@@ -188,18 +188,24 @@
       "phase": "compliance",
       "depends_on": [],
       "notes": "DONE: captured § 3-7 verbatim + håndbok M-3-7.4 summary; states the integrert-og-nødvendig-del test and debunks the 'whole supply chain is exempt' folklore (service-by-service, tied to the performance). Target user: cultural-sector ENK.",
-      "refs": ["docs/regulatory/mva-kunstneriske-tjenester.md", "db/reference/mva/2026-06-23-mval-3-7-kunst-kultur.md"]
+      "refs": [
+        "docs/regulatory/mva-kunstneriske-tjenester.md",
+        "db/reference/mva/2026-06-23-mval-3-7-kunst-kultur.md"
+      ]
     },
     {
       "id": "vat-line-level-model",
       "title": "Per-line VAT treatment in @saldo/domain (ADR 0027 accepted)",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P2",
       "depends_on": ["mva-kunst-sectoral-doc"],
-      "notes": "ADR 0027 ACCEPTED: VAT treatment is per-line (its SAF-T code); org-level mva_status stays as the registration/default state. Revenue-side classification in scope here (rules engine validates code↔status combinations; new-vat-scenario tests). Apportionment is the separate vat-mixed-activity task.",
-      "refs": ["docs/decisions/0027-vat-treatment-granularity.md", "docs/regulatory/mva-kunstneriske-tjenester.md"]
+      "notes": "DONE: @saldo/domain vat/line-treatment.ts (deriveVatTreatment classifier + checkVatLine registration gate over the committed SAF-T codes) + rules/vat-line.ts (vatLineRule over a voucher). Per-line code validated against org mva_status; § 3-7 case = a registered org may post a code-6 unntatt line beside a taxable line. Output-VAT/fritatt/input-deduction require registration; reverse-charge is a non-blocking advisory EXCEPT its input-deduction claim (gated). 25 exhaustive+property tests; vat-reviewer clean. Apportionment stays vat-mixed-activity.",
+      "refs": [
+        "docs/decisions/0027-vat-treatment-granularity.md",
+        "docs/regulatory/mva-kunstneriske-tjenester.md"
+      ]
     },
     {
       "id": "vat-mixed-activity",
@@ -210,7 +216,10 @@
       "phase": "P2",
       "depends_on": ["vat-line-level-model"],
       "notes": "Currently out of scope (spec). Needs a source-grounded apportionment basis + binding rulings (BFU/klagenemnda) captured to db/reference before coding; rules-engine enforcement with exhaustive+property tests; Testcontainers integrity test. Revisit only if ADR 0027 is accepted.",
-      "refs": ["docs/regulatory/mva-kunstneriske-tjenester.md", ".claude/skills/new-vat-scenario/SKILL.md"]
+      "refs": [
+        "docs/regulatory/mva-kunstneriske-tjenester.md",
+        ".claude/skills/new-vat-scenario/SKILL.md"
+      ]
     },
     {
       "id": "vat-sectoral-exemptions",
@@ -221,7 +230,10 @@
       "phase": "P2",
       "depends_on": ["vat-line-level-model"],
       "notes": "No code today knows which activities are unntatt (helse, undervisning, finans, kunst §3-7) or which qualify for 12%/15%. Capture mval kap. 3 sources first, then enforce valid code↔activity combinations so a user can't apply the wrong rate to an exempt activity.",
-      "refs": ["docs/regulatory/mva-kunstneriske-tjenester.md", "db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv"]
+      "refs": [
+        "docs/regulatory/mva-kunstneriske-tjenester.md",
+        "db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv"
+      ]
     },
     {
       "id": "vat-threshold-watcher",
@@ -243,7 +255,10 @@
       "phase": "compliance",
       "depends_on": [],
       "notes": "Spec references bokføringsforskrift conformance (numbering, sporbarhet, retention, krav til bilag) but db/reference/ has NO captured Act/forskrift text and docs/regulatory/ has no page. Capture + write a cited, dated page so the invariants have a grounded rulebook.",
-      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0007-gapless-invoice-counter.md"]
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/decisions/0007-gapless-invoice-counter.md"
+      ]
     },
     {
       "id": "ci-pr-template",

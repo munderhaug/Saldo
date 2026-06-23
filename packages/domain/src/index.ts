@@ -5,6 +5,7 @@ export * from './money/ore.js';
 export * from './ids/org-nr.js';
 export * from './ids/kid.js';
 export * from './vat/status.js';
+export * from './honest-number/honest-number.js';
 export * from './posting/types.js';
 export * from './posting/balance.js';
 export * from './posting/derive.js';

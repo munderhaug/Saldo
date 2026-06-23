@@ -70,13 +70,44 @@
     {
       "id": "feat-honest-number",
       "title": "Honest-number domain feature (spendable = income - VAT held - estimated tax)",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "DONE: pure packages/domain/src/honest-number (11 exhaustive + property tests; vat-reviewed). estimatedTax is INJECTED (no memory tax model); caller-precondition docs for reverse-charge/non-deductible aggregation. Reveal UI + aggregation are feat-honest-number-surface.",
+      "refs": [
+        "packages/domain/src/honest-number/honest-number.ts",
+        "docs/experience-principles.md"
+      ]
+    },
+    {
+      "id": "feat-tax-estimate",
+      "title": "Norwegian ENK income-tax estimation (source-grounded)",
       "status": "todo",
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": [],
-      "notes": "Pure @saldo/domain + exhaustive/property tests, then its reveal. The product's emotional core (experience-principles).",
-      "refs": ["docs/experience-principles.md"]
+      "notes": "The injected estimatedTax for honestNumber. MUST be grounded in a committed Skatteetaten source (regulatory-update skill) — trygdeavgift + trinnskatt + 22% alminnelig inntekt for an ENK; NEVER rates from memory. Needs egress/committed source.",
+      "refs": [
+        ".claude/skills/regulatory-update/SKILL.md",
+        "packages/domain/src/honest-number/honest-number.ts"
+      ]
+    },
+    {
+      "id": "feat-honest-number-surface",
+      "title": "Honest-number reveal: ledger aggregation + the 'what's actually yours' UI",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-tax-estimate", "feat-keyed-microcopy"],
+      "notes": "Aggregate income/output-VAT/deductible-input per the documented preconditions (reverse-charge BOTH legs symmetrically; deductible portion only) with a Testcontainers test; feed honestNumber; render the §6 reveal (permission/relief framing).",
+      "refs": [
+        "docs/experience-principles.md",
+        "packages/domain/src/honest-number/honest-number.ts"
+      ]
     },
     {
       "id": "feat-keyed-microcopy",

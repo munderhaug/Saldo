@@ -37,6 +37,16 @@ auth/identity first lock, observability) **+ a meta-PR** (agentic task graph + r
 org-onboarding behind it.
 
 ## Done (this session)
+- **`feat-honest-number` — the honest-number domain feature (the feature track begins).** Pure
+  `packages/domain/src/honest-number/` — `honestNumber({income, outputVatCollected, deductibleInputVat,
+  estimatedTax, mvaStatus})` → `{vatHeld, estimatedTax, spendable, rawRemainder}` (experience-principles
+  §6: "what's actually yours"). `vatHeld` reads the existing MVA-status fork; **`estimatedTax` is
+  INJECTED** — no committed income-tax source exists, so none invented (source-grounding rule). 11
+  exhaustive + fast-check tests (spendable ∈ [0, income]; conservation when solvent; unregistered ⇒ 0
+  VAT). **vat-reviewer**: logic sound; documented caller preconditions on the input (reverse-charge BOTH
+  legs symmetrically, deductible-portion-only, termin-timing). Follow-ups in the backlog:
+  `feat-tax-estimate` (the injected number, needs a Skatteetaten source) + `feat-honest-number-surface`
+  (aggregation query + the reveal UI).
 - **PR 6 — observability baseline (ADR 0021).** `pino` logger (`app/observability/logger.server.ts`,
   JSON to stdout, externalizes cleanly from the build) with a `REDACT_PATHS` backstop (cookies, auth
   headers, passwords/hashes, session+PKCE tokens, email, org-nr) and `requestLogger(request)` (a child

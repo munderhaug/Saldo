@@ -28,8 +28,13 @@ unchanged (zero dependency changes).
   dates. **Line never to cross:** AI scoring/profiling a natural person's creditworthiness →
   high-risk (Annex III §5(b)).
 - **Deliverables:** `docs/regulatory/eu-ai-act.md` (cited, dated knowledge page); **ADR 0017** (posture,
-  sharpens ADR 0002) + ADR index; backlog **AIA-1…6** in `docs/world-class-roadmap.md`; a **CLAUDE.md
+  sharpens ADR 0002) + ADR index; backlog **AIA-1…7** in `docs/world-class-roadmap.md`; a **CLAUDE.md
   invariant** + path-scoped gate `.claude/rules/ai-act.md`.
+- **Governance decision (gate vs new agent):** considered a standalone EU AI Act subagent — **deferred**.
+  Enforcement is **gate-first**: the auto-loading `.claude/rules/ai-act.md` is a stronger, deterministic
+  trigger than an on-demand agent, and there is no AI surface to review yet. When AI code lands, fold
+  the AI Act review into the existing `privacy-reviewer` (AIA-7), not an 8th agent (roadmap P0-5: don't
+  add more, sharpen the existing). Recorded in ADR 0017.
 - **Reconciled task vs repo:** the task referenced `pnpm backlog` / a `compliance-eu-ai-act` task and
   a pino-logging ADR numbered 0021 — none exist here. Mapped to the roadmap master backlog and ADR
   **0017** (next free number; logging/`pino` is still **Intended**, PR 6 — referenced as such, not as

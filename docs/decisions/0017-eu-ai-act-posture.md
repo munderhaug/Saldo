@@ -60,3 +60,13 @@ with two AI-Act-specific requirements that sit on top of that model: every AI-pr
   Art. 50 applies 2 Aug 2026, and the cheapest time to bake in disclosure/provenance is **before**
   the AI features are built — so the posture, invariant, and gate land now; the feature-coupled code
   gate lands with the feature.
+- **A standalone EU AI Act review subagent (now).** Deferred, not adopted. The repo already has 7
+  subagents, "none demonstrably used" (roadmap P0-5: *don't add more — sharpen the existing ones*),
+  and there is no AI surface to review yet — a new agent today is speculative. An on-demand agent is
+  also a **weaker** guarantee than the auto-loading `.claude/rules/ai-act.md` (which fires
+  deterministically the moment AI/LLM code is touched, with no reliance on someone invoking it) plus
+  the code-level provenance gate (AIA-2). When AI features land, the disciplined move is to **fold the
+  AI Act review checklist into the existing `privacy-reviewer`** — it already reviews
+  `integrations`/`jobs`/`contracts` (incl. the LLM endpoint) for EU compliance — and to split out a
+  dedicated reviewer only on demonstrated need. Tracked as backlog **AIA-7**. ("Gate over reminder",
+  "escalate to subagents only on demonstrated need".)

@@ -260,7 +260,10 @@ Saldo is **not** prohibited (Art. 5) and **not** high-risk (Art. 6 + Annex III);
 features are AI systems (Art. 3(1)). The binding duties are **transparency** (Art. 50, applies
 **2 Aug 2026**) and **AI literacy** (Art. 4, in force). Posture, invariant, and the path-scoped gate
 (`.claude/rules/ai-act.md`) landed with the analysis; the rest is small, mostly documenting/verifying
-the existing propose-only posture (ADR 0002). Tasks (AIA-1…6) are in the master table below.
+the existing propose-only posture (ADR 0002). Tasks (AIA-1…7) are in the master table below.
+Enforcement is **gate-first** (the auto-loading rule + a code-level provenance gate with the feature);
+a standalone AI Act *subagent* is **deferred** — when AI code lands, fold the review into the existing
+`privacy-reviewer` (AIA-7, ADR 0017), not an 8th agent (P0-5: don't add more, sharpen the existing).
 The **line never to cross**: an AI feature that scores/profiles a natural person's creditworthiness
 would make Saldo a high-risk provider (Annex III §5(b)) — re-open ADR 0017 before ever going there.
 
@@ -313,6 +316,7 @@ gate. Going forward, any reintroduced contradiction fails CI.
 | AIA-4 | AI-literacy note (proportionate competence record, Art. 4) | P1 | ★★ | S | — | — |
 | AIA-5 | Conformity self-assessment checklist (re-run per AI release + Art. 113 milestone) | P1 | ★★★ | S | eu-ai-act.md | — |
 | AIA-6 | High-risk guard (no scoring/profiling of natural persons) — invariant + `.claude/rules/ai-act.md` | P1 | ★★★★ | S | — | **done** |
+| AIA-7 | When the first AI feature lands: fold the AI Act review checklist into `privacy-reviewer` (+ wire the AIA-2 code gate); split out a dedicated reviewer only on demonstrated need | P2 | ★★ | S | first AI feature | — |
 
 ---
 

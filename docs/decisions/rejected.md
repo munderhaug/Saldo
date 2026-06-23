@@ -99,3 +99,17 @@ Template:
   interpolation; `en` is a reference pinned to `nb` by `satisfies` + a parity test; a future locale
   promotes `en` and adds a locale arg to `t` — a separate decision, not pre-built.
 - **Refs:** ADR 0024; `apps/web/app/copy/`.
+
+## R-0009 — Full Duolingo-style gamification for engagement
+- **Date:** 2026-06-23
+- **Context:** Shaping the playful experience direction (ADR 0025) — the product owner wants it fun and
+  untraditional, doable by anyone regardless of financial literacy.
+- **Tried:** Borrowing game mechanics wholesale — points, badges, XP, levels, streaks, leaderboards — to
+  make accounting "fun."
+- **Rejected because:** The user does serious, infrequent, high-stakes work; engagement mechanics
+  manufacture pressure and unseriousness, contradict "earn irrelevance" (experience-principles §7.1) and
+  the Feeling Test, and risk making someone feel managed or stupid at exactly the wrong moment.
+- **Instead:** A friendly comprehension *guide* + characterful agents (the Torpedo) + trade analogies +
+  distinctive-but-legible visuals — warmth/guidance/delight, never engagement farming. The §5.5 sober
+  rule stays sacrosanct.
+- **Refs:** ADR 0025; `docs/experience-principles.md`.

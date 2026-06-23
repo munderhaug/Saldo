@@ -347,6 +347,68 @@
       "depends_on": [],
       "notes": "README + CONTRIBUTING already point to AGENTS.md (done). Remaining restatements of the hard invariants in quality-bar.md / domain-model.md / architecture.md should become pointers too, so AGENTS.md + .claude/rules are the only normative source.",
       "refs": ["AGENTS.md", "docs/quality-bar.md"]
+    },
+    {
+      "id": "design-tokens-carnival",
+      "title": "Carnival design tokens — 10 OKLCH 12-step scales + semantic mappings",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "DONE (ADR 0025): app/app.css ships ten 12-step OKLCH scales (neutral + electric/grape/candy/sky/lilac/mint/green/amber/red) as primitives, mapped onto shadcn + domain semantic tokens (primary=electric-9, paid=green-11, overdue=red-10, heads-up=amber-9, bg=neutral-1 cold-white, ink=neutral-12), light + dark, AA-verified. Generator in scratchpad gencss.mjs.",
+      "refs": [
+        "apps/web/app/app.css",
+        "docs/decisions/0025-playful-guided-experience.md",
+        ".claude/rules/design-system.md"
+      ]
+    },
+    {
+      "id": "design-visual-spike",
+      "title": "Visual-identity spike — type, illustration, the companion's look (on carnival tokens)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["design-tokens-carnival"],
+      "notes": "ADR 0025 'distinctive but legible': establish typography, illustration style, and the companion character on top of the carnival OKLCH tokens. Validate with real users before committing a specific companion; keep money/tables legible (neutral ink on cold-white).",
+      "refs": ["docs/decisions/0025-playful-guided-experience.md", ".claude/rules/design-system.md"]
+    },
+    {
+      "id": "feat-companion",
+      "title": "Friendly companion/guide system (the embodied voice)",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P1-feature",
+      "depends_on": ["feat-keyed-microcopy", "design-visual-spike"],
+      "notes": "ADR 0025: a friendly guide that explains in the user's terms and does jobs for them. Comprehension-not-engagement (never gamification); steps back at the §5.5 moments; dismissible; never blocks the competent user. If LLM-backed it's an AI system (Art 50 disclosure, ADR 0022).",
+      "refs": ["docs/decisions/0025-playful-guided-experience.md", "docs/experience-principles.md"]
+    },
+    {
+      "id": "feat-trade-analogies",
+      "title": "Trade-specific analogy comprehension layer",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-keyed-microcopy"],
+      "notes": "ADR 0025 + experience-principles 4.3: explain financial concepts in the user's own trade ('the part of each cut that's Skatteetaten's'). Keyed microcopy variants per trade; formal terms tap-to-explain. No economics knowledge required.",
+      "refs": ["docs/experience-principles.md", "apps/web/app/copy"]
+    },
+    {
+      "id": "feat-torpedo",
+      "title": "Torpedo agent — late-payment chaser (purring -> interest -> inkasso hand-off)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "ADR 0025 + spec 8.4: a characterful agent aimed OUTWARD at late payers, wielded by the user via propose->confirm (ADR 0002). Maps onto purring -> forsinkelsesrenter -> structured inkasso hand-off (full collection out of scope, spec 2). Dunning stays within god inkassoskikk; the user never feels chased. Needs sales/invoicing first.",
+      "refs": [
+        "docs/decisions/0025-playful-guided-experience.md",
+        "docs/saldo-build-specification.md"
+      ]
     }
   ]
 }

@@ -11,12 +11,20 @@ A restrained, trustworthy financial UI — not a mood-driven brand. Consistency 
   `paid`/`overdue` are everyday user-facing states; `debit`/`credit` appear **only in the
   depth-on-demand ledger** (accountant/auditor view) — the everyday surface never shows
   konto/debit/credit (experience-principles §4.2).
-- **Palette:** neutral base + one trustworthy accent. No decorative gradients in data views.
+- **Palette (the "carnival" system, ADR 0025):** a cold-white neutral base + a vibrant accent system,
+  authored as **ten 12-step OKLCH scales** (the primitives, in `app/app.css`) mapped onto semantic
+  tokens — never use a scale step raw in a component; go through a token. Brand roles: **primary =
+  electric, secondary = grape, tertiary = candy**; soft register = sky / lilac / mint; semantic state =
+  **paid (green) · overdue (red) · heads-up (amber)**; `debit`/`credit` are neutral, ledger-only. Step 9
+  = the solid. Money and tables render as **neutral-12 ink on neutral-1 cold-white** so a figure is never
+  hard to read; vibrant colour is for accents, illustration, and the companion. **No gradients** (flat
+  blocks); distinctive **but** legible; the §5.5 sober moments go calm. Contrast is verified AA per step.
 - **No AI-design "tells."** Default-shadcn-looking screens read as generic AI output, never ship that.
   Ship customized tokens/spacing/type — not stock components. Specifically avoid: the un-themed shadcn
   default look, "AI-purple" violet gradients, gradient hero text, unprompted neon glows, emoji used as
   UI icons (use a real icon set), and the centered-hero-plus-three-cards layout. Distinctive and
-  intentional beats trendy.
+  intentional beats trendy. (Saldo's vibrant carnival palette is the **intentional** brand identity per
+  ADR 0025 — flat, accessible, deliberately tuned — not the accidental generic-AI look this warns about.)
 - **Enforced mechanically (eslint-plugin-saldo), active now so the first component is on-bar:**
   `saldo/no-arbitrary-tailwind` (no `bg-[#fff]` / `h-[100vh]` — add a token; arbitrary *variants* like
   `[&_tr]:…` are allowed), `saldo/no-raw-color-utility` (no `text-black` / `bg-red-500` — use the

@@ -364,14 +364,25 @@
       ]
     },
     {
+      "id": "design-typography",
+      "title": "Typography — Fraunces (display) + IBM Plex Sans (body), self-hosted, ≤450",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["design-tokens-carnival"],
+      "notes": "DONE (ADR 0026): self-hosted @fontsource-variable Fraunces (display/peaks, font-serif) + IBM Plex Sans (body/UI + tabular figures, the default font-sans). Weights capped at 450 (font-text token); existing UI swept off font-semibold/font-medium. Tokens in app/app.css; font-optical-sizing auto for Fraunces.",
+      "refs": ["docs/decisions/0026-typography.md", "apps/web/app/app.css"]
+    },
+    {
       "id": "design-visual-spike",
-      "title": "Visual-identity spike — type, illustration, the companion's look (on carnival tokens)",
+      "title": "Visual-identity spike — illustration style + the companion's look (on carnival tokens + type)",
       "status": "todo",
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": ["design-tokens-carnival"],
-      "notes": "ADR 0025 'distinctive but legible': establish typography, illustration style, and the companion character on top of the carnival OKLCH tokens. Validate with real users before committing a specific companion; keep money/tables legible (neutral ink on cold-white).",
+      "depends_on": ["design-tokens-carnival", "design-typography"],
+      "notes": "Typography is now done (ADR 0026). Remaining: illustration style and the companion character on top of the carnival OKLCH tokens + the Fraunces/Plex type system. Validate with real users before committing a specific companion; keep money/tables legible (neutral ink on cold-white).",
       "refs": ["docs/decisions/0025-playful-guided-experience.md", ".claude/rules/design-system.md"]
     },
     {

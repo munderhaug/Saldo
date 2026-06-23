@@ -9,6 +9,10 @@ import {
 } from 'react-router';
 import type { LinksFunction } from 'react-router';
 import { t } from '~/copy';
+// Self-hosted brand fonts (ADR 0026): Fraunces (display/peaks) + IBM Plex Sans (body/UI + tabular
+// figures). Variable files, bundled by Vite — no external CDN (EU-resident, offline PWA).
+import '@fontsource-variable/fraunces/index.css';
+import '@fontsource-variable/ibm-plex-sans/index.css';
 import './app.css';
 
 export const links: LinksFunction = () => [{ rel: 'manifest', href: '/manifest.webmanifest' }];
@@ -52,7 +56,7 @@ export function ErrorBoundary() {
 
   return (
     <main className="mx-auto grid max-w-xl gap-3 p-6 sm:p-10">
-      <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
+      <h1 className="font-serif text-2xl tracking-tight">{heading}</h1>
       <p className="text-muted-foreground">{message}</p>
     </main>
   );

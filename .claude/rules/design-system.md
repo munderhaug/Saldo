@@ -19,6 +19,13 @@ A restrained, trustworthy financial UI — not a mood-driven brand. Consistency 
   = the solid. Money and tables render as **neutral-12 ink on neutral-1 cold-white** so a figure is never
   hard to read; vibrant colour is for accents, illustration, and the companion. **No gradients** (flat
   blocks); distinctive **but** legible; the §5.5 sober moments go calm. Contrast is verified AA per step.
+- **Typography (two-font system, ADR 0026):** **Fraunces** (`font-serif`) is **display only** — page
+  headings + the earned peak moments (the honest-number reveal, post-filing), Light/Regular at large
+  sizes, never at the §5.5 sober act. **IBM Plex Sans** (`font-sans`, the default) is body, UI, and **all
+  money/tables** (its tabular figures via the `tabular` utility — no mono needed). **Weights cap at 450**
+  (`font-text`); no `font-medium`/`font-semibold`/`font-bold`. Build hierarchy from size + the serif/sans
+  switch + colour (`neutral-12`/`neutral-11`), not weight. Both are self-hosted (`@fontsource-variable/*`,
+  no CDN); tokens live in `app/app.css`.
 - **No AI-design "tells."** Default-shadcn-looking screens read as generic AI output, never ship that.
   Ship customized tokens/spacing/type — not stock components. Specifically avoid: the un-themed shadcn
   default look, "AI-purple" violet gradients, gradient hero text, unprompted neon glows, emoji used as

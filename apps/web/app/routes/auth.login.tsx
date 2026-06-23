@@ -61,14 +61,14 @@ export default function Login() {
   const actionData = useActionData<typeof action>();
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('auth.login.title')}</h1>
+      <h1 className="font-serif text-2xl tracking-tight">{t('auth.login.title')}</h1>
 
       {data.oidcConfigured && (
         <Form method="post">
           <input type="hidden" name="intent" value="oidc" />
           <button
             type="submit"
-            className="border-input bg-background w-full rounded-md border px-4 py-2 text-sm font-medium"
+            className="border-input bg-background font-text w-full rounded-md border px-4 py-2 text-sm"
           >
             {t('auth.login.bankid')}
           </button>
@@ -78,7 +78,7 @@ export default function Login() {
       {data.devAuthEnabled && (
         <Form method="post" className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className="text-sm font-medium">
+            <label htmlFor="email" className="font-text text-sm">
               {t('auth.login.email')}
             </label>
             <input
@@ -91,7 +91,7 @@ export default function Login() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium">
+            <label htmlFor="password" className="font-text text-sm">
               {t('auth.login.password')}
             </label>
             <input
@@ -110,7 +110,7 @@ export default function Login() {
           )}
           <button
             type="submit"
-            className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium"
+            className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm"
           >
             {t('auth.login.submit')}
           </button>

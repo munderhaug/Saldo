@@ -113,3 +113,16 @@ Template:
   distinctive-but-legible visuals — warmth/guidance/delight, never engagement farming. The §5.5 sober
   rule stays sacrosanct.
 - **Refs:** ADR 0025; `docs/experience-principles.md`.
+
+## R-0010 — A sans + mono typography pairing (IBM Plex Sans + Plex Mono, or Hanken + Plex Mono)
+- **Date:** 2026-06-23
+- **Context:** Choosing the type system after the carnival colours landed (ADR 0026).
+- **Tried:** Pairing a sans with a monospace for an "engineered, precise" numeric/data identity (no
+  display serif).
+- **Rejected because:** Sans + mono reads "precise but cold / developer-tool" — against ADR 0025's warm,
+  untraditional brief — and the mono isn't even needed for alignment: IBM Plex Sans has true tabular
+  figures, so money already aligns. The warmth at the peak moments (the honest-number reveal) needs a
+  display face, which a mono can't carry.
+- **Instead:** Fraunces (warm display) + IBM Plex Sans (body/UI + tabular figures), a clean two-font
+  system, weights capped at 450.
+- **Refs:** ADR 0026; `apps/web/app/app.css`.

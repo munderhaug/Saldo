@@ -34,7 +34,7 @@ export default function Home({ loaderData }: { loaderData: ReturnType<typeof loa
   return (
     <main className="mx-auto grid max-w-xl gap-6 p-6 sm:p-10">
       <header className="grid gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('app.name')}</h1>
+        <h1 className="font-serif text-3xl tracking-tight">{t('app.name')}</h1>
         <p className="text-muted-foreground">{t('app.tagline')}</p>
       </header>
 
@@ -67,7 +67,7 @@ export default function Home({ loaderData }: { loaderData: ReturnType<typeof loa
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow className="font-semibold">
+              <TableRow className="font-text">
                 <TableCell>{t('home.demo.brutto')}</TableCell>
                 <TableCell className="tabular text-right">
                   {gross}&nbsp;{t('common.currency')}

@@ -3,8 +3,8 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: playful experience direction + carnival design tokens (ADR 0025)
-**Branch:** `claude/playful-experience` (off `main` at PR #13 / `ac30ae0`). Lands via a reviewed PR —
+**Last updated:** 2026-06-23 — session: typography (Fraunces + IBM Plex Sans, ADR 0026)
+**Branch:** `claude/typography` (off `main` at PR #14 / `1f4d812`). Lands via a reviewed PR —
 never a direct push to `main`. (Trust `git log` over any hash here.)
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
@@ -13,34 +13,32 @@ never a direct push to `main`. (Trust `git log` over any hash here.)
 > taken this session (microcopy is the higher-leverage, egress-independent foundation). Don't assume
 > egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
 
-## This session — playful experience direction + carnival design tokens (ADR 0025)
-Set the product's experiential direction with the product owner and made it real in the design tokens.
-**Full gate green:** typecheck, lint, `lint:repo` (53 docs, **0 warnings**), `format:check`, `test`
-(**101 domain + 10 web unit**; 34 integration skipped — no DB here), `db:lint`, `build` (OKLCH CSS
-compiles), `backlog validate` (35 tasks).
-- **Direction (ADR 0025):** Saldo is deliberately *untraditional* for accounting software — playful,
-  warm, and above all **understandable/doable by anyone** regardless of financial literacy, while staying
-  lawful. **Prime directive: no user ever feels stupid.** Revises the old "no mascots/avatars" ban → **no
-  *gamification*** (points/badges/streaks/leaderboards stay out), but a **friendly companion/guide** is
-  now welcome (the embodied warm "I"), plus characterful **agents** — the **Torpedo** late-payment chaser,
-  aimed *outward* at late payers via propose→confirm. Trade-specific analogies for comprehension. The
-  §5.5 sober rule is unchanged and sacrosanct.
-- **Carnival design tokens (`app/app.css`, done):** ten **12-step OKLCH scales** (neutral +
-  electric/grape/candy/sky/lilac/mint/green/amber/red) as primitives → mapped onto shadcn + domain
-  semantic tokens, **light + dark, AA-verified per step**. Brand roles: **primary = electric, secondary =
-  grape, tertiary = candy**; soft register = sky/lilac/mint; state = **paid (green) · overdue (red) ·
-  heads-up (amber, NEW)**. Base = cold-white `neutral-1` (#f1f7ff) with **plum-ink** `neutral-12`
-  (#262130); money is always neutral ink on cold-white. No gradients (flat). Generator: scratchpad
-  `gencss.mjs` (re-run to retune); the visual spike artifacts live in gitignored `reports/`.
-- **Docs aligned:** ADR 0025 (committed earlier) + `rejected.md` R-0009; `experience-principles.md`
-  (prime directive §2.5, companion §2.2/§5.1/§8, analogies §4.3, anti-patterns §9/§10), the enforced
-  `experience-voice.md`, and `.claude/rules/design-system.md` (the carnival palette) all reconciled — the
-  "no mascots" contradiction is gone.
-- **Backlog:** `design-tokens-carnival` (done); queued `design-visual-spike`, `feat-companion`,
-  `feat-trade-analogies`, `feat-torpedo`.
-- **Next:** the visual spike (type/illustration/the companion's look on these tokens), then the first
-  real UI surface (`feat-enhetsregisteret` → `feat-org-onboarding`) which puts the palette + `~/copy` to
-  work. Honest-number reveal still needs `feat-tax-estimate` (source-grounded).
+## This session — typography (Fraunces + IBM Plex Sans, ADR 0026)
+Locked the type system with the product owner and wired it in. **Full gate green:** typecheck, lint,
+`lint:repo`, `format:check`, `test` (101 domain + 10 web), `db:lint`, `build` (fonts bundle + self-host),
+`backlog validate`. **SSR-verified.**
+- **Two-font system (ADR 0026):** **Fraunces** (variable soft-serif, `font-serif`) = **display only** —
+  page headings + earned peaks (the honest-number reveal, post-filing), Light/Regular at large sizes,
+  never at the §5.5 sober act. **IBM Plex Sans** (variable, the default `font-sans`) = body, UI, and **all
+  money/tables** via its tabular figures (no mono — Plex aligns money). **Weights cap at 450**
+  (`font-text` token); no medium/semibold/bold — hierarchy is size + serif/sans + colour. **Self-hosted**
+  via `@fontsource-variable/*` (no CDN; EU-resident/offline); `font-optical-sizing: auto` for Fraunces;
+  æøå via the latin-ext subset. Tokens in `app/app.css` (`--font-sans` / `--font-serif` / `--font-weight-text`).
+- **Swept the existing UI** off `font-semibold`/`font-medium` → `font-serif`/`font-text` (routes + shadcn
+  `card`/`table`); page headings now render in Fraunces. Verified: built CSS has `.font-text{font-weight:450}`,
+  `.font-serif{Fraunces…}`, woff2 bundled; `/` renders.
+- **Docs:** ADR 0026 + `rejected.md` R-0010 (sans+mono rejected — cold, and mono isn't needed since Plex
+  has tnum); `design-system.md` typography section; backlog `design-typography` (done), `design-visual-spike`
+  narrowed to illustration + the companion look.
+- **Next:** the rest of `design-visual-spike` (illustration style + the companion character on these
+  tokens + type), then the first real UI surface (`feat-enhetsregisteret` → `feat-org-onboarding`).
+  Honest-number reveal still needs `feat-tax-estimate` (source-grounded).
+
+## Previous session — playful experience direction + carnival tokens (ADR 0025, PR #14 merged)
+Prime directive "no user ever feels stupid"; a friendly companion + the Torpedo agent (no gamification);
+ten 12-step OKLCH scales in `app/app.css` (primary=electric, paid=green, overdue=red, heads-up=amber;
+cold-white `neutral-1` base, plum `neutral-12` ink), light+dark, AA. Generator: scratchpad `gencss.mjs`;
+spike artifacts in gitignored `reports/`. Docs reconciled (no "no mascots" contradiction).
 
 ## Previous session — keyed microcopy (`feat-keyed-microcopy`, PR #13 merged)
 `apps/web/app/copy` (ADR 0024): typed `t()` over a flat nb/en catalog (nb shipped, en reference pinned by

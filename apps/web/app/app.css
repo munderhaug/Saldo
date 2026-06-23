@@ -456,6 +456,13 @@
   --color-red-11: var(--red-11);
   --color-red-12: var(--red-12);
 
+  /* Typography (ADR 0026): Fraunces = display (headings + earned peaks); IBM Plex Sans = body, UI,
+     and all money/tables (it has real tabular figures). Weights cap at Text/450 — hierarchy comes
+     from size + the serif/sans switch + colour, never bold. */
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-weight-text: 450;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -481,6 +488,8 @@
     min-height: 100dvh;
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
     font-variant-numeric: tabular-nums lining-nums;
     overscroll-behavior-y: none;
     -webkit-tap-highlight-color: transparent;

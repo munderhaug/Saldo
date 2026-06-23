@@ -4,8 +4,9 @@
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
 **Last updated:** 2026-06-23 — session: `feat-tax-estimate` + `vat-sectoral-exemptions` (ADR 0029, 0030)
-**Branch:** `claude/practical-edison-20f9p6` (off `main` at PR #18 / `3e86e1b` — per-line VAT engine).
-Lands via a reviewed PR — never a direct push to `main`. (Trust `git log` over any hash here.)
+**Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
+direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
+are not restated here, where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
 > not configured here. **This session HAD outbound egress and USED it** (verified + fetched: Lovdata
@@ -73,11 +74,11 @@ captures; clean on all 7 axes).
   (FOR-2025-12-18-2748 — trygdeavgift §§ 6–8) + folketrygdloven § 23-3 (nedre grense / 25 % opptrapping).
   Cross-confirmed 2026 figures against Skatteetaten (summarised, not reproduced). Distilled into
   **`docs/regulatory/skatt-enk-personskatt.md`** (cited, verify-by 2026-12-31).
-- **Two facts pinned that are widely gotten wrong:** a *person's* 22 % alminnelig inntekt = fellesskatt
-  8,25 + kommune 11,35 + fylke 2,40 (the § 3-3 "22 %" is the **company** rate, not an ENK owner's); and
-  **minstefradrag does NOT apply to næringsinntekt**. Personfradrag 2026 = **114 540 kr** (a websearch
-  summary claimed 45 000 — wrong; verbatim § 6-3 settled it). Trygdeavgift næring **10,8 %** with a **99 650
-  kr** floor and a **25 %** phase-in cap (binds ≈ 99 650 → 175 440 kr, then flat 10,8 %).
+- **Two facts pinned that are widely gotten wrong** (now canonical in
+  `docs/regulatory/skatt-enk-personskatt.md`): a *person's* 22 % alminnelig inntekt is the sum of
+  fellesskatt + kommune + fylke (the § 3-3 "22 %" is the **company** rate, not an ENK owner's), and
+  **minstefradrag does NOT apply to næringsinntekt**. The exact 2026 figures (personfradrag,
+  trygdeavgift rate/floor/phase-in) live on that cited page — not restated here.
 - **`packages/domain/src/tax/`** — `params.ts` (the cited 2026 rate table, keyed by year, **fail-closed**
   for un-captured years; same pattern as `saft/rates.ts`) + `income-estimate.ts`:
   `estimateEnkIncomeTax(profit, year)` → `{ alminneligInntektSkatt, trinnskatt, trygdeavgift, total }`.
@@ -251,14 +252,14 @@ ADR 0022 (EU AI Act posture) + `docs/regulatory/eu-ai-act.md` + `.claude/rules/a
 `LICENSE` + ADR 0023; AGENTS.md made canonical (CLAUDE.md imports it); roadmap renamed; 8 unused deps
 pruned; repo-lint rule-glob + slop guardrails. (Detail in the ADRs / `git log`.)
 
-## Verified state (current — at branch HEAD `cfbe475`)
+## Verified state (current — see `git rev-parse HEAD` for the exact commit)
 Full gate green at HEAD:
-- `pnpm typecheck` · `lint` · `format:check` · `lint:repo` (**61 docs / 9 sourced / 0 warn**) ·
-  `backlog validate` (**47 tasks**, acyclic).
-- `pnpm test` — **158 domain** (incl. fast-check) **+ 23 web**; the **34 integration tests** skip cleanly
-  where no DB is present and run on **Testcontainers in CI** (here: local Postgres via `DATABASE_URL`;
-  Docker is **not** available, so Testcontainers can't run locally).
-- **Decisions current:** ADRs **0001–0030** (index in `docs/decisions/README.md`).
+- Static gates green: `pnpm typecheck` · `lint` · `format:check` · `lint:repo` · `backlog validate`
+  (run them or see CI for the live counts — not restated here).
+- `pnpm test` green (domain: exhaustive + fast-check; web; the integration suite skips cleanly with no
+  DB and runs on **Testcontainers in CI**).
+- **Decisions:** the ADR index is `docs/decisions/README.md` (the current range is derivable from
+  `docs/decisions/0*.md`).
 - **Enduring proven invariants** (unchanged): ledger balance / immutability / period-lock /
   gapless-counter + tenant **FORCE-RLS** isolation, proven by Testcontainers (`apps/web/test/integrity/`);
   the **no-contradiction** repo-lint gate (every `ADR NNNN` ref resolves, no "Locked" label, cited

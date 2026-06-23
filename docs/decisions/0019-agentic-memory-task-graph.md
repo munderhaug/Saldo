@@ -10,7 +10,7 @@ sessions:
 1. **Order.** The backlog lived as prose (STATUS.md, the roadmap). For a multi-phase plan where order
    matters — hardening → auth → Enhetsregisteret → Phase 1 — a flat doc can't answer "what is the
    highest-value task that is *ready* (all prerequisites done) right now?". Dependencies are implicit.
-2. **Abandoned approaches.** ADRs record decisions we *kept*. Nothing structured recorded what we
+2. **Abandoned approaches.** ADRs record decisions that were *kept*. Nothing structured recorded what was
    *tried and rejected, and why* — the most expensive context to lose, because the next session
    re-discovers the same dead end.
 

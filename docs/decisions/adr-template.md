@@ -10,7 +10,7 @@ What forces are at play? What problem or constraint prompts this decision?
 The choice, stated plainly.
 
 ## Consequences
-What becomes easier, what becomes harder, what we accept as a known cost.
+What becomes easier, what becomes harder, what is accepted as a known cost.
 
 ## Alternatives considered
 What else, and why not.

@@ -56,7 +56,7 @@ The full feature breakdown is **§8**.
 - **Delt virksomhet input-VAT apportionment** — flag as unsupported; advise the user to engage an accountant.
 - **Full in-app debt collection or kassasystem (cash-register) certification.**
 
-The boundary rule: every excluded item exists to serve a business that has crossed a size/complexity/legal threshold the target user has not. When a user needs one, the honest answer is "you've outgrown Saldo" — and a clean SAF-T export makes that exit painless.
+The boundary rule: every excluded item exists to serve a business that has crossed a size/complexity/legal threshold the target user has not. When a user needs one, the honest answer is "the business has outgrown Saldo" — and a clean SAF-T export makes that exit painless.
 
 ---
 
@@ -360,7 +360,7 @@ For each: purpose, auth, access status (start-now / onboarding-gated / self-buil
 3. **Rules engine (the compliance backbone, deterministic).** Encode the non-obvious rules: the input-VAT fork by MVA status; non-deductible cases (representasjon, vehicles, private use); valid account↔VAT-code combinations; reverse-charge dual posting. Lives in `@saldo/domain`, exhaustively tested.
 4. **LLM extraction (where AI earns its place).** Vision extraction of structured fields from receipts/invoices (vendor, date, net, VAT, lines) and free-text → *proposed* account. Output flows into layer 3 for validation before a human commits.
 5. **Lint/validation at posting time.** Debits = credits; period open; bilag attached; MVA reconciles. Block on hard errors; warn on soft ones.
-6. **Anomaly flags & explanations.** Duplicate invoice/voucher, missing documentation, unusual amount vs history; plus plain-language explanations of each booking (the user does their own books — teach as you go).
+6. **Anomaly flags & explanations.** Duplicate invoice/voucher, missing documentation, unusual amount vs history; plus plain-language explanations of each booking (the user does their own books, so each explanation teaches).
 7. **Deadline & threshold alerts.** MVA terms, skattemelding (31 May), the 50k threshold.
 
 ---

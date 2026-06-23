@@ -10,7 +10,7 @@ keyed microcopy, not ad-hoc literals."* The accessibility rule independently req
 **translatable (NO/EN)** with a correct `lang`. Yet the first UI surfaces shipped with hard-coded
 string literals scattered across routes (`'Logg inn'`, `'Feil e-post eller passord.'`, …), and two were
 even **English** in a Norwegian product (`'OIDC is not configured'`, `'Password login is disabled'`).
-Every future surface would have multiplied this drift. We need one foundational pattern — established
+Every future surface would have multiplied this drift. One foundational pattern is needed — established
 now, while the UI is 7 files — that the rest of the product follows.
 
 The target market is the Norwegian *enkeltpersonforetak*; there is **no second shipping locale** on the

@@ -6,8 +6,8 @@
 ## Context
 The ledger needs a managed, EU-resident Postgres that supports the full integrity model: raw-SQL
 triggers, extensions (`pgcrypto`, `btree_gist`), and — critically — `FORCE ROW LEVEL SECURITY` with a
-**non-owner application role** (ADR 0012). As a solo-maintained, decade-horizon system of record we
-want low operational burden without giving up SQL-level control or EU residency. Self-hosting every
+**non-owner application role** (ADR 0012). For a solo-maintained, decade-horizon system of record,
+low operational burden matters without giving up SQL-level control or EU residency. Self-hosting every
 layer (ADR 0008) is reconsidered in ADR 0015.
 
 ## Decision
@@ -18,7 +18,7 @@ app.current_org` tenancy pattern (ADR 0012) works unchanged — it is transactio
 Hyperdrive preserves. Self-hosted Postgres remains the sovereignty fallback (ADR 0008 / ADR 0015).
 
 ## Consequences
-- Managed backups / PITR and EU-region data-at-rest without operating a database ourselves.
+- Managed backups / PITR and EU-region data-at-rest without self-operating a database.
 - The integrity layer is unaffected and portable — it lives in SQL, not in any host feature.
 - Must confirm Neon EU supports the custom non-owner-role FORCE-RLS model when wiring it live.
 - CI does **not** use Neon branching; it uses Testcontainers (ADR 0014).

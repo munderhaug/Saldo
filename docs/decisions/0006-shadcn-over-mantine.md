@@ -16,7 +16,7 @@ not used.
 - Full control over interaction/animation/chrome — required for native feel (Motion, Vaul, View
   Transitions layer on top).
 - More agent-legible: components are real HTML + Tailwind in-repo, not a black-box prop API.
-- **Accepted cost:** we rebuild the table/form layer that Mantine ships out of the box.
+- **Accepted cost:** the table/form layer that Mantine ships out of the box must be rebuilt.
 
 ## Alternatives considered
 - **Mantine** — great batteries-included desktop tables/forms, but opaque and hard to bend into a

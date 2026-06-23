@@ -21,4 +21,4 @@ The full list lives in **[`AGENTS.md`](AGENTS.md)** + the path-scoped rules in `
 single source. Read them there before changing money, the ledger, VAT, or posting; don't restate them.
 
 ## End every session
-Run the `handover` skill: verify green, update `docs/STATUS.md`, commit, push your branch, report.
+Run the `handover` skill: verify green, update `docs/STATUS.md`, commit, push the branch, report.

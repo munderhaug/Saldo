@@ -28,7 +28,7 @@ eID broker (Criipto/Signicat), which Norwegian law effectively requires.
 ## Consequences
 - No vendor can pull the rug; the whole stack can run on owned EU infrastructure.
 - More ops responsibility than a managed-everything stack — accepted for sovereignty and longevity.
-- Directly mitigates the "young trendy stack" longevity risk: we hold the code.
+- Directly mitigates the "young trendy stack" longevity risk: the code is held in-house.
 
 ## Alternatives considered
 - Managed SaaS (Neon/Supabase/Inngest/Sentry/Vercel) — faster to start, but reintroduces lock-in and

@@ -43,7 +43,7 @@ A **two-font system**, self-hosted:
 - A future `harness-design-lint` rule can enforce "no font-weight > 450" and "`font-serif` only at
   display sizes" mechanically.
 - The variable files add a few woff2 subsets per family (latin first; others lazy via `unicode-range`),
-  served from our own origin.
+  served from the app's own origin.
 
 ## Alternatives considered
 - **Sans + mono** (IBM Plex Sans + Plex Mono, or Hanken Grotesk + Plex Mono). Rejected — it reads

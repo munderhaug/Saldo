@@ -6,9 +6,9 @@
 ## Context
 Saldo must apply Norwegian VAT/bookkeeping law correctly. A tempting shortcut is to connect an LLM to a
 legal corpus (Lovdata/Skatteetaten) and **retrieve-and-reason at runtime** (RAG) to decide a posting's
-VAT treatment. We need to settle where law lives in the architecture before anyone wires up a legal feed.
+VAT treatment. Where law lives in the architecture must be settled before anyone wires up a legal feed.
 
-Two questions hide inside "should we RAG over a legal API?": (1) how we **source** authoritative text,
+Two questions hide inside "RAG over a legal API?": (1) how to **source** authoritative text,
 and (2) how the law **decides** what Saldo posts. They have different answers. The law that drives
 posting is **stable and shared** — identical for every user and transaction, changing a few times a year —
 which is the opposite of the per-query, open-ended profile RAG is for.

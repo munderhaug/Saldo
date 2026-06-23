@@ -1,6 +1,6 @@
 # Rejected approaches (the anti-ADR)
 
-ADRs record decisions we **kept**. This file records approaches we **tried and abandoned**, and why —
+ADRs record decisions that were **kept**. This file records approaches **tried and abandoned**, and why —
 so the next ephemeral session doesn't re-walk the same dead end (ADR 0019). Append-only; newest at the
 bottom. One entry per abandoned approach. IDs are `R-NNNN`, gapless.
 
@@ -12,7 +12,7 @@ Template:
 - **Context:** where/why this came up
 - **Tried:** the approach
 - **Rejected because:** the reason it didn't hold
-- **Instead:** what we did
+- **Instead:** the approach adopted instead
 - **Refs:** ADR / commit / file
 ```
 
@@ -93,7 +93,8 @@ Template:
 - **Context:** Building the keyed microcopy system (feat-keyed-microcopy → ADR 0024).
 - **Tried:** Reaching for an established i18n library to hold the strings.
 - **Rejected because:** Saldo is single-locale (Norwegian *enkeltpersonforetak*); a framework adds
-  runtime locale negotiation, ICU parsing, and message-extraction tooling we don't need, and it pulls
+  runtime locale negotiation, ICU parsing, and message-extraction tooling a single-locale product
+  doesn't need, and it pulls
   copy out of type-checked source into extracted catalogs (losing compile-time key/param safety).
 - **Instead:** A tiny in-repo catalog (`apps/web/app/copy`) with a typed `t()` accessor and `{name}`
   interpolation; `en` is a reference pinned to `nb` by `satisfies` + a parity test; a future locale

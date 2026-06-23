@@ -3,12 +3,11 @@
 > Status: **Current** (2026-06-23; revisable via an ADR). Supersedes the stack discussion in
 > `saldo-build-specification.md` §6. Changes require an ADR in `docs/decisions/`.
 >
-> Three principles drove every choice: **(1) open-source & self-hostable** — so no
-> vendor can pull the rug on a 10-year system of record; **(2) local-LLM capable** —
-> the smart layer must run fully on-prem in the final product; **(3) agent-legible** —
-> the repo and its surfaces are optimized for Claude Code / agentic engineering, which
-> favors semantic-HTML-first UI, in-repo components, deterministic guardrails, and a
-> documented harness.
+> Three principles drive every choice: **(1) open-source & self-hostable** — so no vendor
+> controls a 10-year system of record; **(2) local-LLM capable** — the smart layer must run
+> fully on-prem in the final product; **(3) agent-legible** — the repo and its surfaces are
+> optimized for Claude Code / agentic engineering, which favors semantic-HTML-first UI, in-repo
+> components, deterministic guardrails, and a documented harness.
 
 ## Decision table
 
@@ -33,7 +32,7 @@
 | Validation | **Zod** at every boundary | ✅ | Single source of truth for shapes; infer types from schemas. |
 | Auth | **`openid-client` v6 + `@oslojs/*` + Postgres sessions** | ✅ | BankID/Vipps via **Criipto/Signicat** broker (the one unavoidable non-OSS dep). `oslo` umbrella deprecated → `@oslojs/crypto`/`encoding`. ID-porten scoped to Altinn only. |
 | Tenancy | app-layer org filter **+ Postgres RLS** via `SET LOCAL app.current_org` | ✅ | Defense-in-depth; GUC pattern (not `auth.uid()`). |
-| Background jobs | **graphile-worker** | ✅ | Runs on our Postgres; payloads never leave the DB. Replaces Inngest. |
+| Background jobs | **graphile-worker** | ✅ | Runs on the app's Postgres; payloads never leave the DB. Replaces Inngest. |
 | Email | **nodemailer** (provider-agnostic SMTP) | ✅ | EU provider behind a swappable interface. |
 | PDF | **`@react-pdf/renderer`** | ✅ | Invoice PDFs in React/TS, no headless browser. |
 | E-invoice | typed **UBL builder** + **VEFA validator** | ✅ | EHF/PEPPOL BIS 3.0; validate locally. |
@@ -46,9 +45,9 @@
 | SAF-T reference | committed copy of `Skatteetaten/saf-t` | ✅ | Codes/accounts/XSD never hardcoded from memory. |
 
 ## The one knowingly-accepted risk
-**React Router 7 framework mode** has a thinner training corpus than Next.js. We accept
-this because its HTML-first loader/action model produces fewer agent-error modes than RSC,
-and we mitigate with **Context7 MCP pinned to the exact version**. See ADR 0005.
+**React Router 7 framework mode** has a thinner training corpus than Next.js. This is accepted
+because its HTML-first loader/action model produces fewer agent-error modes than RSC, and is
+mitigated with **Context7 MCP pinned to the exact version**. See ADR 0005.
 
 ## Agentic-repo layer (third constraint)
 Per the harness-design knowledge base, the repo follows the documented method:

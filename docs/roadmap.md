@@ -1,18 +1,18 @@
 # Saldo — Repo Roadmap
 
-> **Type:** planning report (living). **Created:** 2026-06-23. **Owner:** @munderhaug.
-> This is the full, prioritized plan to take Saldo from an excellent Phase-0 foundation to a
-> a durable system of record — both the work to do **now** and the discipline to stay
-> high-quality **going forward**. It supersedes the ad-hoc review notes from this session.
+> **Type:** planning report (point-in-time; historical). **Created:** 2026-06-23. **Owner:** @munderhaug.
+> The full, prioritized plan that took Saldo from its Phase-0 foundation toward a durable system of
+> record — the work to do **now** and the discipline to stay high-quality **going forward**.
 >
-> **Status (updated 2026-06-23 — feature track): Part 2 (P0 foundation hardening) is COMPLETE** — all six
-> PRs landed (see ADRs 0013–0021 + `git log`). Current work is the **feature + regulatory-engine track**,
-> tracked in `docs/backlog/tasks.json` (`pnpm backlog`); the Part 3 (P1/P2) items remain the forward plan.
-> This is the point-in-time plan that produced P0 — for live repo status see `docs/STATUS.md`.
+> **This is a dated snapshot, not a live tracker.** Part 2 (P0 foundation hardening) is **COMPLETE** —
+> all six PRs landed (ADRs 0013–0021 + `git log`). Live status lives in `docs/STATUS.md`; the active
+> task graph is `docs/backlog/tasks.json` (`pnpm backlog`). The Part 3 (P1/P2) items remain the forward
+> plan; the Part 0 and Part 4 sections are retained as the record of how P0 was decided.
 >
-> **Status vocabulary** (replaces "Locked", per this session's decision):
-> **Current** = active choice, in effect now (revisable via ADR) · **Intended** = planned, not
-> yet adopted/built · **Superseded** = replaced by a later ADR.
+> **Status vocabulary** (for tech-stack / roadmap items; replaces the banned "Locked"):
+> **Current** = active choice, in effect now (revisable via ADR) · **Intended** = planned, not yet
+> adopted/built · **Superseded** = replaced by a later ADR. (ADR *Status* fields use the conventional
+> Proposed / Accepted / Superseded — a separate vocabulary.)
 
 ---
 
@@ -30,12 +30,12 @@ outcome (a test, a gate, a doc, an observable behavior).
 
 ---
 
-## Part 0 — The one decision that gates everything: deployment architecture
+## Part 0 — The one decision that gated everything: deployment architecture
 
-You chose **Cloudflare over Fly.io**. That is not a deploy-target swap; it is an architectural
-fork, because today's docs describe a *persistent Node server* with *in-process jobs*, a *local
-LLM*, and a *self-hostable everywhere* principle (ADR 0008/0009/0010). Resolve this first — it
-cascades into the tech stack, several ADRs, and the residency story.
+The early fork was **Cloudflare vs Fly.io**. It was not a deploy-target swap but an architectural
+fork, because the docs at the time described a *persistent Node server* with *in-process jobs*, a
+*local LLM*, and a *self-hostable everywhere* principle (ADR 0008/0009/0010). It was resolved first —
+the choice cascades into the tech stack, several ADRs, and the residency story.
 
 ### The good news: the hard parts are portable
 
@@ -48,7 +48,7 @@ The hard, high-value work is **architecture-independent**:
   over **Cloudflare Hyperdrive** with `postgres.js` (Hyperdrive recommends a native driver; `SET
   LOCAL` is transaction-scoped, which is exactly why `withOrgTx` is transaction-based).
 
-So **choosing Cloudflare costs you none of the ledger work.** Confirmed against current docs:
+So **the architecture choice costs none of the ledger work.** Confirmed against the docs:
 React Router 7 has **first-class Cloudflare support** (official template + Cloudflare Vite plugin,
 GA 2026), and **Neon + Workers via Hyperdrive** keeps `postgres.js` and RLS.
 
@@ -69,12 +69,12 @@ GA 2026), and **Neon + Workers via Hyperdrive** keeps `postgres.js` and RLS.
 | Email | nodemailer SMTP | Email Workers **or** external EU SMTP (keep swappable) | Keep interface |
 | Secrets | Server env | Workers secrets / env bindings | Change wiring |
 
-### The two coherent architectures (you must pick one; hybrids leak ops)
+### The two coherent architectures (one must be picked; hybrids leak ops)
 
-- **A. Sovereign self-hosted** (today's docs): max control + data sovereignty; **heavy** solo
-  operational burden (you run PG, MinIO, observability, an LLM box, a Kamal/Hetzner deploy).
-- **B. Cloudflare-native serverless** (your lean): **minimal** ops, first-class RR7, managed
-  durable jobs; cost is **proprietary lock-in** and a self-imposed-principle change (ADR 0008).
+- **A. Sovereign self-hosted**: max control + data sovereignty; **heavy** solo operational burden
+  (self-run PG, MinIO, observability, an LLM box, a Kamal/Hetzner deploy).
+- **B. Cloudflare-native serverless**: **minimal** ops, first-class RR7, managed durable jobs; cost
+  is **proprietary lock-in** and a self-imposed-principle change (ADR 0008).
 
 ### Decision (2026-06-23): **Option 2 — persistent Node on an EU PaaS + Cloudflare edge/CDN + R2** (ADR 0015)
 
@@ -113,8 +113,8 @@ solo-maintained, agent-built, 10-year horizon).
 | DB + integrity | Postgres, SQL-first migrations, triggers, FORCE RLS | **Keep — core asset** | Portable across hosts. Strong as-is. |
 | ORM | Drizzle (introspected from SQL) | **Keep** | Right call; schema generated, integrity in SQL. |
 | Web framework | React Router 7 framework mode | **Keep** | First-class Cloudflare support confirms the bet (ADR 0005). |
-| UI | shadcn/ui + Tailwind v4 | **Keep, but build it** | Currently documented, not implemented. See P0-2. |
-| React | 18.3 | **Upgrade → 19** | Stable; Actions/`useActionState`/`use()` pair with RR7. (Decided this session.) |
+| UI | shadcn/ui + Tailwind v4 | **Keep** | Tokens + primitives landed (PR2); first real surface is `/oppslag`. |
+| React | 19 | **Current** | Actions/`useActionState`/`use()` pair with RR7; upgraded from 18.3 in PR2. |
 | Migrations | dbmate | **Keep; add `squawk` lint** | SQL-first is correct; add unsafe-DDL gate. |
 | CI DB | Testcontainers | **Keep** | Real Postgres per run; supersedes Neon-branching (ADR 0014). |
 | Hosted DB | Neon (EU) | **Keep** | Pairs with Cloudflare via **Hyperdrive** (ADR 0013). |
@@ -133,7 +133,7 @@ choices — they're **unbuilt foundations** (auth, UI, observability) and **unen
 
 ---
 
-## Part 2 — NOW: foundation hardening (P0)
+## Part 2 — foundation hardening (P0) — COMPLETE (landed in PRs #3–#11)
 
 Six PRs. Order: **2.1 → 2.2 → 2.5 → 2.3 → 2.4 → 2.6** (consistency first; gates before the auth
 they protect; observability alongside auth).
@@ -142,7 +142,7 @@ they protect; observability alongside auth).
 Eliminate all **24 contradictions** (Part 4) and make recurrence impossible.
 - [ ] Refresh `saldo-build-specification.md` in place to current decisions **and** add a banner:
       *"This is the dated vision doc; where it diverges from `tech-stack.md` or an ADR, those are
-      Current."* (Your chosen hybrid: refresh + canonical pointer.)
+      Current."* (The chosen hybrid: refresh + canonical pointer.)
 - [ ] Replace **"Locked" → "Current"** repo-wide; tag future-phase tech **"Intended"**.
 - [ ] Write **ADR 0013 (Neon EU)**, **ADR 0014 (Testcontainers CI DB)**, and **ADR 0015 (deploy:
       persistent Node on an EU PaaS + Cloudflare edge/R2, revising ADR 0008)** — resolves the phantom
@@ -188,8 +188,8 @@ Close the biggest gap: RLS is a strong *second* lock with no *first* lock today.
       actions. **ADR: Session & identity model.** Flip SECURITY.md OIDC claims to Current once built.
 
 ### P0-4 (PR 5) — Ledger integrity gaps · **M**
-Close concrete holes in the invariants you prize (each with a Testcontainers proof of the *bad*
-case, per your discipline).
+Close concrete holes in the prized invariants (each with a Testcontainers proof of the *bad*
+case, per the project's discipline).
 - [ ] **Period-lock hole** (real bug): the lock trigger fires on `voucher`, not `posting`, so
       postings can be added to an *existing unposted* voucher in a *now-locked* period. Add a
       `posting`-side check (or re-validate the voucher's period on posting INSERT/UPDATE/DELETE).
@@ -215,7 +215,7 @@ Make the quality bar deterministic, not honor-system.
 - [ ] **`/new-adr` skill**: scaffolds the next-numbered ADR from the template (kills the
       wrong-number / phantom-ADR class).
 - [ ] **Subagents**: don't add more (7 exist, none demonstrably used) — sharpen the existing ones
-      to trigger *proactively* and delete any you won't use.
+      to trigger *proactively* and delete any that won't be used.
 
 ### P0-6 (PR 6) — Observability baseline · **S**
 - [ ] Add **`pino`** with **redaction** (personal data + secrets) and a request-id from the first
@@ -245,11 +245,11 @@ reminder — everywhere.
   `verify-by` dates), `pnpm audit`, the consistency gate — opens/updates one tracking issue when
   action is needed. Mechanically keeps regulatory citations + the no-contradiction invariant fresh.
 - **Dependabot** (already weekly) — keep; auto-merge patch-level dev deps once CI is trusted.
-- **PR-autofix loop** (`subscribe_pr_activity`) when you want CI babysat to green.
+- **PR-autofix loop** (`subscribe_pr_activity`) for babysitting CI to green.
 - The **red-green dev loop** already lives in `engineering-discipline.md` — keep it.
 
 ### Operational maturity (P1 → P2)
-- **DR runbook**: Neon PITR + restore *drills* (a restore you've never tested is not a backup);
+- **DR runbook**: Neon PITR + restore *drills* (an untested restore is not a backup);
   R2 lifecycle + the 5-year retention vs immutability procedure as an actual operational doc.
 - **Security program**: threat model doc; dependency-review action; secret-rotation procedure;
   signed commits in CI; periodic `security-review` skill pass on integration PRs.
@@ -271,10 +271,10 @@ feature that scores/profiles a natural person → high-risk (Annex III §5(b)); 
 
 ---
 
-## Part 4 — Contradiction elimination (zero, and kept at zero)
+## Part 4 — Contradiction elimination (resolved; kept at zero by the gate)
 
-24 findings across 14 themes, collapsed to fixes (all in PR 1; the durable gate makes them stay
-fixed):
+24 findings across 14 themes were collapsed to fixes (landed in PR 1; the durable `repo-lint` gate
+keeps them fixed):
 
 | Theme | Fix |
 |---|---|
@@ -315,7 +315,7 @@ gate. Going forward, any reintroduced contradiction fails CI.
 
 ---
 
-## Part 6 — Open decisions for you
+## Part 6 — Open decisions
 
 1. **Cloudflare EU residency / DPA** — the architecture is **decided** (Option 2, ADR 0015). The
    residual action is to **sign Cloudflare's EU DPA + SCCs** and confirm the Node-PaaS EU region

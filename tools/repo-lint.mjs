@@ -140,7 +140,11 @@ const voiceAllow = new Set([
   'docs/experience-principles.md',
   'docs/repo-consistency-audit-2026-06-23.md',
 ]);
-const stripSpans = (s) => s.replace(/"[^"]*"/g, '').replace(/'[^']*'/g, '').replace(/`[^`]*`/g, '');
+const stripSpans = (s) =>
+  s
+    .replace(/"[^"]*"/g, '')
+    .replace(/'[^']*'/g, '')
+    .replace(/`[^`]*`/g, '');
 const secondPersonRe = /\byou(r|'ll|'ve|'d|'re)?\b/i;
 for (const f of docFiles) {
   if (voiceAllow.has(rel(f))) continue;

@@ -14,8 +14,8 @@ process. A hosted engine (Inngest/Trigger.dev) is permitted only if EU-region pa
 confirmed and the orchestration ergonomics are worth the extra vendor.
 
 ## Consequences
-- Payloads never leave our database; one fewer vendor.
-- We own scheduling/retry semantics (graphile-worker provides them).
+- Payloads never leave the database; one fewer vendor.
+- Scheduling/retry semantics stay in-house (graphile-worker provides them).
 
 ## Alternatives considered
 - **Inngest** — nice DX, but US SaaS in the data path; not load-bearing here.

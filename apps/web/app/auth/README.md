@@ -1,7 +1,7 @@
 # auth/
 
 OIDC login via `openid-client` (v6) + `@oslojs/crypto` / `@oslojs/encoding`, with server-side Postgres
-sessions. BankID/Vipps Login through the Criipto/Signicat broker (ADR 0008;
+sessions. BankID/Vipps Login through the Criipto/Signicat broker (ADR 0020;
 `docs/integrations/bankid-criipto.md`). NB: the `oslo` umbrella package is deprecated — use the
 `@oslojs/*` successors for session-token generation/hashing.
 

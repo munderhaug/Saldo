@@ -1,5 +1,6 @@
 # Local development services. `docker compose -f infra/compose.yaml up -d`.
-# Production runs the equivalent self-hosted, EU-resident stack (ADR 0008).
+# Production deploys this app container per ADR 0015 (EU PaaS + Cloudflare/R2 + Neon EU); a
+# self-hosted EU stack (PostgreSQL + MinIO/Garage) is the ADR 0008 sovereignty fallback.
 name: saldo
 
 services:

@@ -6,7 +6,7 @@
 ## Context
 The core ledger (ADR 0003) enforces balance, immutability, period-lock, and gapless numbering in SQL.
 A review found four concrete holes where the SQL did not fully enforce an invariant the ledger relies
-on. Per our discipline, each is closed in SQL (not app code) and proven by a Testcontainers test of the
+on. Per project discipline, each is closed in SQL (not app code) and proven by a Testcontainers test of the
 **bad** case.
 
 1. **Period-lock reached only the voucher.** `block_locked_period` fired on `voucher`, so postings

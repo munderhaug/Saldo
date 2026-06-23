@@ -24,11 +24,14 @@ harness-design knowledge base; deviations from its defaults are noted with a rea
 - **Must be a hook, not a prompt:** typecheck/lint after edits, blocking edits to generated files,
   denying `.env`/secret reads.
 - Skills use progressive disclosure, one default + escape hatch (never a menu of equals). The
-  load-bearing skills (`new-vat-scenario`, `saft-validate`) get trigger + with/without-skill evals
-  before they're trusted.
-- **Evidence before done.** Every load-bearing skill ends with a **Rationalizations** table
-  (excuse → reality), **Red flags — STOP**, and **Done means (evidence required)** — so a task can't be
-  claimed done without the listed proof (tests green, validator passed, reviewer run).
+  **load-bearing** skills — the ones that gate correctness: `add-migration`, `new-vat-scenario`,
+  `saft-validate`, `new-feature`, `regulatory-update` — get trigger + with/without-skill evals before
+  they're trusted.
+- **Evidence before done.** Each load-bearing skill ends with **Red flags — STOP** and **Done means
+  (evidence required)** — so a task can't be claimed done without the listed proof (tests green,
+  validator passed, reviewer run) — plus a **Rationalizations** table (excuse → reality) where the
+  failure mode warrants one. The utility skills (`backlog`, `handover`, `new-adr`, `html-report`,
+  `design-review`) are procedural and need only clear steps.
 - **Knowledge is cited & dated, never from memory.** Regulatory/integration facts live in
   `docs/regulatory/` + `docs/integrations/` with a `## Sources` section + `verify-by:` date, grounded in
   raw captures under `db/reference/`. `pnpm lint:repo` enforces this and link integrity. Use the
@@ -41,25 +44,26 @@ Secure consistency with the cheapest mechanism that works; reserve subagents for
   integrations, **data-handling (GDPR)**, **accessibility**, **design-system**.
 - **Read-only subagents** (isolated review) — `vat-reviewer`, `privacy-reviewer`, `a11y-reviewer`,
   `integration-auditor`, plus `explore` / `migration-author` / `test-runner`.
-- **Skills** (procedural) — add-migration, new-vat-scenario, saft-validate, new-feature, html-report,
-  **design-review**.
+- **Skills** (procedural) — the `.claude/skills/` directory is the source of truth: add-migration,
+  new-vat-scenario, saft-validate, new-feature, html-report, design-review, backlog, handover, new-adr,
+  regulatory-update.
 
 Do NOT create subagents for "repo structure", "app design", or "accounting rules" — those are
 constraints (rules/docs/tests/ADRs), not recurring reviews. Add a new subagent only on a demonstrated
 need, and pair it with a deterministic backstop.
 
 ## 3a. Definition of Done
-Every change meets `docs/quality-bar.md` before merge — production-ready, enforced by CI
-required checks + hooks, not by reminders. No stub is "done"; no merge past a red check.
+Every change meets `docs/quality-bar.md` before merge — enforced by CI required checks + hooks, not
+reminders.
 
 ## 4. Security always/never
-- NEVER commit secrets; never read `.env*`/`secrets/**` (denied in settings). Never let the domain
-  core call the network. Never auto-`git push` (it's an `ask`).
-- ALWAYS validate external payloads with Zod. ALWAYS keep ledger integrity in SQL. ALWAYS add a
-  test for new money/VAT/posting behavior.
+Enforced, not reminded: secret-handling (`.env*`/`secrets/**` denied), the no-network domain boundary,
+no auto-`git push`, Zod at every boundary, ledger integrity in SQL, and a test for every new
+money/VAT/posting behavior. The authoritative statements live in `AGENTS.md` (invariants), `SECURITY.md`
+(policy), and `.claude/settings.json` (the permission/hook gates).
 
 ## 5. Recurring corrections (grow this over time)
 > Add an item whenever the same correction is needed twice.
 - (none yet — fill in during the build)
 
-Last updated: 2026-06-22
+Last updated: 2026-06-23

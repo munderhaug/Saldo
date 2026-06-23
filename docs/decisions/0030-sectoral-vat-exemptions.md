@@ -10,10 +10,10 @@ Norwegian law (merverdiavgiftsloven kapittel 3) places whole activities outside 
 sosiale (§ 3-4), undervisning (§ 3-5), finansielle (§ 3-6), kunst/kultur (§ 3-7), idrett (§ 3-8), utleie av
 fast eiendom (§ 3-11) — so their revenue may never carry output VAT, **however the org is registered**. A
 registered consultant who also teaches must not charge VAT on the teaching line. `checkVatLine` cannot catch
-this: it only knows registration, not the supply's sector. We need an **activity** dimension.
+this: it only knows registration, not the supply's sector. An **activity** dimension is needed.
 
 Encoding all of kap. 3 + the reduced-rate scope (kap. 5) + delt-virksomhet apportionment (§ 8-2) at once is
-large and partly needs sources we have not captured. We must decide how much to enforce now.
+large and partly needs sources not yet captured. The open question is how much to enforce now.
 
 ## Decision
 Introduce **`VatActivity`** — a per-line property (consistent with ADR 0027's per-line model) — and gate the

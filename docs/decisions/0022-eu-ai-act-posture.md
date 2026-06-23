@@ -5,8 +5,8 @@
 
 ## Context
 Saldo uses an LLM for receipt extraction and AI-proposed entries (ADR 0009), so **Regulation (EU)
-2024/1689** (the AI Act) applies to part of the product. We need a recorded classification and a
-compliance approach grounded in the text, not a vague "we'll be careful". The full, cited analysis
+2024/1689** (the AI Act) applies to part of the product. A recorded classification and a
+compliance approach grounded in the text are required, not vague good intentions. The full, cited analysis
 is `docs/regulatory/eu-ai-act.md`; this ADR records the decision it leads to.
 
 ## Decision
@@ -14,7 +14,7 @@ Saldo adopts the following posture, grounded in the Act:
 
 1. **Scope boundary.** Only the **LLM features** are AI systems (Art. 3(1)). The deterministic
    `@saldo/domain` rules engine and SQL integrity layer are **not** AI systems — Recital 12 excludes
-   software executing "rules defined solely by natural persons". We keep that boundary sharp: it is
+   software executing "rules defined solely by natural persons". That boundary stays sharp: it is
    what keeps the regulated surface small.
 2. **Not prohibited, not high-risk.** None of Art. 5's prohibited practices apply. Saldo is not
    high-risk: it touches no Annex III area. The honest-number/estimated-tax feature computes the
@@ -22,21 +22,23 @@ Saldo adopts the following posture, grounded in the Act:
    persons*).
 3. **Roles.** Saldo is the **provider** of its AI system and a **deployer** of the model (Art. 3(3),
    (4)); it is **not** a GPAI provider and **relies on** the model provider's Art. 53 documentation.
-4. **The two binding duties we build to:** **transparency** (Art. 50 — disclose the AI interaction;
+4. **The two binding duties:** **transparency** (Art. 50 — disclose the AI interaction;
    mark AI output as AI-assisted; applies 2 Aug 2026) and **AI literacy** (Art. 4 — a proportionate
-   competence note; in force). We build to the EU application dates regardless of EEA-incorporation
+   competence note; in force). Both follow the EU application dates regardless of EEA-incorporation
    timing.
-5. **The line we never cross (invariant):** no AI feature **evaluates a natural person's
+5. **The line never crossed (invariant):** no AI feature **evaluates a natural person's
    creditworthiness or profiles a natural person** — either would make Saldo a high-risk provider
    (Annex III(5)(b); Art. 6(3) final subparagraph; Art. 25(1)). Recorded as an invariant in AGENTS.md and
    gated by `.claude/rules/ai-act.md`.
 
 ## Relationship to ADR 0002 (propose-only AI)
-ADR 0002 already gives us most of what the Act wants: AI **proposes**, the rules engine
+ADR 0002 already provides most of what the Act wants: AI **proposes**, the rules engine
 **validates**, a human **confirms**, and **AI never writes the ledger**. ADR 0022 **sharpens** it
 with two AI-Act-specific requirements that sit on top of that model: every AI-proposed value is
 **disclosed as an AI interaction** (Art. 50(1)) and **labelled "AI-assisted" with logged provenance**
-(Art. 50(2)). The oversight model is unchanged; transparency and provenance are added.
+(Art. 50(2)). The oversight model is unchanged; transparency and provenance are added. ADR 0028 further
+sharpens the boundary: the deterministic engine — never an LLM — decides postings (AI may explain a
+rule, not be it).
 
 ## Consequences
 - **Easier:** a defensible, cited classification; a small, well-bounded compliance surface; the

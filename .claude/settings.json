@@ -7,6 +7,7 @@
       "Bash(pnpm format:*)",
       "Bash(pnpm db:migrate)",
       "Bash(pnpm db:introspect)",
+      "Bash(pnpm db:lint)",
       "Bash(pnpm saft:*)",
       "Bash(pnpm --filter*)",
       "Bash(git diff:*)",
@@ -16,7 +17,7 @@
       "Glob",
       "Grep"
     ],
-    "ask": ["Bash(git push:*)", "Bash(pnpm deploy:*)", "Bash(kamal:*)", "Bash(dbmate down:*)"],
+    "ask": ["Bash(git push:*)", "Bash(pnpm deploy:*)", "Bash(kamal:*)", "Bash(pnpm db:rollback)"],
     "deny": ["Read(./.env)", "Read(./.env.*)", "Read(./**/.env*)", "Read(./secrets/**)"]
   },
   "hooks": {

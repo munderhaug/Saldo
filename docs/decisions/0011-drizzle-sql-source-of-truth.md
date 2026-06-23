@@ -4,7 +4,7 @@
 - **Date:** 2026-06-22
 
 ## Context
-We want Drizzle's typed queries and large agent corpus, but integrity lives in raw SQL (ADR 0003).
+Drizzle's typed queries and large agent corpus are desirable, but integrity lives in raw SQL (ADR 0003).
 Drizzle's default "schema-as-TypeScript with generated migrations" would create a second source of
 schema truth that can drift from the hand-written SQL.
 

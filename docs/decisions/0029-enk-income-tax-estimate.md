@@ -9,7 +9,7 @@ tax to fence off from the spendable headline. Until now that figure was **inject
 source existed, and the source-grounding rule (AGENTS.md) forbids inventing rates from memory. The 2026
 rates are now captured (`db/reference/skatt/`, distilled in `docs/regulatory/skatt-enk-personskatt.md`), so
 `feat-tax-estimate` can compute it. But an ENK owner's *exact* tax depends on facts Saldo does not have
-early in the year (other income, capital basis, residence, wealth). We must decide **what the estimate
+early in the year (other income, capital basis, residence, wealth). The estimate must define **what it
 models and what it deliberately omits**, and record it — this is a number shown to a user about their tax.
 
 ## Decision

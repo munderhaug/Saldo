@@ -3,9 +3,10 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: `feat-tax-estimate` + `vat-sectoral-exemptions` (ADR 0029, 0030)
-**Branch:** `claude/practical-edison-20f9p6` (off `main` at PR #18 / `3e86e1b` — per-line VAT engine).
-Lands via a reviewed PR — never a direct push to `main`. (Trust `git log` over any hash here.)
+**Last updated:** 2026-06-23 — session: `repo-consistency-remediation` (whole-repo audit + voice / state-once / staleness fixes, a repo-lint voice gate, and mval § 2-1 grounding)
+**Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
+direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
+are not restated here, where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
 > not configured here. **This session HAD outbound egress and USED it** (verified + fetched: Lovdata
@@ -60,7 +61,30 @@ page past `verify-by` with dependents. This *verified* status is the quality alt
 convenience):** A is the prerequisite (B/C are worthless until docs derive from a gated source) and fixes
 the *proven* failure; for a system of record, *verified* status (A+B) beats *blindly-automated* status (C).
 
-## This session (1/2) — `feat-tax-estimate`: source-grounded ENK income-tax estimate (ADR 0029)
+## This session — repo-wide consistency audit + remediation (doc-quality)
+An owner-requested audit of the **entire repo** against the AGENTS.md standard, then a full remediation —
+landing as a reviewed PR to `main`. Audit report: `docs/repo-consistency-audit-2026-06-23.md` (carries a
+resolution banner). Full gate green (typecheck · lint · test · lint:repo · format:check · backlog validate).
+- **P0 correctness:** bokføringsplikt no longer conflated with the 50k MVA threshold (grounded in the
+  committed Skatteetaten capture); the LLM-default contradiction; deploy docs → ADR 0015; the CI-step
+  order vs `ci.yml`; the auth-broker ADR ref (0008 → 0020).
+- **Neutral voice:** removed reader-addressing "You chose…" (roadmap) and editorial "we/our" (the ADR
+  template + ~14 ADRs, tech-stack, SECURITY, READMEs, …) — and **added a `repo-lint` voice gate**
+  (check I) so it can't recur (proven to bite; runs in CI + the docs PostToolUse hook).
+- **State a fact once:** condensed duplicated/stale content to pointers — build-spec §4.2/§6/§14/§15/§17/§18
+  (~650 → ~424 lines), domain-model, decisions/README prose, the tech-stack agentic block,
+  house-standards §3a/§4. Closes `docs-consolidate-build-spec`.
+- **De-staling + structure:** STATUS current-state facts (branch/HEAD/counts/ENK rates) → pointers; dead
+  integration refs → "(planned)"; emoji → text; status banners on the four narrative docs; ADR
+  supersession reciprocity (0002→0022/0028, 0022→0028, 0027→0030).
+- **Source-grounding:** captured **mval § 2-1** verbatim (the 50k/140k registration threshold) into
+  `db/reference/mva/` and grounded `mva-registration-threshold.md` (dropped its "not yet committed"
+  caveat). Egress was available and used.
+- **Harness:** `.claude/settings.json` — allow `pnpm db:lint`; gate `pnpm db:rollback` (not raw `dbmate down`).
+- **Next:** the assigned `harness-doc-freshness` (status-block.mjs) then `harness-knowledge-graph` (the brief
+  at the top). The doc corpus is now clean + voice-gated, so the generator lands on solid ground.
+
+## Previous session — `feat-tax-estimate`: source-grounded ENK income-tax estimate (ADR 0029)
 Grounded the **ENK personal-tax layer** and encoded it, taking the honest-number's `estimatedTax` from
 **INJECTED** to **source-grounded**. A full vertical slice: capture verbatim primaries → distil a cited
 page → pure domain estimator (exhaustive + property tests) → ADR. **Domain-only, no migration.** Full gate
@@ -73,11 +97,11 @@ captures; clean on all 7 axes).
   (FOR-2025-12-18-2748 — trygdeavgift §§ 6–8) + folketrygdloven § 23-3 (nedre grense / 25 % opptrapping).
   Cross-confirmed 2026 figures against Skatteetaten (summarised, not reproduced). Distilled into
   **`docs/regulatory/skatt-enk-personskatt.md`** (cited, verify-by 2026-12-31).
-- **Two facts pinned that are widely gotten wrong:** a *person's* 22 % alminnelig inntekt = fellesskatt
-  8,25 + kommune 11,35 + fylke 2,40 (the § 3-3 "22 %" is the **company** rate, not an ENK owner's); and
-  **minstefradrag does NOT apply to næringsinntekt**. Personfradrag 2026 = **114 540 kr** (a websearch
-  summary claimed 45 000 — wrong; verbatim § 6-3 settled it). Trygdeavgift næring **10,8 %** with a **99 650
-  kr** floor and a **25 %** phase-in cap (binds ≈ 99 650 → 175 440 kr, then flat 10,8 %).
+- **Two facts pinned that are widely gotten wrong** (now canonical in
+  `docs/regulatory/skatt-enk-personskatt.md`): a *person's* 22 % alminnelig inntekt is the sum of
+  fellesskatt + kommune + fylke (the § 3-3 "22 %" is the **company** rate, not an ENK owner's), and
+  **minstefradrag does NOT apply to næringsinntekt**. The exact 2026 figures (personfradrag,
+  trygdeavgift rate/floor/phase-in) live on that cited page — not restated here.
 - **`packages/domain/src/tax/`** — `params.ts` (the cited 2026 rate table, keyed by year, **fail-closed**
   for un-captured years; same pattern as `saft/rates.ts`) + `income-estimate.ts`:
   `estimateEnkIncomeTax(profit, year)` → `{ alminneligInntektSkatt, trinnskatt, trygdeavgift, total }`.
@@ -99,7 +123,7 @@ captures; clean on all 7 axes).
   show); or continue the regulatory foundation — `vat-sectoral-exemptions` (mval kap. 3, on the new gate) or
   the VAT/bokføring Tier-1 gaps (tidfesting / tap på krav / uttak / justering / EHF-Peppol; `bokforingslov-doc`).
 
-## This session (2/2) — `vat-sectoral-exemptions`: the activity dimension on the VAT gate (ADR 0030)
+## Previous session — `vat-sectoral-exemptions`: the activity dimension on the VAT gate (ADR 0030)
 Extended the freshly-landed line-treatment gate with the **sectoral-exemption (activity)** dimension, so a
 user can't charge VAT on an *unntatt* activity (the § 3-7 musician problem, generalized to helse / sosiale /
 undervisning / finansielle / idrett / fast eiendom). **Domain-only, no migration, DB-independent.** Same
@@ -251,14 +275,14 @@ ADR 0022 (EU AI Act posture) + `docs/regulatory/eu-ai-act.md` + `.claude/rules/a
 `LICENSE` + ADR 0023; AGENTS.md made canonical (CLAUDE.md imports it); roadmap renamed; 8 unused deps
 pruned; repo-lint rule-glob + slop guardrails. (Detail in the ADRs / `git log`.)
 
-## Verified state (current — at branch HEAD `cfbe475`)
+## Verified state (current — see `git rev-parse HEAD` for the exact commit)
 Full gate green at HEAD:
-- `pnpm typecheck` · `lint` · `format:check` · `lint:repo` (**61 docs / 9 sourced / 0 warn**) ·
-  `backlog validate` (**47 tasks**, acyclic).
-- `pnpm test` — **158 domain** (incl. fast-check) **+ 23 web**; the **34 integration tests** skip cleanly
-  where no DB is present and run on **Testcontainers in CI** (here: local Postgres via `DATABASE_URL`;
-  Docker is **not** available, so Testcontainers can't run locally).
-- **Decisions current:** ADRs **0001–0030** (index in `docs/decisions/README.md`).
+- Static gates green: `pnpm typecheck` · `lint` · `format:check` · `lint:repo` · `backlog validate`
+  (run them or see CI for the live counts — not restated here).
+- `pnpm test` green (domain: exhaustive + fast-check; web; the integration suite skips cleanly with no
+  DB and runs on **Testcontainers in CI**).
+- **Decisions:** the ADR index is `docs/decisions/README.md` (the current range is derivable from
+  `docs/decisions/0*.md`).
 - **Enduring proven invariants** (unchanged): ledger balance / immutability / period-lock /
   gapless-counter + tenant **FORCE-RLS** isolation, proven by Testcontainers (`apps/web/test/integrity/`);
   the **no-contradiction** repo-lint gate (every `ADR NNNN` ref resolves, no "Locked" label, cited
@@ -294,12 +318,10 @@ frontend tokens + shadcn + React 19; identity & sessions (0020); four ledger-int
 typography foundations of the UI followed in ADRs **0024–0026** (PRs #13–#15).
 
 ## In progress
-- Branch `claude/practical-edison-20f9p6` carries this session's **3 commits** — `feat-tax-estimate`
-  (ADR 0029), `vat-sectoral-exemptions` (ADR 0030), and the STATUS/roadmap reconciliation — on top of the
-  merged #18 base. **No PR opened yet.**
+- The **doc-consistency remediation** (this session) is landing via a reviewed PR to `main` — see the
+  "This session" block above. Nothing else is mid-flight.
 - **Next session's assignment: the doc-freshness mechanism (A→B)** — see the "Next session (assigned)" brief
-  at the top + tasks `harness-doc-freshness` / `harness-knowledge-graph`. (Tasks added to the graph this
-  session; not yet started.)
+  at the top + tasks `harness-doc-freshness` / `harness-knowledge-graph`. Not yet started.
 
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**

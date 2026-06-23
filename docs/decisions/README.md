@@ -36,18 +36,6 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0029 | ENK income-tax estimate: model and stated assumptions | Accepted |
 | 0030 | Sectoral VAT exemptions: the activity dimension, revenue gate first | Accepted |
 
-ADRs 0001–0004 restate decisions from `saldo-build-specification.md` §17; 0005–0011 capture the
-stack-shaping calls from the tech-stack review; 0012–0016 harden tenancy and record the hosting,
-CI-database, deployment, and design-system decisions; 0017 makes the quality bar deterministic
-(fail-closed hooks, turn-end green-bar, CI supply-chain hardening); 0018 closes four ledger-integrity
-gaps (posting-side period lock, posted-completeness, period non-overlap, cross-org period FK); 0019
-adds the committed task graph + rejected-approaches log; 0020 adds the auth/identity first lock; 0021
-adds the pino observability baseline; 0022 records the EU AI Act classification + compliance posture
-(sharpening 0002); 0023 records that Saldo's own code is proprietary (the stack stays OSS +
-self-hostable per 0008); 0024–0026 establish the copy, experience, and typography foundations of the UI;
-0027 lifts VAT treatment to the line (revenue-side now, delt-virksomhet apportionment sequenced); 0028
-fixes the regulatory architecture (deterministic engine over captured sources; AI explains, never
-decides — sharpening 0002/0022); 0029 grounds the honest-number's income-tax estimate in the captured
-2026 rates with explicit, conservative assumptions; 0030 adds the sectoral-exemption (activity) dimension
-to the VAT gate — the revenue side first (an exempt activity can't charge VAT), reduced-rate and
-apportionment sequenced. Approaches we **rejected** live in `rejected.md` (the anti-ADR).
+Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
+(e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that
+were **rejected** live in `rejected.md` (the anti-ADR).

@@ -1,12 +1,14 @@
 # Glossary (Norwegian accounting terms)
 
+> Status: **Current** (2026-06-23).
+
 Treat these as precise domain terms, not approximate translations. The authoritative table lives in
 `docs/saldo-build-specification.md` §3; the high-frequency subset is below for quick reference.
 
 | Term | Meaning |
 |---|---|
 | **Enkeltpersonforetak (ENK)** | Sole proprietorship; the target legal form. Owner not an employee. |
-| **Bokføringsplikt** | Bookkeeping obligation (above 50,000 NOK turnover). |
+| **Bokføringsplikt** | Bookkeeping obligation — follows from the duty to submit annual accounts and/or income statements (næringsoppgave) or a VAT return; distinct from the 50,000 NOK MVA-registration threshold. |
 | **Regnskapsplikt** | Annual-accounts obligation (ENK only above 20M assets / 20 årsverk). Out of scope. |
 | **MVA / merverdiavgift** | VAT. Output = utgående, input = inngående. |
 | **Bilag** | Voucher — the documented accounting transaction. |

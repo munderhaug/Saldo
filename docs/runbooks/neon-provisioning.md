@@ -3,7 +3,7 @@
 How to stand up the hosted Postgres (Neon EU, **ADR 0013**) and apply Saldo's schema. The schema +
 integrity (triggers, RLS, the gapless counter, the auth tables) is **migration-driven** — `dbmate`
 applies `db/migrations/*.sql` over a normal connection string. None of it needs the Neon API/MCP; that
-API is only for control-plane actions (creating the project), which you do once in the console.
+API is only for control-plane actions (creating the project), performed once in the console.
 
 ## 1. Create the project (Neon console, once)
 
@@ -20,8 +20,8 @@ Pick one:
   (repo Settings → Environments → `production`; add a required reviewer there). Run the
   **Deploy migrations** workflow (`.github/workflows/deploy-migrate.yml`) → it runs `pnpm db:migrate`
   against Neon. Idempotent and re-runnable.
-- **From your machine:** `DATABASE_URL='postgres://…neon…?sslmode=require' pnpm db:migrate`. Keeps the
-  credential off any shared environment entirely.
+- **From a local machine:** `DATABASE_URL='postgres://…neon…?sslmode=require' pnpm db:migrate`. Keeps
+  the credential off any shared environment entirely.
 
 Either way this builds every table + the four SQL guarantees + RLS + the `app_user`/`user_session`/
 `membership` auth tables, and **creates the `saldo_app` role** (without a password).
@@ -54,8 +54,9 @@ ALTER ROLE saldo_app WITH PASSWORD '<a strong, stored secret>';
 ## Notes
 
 - Secrets never go in the cloud-environment "Environment variables" box (it's shared/visible) — use a
-  CI/Environment secret or your own machine.
-- Local dev uses a throwaway local Postgres (the environment setup script), not Neon; Neon is real
-  Postgres, so what passes locally / in CI passes here.
+  CI/Environment secret or a local machine.
+- Local dev uses a throwaway local Postgres (`docker compose -f infra/compose.yaml`; see
+  `docs/runbook.md` first-time setup), not Neon; Neon is real Postgres, so what passes locally / in
+  CI passes here.
 
 See: ADR 0013 (Neon), ADR 0012 (FORCE RLS + app role), ADR 0020 (auth), `docs/STATUS.md` known issues.

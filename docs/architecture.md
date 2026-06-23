@@ -1,5 +1,7 @@
 # Architecture
 
+> Status: **Current** (2026-06-23).
+
 Full stack: `docs/tech-stack.md`. Domain rules: `docs/domain-model.md`. Canonical spec:
 `docs/saldo-build-specification.md`.
 

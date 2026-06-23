@@ -5,7 +5,7 @@
 
 ## Context
 RLS (ADR 0012) is a strong **second** lock, but there was no **first** lock: nothing authenticated a
-user or linked them to an org, so `withOrgTx` trusted a caller-supplied org id. We need authentication,
+user or linked them to an org, so `withOrgTx` trusted a caller-supplied org id. The system needs authentication,
 server-side sessions, and a user→org authz link — best-practice, and testable now without a live eID
 broker (BankID/Vipps via Criipto needs egress + a tenant, deferred).
 

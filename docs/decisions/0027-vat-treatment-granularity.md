@@ -51,6 +51,8 @@ lower-frequency and needs its own captured basis (§ 8-2 keys, the de-minimis th
   Testcontainers integrity test, and the build-spec scope-line revision — all deferred to that task.
 - `docs/regulatory/mva-kunstneriske-tjenester.md` stands as the cited basis; the gap is tracked in the
   backlog (`vat-line-level-model`, `vat-mixed-activity`, `vat-sectoral-exemptions`).
+- **Extended by ADR 0030** (sectoral VAT exemptions): the activity dimension that blocks charging VAT on
+  an exempt-sector line, composing with this per-line model.
 
 ## Alternatives considered
 - **Per-line *and* apportionment now (the full delt-virksomhet build).** Rejected as the first step —

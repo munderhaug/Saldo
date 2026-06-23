@@ -21,7 +21,7 @@ pnpm backlog validate   # schema + dangling-dep + cycle check (also runs in CI)
 ```
 
 Ordering: **value** (high→low), then **leverage** (unblocks the most downstream work — this is what the
-graph buys you over a list), then **effort** (quicker wins first).
+graph provides over a flat list), then **effort** (quicker wins first).
 
 ## Editing
 
@@ -33,5 +33,5 @@ depends_on, notes, refs }`.
 - `value`: `high` · `medium` · `low`. `effort`: `S` · `M` · `L`.
 - `depends_on`: ids that must be `done` or `cancelled` first. `validate` rejects dangling deps + cycles.
 
-Update it whenever the plan changes — and at session handover, alongside STATUS. When you abandon an
-approach, record it in `../decisions/rejected.md` so the next session doesn't re-try it.
+Update it whenever the plan changes — and at session handover, alongside STATUS. When an approach is
+abandoned, record it in `../decisions/rejected.md` so the next session doesn't re-try it.

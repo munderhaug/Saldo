@@ -1,0 +1,51 @@
+{
+  "organisasjonsnummer": "311000004",
+  "navn": "EKSEMPEL ENKELTPERSONFORETAK",
+  "organisasjonsform": {
+    "kode": "ENK",
+    "beskrivelse": "Enkeltpersonforetak",
+    "_links": {
+      "self": {
+        "href": "https://data.brreg.no/enhetsregisteret/api/organisasjonsformer/ENK"
+      }
+    }
+  },
+  "registreringsdatoEnhetsregisteret": "2025-01-15",
+  "registrertIMvaregisteret": false,
+  "naeringskode1": {
+    "kode": "62.010",
+    "beskrivelse": "Programmeringstjenester"
+  },
+  "harRegistrertAntallAnsatte": false,
+  "forretningsadresse": {
+    "land": "Norge",
+    "landkode": "NO",
+    "postnummer": "0123",
+    "poststed": "OSLO",
+    "adresse": [
+      "Eksempelveien 1"
+    ],
+    "kommune": "OSLO",
+    "kommunenummer": "0301"
+  },
+  "institusjonellSektorkode": {
+    "kode": "8200",
+    "beskrivelse": "Personlig næringsdrivende"
+  },
+  "registrertIForetaksregisteret": false,
+  "registrertIStiftelsesregisteret": false,
+  "registrertIFrivillighetsregisteret": false,
+  "konkurs": false,
+  "underAvvikling": false,
+  "underTvangsavviklingEllerTvangsopplosning": false,
+  "maalform": "Bokmål",
+  "registrertIPartiregisteret": false,
+  "paategninger": [],
+  "erIKonsern": false,
+  "_links": {
+    "self": {
+      "href": "https://data.brreg.no/enhetsregisteret/api/enheter/311000004"
+    }
+  },
+  "respons_klasse": "Enhet"
+}

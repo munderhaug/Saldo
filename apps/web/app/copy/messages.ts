@@ -47,6 +47,42 @@ export const nb = {
   'auth.login.oidcNotConfigured': 'BankID er ikke konfigurert.',
   'auth.login.passwordDisabled': 'Passordpålogging er slått av.',
 
+  // ── Enhetsregisteret lookup — "find your business" ───────────────────────────
+  'oppslag.title': 'Finn foretaket ditt',
+  'oppslag.intro':
+    'Søk på navn eller organisasjonsnummer, så henter jeg resten fra Enhetsregisteret.',
+  'oppslag.label': 'Navn eller organisasjonsnummer',
+  'oppslag.hint': 'For eksempel «Equinor» eller 923 609 016.',
+  'oppslag.submit': 'Søk',
+  'oppslag.matchesCount': 'Viser {shown} av {total} treff.',
+  'oppslag.noMatches': 'Jeg fant ingen foretak som matcher «{query}».',
+  'oppslag.notFound': 'Jeg fant ingen enhet med organisasjonsnummer {orgnr}.',
+  'oppslag.invalidOrgNr':
+    'Det ser ut som et organisasjonsnummer, men kontrollsifferet stemmer ikke. Sjekk tallene en gang til?',
+  'oppslag.error':
+    'Jeg fikk ikke kontakt med Enhetsregisteret akkurat nå. Prøv igjen om et øyeblikk.',
+  'oppslag.tooShort': 'Skriv minst to tegn for å søke på navn.',
+  // Detail card — field labels
+  'oppslag.field.orgnr': 'Organisasjonsnummer',
+  'oppslag.field.form': 'Organisasjonsform',
+  'oppslag.field.address': 'Forretningsadresse',
+  'oppslag.field.industry': 'Næringskode',
+  'oppslag.field.vat': 'Merverdiavgift',
+  'oppslag.vat.registered': 'Registrert i Merverdiavgiftsregisteret',
+  'oppslag.vat.notRegistered': 'Ikke registrert i Merverdiavgiftsregisteret',
+  'oppslag.vat.unknown': 'Ukjent',
+  // Search results — table columns
+  'oppslag.col.name': 'Navn',
+  'oppslag.col.orgnr': 'Org.nr',
+  'oppslag.col.form': 'Form',
+  'oppslag.col.place': 'Sted',
+  // Heads-up status flags (sober tone — these matter for onboarding)
+  'oppslag.status.konkurs': 'Dette foretaket er registrert konkurs.',
+  'oppslag.status.avvikling': 'Dette foretaket er under avvikling.',
+  'oppslag.status.tvangsavvikling':
+    'Dette foretaket er under tvangsavvikling eller tvangsoppløsning.',
+  'oppslag.status.slettet': 'Dette foretaket er slettet fra registeret.',
+
   // ── Errors (root error boundary) ─────────────────────────────────────────────
   'error.title': 'Noe gikk galt',
   'error.statusHeading': '{status} {statusText}',
@@ -90,6 +126,36 @@ export const en = {
   'auth.login.errorBadCredentials': 'Wrong email or password.',
   'auth.login.oidcNotConfigured': 'BankID is not configured.',
   'auth.login.passwordDisabled': 'Password login is disabled.',
+
+  'oppslag.title': 'Find your business',
+  'oppslag.intro':
+    "Search by name or organisation number, and I'll fetch the rest from the register.",
+  'oppslag.label': 'Name or organisation number',
+  'oppslag.hint': 'For example "Equinor" or 923 609 016.',
+  'oppslag.submit': 'Search',
+  'oppslag.matchesCount': 'Showing {shown} of {total} matches.',
+  'oppslag.noMatches': 'I found no businesses matching "{query}".',
+  'oppslag.notFound': 'I found no unit with organisation number {orgnr}.',
+  'oppslag.invalidOrgNr':
+    "That looks like an organisation number, but the check digit doesn't add up. Mind checking the digits again?",
+  'oppslag.error': "I couldn't reach the register just now. Try again in a moment.",
+  'oppslag.tooShort': 'Type at least two characters to search by name.',
+  'oppslag.field.orgnr': 'Organisation number',
+  'oppslag.field.form': 'Legal form',
+  'oppslag.field.address': 'Business address',
+  'oppslag.field.industry': 'Industry code',
+  'oppslag.field.vat': 'Value-added tax',
+  'oppslag.vat.registered': 'Registered in the VAT Register',
+  'oppslag.vat.notRegistered': 'Not registered in the VAT Register',
+  'oppslag.vat.unknown': 'Unknown',
+  'oppslag.col.name': 'Name',
+  'oppslag.col.orgnr': 'Org. no.',
+  'oppslag.col.form': 'Form',
+  'oppslag.col.place': 'Location',
+  'oppslag.status.konkurs': 'This business is registered as bankrupt.',
+  'oppslag.status.avvikling': 'This business is being wound up.',
+  'oppslag.status.tvangsavvikling': 'This business is under compulsory liquidation or dissolution.',
+  'oppslag.status.slettet': 'This business has been deleted from the register.',
 
   'error.title': 'Something went wrong',
   'error.statusHeading': '{status} {statusText}',

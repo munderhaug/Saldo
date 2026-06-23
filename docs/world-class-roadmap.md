@@ -47,7 +47,11 @@ So **choosing Cloudflare costs you none of the ledger work.** Confirmed against 
 React Router 7 has **first-class Cloudflare support** (official template + Cloudflare Vite plugin,
 GA 2026), and **Neon + Workers via Hyperdrive** keeps `postgres.js` and RLS.
 
-### What changes under Cloudflare
+### What a *fully* Cloudflare-native (Workers) topology would change — the runner-up
+
+> The chosen **Option 2** (below) uses only Cloudflare's **edge/CDN + R2**, not the Workers runtime —
+> so the jobs and LLM rows here (Workflows, Workers AI) do **not** apply; `graphile-worker` and the
+> local-LLM option stay.
 
 | Concern | Current docs (self-hosted) | Cloudflare-native | Verdict |
 |---|---|---|---|
@@ -67,29 +71,28 @@ GA 2026), and **Neon + Workers via Hyperdrive** keeps `postgres.js` and RLS.
 - **B. Cloudflare-native serverless** (your lean): **minimal** ops, first-class RR7, managed
   durable jobs; cost is **proprietary lock-in** and a self-imposed-principle change (ADR 0008).
 
-### Recommendation: **B (Cloudflare-native), conditional on the EU box being checked**
+### Decision (2026-06-23): **Option 2 — persistent Node on an EU PaaS + Cloudflare edge/CDN + R2** (ADR 0015)
 
-This directly fixes the single biggest strategic risk I flagged — *operational sustainability for
-a solo maintainer*. The sovereignty principle (ADR 0008) was self-imposed; you're rightly willing
-to revisit it. Adopt Cloudflare-native, **keep Neon (EU) via Hyperdrive so the integrity layer is
-untouched**, and treat lock-in as a managed risk (your anti-lock-in guarantee is the **SAF-T +
-raw data export**, which is product-level and survives any host).
+After weighing all alternatives, the chosen architecture is a **persistent Node server in one EU
+region** (Railway/Render/Fly EU — interchangeable container hosts), with **Cloudflare as the edge
+layer** (CDN, WAF/DDoS, DNS) and **R2** (EU jurisdiction) for documents; the database stays **Neon
+EU** (ADR 0013), reached via **Hyperdrive** when fronted by Cloudflare. Rationale: the app's compute
+is **server-shaped** (PDF / SAF-T / LLM / jobs) and **single-country**, so a global edge runtime
+(Workers) is a poor fit and buys benefits Saldo doesn't need; a standard-Node host keeps the whole
+pipeline predictable and portable. This **keeps `graphile-worker` in-process (ADR 0010 stands)** and
+**leaves the local-LLM option open (ADR 0009 stands)** — so it also minimizes doc churn.
+**Cloudflare Workers-native** (the table above) is the documented **runner-up**; **self-host
+Hetzner/Kamal** is the sovereignty fallback.
 
-**The one box to check before committing (Norwegian bokføring + GDPR):**
+**The one box to check before committing (Norwegian bokføring + GDPR):** data-at-rest in the EU is
+achievable (**Neon EU**, **R2 `eu`**); confirm the EU residency of the chosen Node PaaS region,
+**sign Cloudflare's EU DPA + SCCs**, and verify **Hyperdrive preserves the `SET LOCAL` GUC**
+end-to-end (a Testcontainers/staging check).
 
-- ✅ Data-at-rest in EU is achievable: **Neon EU region**, **R2 `eu` jurisdiction**, **D1/Durable
-  Objects `eu` jurisdiction** (D1 added `--jurisdiction eu` Nov 2025).
-- ⚠️ **Worker compute residency**: Workers execute at the edge globally. Confirm **Regional
-  Services / Data Localization** keeps personal-data processing in-region to the standard you
-  want, and **sign Cloudflare's EU DPA + SCCs**. This is the gating compliance question.
-- ⚠️ Confirm **Hyperdrive preserves the `SET LOCAL` transaction GUC** end-to-end (expected — it
-  pools but preserves transaction semantics) with a Testcontainers/staging check.
-
-**Docs impact if you confirm B:** rewrite/ supersede **ADR 0008** (sovereignty → "EU-resident,
-managed; portability guaranteed by data export, not self-hosting"), **ADR 0010** (graphile-worker
-→ Workflows/Cron), **revisit ADR 0009** (LLM); add **ADR: deploy on Cloudflare Workers**; update
-the `tech-stack.md` rows for deploy/jobs/storage/observability/LLM. The domain, contracts, db, and
-auth work below are unaffected.
+**Docs impact (done in PR 1):** **ADR 0013** (Neon EU), **ADR 0014** (Testcontainers), **ADR 0015**
+(deploy: persistent Node on an EU PaaS + Cloudflare edge/R2, revising **ADR 0008**); **ADR 0010**
+(graphile-worker) and **ADR 0009** (local-LLM) **stand**. `tech-stack.md` deploy/storage/auth rows
+refreshed. The domain, contracts, db, and auth work below are unaffected.
 
 ---
 
@@ -108,15 +111,15 @@ solo-maintained, agent-built, 10-year horizon).
 | UI | shadcn/ui + Tailwind v4 | **Keep, but build it** | Currently documented, not implemented. See P0-2. |
 | React | 18.3 | **Upgrade → 19** | Stable; Actions/`useActionState`/`use()` pair with RR7. (Decided this session.) |
 | Migrations | dbmate | **Keep; add `squawk` lint** | SQL-first is correct; add unsafe-DDL gate. |
-| CI DB | Testcontainers | **Keep** | Real Postgres per run; supersedes Neon-branching. Write the ADR. |
-| Hosted DB | Neon (EU) | **Keep** | Pairs with Cloudflare via **Hyperdrive**. Write the ADR (kills the phantom "ADR 0013"). |
-| Jobs | graphile-worker | **Change → Cloudflare Workflows** (if B) | Durable execution + cron; managed retries. |
-| Object storage | MinIO/Garage | **Change → R2 (eu)** (if B) | S3-compatible; EU jurisdiction. |
-| LLM/OCR | local Ollama/vLLM + Qwen2.5-VL | **Revisit → Workers AI / AI Gateway or external EU** (if B) | Decide at Phase 4; keep the OpenAI-compatible abstraction so it's swappable. |
+| CI DB | Testcontainers | **Keep** | Real Postgres per run; supersedes Neon-branching (ADR 0014). |
+| Hosted DB | Neon (EU) | **Keep** | Pairs with Cloudflare via **Hyperdrive** (ADR 0013). |
+| Jobs | graphile-worker | **Keep** (Option 2) | In-process on the persistent EU Node host; ADR 0010 stands. |
+| Object storage | MinIO/Garage | **Change → R2 (eu)** | S3-compatible; EU jurisdiction (ADR 0015). MinIO/Garage = self-host fallback. |
+| LLM/OCR | local Ollama/vLLM + Qwen2.5-VL | **Keep option; decide at Phase 4** | ADR 0009 stands; keep the OpenAI-compatible abstraction so hosted-EU is a base-URL swap. |
 | Auth | openid-client + ~~oslo~~ + PG sessions | **Keep shape; fix lib** | `oslo` is deprecated → `@oslojs/crypto` + `@oslojs/encoding`; openid-client **v6**. |
 | Validation | Zod | **Keep; extend to env** | Add a Zod-validated `env.ts` (the one boundary Zod is missing). |
 | Forms/tables | RHF+Zod / TanStack Table | **Keep — build when needed** | Installed but unused today; wire when the UI lands (don't carry dead deps before then). |
-| Observability | OTel/SigNoz/pino | **Start with `pino` now**; OTel later (or Workers-native if B) | Not one log line exists yet; logging is foundational. |
+| Observability | OTel/SigNoz/pino | **Start with `pino` now**; OTel later | Not one log line exists yet; logging is foundational. |
 | Testing | Vitest/fast-check/Testcontainers/Playwright | **Keep; add stateful + e2e + axe + mutation** | Property tests are the safety net; extend them (P1/P2). |
 
 **Net:** the stack is excellent and mostly correct. The only *changes* are the ones Cloudflare
@@ -136,12 +139,13 @@ Eliminate all **24 contradictions** (Part 4) and make recurrence impossible.
       *"This is the dated vision doc; where it diverges from `tech-stack.md` or an ADR, those are
       Current."* (Your chosen hybrid: refresh + canonical pointer.)
 - [ ] Replace **"Locked" → "Current"** repo-wide; tag future-phase tech **"Intended"**.
-- [ ] Write **ADR 0013 (Hosted Postgres: Neon EU)** and **ADR 0014 (CI DB: Testcontainers
-      replaces Neon-branching)** — resolves the phantom "ADR 0013" reference in STATUS.
+- [ ] Write **ADR 0013 (Neon EU)**, **ADR 0014 (Testcontainers CI DB)**, and **ADR 0015 (deploy:
+      persistent Node on an EU PaaS + Cloudflare edge/R2, revising ADR 0008)** — resolves the phantom
+      "ADR 0013" reference in STATUS.
 - [ ] Update `.claude/rules/integrations.md`: `oslo` → `@oslojs/*`; openid-client v6.
 - [ ] Refresh `STATUS.md` (branch/HEAD/date) and soften `SECURITY.md` to mark unbuilt controls
       **Intended**, not present-tense.
-- [ ] Create `db/reference/brreg/` (+ README placeholder) so cited paths exist.
+- [ ] Create `db/reference/{brreg,llm,auth}/` (+ README placeholders) so every cited path exists.
 - [ ] **Extend `tools/repo-lint.mjs`** (the durable gate): every `ADR NNNN` reference resolves to
       a file; no `db/reference/**` path is cited unless it exists; the word "Locked" is banned as
       a status label; (optional) STATUS HEAD matches `git rev-parse`. CI then fails on any new
@@ -279,7 +283,7 @@ gate. Going forward, any reintroduced contradiction fails CI.
 
 | # | Item | Tier | Impact | Effort | Depends on | PR |
 |---|---|---|---|---|---|---|
-| 1 | Confirm Cloudflare (A/B) + EU-residency/DPA | P0 | ★★★★★ | S | — | (decision) |
+| 1 | Sign Cloudflare EU DPA + confirm PaaS EU region (architecture decided — ADR 0015) | P0 | ★★★★★ | S | — | (compliance) |
 | 2 | Consistency sweep + repo-lint gate | P0 | ★★★★ | S/M | label decision | PR1 |
 | 3 | ADRs 0013/0014 (+ Cloudflare/Auth ADRs) | P0 | ★★★ | S | #1 | PR1/PR4 |
 | 4 | Frontend tokens + shadcn + no-inline-CSS + React 19 | P0 | ★★★★ | M | — | PR2 |
@@ -292,15 +296,16 @@ gate. Going forward, any reintroduced contradiction fails CI.
 | 11 | Freshness loop (scheduled CI) | P1 | ★★★ | S | #2 | — |
 | 12 | e2e (Playwright) + axe | P1 | ★★★ | M | #5 | — |
 | 13 | DR runbook + restore drills | P1 | ★★★★ | M | #1 | — |
-| 14 | OTel / Workers-native tracing | P2 | ★★ | M | #1,#8 | — |
+| 14 | OTel tracing (SigNoz/Grafana) | P2 | ★★ | M | #8 | — |
 | 15 | Mutation testing (Stryker) | P2 | ★★ | S | #10 | — |
 
 ---
 
 ## Part 6 — Open decisions for you
 
-1. **Cloudflare A vs B** (Part 0) — recommend **B**, conditional on the EU-residency/DPA check.
-   *Everything else waits on this.*
+1. **Cloudflare EU residency / DPA** — the architecture is **decided** (Option 2, ADR 0015). The
+   residual action is to **sign Cloudflare's EU DPA + SCCs** and confirm the Node-PaaS EU region
+   before go-live.
 2. **LLM hosting** (Phase 4) — Workers AI vs external EU GPU vs (still) local. Keep the
    OpenAI-compatible abstraction so it's a base-URL swap.
 3. **Transactional email** — EU provider (Postmark EU / SES eu-* / Scaleway TEM) vs Cloudflare

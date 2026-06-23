@@ -3,9 +3,10 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-22 — session: Phase 0 step 5 (RLS tenancy hardening + tenancy middleware)
-**Branch:** `claude/upbeat-darwin-hepsel` (off `main`, which now includes Phase 0 steps 1–4 via
-PR #6 + Neon MCP via PR #8). HEAD `014f38c`. Lands via reviewed PR — no direct pushes to `main`.
+**Last updated:** 2026-06-23 — session: world-class review + PR 1 (decisions & consistency sweep)
+**Branch:** `claude/vigilant-curie-gydm6s` (off `main`, which includes Phase 0 steps 1–5 via
+PR #6/#8/#9). Lands via reviewed PR — no direct pushes to `main`. (HEAD moves each commit — trust
+`git log` over any hash written here.)
 
 > ⚠️ **This environment blocks ALL external network egress except the npm registry.** Neon
 > (`*.neon.tech`), Criipto, and Brønnøysund (`data.brreg.no`) all return 403 "Host not in allowlist",

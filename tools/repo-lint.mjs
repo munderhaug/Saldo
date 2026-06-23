@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// Repo hygiene gate: validates the .claude/ harness frontmatter, internal doc-link integrity, and the
-// cited-&-dated convention for regulatory/integration pages. Dependency-free. Run via `pnpm lint:repo`.
+// Repo hygiene gate: validates the .claude/ harness frontmatter, internal doc-link integrity, the
+// cited-&-dated convention for regulatory/integration pages, and the no-contradiction invariants
+// (ADR cross-references resolve, no "Locked" status label, cited db/reference paths exist).
+// Dependency-free. Run via `pnpm lint:repo`.
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,6 +75,34 @@ for (const f of sourced) {
     warnings.push(
       `${rel(f)}: verify-by ${vb[1]} has passed — re-confirm against the primary source`,
     );
+}
+
+// D) ADR cross-references resolve to a file in docs/decisions/ (no phantom ADR numbers).
+const adrNums = new Set(
+  walk(join(root, 'docs/decisions'), (p) => /\/\d{4}-.*\.md$/.test(p)).map(
+    (p) => p.match(/\/(\d{4})-/)[1],
+  ),
+);
+for (const f of docFiles) {
+  for (const m of read(f).matchAll(/\bADRs?[-\s]?(\d{4})/g)) {
+    if (!adrNums.has(m[1]))
+      errors.push(`${rel(f)}: references ADR ${m[1]}, which has no file in docs/decisions/`);
+  }
+}
+
+// E) "Locked" must not be used as a status label (the vocabulary is Current / Intended / Superseded).
+for (const f of docFiles) {
+  const text = read(f);
+  if (/—\s*LOCKED\b/.test(text) || /\bstatus\b\s*[:|]\s*\*{0,2}\s*locked\b/i.test(text))
+    errors.push(`${rel(f)}: uses "Locked" as a status label — use Current / Intended / Superseded`);
+}
+
+// F) every cited db/reference/<dir> path actually exists (no citing a source that was never captured).
+for (const f of docFiles) {
+  for (const m of read(f).matchAll(/db\/reference\/([a-z0-9][a-z0-9-]*)/g)) {
+    if (!existsSync(join(root, 'db/reference', m[1])))
+      errors.push(`${rel(f)}: cites db/reference/${m[1]}/ which does not exist`);
+  }
 }
 
 for (const w of warnings) console.warn('warn: ' + w);

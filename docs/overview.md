@@ -18,5 +18,5 @@ and files their own taxes — phone for capture, desktop for everything else.
 - Full product spec & scope: `docs/saldo-build-specification.md` (§1–§2, §8).
 - Norwegian terms: `docs/glossary.md`.
 - Domain rules & data model: `docs/domain-model.md`.
-- Locked stack: `docs/tech-stack.md`. Architecture: `docs/architecture.md`.
+- Current stack: `docs/tech-stack.md`. Architecture: `docs/architecture.md`.
 - Decisions: `docs/decisions/`. Integrations: `docs/integrations/`.

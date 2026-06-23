@@ -15,8 +15,11 @@ reproduce and impact. We aim to acknowledge within a few business days.
 
 ## Engineering controls
 - Secrets only in the server environment; `.env*` and `secrets/**` are git-ignored and agent-denied.
-- Inputs validated with Zod at every boundary; queries parameterized; tenancy enforced by app-layer
-  org filtering **and** Postgres RLS (`app.current_org` GUC).
-- OIDC with PKCE + state/nonce; server-side sessions; secure cookies.
+- Inputs are validated with Zod at boundaries and queries are parameterized. Tenancy is enforced
+  **today** by Postgres `FORCE` RLS via the `app.current_org` GUC (ADR 0012); app-layer org filtering
+  is added with the query layer (**Intended**, Phase 0).
+- OIDC with PKCE + state/nonce, server-side sessions, and secure cookies are **Intended** — the
+  Phase 0 identity foundation, not yet implemented (see `docs/STATUS.md`).
 - Dependencies are audited in CI (`pnpm audit`) and kept current via Dependabot.
-- Audit trail is append-only; the ledger is immutable (enforced by SQL triggers).
+- The ledger is immutable and append-only (enforced by SQL triggers today); a dedicated audit trail
+  for actor identity lands with the app layer (**Intended**).

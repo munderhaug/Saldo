@@ -22,11 +22,11 @@ pnpm dev
 | `db/migrations` | Raw SQL — the source of truth for schema + all ledger integrity. |
 | `db/reference/saf-t` | Committed official SAF-T codes/accounts/XSD. |
 | `tools/eslint-plugin-saldo` | Custom lint rule banning raw arithmetic on money. |
-| `docs/` | Overview, glossary, domain model, architecture, **tech-stack (locked)**, ADRs, integrations. |
+| `docs/` | Overview, glossary, domain model, architecture, **tech-stack (current)**, ADRs, integrations. |
 | `.claude/` | Agentic harness: CLAUDE.md, path-scoped rules, subagents, skills, hooks. |
 
 ## Read first
-- **Locked stack:** [`docs/tech-stack.md`](docs/tech-stack.md)
+- **Current stack:** [`docs/tech-stack.md`](docs/tech-stack.md)
 - **Canonical spec:** [`docs/saldo-build-specification.md`](docs/saldo-build-specification.md)
 - **Architecture:** [`docs/architecture.md`](docs/architecture.md) · **Decisions:** [`docs/decisions/`](docs/decisions/)
 - **Build sequencing:** spec §16 (start with Phase 0).

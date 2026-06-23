@@ -1,8 +1,9 @@
 # BankID / Vipps Login via Criipto or Signicat
 
 - **Purpose:** Production app login with the eID methods Norwegian users expect.
-- **Auth:** OIDC (authorization code + PKCE). Implemented with `openid-client` + `oslo` in RR7 route
-  actions; server-side session cookie; users stored in Postgres. Email/password only for early dev.
+- **Auth:** OIDC (authorization code + PKCE). Implemented with `openid-client` (v6) + `@oslojs/*` (the
+  `oslo` umbrella is deprecated) in RR7 route actions; server-side session cookie; users stored in
+  Postgres. Email/password only for early dev.
 - **Status / phase:** set up early — Phase 1 (provider account is onboarding-gated).
 - **Separation of concerns:** this is **app login only**. **ID-porten is a separate integration**
   (`altinn.md`) scoped to the Altinn tax-filing authorization flow — never reused for login.

@@ -207,6 +207,20 @@
       "depends_on": [],
       "notes": "The custom rules (no-money-arithmetic, no-arbitrary-tailwind, no-raw-color-utility) are verified by fixtures but have no committed RuleTester tests; wire a tools test runner. Expand korrodesign-style rules (focus-visible, font-family, element semantics) as UI surface grows.",
       "refs": ["tools/eslint-plugin-saldo/index.js", ".claude/rules/design-system.md"]
+    },
+    {
+      "id": "compliance-eu-ai-act",
+      "title": "EU AI Act readiness & compliance",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "NEXT SESSION FOCUS. Make the repo ready for + compliant with the EU AI Act. SOURCE-GROUNDED against the official AI Act text + EU/AI-Office guidance (regulatory-update skill) — never from memory. Classify Saldo's AI use (propose-only, ADR 0002: AI proposes -> rules engine validates -> human confirms; LLM receipt-OCR later): likely limited-risk -> transparency + human-oversight + logging obligations, not Annex III high-risk. Document the posture (an ADR + a cited regulatory page), check the propose-only/grace-window design against the oversight requirements, and add any gates (e.g. AI-output provenance/logging).",
+      "refs": [
+        "docs/decisions/0002-propose-only-ai.md",
+        ".claude/skills/regulatory-update/SKILL.md"
+      ]
     }
   ]
 }

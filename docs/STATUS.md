@@ -3,9 +3,10 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: P0 hardening PRs 3–6 + agentic-memory + design-lint + honest-number (epic PR opened)
-**Branch:** `claude/epic-bell-u2bbx9` (off `main`). **Open as a reviewed PR to `main`** — never a direct
-push. (HEAD moves each commit — trust `git log` over any hash written here.)
+**Last updated:** 2026-06-23 — session: P0 hardening PRs 3–6 + agentic-memory + design-lint + honest-number + dev-infra (epic **PR #11**)
+**Branch:** this work lands via **PR #11 → `main`** (CI-gated squash-merge). After merge, `main` is the
+integrated trunk; next work branches off `main`. (Trust `git log` over any hash here.) **Next focus:
+EU AI Act (see Next up).**
 
 > ⚠️ **Live external integrations are not exercised in these sessions.** The Neon control plane,
 > Criipto OIDC, and Brønnøysund (`data.brreg.no`) are not reachable/configured here, so auth and
@@ -123,10 +124,19 @@ org-onboarding behind it.
 ## In progress
 - (PR 3 committed; PRs 4–6 next this session)
 
-## Next up (ordered) — the feature track (P0 hardening is complete)
-**Ask the graph:** `pnpm backlog next` → currently **`feat-honest-number`** (high value, unblocks the
-mobile companion). `pnpm backlog ready` for the full ordered list; `pnpm backlog list` for blockers.
-**The feature track (Phase 1+):** Enhetsregisteret lookup; org & contacts onboarding (the user→org
+## Next up (ordered)
+**NEXT SESSION FOCUS → `compliance-eu-ai-act`: EU AI Act readiness & compliance.** Make the repo ready
+for + compliant with the EU AI Act. Work SOURCE-GROUNDED from the official AI Act text + EU/AI-Office
+guidance (the `regulatory-update` skill) — never from memory. Classify Saldo's AI use (propose-only,
+ADR 0002: AI proposes → rules engine validates → human confirms; LLM receipt-OCR later) — likely
+limited-risk (transparency + human-oversight + logging), not Annex III high-risk — then document the
+posture (an ADR + a cited regulatory page) and check the propose-only / grace-window design against the
+oversight obligations. Saldo already has structural advantages here (AI never writes the ledger; the
+rules engine is the boundary; pino logging exists) — this is largely *documenting + verifying* the
+posture, plus any provenance/logging gates.
+
+**Then the feature track:** `pnpm backlog next` (`pnpm backlog ready`/`list` for the rest). Pending:
+Enhetsregisteret lookup; org & contacts onboarding (the user→org
 membership UI); the **honest-number domain feature** (spendable = income − VAT held − estimated tax —
 pure + exhaustively tested) + its reveal; the Norwegian-first **keyed microcopy** system; the **mobile
 companion** surface (`components/mobile`, per ADR 0016, built per feature); reverse-charge dual-leg +

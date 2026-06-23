@@ -29,12 +29,23 @@
   (lint:repo+audit+knip → one rolling issue). `knip` is advisory (cron), not a blocking gate (ADR 0017).
 
 ## Active phase
-**Phase 0 (Foundation) — hardening.** Prior sessions delivered steps 1–5 (ledger schema, SQL-integrity
-proofs, SAF-T reference data, VAT engine, RLS tenancy + `withOrgTx`). This session: a full world-class
-review + the foundation-hardening PRs 1 / 2 / 2.5. Next: the remaining hardening PRs 3–6, then the
-feature track (auth → Enhetsregisteret → Phase 1).
+**Phase 0 (Foundation) — hardening COMPLETE.** Prior sessions: steps 1–5 + hardening PRs 1 / 2 / 2.5.
+This session delivered the remaining hardening **PRs 3–6** (mechanical gates, ledger-integrity gaps,
+auth/identity first lock, observability) **+ a meta-PR** (agentic task graph + rejected-approaches log)
+**+ design-lint gates** for the incoming UI. P0 foundation is done. **Next: the feature track** —
+`pnpm backlog next` → `feat-honest-number` (the honest-number domain feature), with Enhetsregisteret +
+org-onboarding behind it.
 
 ## Done (this session)
+- **PR 6 — observability baseline (ADR 0021).** `pino` logger (`app/observability/logger.server.ts`,
+  JSON to stdout, externalizes cleanly from the build) with a `REDACT_PATHS` backstop (cookies, auth
+  headers, passwords/hashes, session+PKCE tokens, email, org-nr) and `requestLogger(request)` (a child
+  bound to `x-request-id`/method/path). Wired into `/auth/login|logout` — outcomes only, never PII.
+  Always-on redaction unit test. Logger reads `process.env` directly (foundational; importable in tests).
+- **Design-lint gates (review follow-up).** Two `eslint-plugin-saldo` rules — `no-arbitrary-tailwind`
+  (bans `bg-[#fff]`/`h-[100vh]`; allows shadcn `[&_tr]:` variants) + `no-raw-color-utility` (bans
+  `text-black`/`bg-red-500`; use semantic tokens) — enforced now so the first UI is on-bar. Anti-vibe
+  "tells" folded into `design-system.md`. (RuleTester coverage tracked as `harness-design-lint`.)
 - **PR 5 — identity & session foundation / auth (ADR 0020).** The missing FIRST lock. Migration
   `app_user` / `user_session` / `membership` (auth tables, intentionally NOT org-RLS'd — allowlisted in
   the RLS-coverage test). Lucia-pattern sessions (160-bit opaque token stored only as SHA-256 via
@@ -91,10 +102,10 @@ feature track (auth → Enhetsregisteret → Phase 1).
 ## In progress
 - (PR 3 committed; PRs 4–6 next this session)
 
-## Next up (ordered) — remaining P0 hardening, then the feature track
-**PR 6 — Observability baseline** — `pino` + redaction (personal data + secrets) + request-id from the
-first real route (OTel later). `pnpm backlog next` and the feature track follow.
-**Then the feature track (Phase 1+):** Enhetsregisteret lookup; org & contacts onboarding (the user→org
+## Next up (ordered) — the feature track (P0 hardening is complete)
+**Ask the graph:** `pnpm backlog next` → currently **`feat-honest-number`** (high value, unblocks the
+mobile companion). `pnpm backlog ready` for the full ordered list; `pnpm backlog list` for blockers.
+**The feature track (Phase 1+):** Enhetsregisteret lookup; org & contacts onboarding (the user→org
 membership UI); the **honest-number domain feature** (spendable = income − VAT held − estimated tax —
 pure + exhaustively tested) + its reveal; the Norwegian-first **keyed microcopy** system; the **mobile
 companion** surface (`components/mobile`, per ADR 0016, built per feature); reverse-charge dual-leg +

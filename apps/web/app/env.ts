@@ -23,6 +23,7 @@ const schema = z.object({
   OIDC_ISSUER: z.string().url().optional(),
   OIDC_CLIENT_ID: z.string().min(1).optional(),
   OIDC_CLIENT_SECRET: z.string().min(1).optional(),
+  // LOG_LEVEL is read directly by the logger (foundational infra; see observability/logger.server.ts).
 });
 
 export const env = schema.parse(process.env);

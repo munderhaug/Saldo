@@ -7,6 +7,7 @@ import { authenticateWithPassword } from '~/auth/dev-auth.server';
 import { createSession, generateSessionToken } from '~/auth/session.server';
 import { buildSessionCookie } from '~/auth/cookies.server';
 import { beginOidcLogin, buildOidcCookie } from '~/auth/oidc.server';
+import { requestLogger } from '~/observability/logger.server';
 import { credentialsInput } from '~/contracts';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -16,30 +17,39 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   assertSameOrigin(request);
+  const { log } = requestLogger(request);
   const form = await request.formData();
 
   // Start the OIDC redirect dance (BankID/Vipps via Criipto).
   if (form.get('intent') === 'oidc') {
     if (!oidcConfigured) throw new Response('OIDC is not configured', { status: 400 });
     const { authorizationUrl, transaction } = await beginOidcLogin();
+    log.info({ provider: 'oidc' }, 'login started');
     return redirect(authorizationUrl, {
       headers: { 'Set-Cookie': buildOidcCookie(transaction, isProd) },
     });
   }
 
-  // Dev email/password.
+  // Dev email/password. (Never log the email or password — only the outcome.)
   if (!devAuthEnabled) throw new Response('Password login is disabled', { status: 403 });
   const parsed = credentialsInput.safeParse({
     email: form.get('email'),
     password: form.get('password'),
   });
-  if (!parsed.success) return { error: 'Sjekk e-post og passord.' };
+  if (!parsed.success) {
+    log.warn({ provider: 'password', outcome: 'invalid_input' }, 'login failed');
+    return { error: 'Sjekk e-post og passord.' };
+  }
 
   const result = await authenticateWithPassword(db, parsed.data.email, parsed.data.password);
-  if (!result) return { error: 'Feil e-post eller passord.' };
+  if (!result) {
+    log.warn({ provider: 'password', outcome: 'invalid_credentials' }, 'login failed');
+    return { error: 'Feil e-post eller passord.' };
+  }
 
   const token = generateSessionToken();
   const session = await createSession(db, token, result.userId);
+  log.info({ provider: 'password', userId: result.userId }, 'login succeeded');
   return redirect('/', {
     headers: { 'Set-Cookie': buildSessionCookie(token, session.expiresAt, isProd) },
   });

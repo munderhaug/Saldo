@@ -5,11 +5,14 @@ import { isProd } from '~/env';
 import { assertSameOrigin } from '~/auth/auth.server';
 import { clearSessionCookie, readSessionToken } from '~/auth/cookies.server';
 import { invalidateSession } from '~/auth/session.server';
+import { requestLogger } from '~/observability/logger.server';
 
 export async function action({ request }: Route.ActionArgs) {
   assertSameOrigin(request);
+  const { log } = requestLogger(request);
   const token = readSessionToken(request);
   if (token) await invalidateSession(db, token);
+  log.info('logout');
   return redirect('/auth/login', { headers: { 'Set-Cookie': clearSessionCookie(isProd) } });
 }
 

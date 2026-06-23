@@ -48,13 +48,13 @@
     {
       "id": "pr6-observability",
       "title": "Observability baseline (pino + redaction + request-id)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "P0-hardening",
       "depends_on": [],
-      "notes": "pino with redaction of personal data + secrets, request-id from the first real route. OTel later (P2).",
-      "refs": ["docs/world-class-roadmap.md"]
+      "notes": "DONE (ADR 0021): pino logger.server.ts with REDACT_PATHS backstop + requestLogger(x-request-id), wired into /auth routes (outcomes only, never PII). Always-on redaction unit test. OTel later (P2).",
+      "refs": ["docs/decisions/0021-observability-baseline-pino.md"]
     },
     {
       "id": "test-stateful-ledger",

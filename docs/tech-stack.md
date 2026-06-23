@@ -50,17 +50,7 @@ because its HTML-first loader/action model produces fewer agent-error modes than
 mitigated with **Context7 MCP pinned to the exact version**. See ADR 0005.
 
 ## Agentic-repo layer (third constraint)
-Per the harness-design knowledge base, the repo follows the documented method:
-- **Single-agent loop is the default**; subagents are an escalation on demonstrated need.
-- Build order **CLAUDE.md → hooks → skills → plugins → MCP**.
-- `CLAUDE.md` hand-written, lean, stable prefix (prompt-cache friendly).
-- **Hooks carry all determinism** (typecheck/lint/affected-tests after edits; block edits to
-  generated files; deny `.env`/secret reads).
-- **Skills** use progressive disclosure, one default + escape hatch, and the load-bearing ones
-  get trigger + with/without-skill evals.
-- Skill scripts are **Node/`tsx`** (house-standard deviation from the KB's Python default) so
-  they can import the real `@saldo/domain`.
-- An **`html-report` skill** emits self-contained HTML artifacts for anything you'll review
-  (VAT-scenario matrices, SAF-T summaries, ER diagrams) — per the "HTML effectiveness" argument.
-
-See `docs/house-standards.md` and `.claude/` for the concrete configuration.
+The harness model — single-agent default, the **CLAUDE.md → hooks → skills → plugins → MCP** build
+order, hooks carrying all determinism, progressive-disclosure skills, the Node/`tsx` skill-script
+deviation, and the `html-report` artifact skill — is owned by `docs/house-standards.md` and configured
+in `.claude/`. It is not restated here.

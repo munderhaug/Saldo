@@ -40,7 +40,8 @@ A change is "done" only when ALL of the following hold:
 ## Explicitly NOT acceptable
 - A scaffold/stub merged and called "done" (e.g. a no-op validator) — finish it or mark it clearly TODO
   and out of the Definition of Done for that change.
-- `any`, raw arithmetic on money, hardcoded VAT codes/accounts, an UPDATE/DELETE on a posted row.
+- `any`, raw arithmetic on money, hardcoded VAT codes/accounts, an UPDATE/DELETE on a posted row (the
+  negative of the `AGENTS.md` hard invariants).
 - A ledger change without a SQL-integrity test. Secrets in the repo. Merging past a red check.
 - Shipping inaccessible UI, or English-only user-facing copy.
 

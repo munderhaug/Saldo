@@ -5,8 +5,7 @@
 
 ## Context
 Tenancy is enforced primarily at the app layer (every query filtered by `organization_id`) with
-Postgres RLS as defense-in-depth, keyed on the `app.current_org` GUC set per request (spec §6.4,
-ADR 0003). The core-ledger migration `ENABLE`d RLS and added `USING` policies — but that does **not**
+Postgres RLS as defense-in-depth, keyed on the `app.current_org` GUC set per request (ADR 0003). The core-ledger migration `ENABLE`d RLS and added `USING` policies — but that does **not**
 actually isolate tenants at runtime:
 
 - Postgres **exempts the table owner** from RLS unless `FORCE ROW LEVEL SECURITY` is set. If the app

@@ -275,6 +275,44 @@
       ]
     },
     {
+      "id": "harness-doc-freshness",
+      "title": "Derive repo-status from the task graph + gate it (kill doc staleness at the root)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "A of the owner-decided A→B plan. Root cause of recurring staleness: STATUS/roadmap RESTATE facts that live in tasks.json (the DAG, ADR 0019) / git / ADRs, so they rot (violates AGENTS.md 'state once, link, don't restate'). Fix: tools/status-block.mjs generates the volatile facts (ADR count+range; backlog total/done/todo + highest-value ready task) from committed sources into an AUTOGEN block in docs/STATUS.md; repo-lint --check fails on drift. Export load/readyTasks from backlog.mjs (GUARD its CLI-runs-on-import first). Add status:refresh/status:check scripts; update the handover skill. Full plan + gotchas in the 'Next session (assigned)' brief in docs/STATUS.md. Land with an ADR (/new-adr).",
+      "refs": [
+        "docs/STATUS.md",
+        "tools/repo-lint.mjs",
+        "tools/backlog.mjs",
+        ".claude/skills/handover/SKILL.md"
+      ]
+    },
+    {
+      "id": "harness-knowledge-graph",
+      "title": "Enrich the task graph with typed links + evidence-based drift checks",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["harness-doc-freshness"],
+      "notes": "B of A→B. Add typed edges to tasks.json (implements_adr, touches[files/globs], sources[db/reference|regulatory]) and verify status against EVIDENCE in repo-lint/backlog: a 'done' task whose touches/refs are gone; an ADR file with no implementing task; a regulatory page past verify-by with dependents. This 'verified status' is the quality alternative to blind auto-flip (C). See the 'Next session (assigned)' brief in docs/STATUS.md.",
+      "refs": ["docs/backlog/tasks.json", "tools/repo-lint.mjs"]
+    },
+    {
+      "id": "harness-status-autopr",
+      "title": "Optional: auto-suggest task status from PR/commit state",
+      "status": "todo",
+      "value": "low",
+      "effort": "M",
+      "phase": "P2",
+      "depends_on": ["harness-knowledge-graph"],
+      "notes": "C of A→B — DEFERRED/OPTIONAL (owner-decided). Only if task↔PR proves worth the GitHub coupling, and even then a GATE-CONFIRMED SUGGESTION, never a blind write: not every task is one PR (research/doc/regulatory-capture, multi-PR features), and 'done' here = gates green + ADR + merged, richer than 'PR merged'. Link via a commit/PR trailer 'Task: <id>'.",
+      "refs": ["docs/STATUS.md"]
+    },
+    {
       "id": "ci-pr-template",
       "title": "Make the quality bar mechanical (PR template + migration-touches-test gate)",
       "status": "todo",

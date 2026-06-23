@@ -189,6 +189,12 @@ function OrgDetail({ enhet }: { enhet: Enhet }) {
           {industry && <Field label={t('oppslag.field.industry')}>{industry}</Field>}
           <Field label={t('oppslag.field.vat')}>{vatStatusLabel(enhet)}</Field>
         </dl>
+        <Link
+          to={`/orgs/new?orgnr=${enhet.organisasjonsnummer}`}
+          className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
+        >
+          {t('oppslag.useThis')}
+        </Link>
       </CardContent>
     </Card>
   );

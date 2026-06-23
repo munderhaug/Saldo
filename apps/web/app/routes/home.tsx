@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { addØre, formatKr, mulRate, rate, øre } from '@saldo/domain';
 import { t } from '~/copy';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
@@ -83,6 +84,13 @@ export default function Home({ loaderData }: { loaderData: ReturnType<typeof loa
         <code className="bg-muted rounded px-1 py-0.5">docs/saldo-build-specification.md</code>{' '}
         {t('home.next.post')}
       </p>
+
+      <Link
+        to="/orgs"
+        className="bg-primary text-primary-foreground font-text w-fit rounded-md px-4 py-2 text-sm"
+      >
+        {t('home.ctaOrgs')}
+      </Link>
     </main>
   );
 }

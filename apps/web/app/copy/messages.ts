@@ -35,6 +35,7 @@ export const nb = {
   // nextPre + <code>docs/…</code> + nextPost, same inline-code pattern.
   'home.next.pre': 'Neste steg: Fase 0 (se',
   'home.next.post': '§16).',
+  'home.ctaOrgs': 'Til foretakene dine',
 
   // ── Auth — log in ────────────────────────────────────────────────────────────
   'auth.login.title': 'Logg inn',
@@ -71,6 +72,7 @@ export const nb = {
   'oppslag.vat.registered': 'Registrert i Merverdiavgiftsregisteret',
   'oppslag.vat.notRegistered': 'Ikke registrert i Merverdiavgiftsregisteret',
   'oppslag.vat.unknown': 'Ukjent',
+  'oppslag.useThis': 'Bruk dette foretaket',
   // Search results — table columns
   'oppslag.col.name': 'Navn',
   'oppslag.col.orgnr': 'Org.nr',
@@ -82,6 +84,60 @@ export const nb = {
   'oppslag.status.tvangsavvikling':
     'Dette foretaket er under tvangsavvikling eller tvangsoppløsning.',
   'oppslag.status.slettet': 'Dette foretaket er slettet fra registeret.',
+
+  // ── Org onboarding — selection ───────────────────────────────────────────────
+  'orgs.title': 'Foretakene dine',
+  'orgs.intro': 'Velg et foretak å jobbe med, eller legg til et nytt.',
+  'orgs.create': 'Legg til foretak',
+  'orgs.open': 'Åpne',
+  'orgs.empty.body':
+    'Du har ingen foretak enda. Vi finner ditt i Enhetsregisteret og setter opp resten.',
+  'orgs.empty.cta': 'Finn foretaket ditt',
+  'orgs.role.owner': 'Eier',
+  'orgs.role.member': 'Medlem',
+
+  // MVA-status — shown when choosing and when displaying. Plain language, no jargon wall.
+  'orgs.mva.under_threshold.label': 'Ikke MVA-registrert',
+  'orgs.mva.under_threshold.desc':
+    'Du har ikke passert 50 000 kr i avgiftspliktig omsetning, så du legger ikke til MVA enda.',
+  'orgs.mva.unntatt.label': 'Unntatt fra MVA',
+  'orgs.mva.unntatt.desc':
+    'Virksomheten er utenfor merverdiavgiftsloven — for eksempel helse, undervisning eller en del kunst og kultur.',
+  'orgs.mva.registered_standard.label': 'MVA-registrert',
+  'orgs.mva.registered_standard.desc': 'Du legger til MVA på salg og trekker fra MVA på kjøp.',
+  'orgs.mva.registered_zero_rated.label': 'MVA-registrert med nullsats',
+  'orgs.mva.registered_zero_rated.desc':
+    'Du er registrert, men salget er fritatt (0 %) — for eksempel eksport.',
+
+  // ── Org onboarding — create ──────────────────────────────────────────────────
+  'orgs.new.title': 'Registrer foretaket',
+  'orgs.new.intro': 'Når du oppretter foretaket, setter jeg opp kontoplan og MVA-koder for deg.',
+  'orgs.new.orgNrLabel': 'Organisasjonsnummer',
+  'orgs.new.orgNrHint': '9 siffer. For eksempel 923 609 016.',
+  'orgs.new.nameLabel': 'Navn på foretaket',
+  'orgs.new.mvaLegend': 'Avgiftsstatus',
+  'orgs.new.mvaHint': 'Dette avgjør hvordan salg og kjøp bokføres. Velg det som stemmer for deg.',
+  'orgs.new.submit': 'Opprett foretak',
+  'orgs.new.prefilled': 'Hentet fra Enhetsregisteret. Sjekk at det stemmer.',
+  'orgs.new.findCta': 'Søk i Enhetsregisteret i stedet',
+  'orgs.new.errorInvalidInput': 'Sjekk organisasjonsnummer og navn.',
+  'orgs.new.errorInvalidOrgNr':
+    'Kontrollsifferet i organisasjonsnummeret stemmer ikke. Sjekk tallene en gang til?',
+  'orgs.new.errorDuplicate': 'Dette foretaket er allerede registrert hos oss.',
+
+  // ── Org onboarding — overview ────────────────────────────────────────────────
+  'orgs.overview.ready': 'Klart. {accounts} kontoer og {codes} MVA-koder er på plass.',
+  'orgs.overview.orgNrLabel': 'Organisasjonsnummer',
+  'orgs.overview.mvaLabel': 'Avgiftsstatus',
+  'orgs.overview.vatTitle': 'MVA-koder',
+  'orgs.overview.vatCaption': '{count} MVA-koder fra SAF-T-standarden.',
+  'orgs.overview.col.code': 'Kode',
+  'orgs.overview.col.rate': 'Sats',
+  'orgs.overview.col.direction': 'Retning',
+  'orgs.direction.output': 'Utgående',
+  'orgs.direction.input': 'Inngående',
+  'orgs.direction.none': 'Ingen',
+  'orgs.overview.back': 'Tilbake til foretakene',
 
   // ── Errors (root error boundary) ─────────────────────────────────────────────
   'error.title': 'Noe gikk galt',
@@ -116,6 +172,7 @@ export const en = {
   'home.demo.brutto': 'Gross',
   'home.next.pre': 'Next: Phase 0 (see',
   'home.next.post': '§16).',
+  'home.ctaOrgs': 'To your businesses',
 
   'auth.login.title': 'Log in',
   'auth.login.submit': 'Log in',
@@ -148,6 +205,7 @@ export const en = {
   'oppslag.vat.registered': 'Registered in the VAT Register',
   'oppslag.vat.notRegistered': 'Not registered in the VAT Register',
   'oppslag.vat.unknown': 'Unknown',
+  'oppslag.useThis': 'Use this business',
   'oppslag.col.name': 'Name',
   'oppslag.col.orgnr': 'Org. no.',
   'oppslag.col.form': 'Form',
@@ -156,6 +214,58 @@ export const en = {
   'oppslag.status.avvikling': 'This business is being wound up.',
   'oppslag.status.tvangsavvikling': 'This business is under compulsory liquidation or dissolution.',
   'oppslag.status.slettet': 'This business has been deleted from the register.',
+
+  'orgs.title': 'Your businesses',
+  'orgs.intro': 'Pick a business to work on, or add a new one.',
+  'orgs.create': 'Add a business',
+  'orgs.open': 'Open',
+  'orgs.empty.body':
+    "You don't have any businesses yet. We'll find yours in the register and set up the rest.",
+  'orgs.empty.cta': 'Find your business',
+  'orgs.role.owner': 'Owner',
+  'orgs.role.member': 'Member',
+
+  'orgs.mva.under_threshold.label': 'Not VAT-registered',
+  'orgs.mva.under_threshold.desc':
+    "You haven't passed 50,000 kr in taxable turnover, so you don't add VAT yet.",
+  'orgs.mva.unntatt.label': 'Exempt from VAT',
+  'orgs.mva.unntatt.desc':
+    'The activity is outside the VAT Act — for example health, teaching, or some arts and culture.',
+  'orgs.mva.registered_standard.label': 'VAT-registered',
+  'orgs.mva.registered_standard.desc': 'You add VAT on sales and deduct VAT on purchases.',
+  'orgs.mva.registered_zero_rated.label': 'VAT-registered, zero-rated',
+  'orgs.mva.registered_zero_rated.desc':
+    'You are registered, but your sales are zero-rated (0 %) — for example export.',
+
+  'orgs.new.title': 'Register your business',
+  'orgs.new.intro':
+    "When you create the business, I'll set up its chart of accounts and VAT codes.",
+  'orgs.new.orgNrLabel': 'Organisation number',
+  'orgs.new.orgNrHint': '9 digits. For example 923 609 016.',
+  'orgs.new.nameLabel': 'Business name',
+  'orgs.new.mvaLegend': 'VAT status',
+  'orgs.new.mvaHint':
+    'This decides how sales and purchases are booked. Pick the one that fits you.',
+  'orgs.new.submit': 'Create business',
+  'orgs.new.prefilled': 'Fetched from the register. Check that it looks right.',
+  'orgs.new.findCta': 'Search the register instead',
+  'orgs.new.errorInvalidInput': 'Check the organisation number and name.',
+  'orgs.new.errorInvalidOrgNr':
+    "The check digit in the organisation number doesn't add up. Mind checking again?",
+  'orgs.new.errorDuplicate': 'This business is already registered with us.',
+
+  'orgs.overview.ready': 'Done. {accounts} accounts and {codes} VAT codes are in place.',
+  'orgs.overview.orgNrLabel': 'Organisation number',
+  'orgs.overview.mvaLabel': 'VAT status',
+  'orgs.overview.vatTitle': 'VAT codes',
+  'orgs.overview.vatCaption': '{count} VAT codes from the SAF-T standard.',
+  'orgs.overview.col.code': 'Code',
+  'orgs.overview.col.rate': 'Rate',
+  'orgs.overview.col.direction': 'Direction',
+  'orgs.direction.output': 'Output',
+  'orgs.direction.input': 'Input',
+  'orgs.direction.none': 'None',
+  'orgs.overview.back': 'Back to your businesses',
 
   'error.title': 'Something went wrong',
   'error.statusHeading': '{status} {statusText}',

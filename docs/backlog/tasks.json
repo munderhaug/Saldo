@@ -173,13 +173,46 @@
     {
       "id": "feat-org-onboarding",
       "title": "Org & contacts onboarding (user -> org membership UI)",
-      "status": "todo",
+      "implements_adr": ["0032"],
+      "touches": [
+        "apps/web/app/db/organizations.server.ts",
+        "apps/web/app/db/provisioning.server.ts",
+        "apps/web/app/routes/orgs.tsx",
+        "apps/web/app/routes/orgs.new.tsx",
+        "apps/web/app/routes/orgs.$orgId.tsx",
+        "apps/web/app/contracts/organization.ts",
+        "packages/domain/src/saft/accounts.ts",
+        "apps/web/test/integrity/org-provisioning.integration.test.ts"
+      ],
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P1-feature",
       "depends_on": ["pr5-auth", "feat-enhetsregisteret"],
-      "notes": "The membership UI that makes withOrgTx real per logged-in user. First real forms/tables surface: pnpm add react-hook-form + @hookform/resolvers + @tanstack/react-table here (chosen in frontend.md; removed until used).",
-      "refs": ["docs/STATUS.md"]
+      "notes": "DONE (ADR 0032). create-org + owner membership + provision the full committed SAF-T kontoplan (745 accounts, classifyAccountType by kontoklasse) + 30 VAT codes atomically inside withOrgTx; duplicate org-nr rolls back. RHF + @hookform/resolvers (create form, Zod contract authoritative server-side) + TanStack Table (vat-code overview) installed here. /oppslag prefills org-nr; MVA status human-confirmed from the brreg register flag (not AI). Multi-membership selection loops withOrgTx per org (RLS-correct on every topology). Testcontainers integrity test: counts scoped, owner membership, RLS isolation, atomic rollback. No schema change.",
+      "refs": ["docs/decisions/0032-org-provisioning.md"]
+    },
+    {
+      "id": "feat-org-active-context",
+      "title": "Persisted active-org context (session-scoped current org)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P1-feature",
+      "depends_on": ["feat-org-onboarding"],
+      "notes": "Remember the org a user is acting for across requests (cookie/session), so feature routes need not carry orgId in the path. Org selection (feat-org-onboarding) sets it; withUserOrg reads it.",
+      "refs": ["docs/decisions/0032-org-provisioning.md"]
+    },
+    {
+      "id": "feat-account-chart-curation",
+      "title": "Curated working chart of accounts (favourites over the full kontoplan)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-org-onboarding"],
+      "notes": "A fresh org is provisioned with the full 745-account standard kontoplan (ADR 0032). Filter pickers to a used/favourites subset (UI-layer; does not change what is provisioned).",
+      "refs": ["docs/decisions/0032-org-provisioning.md"]
     },
     {
       "id": "feat-mobile-companion",

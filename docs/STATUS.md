@@ -3,10 +3,9 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: P0 hardening PRs 3–6 + agentic-memory + design-lint + honest-number + dev-infra (epic **PR #11**)
-**Branch:** this work lands via **PR #11 → `main`** (CI-gated squash-merge). After merge, `main` is the
-integrated trunk; next work branches off `main`. (Trust `git log` over any hash here.) **Next focus:
-EU AI Act (see Next up).**
+**Last updated:** 2026-06-23 — session: EU AI Act compliance + reconcile onto `main` + repo-standards consolidation
+**Branch:** `claude/nice-davinci-6hsjbn` (off `main`; merges `main` in). Lands via reviewed **PR #12** —
+never a direct push to `main`. (Trust `git log` over any hash here.)
 
 > ⚠️ **Live external integrations are not exercised in these sessions.** The Neon control plane,
 > Criipto OIDC, and Brønnøysund (`data.brreg.no`) are not reachable/configured here, so auth and
@@ -14,7 +13,26 @@ EU AI Act (see Next up).**
 > the npm registry, and Cloudflare docs MCP were available this session; local Postgres + Testcontainers
 > stand in for DB work.)
 
-## Verified state (this session — full production gate green)
+## This session — EU AI Act compliance + reconcile onto `main` + repo-standards consolidation
+Branched off `9c30903`, reviewed the **EU AI Act** source-grounded (Reg (EU) 2024/1689; raw captures in
+`db/reference/eu-ai-act/`), **merged `main` in** (resolving every conflict), then ran a field-guide
+**standards consolidation**. **Full gate green:** typecheck, lint, `lint:repo` (51 docs, **0 warnings**),
+format, `test` (101 domain + 4 web), `knip` (deps clean), `backlog validate` (28 tasks), build.
+- **EU AI Act (`compliance-eu-ai-act` → done):** only the LLM features are AI systems (Art 3(1)/Recital
+  12); **not** prohibited (Art 5), **not** high-risk (Art 6/Annex III); provider+deployer, not a GPAI
+  provider. Duties: transparency (Art 50, 2 Aug 2026) + AI literacy (Art 4, in force). Delivered
+  `docs/regulatory/eu-ai-act.md`, **ADR 0022**, the `.claude/rules/ai-act.md` gate, an AGENTS.md
+  invariant, and the forward `aia-*` tasks.
+- **Reconcile:** merged main (#11) cleanly; ADR draft 0017 → **0022** (main took 0017 for mech-gates);
+  backlog moved to `docs/backlog/tasks.json`.
+- **Standards:** proprietary **`LICENSE`** + **ADR 0023** (scopes ADR 0008 to the stack); rewrote stale
+  `runbook.md`/`architecture.md`/`data-handling.md` to ADR 0015 (EU PaaS + Cloudflare + R2 + Neon);
+  honest `saft:validate`; pruned **8** unused deps (re-added per feature); **AGENTS.md now canonical**
+  (CLAUDE.md imports it); renamed the roadmap doc → `roadmap.md` + stripped slop repo-wide;
+  de-duplicated invariants (README/CONTRIBUTING → pointers); repo-lint **rule-glob + slop** warnings
+  (caught a mis-targeted `vat.md` glob); queued **Vale** (`harness-vale`).
+
+## Verified state (PR #11 — merged to `main`)
 - ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (**47 docs**,
   0 warnings), `format:check`, **`type-coverage` 98.62%**, `db:lint` (squawk), `backlog validate`,
   `test` (**101 domain** incl. fast-check + **4 web unit**; the **34 integration tests** now run against
@@ -36,11 +54,11 @@ EU AI Act (see Next up).**
 **Phase 0 (Foundation) — hardening COMPLETE.** Prior sessions: steps 1–5 + hardening PRs 1 / 2 / 2.5.
 This session delivered the remaining hardening **PRs 3–6** (mechanical gates, ledger-integrity gaps,
 auth/identity first lock, observability) **+ a meta-PR** (agentic task graph + rejected-approaches log)
-**+ design-lint gates** for the incoming UI. P0 foundation is done. **Next: the feature track** —
-`pnpm backlog next` → `feat-honest-number` (the honest-number domain feature), with Enhetsregisteret +
-org-onboarding behind it.
+**+ design-lint gates** for the incoming UI. P0 foundation is done; the **EU AI Act** compliance work landed this session.
+**Next: the repo-standards consolidation (in progress), then the feature track** — `pnpm backlog next`,
+with Enhetsregisteret + org-onboarding ahead.
 
-## Done (this session)
+## Done (PR #11 — merged to `main`)
 - **Dev-infra: run the real integration tests without Docker + the Neon path.** Added a
   `SALDO_TEST_PG_URI` escape hatch to `db-harness.ts` (creates a throwaway DB per run on an existing
   Postgres, advisory-locked for parallel safety; CI keeps Testcontainers) — the 34 integration tests now
@@ -107,7 +125,7 @@ org-onboarding behind it.
   active next session.
 
 ## Done (prior session — PRs 1 / 2 / 2.5)
-- **World-class roadmap** — `docs/world-class-roadmap.md` (architecture decision, hardening plan, the
+- **Roadmap** — `docs/roadmap.md` (architecture decision, hardening plan, the
   24-item contradiction kill-list, master backlog).
 - **PR 1 — decisions & consistency.** Option 2 architecture (**ADR 0015** persistent Node on an EU PaaS
   + Cloudflare edge/CDN + R2; **ADR 0013** Neon EU; **ADR 0014** Testcontainers). Eliminated all 24
@@ -125,15 +143,10 @@ org-onboarding behind it.
 - (PR 3 committed; PRs 4–6 next this session)
 
 ## Next up (ordered)
-**NEXT SESSION FOCUS → `compliance-eu-ai-act`: EU AI Act readiness & compliance.** Make the repo ready
-for + compliant with the EU AI Act. Work SOURCE-GROUNDED from the official AI Act text + EU/AI-Office
-guidance (the `regulatory-update` skill) — never from memory. Classify Saldo's AI use (propose-only,
-ADR 0002: AI proposes → rules engine validates → human confirms; LLM receipt-OCR later) — likely
-limited-risk (transparency + human-oversight + logging), not Annex III high-risk — then document the
-posture (an ADR + a cited regulatory page) and check the propose-only / grace-window design against the
-oversight obligations. Saldo already has structural advantages here (AI never writes the ledger; the
-rules engine is the boundary; pino logging exists) — this is largely *documenting + verifying* the
-posture, plus any provenance/logging gates.
+**EU AI Act — DONE this session** (ADR 0022 + `docs/regulatory/eu-ai-act.md`; `compliance-eu-ai-act`
+marked done; forward work tracked as the `aia-*` tasks). **Current focus: repo-standards consolidation**
+(against the field-guide review) — LICENSE (proprietary), kill the stale `runbook.md`,
+AGENTS.md-canonical, make `knip` bite + prune unused deps, de-dup invariants, strip slop, add Vale.
 
 **Then the feature track:** `pnpm backlog next` (`pnpm backlog ready`/`list` for the rest). Pending:
 Enhetsregisteret lookup; org & contacts onboarding (the user→org
@@ -166,10 +179,11 @@ dated ADOPT/MINE/SKIP, adoption gated by an ADR) + a `docs/improvements.md` ledg
   runs migrations as a separate OWNER `DATABASE_URL`; the app process uses the `saldo_app` one.
 - **Live integrations deferred** — verify Neon EU + custom-role RLS, and that **Hyperdrive preserves
   `SET LOCAL`**, when wiring auth/DB live (needs egress + tenants).
-- `saft:validate` is still a **scaffold** (returns 0) — implement SAF-T generation + XSD validation.
-- **Unused frontend deps** (motion, vaul, recharts, lucide-react, react-hook-form, @hookform/resolvers,
-  @tanstack/react-table) remain in `apps/web/package.json` — wire or prune per feature (RHF + TanStack
-  are imminent; `knip` in PR 3 tracks this).
+- `saft:validate` is a **scaffold** — now prints `NOT YET IMPLEMENTED` loudly (no longer a silent
+  fake-green; CI label says SCAFFOLD). Implement SAF-T generation + XSD validation (Phase 8).
+- ~~Unused frontend deps~~ — **pruned this session** (knip-clean). The choice is preserved in
+  `tech-stack.md` + `.claude/rules/frontend.md`; each is `pnpm add`-ed in the feature PR that first uses
+  it (annotated on `feat-org-onboarding` / `feat-mobile-companion`).
 - `home.tsx` is a **throwaway scaffold** — the real home is "You're caught up" + the honest-number
   reveal, not a ledger (experience-principles §4.2 / §6).
 - Local commits are **unsigned** (no signing key here); they verify on push through the proxy.

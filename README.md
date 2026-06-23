@@ -23,7 +23,7 @@ pnpm dev
 | `db/reference/saf-t` | Committed official SAF-T codes/accounts/XSD. |
 | `tools/eslint-plugin-saldo` | Custom lint rule banning raw arithmetic on money. |
 | `docs/` | Overview, glossary, domain model, architecture, **tech-stack (current)**, ADRs, integrations. |
-| `.claude/` | Agentic harness: CLAUDE.md, path-scoped rules, subagents, skills, hooks. |
+| `.claude/` | Agentic harness: AGENTS.md + CLAUDE.md, path-scoped rules, subagents, skills, hooks. |
 
 ## Read first
 - **Current stack:** [`docs/tech-stack.md`](docs/tech-stack.md)
@@ -32,6 +32,6 @@ pnpm dev
 - **Build sequencing:** spec §16 (start with Phase 0).
 
 ## Hard invariants
-Money is integer `Øre` · ledger append-only (motbilag/kreditnota only) · gapless invoice numbers via
-a per-org counter · posting enforced in SQL · MVA status drives all posting · AI proposes, never
-writes to the ledger.
+The non-negotiables (integer øre · append-only ledger · gapless invoice numbers · SQL-enforced
+posting · MVA-status-driven posting · propose-only AI) live in **[`AGENTS.md`](AGENTS.md)** — the
+single source. Read them there before touching money, the ledger, VAT, or posting.

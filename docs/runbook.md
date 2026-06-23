@@ -1,14 +1,14 @@
 # Runbook
 
 ## Prerequisites
-- Node 22 (`nvm use`), pnpm 9, Docker (for local Postgres/MinIO/Langfuse).
+- Node 22 (`nvm use`), pnpm 9, Docker (for local Postgres; MinIO emulates the S3/R2 API locally).
 - `dbmate` (via `pnpm db:migrate`) and, optionally, Ollama for local LLM extraction.
 
 ## First-time setup
 ```bash
 cp .env.example .env          # fill in values; .env is git-ignored and agent-denied
 pnpm install
-docker compose -f infra/compose.yaml up -d   # postgres, minio, langfuse
+docker compose -f infra/compose.yaml up -d   # local Postgres + MinIO (S3/R2 emulation)
 pnpm db:migrate               # apply SQL migrations (creates the ledger + integrity)
 pnpm db:introspect            # generate apps/web/app/db/schema.ts from the DB
 pnpm dev                      # RR7 dev server on http://localhost:3000
@@ -19,12 +19,12 @@ pnpm dev                      # RR7 dev server on http://localhost:3000
 |---|---|
 | Dev server | `pnpm dev` |
 | Unit/property tests | `pnpm test` |
-| Watch tests | `pnpm test:watch` |
-| Typecheck | `pnpm typecheck` |
-| Lint | `pnpm lint` · fix: `pnpm format` |
+| Typecheck · Lint · Format | `pnpm typecheck` · `pnpm lint` · `pnpm format` |
+| Repo hygiene · migration lint | `pnpm lint:repo` · `pnpm db:lint` |
+| Backlog (what's next) | `pnpm backlog` (`ready` · `list` · `validate`) |
 | New migration | `pnpm db:migrate:new <name>` then edit, then `pnpm db:migrate` |
 | Regenerate Drizzle schema | `pnpm db:introspect` |
-| SAF-T validate | `pnpm saft:validate` |
+| SAF-T validate | `pnpm saft:validate` *(scaffold — see below)* |
 
 ## Local LLM (optional)
 ```bash
@@ -32,12 +32,16 @@ ollama pull qwen2.5-vl        # vision model for receipt extraction
 # LLM_BASE_URL=http://localhost:11434/v1 in .env (default). Swap for vLLM or a hosted endpoint.
 ```
 
-## Deploy (Hetzner EU, Kamal)
-```bash
-kamal deploy                  # builds the Docker image and ships to the EU host
-```
-Postgres, MinIO, and Langfuse are provisioned alongside; secrets live in the server env only.
+## Deploy
+Per **ADR 0015**: a persistent **Node server on an EU-region PaaS**, with **Cloudflare** as edge/CDN
+and **R2** (EU jurisdiction) for documents; the database is **Neon EU** (ADR 0013). Migrations run via
+the **`deploy-migrate`** GitHub Actions workflow (`dbmate up` against Neon, protected `production`
+env) — see [`docs/runbooks/neon-provisioning.md`](runbooks/neon-provisioning.md). Self-host
+Hetzner/Kamal is retained only as the sovereignty fallback (ADR 0008/0015). Secrets live in the
+server/CI environment only, never in the repo.
 
 ## CI (GitHub Actions)
-`typecheck → lint → test → build → migration check → SAF-T XSD validation`, on an ephemeral
-Postgres (Testcontainers). See `.github/workflows/ci.yml`.
+`ci.yml` gates on `typecheck → lint → lint:repo → format:check → type-coverage → db:lint → test →
+build → saft:validate` against an ephemeral Postgres (Testcontainers). Separate workflows:
+`codeql.yml` (SAST), `security.yml` (gitleaks + CycloneDX SBOM), `freshness.yml` (weekly cron),
+`deploy-migrate.yml`. See `.github/workflows/`.

@@ -1,5 +1,5 @@
 ---
-paths: ["packages/domain/vat/**", "packages/domain/src/vat/**", "packages/domain/src/posting/**"]
+paths: ["packages/domain/src/vat/**", "packages/domain/src/posting/**"]
 ---
 # MVA (VAT) rules
 

@@ -16,4 +16,4 @@ behavioral half of `docs/quality-bar.md`.
 - **Source-grounded, not memory-grounded.** For anything regulatory, financial, or API-shaped, work from
   committed primary sources (SAF-T lists, `db/reference/`, cited docs) — never from model memory.
 
-When these conflict with speed, these win. We are building a world-class system of record, not an MVP.
+When these conflict with speed, these win. We are building a durable system of record, not an MVP.

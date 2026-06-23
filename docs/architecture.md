@@ -6,21 +6,21 @@ Full stack: `docs/tech-stack.md`. Domain rules: `docs/domain-model.md`. Canonica
 ```
 Browser (RR7 client, native-feel PWA)
   │  semantic HTML + <Form>; re-runs @saldo/domain for instant feedback; authoritative for NOTHING
-  │  Motion / Vaul / View Transitions layered on top; Dexie outbox for offline receipt capture
+  │  native-feel polish layered on top; an offline outbox for receipt capture
   ▼
-RR7 server (loaders/actions, persistent Node on Hetzner EU)  ── session (BankID via Criipto/Signicat) ─┐
+RR7 server (loaders/actions, persistent Node on an EU PaaS + Cloudflare — ADR 0015) ── session (BankID via Criipto) ─┐
   │  validate via @saldo/domain → persist via Drizzle → enqueue graphile-worker jobs                   │
   │                                                                                                     │
   ├── @saldo/domain  (PURE TS: money, ids, VAT, posting, rules — no I/O)                                │
   │                                                                                                     │
-  ├── Drizzle ──► PostgreSQL (self-hosted, EU)                                                          │
+  ├── Drizzle ──► PostgreSQL (Neon, EU — ADR 0013)                                                          │
   │                 integrity in SQL: balance trigger, immutability trigger, period-lock,               │
   │                 per-org invoice_counter (gapless), RLS via SET LOCAL app.current_org                │
   │                                                                                                     │
-  ├── Object storage: MinIO/Garage (S3, EU) — receipts/PDF/SAF-T, 5-year retention                     │
+  ├── Object storage: Cloudflare R2 (S3 API, EU jurisdiction — ADR 0015) — receipts/PDF/SAF-T, 5-yr                     │
   │                                                                                                     │
   ├── Integrations: Enhetsregisteret · Skatteetaten (MVA validate/submit, SAF-T) · Altinn 3/ID-porten ·│
-  │                 PEPPOL access point · GoCardless/camt.054 · Vipps · email (SMTP) · LLM (Langfuse)   │
+  │                 PEPPOL · GoCardless/camt.054 · Vipps · email (EU provider) · LLM (Langfuse optional) │
   │                                                                                                     │
   └── graphile-worker (on Postgres): recurring invoices, reminders, OCR→propose, threshold/term watchers┘
 

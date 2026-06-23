@@ -105,6 +105,32 @@ for (const f of docFiles) {
   }
 }
 
+// G) .claude/rules path globs must point at real paths (catch rules pre-positioned for absent code).
+for (const f of walk(join(root, '.claude/rules'), (p) => p.endsWith('.md'))) {
+  const fm = frontmatter(read(f));
+  const m = fm && fm.match(/paths:\s*\[([^\]]*)\]/);
+  if (!m) continue;
+  for (const raw of m[1].match(/["']([^"']+)["']/g) || []) {
+    const glob = raw.slice(1, -1);
+    const base = glob.split('*')[0].replace(/\/+$/, '');
+    if (base && !existsSync(join(root, base)))
+      warnings.push(
+        `${rel(f)}: paths glob "${glob}" matches nothing (base "${base}" absent) — narrow it or add the code`,
+      );
+  }
+}
+
+// H) marketing slop has no place in a system-of-record doc set (warn, not fail).
+const slopRe = /\b(world-class|crown jewel|vibe-coded)\b/i;
+for (const f of [...docFiles, join(root, 'AGENTS.md')].filter(existsSync)) {
+  const lines = read(f).split('\n');
+  const i = lines.findIndex((l) => slopRe.test(l));
+  if (i >= 0)
+    warnings.push(
+      `${rel(f)}:${i + 1}: marketing slop "${lines[i].match(slopRe)[0]}" — prefer plain language`,
+    );
+}
+
 for (const w of warnings) console.warn('warn: ' + w);
 if (errors.length) {
   for (const e of errors) console.error('error: ' + e);

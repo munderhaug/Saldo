@@ -16,13 +16,9 @@ change must meet that Definition of Done.
 pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm audit --audit-level=high
 ```
 
-## Hard invariants (non-negotiable — see CLAUDE.md / .claude/rules)
-- Money is integer `Øre`; never `number`/float; use the domain helpers (lint enforces this).
-- Ledger is append-only — correct via motbilag / kreditnota. Integrity lives in SQL, not the ORM.
-- Invoice numbers are gapless via the per-org counter (never a SEQUENCE).
-- MVA status drives all posting. AI proposes; the rules engine validates; a human confirms.
-- VAT codes/accounts come from the committed SAF-T lists — never hardcoded.
-- Semantic-HTML, server-authoritative substrate; native polish layered on top.
+## Hard invariants (non-negotiable)
+The full list lives in **[`AGENTS.md`](AGENTS.md)** + the path-scoped rules in `.claude/rules/` — the
+single source. Read them there before changing money, the ledger, VAT, or posting; don't restate them.
 
 ## End every session
 Run the `handover` skill: verify green, update `docs/STATUS.md`, commit, push your branch, report.

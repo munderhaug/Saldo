@@ -1,9 +1,9 @@
-# Saldo — Roadmap to a World-Class Repo
+# Saldo — Repo Roadmap
 
 > **Type:** planning report (living). **Created:** 2026-06-23. **Owner:** @munderhaug.
 > This is the full, prioritized plan to take Saldo from an excellent Phase-0 foundation to a
-> truly world-class system of record — both the work to do **now** and the discipline to stay
-> world-class **going forward**. It supersedes the ad-hoc review notes from this session.
+> a durable system of record — both the work to do **now** and the discipline to stay
+> high-quality **going forward**. It supersedes the ad-hoc review notes from this session.
 >
 > **Status vocabulary** (replaces "Locked", per this session's decision):
 > **Current** = active choice, in effect now (revisable via ADR) · **Intended** = planned, not
@@ -32,9 +32,9 @@ fork, because today's docs describe a *persistent Node server* with *in-process 
 LLM*, and a *self-hostable everywhere* principle (ADR 0008/0009/0010). Resolve this first — it
 cascades into the tech stack, several ADRs, and the residency story.
 
-### The good news: your crown jewels are portable
+### The good news: the hard parts are portable
 
-The genuinely hard, genuinely excellent work is **architecture-independent**:
+The hard, high-value work is **architecture-independent**:
 
 - The pure `@saldo/domain` core — runs anywhere.
 - The SQL integrity layer (balance/immutability/period-lock triggers, gapless counter, **FORCE
@@ -105,7 +105,7 @@ solo-maintained, agent-built, 10-year horizon).
 |---|---|---|---|
 | Language / types | TS strict, branded `Øre` | **Keep — best-in-class** | The branded-money + custom-ESLint approach is exactly right. |
 | Domain purity | pure `@saldo/domain` | **Keep** | The one hard boundary; zero client/server drift. Don't touch. |
-| DB + integrity | Postgres, SQL-first migrations, triggers, FORCE RLS | **Keep — crown jewel** | Portable across hosts. World-class as-is. |
+| DB + integrity | Postgres, SQL-first migrations, triggers, FORCE RLS | **Keep — core asset** | Portable across hosts. Strong as-is. |
 | ORM | Drizzle (introspected from SQL) | **Keep** | Right call; schema generated, integrity in SQL. |
 | Web framework | React Router 7 framework mode | **Keep** | First-class Cloudflare support confirms the bet (ADR 0005). |
 | UI | shadcn/ui + Tailwind v4 | **Keep, but build it** | Currently documented, not implemented. See P0-2. |
@@ -118,7 +118,7 @@ solo-maintained, agent-built, 10-year horizon).
 | LLM/OCR | local Ollama/vLLM + Qwen2.5-VL | **Keep option; decide at Phase 4** | ADR 0009 stands; keep the OpenAI-compatible abstraction so hosted-EU is a base-URL swap. |
 | Auth | openid-client + ~~oslo~~ + PG sessions | **Keep shape; fix lib** | `oslo` is deprecated → `@oslojs/crypto` + `@oslojs/encoding`; openid-client **v6**. |
 | Validation | Zod | **Keep; extend to env** | Add a Zod-validated `env.ts` (the one boundary Zod is missing). |
-| Forms/tables | RHF+Zod / TanStack Table | **Keep — build when needed** | Installed but unused today; wire when the UI lands (don't carry dead deps before then). |
+| Forms/tables | RHF+Zod / TanStack Table | **Keep — add when needed** | Choice fixed (tech-stack.md + frontend.md); **not installed** (removed to keep the dep tree knip-clean). Each is `pnpm add`-ed in the feature PR that first uses it. |
 | Observability | OTel/SigNoz/pino | **Start with `pino` now**; OTel later | Not one log line exists yet; logging is foundational. |
 | Testing | Vitest/fast-check/Testcontainers/Playwright | **Keep; add stateful + e2e + axe + mutation** | Property tests are the safety net; extend them (P1/P2). |
 
@@ -149,7 +149,7 @@ Eliminate all **24 contradictions** (Part 4) and make recurrence impossible.
 - [ ] **Extend `tools/repo-lint.mjs`** (the durable gate): every `ADR NNNN` reference resolves to
       a file; no `db/reference/**` path is cited unless it exists; the word "Locked" is banned as
       a status label; (optional) STATUS HEAD matches `git rev-parse`. CI then fails on any new
-      contradiction. **This is what makes "absolutely none" a guarantee, not a promise.**
+      contradiction. **This is what makes "no contradictions" a guarantee, not a promise.**
 
 ### P0-2 (PR 2) — Frontend foundation (tokens, shadcn, no inline CSS) · **M**
 Make `frontend.md`/`design-system.md` true.
@@ -219,7 +219,7 @@ Make the quality bar deterministic, not honor-system.
 
 ---
 
-## Part 3 — GOING FORWARD: sustaining world-class (P1 / P2)
+## Part 3 — GOING FORWARD: sustaining quality (P1 / P2)
 
 ### Make the quality bar mechanical (P1)
 The 21 "Definition of Done" criteria are mostly honor-system today. Convert the high-value ones to
@@ -254,6 +254,15 @@ reminder — everywhere.
 Enhetsregisteret, BankID-via-Criipto, MVA-melding + Skatteetaten validate, PEPPOL/EHF (UBL+VEFA),
 GoCardless/camt.054 banking, Vipps, recurring invoices/reminders (Workflows), receipt-capture +
 vision-LLM (propose-only). Each lands in its spec'd phase, gated by the foundations above.
+
+### EU AI Act compliance — see ADR 0022 + `docs/regulatory/eu-ai-act.md`
+Saldo is **not** prohibited (Art. 5) and **not** high-risk (Art. 6 + Annex III); only the LLM features
+are AI systems (Art. 3(1)). Binding duties: **transparency** (Art. 50, applies 2 Aug 2026) + **AI
+literacy** (Art. 4, in force). The posture, the AGENTS.md invariant, and the path-scoped gate
+(`.claude/rules/ai-act.md`) have landed; the forward work is tracked as the `aia-*` tasks in
+`docs/backlog/tasks.json`. Enforcement is **gate-first**; a standalone AI Act subagent is deferred
+(fold into `privacy-reviewer` when AI code lands — `aia-review-fold`). **Line never to cross:** an AI
+feature that scores/profiles a natural person → high-risk (Annex III §5(b)); re-open ADR 0022 first.
 
 ---
 

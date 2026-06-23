@@ -380,7 +380,7 @@ For each: purpose, auth, access status (start-now / onboarding-gated / self-buil
 
 ## 12. Testing strategy
 
-- **Domain core is exhaustively tested** — it is both the crown jewel and the agent's safety net. Every VAT scenario and posting rule is a test case.
+- **Domain core is exhaustively tested** — it is both the most correctness-critical layer and the agent's safety net. Every VAT scenario and posting rule is a test case.
 - **Property-based tests (fast-check)** for accounting invariants: for all generated vouchers, Σ debit = Σ credit; posting is idempotent; immutability holds; the input-VAT fork is correct for every MVA status; reverse charge posts both legs; KID/OrgNr validators accept valid and reject invalid control digits.
 - **Integration tests** against a real Postgres (Drizzle migrations applied) to verify the SQL triggers actually block mutation/imbalance/locked-period postings, and that the invoice-counter yields gapless numbers under concurrent issuance and across rolled-back transactions.
 - **E2E (Playwright)** for the critical flows: issue invoice → it's immutable → credit it; capture receipt → propose → confirm → posted; reconcile a KID payment; generate + validate an MVA-melding; produce a valid SAF-T export.

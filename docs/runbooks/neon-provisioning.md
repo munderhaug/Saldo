@@ -48,7 +48,7 @@ ALTER ROLE saldo_app WITH PASSWORD '<a strong, stored secret>';
 - **`SET LOCAL app.current_org` is preserved end-to-end**, especially once Cloudflare **Hyperdrive**
   fronts Neon (it pools connections; `withOrgTx` relies on transaction-scoped `SET LOCAL`). Verify in a
   staging round-trip before go-live.
-- **Residency / DPA:** confirm the EU region and sign Cloudflare's EU DPA + SCCs (world-class-roadmap
+- **Residency / DPA:** confirm the EU region and sign Cloudflare's EU DPA + SCCs (roadmap
   Part 6) before production data lands.
 
 ## Notes

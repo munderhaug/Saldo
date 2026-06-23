@@ -49,7 +49,7 @@ constraints (rules/docs/tests/ADRs), not recurring reviews. Add a new subagent o
 need, and pair it with a deterministic backstop.
 
 ## 3a. Definition of Done
-Every change meets `docs/quality-bar.md` before merge — world-class, production-ready, enforced by CI
+Every change meets `docs/quality-bar.md` before merge — production-ready, enforced by CI
 required checks + hooks, not by reminders. No stub is "done"; no merge past a red check.
 
 ## 4. Security always/never

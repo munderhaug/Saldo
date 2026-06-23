@@ -65,7 +65,7 @@
       "phase": "P1",
       "depends_on": ["pr4-ledger-integrity"],
       "notes": "Random sequences of post/reverse/lock against the invariants — the highest-value test for a system of record.",
-      "refs": ["docs/world-class-roadmap.md"]
+      "refs": ["docs/roadmap.md"]
     },
     {
       "id": "feat-honest-number",
@@ -139,7 +139,7 @@
       "effort": "L",
       "phase": "P1-feature",
       "depends_on": ["pr5-auth", "feat-enhetsregisteret"],
-      "notes": "The membership UI that makes withOrgTx real per logged-in user.",
+      "notes": "The membership UI that makes withOrgTx real per logged-in user. First real forms/tables surface: pnpm add react-hook-form + @hookform/resolvers + @tanstack/react-table here (chosen in frontend.md; removed until used).",
       "refs": ["docs/STATUS.md"]
     },
     {
@@ -150,7 +150,7 @@
       "effort": "L",
       "phase": "P1-feature",
       "depends_on": ["feat-honest-number"],
-      "notes": "Built per feature, not all at once (adaptive two-surface design system).",
+      "notes": "Built per feature, not all at once (adaptive two-surface design system). Native-feel polish: pnpm add motion + vaul here (chosen in frontend.md/tech-stack.md; removed until used).",
       "refs": ["docs/decisions/0016-adaptive-two-surface-design-system.md"]
     },
     {
@@ -173,7 +173,7 @@
       "phase": "P1",
       "depends_on": ["pr3-gates"],
       "notes": "PR template requiring linked ADR/tests; a CI check that a migration PR also touches test/integrity/.",
-      "refs": ["docs/world-class-roadmap.md"]
+      "refs": ["docs/roadmap.md"]
     },
     {
       "id": "test-e2e-axe",
@@ -184,7 +184,7 @@
       "phase": "P1",
       "depends_on": ["pr5-auth"],
       "notes": "e2e for the auth + first-invoice flow; axe gate once UI lands.",
-      "refs": ["docs/world-class-roadmap.md"]
+      "refs": ["docs/roadmap.md"]
     },
     {
       "id": "ops-dr-runbook",
@@ -211,16 +211,138 @@
     {
       "id": "compliance-eu-ai-act",
       "title": "EU AI Act readiness & compliance",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "compliance",
       "depends_on": [],
-      "notes": "NEXT SESSION FOCUS. Make the repo ready for + compliant with the EU AI Act. SOURCE-GROUNDED against the official AI Act text + EU/AI-Office guidance (regulatory-update skill) — never from memory. Classify Saldo's AI use (propose-only, ADR 0002: AI proposes -> rules engine validates -> human confirms; LLM receipt-OCR later): likely limited-risk -> transparency + human-oversight + logging obligations, not Annex III high-risk. Document the posture (an ADR + a cited regulatory page), check the propose-only/grace-window design against the oversight requirements, and add any gates (e.g. AI-output provenance/logging).",
+      "notes": "DONE (ADR 0022): source-grounded against Regulation (EU) 2024/1689 (eur-lex CELEX 32024R1689 + AI Act Explorer; raw captures in db/reference/eu-ai-act/). Only the LLM features are AI systems (Art 3(1)/Recital 12); NOT prohibited (Art 5), NOT high-risk (Art 6/Annex III); provider+deployer, not a GPAI provider (relies on Art 53 docs). Binding duties: transparency (Art 50, 2 Aug 2026) + AI literacy (Art 4, in force). Delivered the cited knowledge page, ADR 0022, the .claude/rules/ai-act.md gate + AGENTS.md invariant. Forward product/repo work = the aia-* tasks.",
       "refs": [
-        "docs/decisions/0002-propose-only-ai.md",
-        ".claude/skills/regulatory-update/SKILL.md"
+        "docs/decisions/0022-eu-ai-act-posture.md",
+        "docs/regulatory/eu-ai-act.md",
+        ".claude/rules/ai-act.md"
       ]
+    },
+    {
+      "id": "feat-receipt-extraction",
+      "title": "Receipt/invoice -> structured proposal via vision-LLM (propose-only)",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P2-feature",
+      "depends_on": [],
+      "notes": "The first AI-system surface (spec 8.5 / Phase 4; ADR 0009 local-first). image -> extraction -> Zod -> rules engine -> proposed voucher -> human confirms. AI never writes the ledger (ADR 0002). Carries the EU AI Act obligations (aia-*).",
+      "refs": ["docs/integrations/llm-extraction.md", "docs/decisions/0009-local-first-llm.md"]
+    },
+    {
+      "id": "aia-transparency-ui",
+      "title": "EU AI Act: disclose AI interaction in the UI (Art 50(1))",
+      "status": "todo",
+      "value": "high",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": ["feat-receipt-extraction"],
+      "notes": "Tell the user, at first interaction, that a value/proposal is AI-generated (unless obvious). Applies by 2 Aug 2026. See eu-ai-act.md s4.",
+      "refs": ["docs/regulatory/eu-ai-act.md", "docs/decisions/0022-eu-ai-act-posture.md"]
+    },
+    {
+      "id": "aia-provenance-logging",
+      "title": "EU AI Act: AI-output provenance + 'AI-assisted' label + logging (Art 50(2))",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "compliance",
+      "depends_on": ["feat-receipt-extraction", "pr6-observability"],
+      "notes": "Every AI-proposed value carries machine-readable provenance (model+version+confidence) in its Zod contract, is labelled AI-assisted, and is logged (pino). This is where the code-level provenance gate lands (a required field + a lint/test check).",
+      "refs": ["docs/regulatory/eu-ai-act.md", ".claude/rules/ai-act.md"]
+    },
+    {
+      "id": "aia-gpai-docs",
+      "title": "EU AI Act: capture the upstream GPAI model's Annex XII docs (Art 53)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "At the LLM-hosting decision (Phase 4): capture the chosen model's capabilities/limitations docs under db/reference/llm/ — rely on the provider's documentation, never infer from memory.",
+      "refs": ["db/reference/llm", "docs/regulatory/eu-ai-act.md"]
+    },
+    {
+      "id": "aia-literacy-note",
+      "title": "EU AI Act: proportionate AI-literacy note (Art 4, in force)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "A short dated competence note: what the AI features do, their limits, the propose-only/confirm model. Art 4 in force since 2 Feb 2025; proportionate for a solo/small team.",
+      "refs": ["docs/regulatory/eu-ai-act.md"]
+    },
+    {
+      "id": "aia-conformity-checklist",
+      "title": "EU AI Act: conformity self-assessment checklist",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": ["compliance-eu-ai-act"],
+      "notes": "A dated checklist re-run before each AI feature ships and at each Art 113 milestone: prohibitions clear (Art 5), still not high-risk (Art 6/Annex III), transparency met (Art 50).",
+      "refs": ["docs/regulatory/eu-ai-act.md"]
+    },
+    {
+      "id": "aia-highrisk-guard",
+      "title": "EU AI Act: high-risk guard — never score/profile a natural person",
+      "status": "done",
+      "value": "high",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "DONE: AGENTS.md invariant + .claude/rules/ai-act.md (auto-loads on AI/LLM code). No feature may evaluate a natural person's creditworthiness or profile them (Annex III 5(b); Art 6(3)) without re-opening ADR 0022.",
+      "refs": ["AGENTS.md", ".claude/rules/ai-act.md"]
+    },
+    {
+      "id": "aia-review-fold",
+      "title": "EU AI Act: fold the AI Act review into privacy-reviewer when AI code lands",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": ["feat-receipt-extraction"],
+      "notes": "When the AI surface exists, extend the existing privacy-reviewer subagent with the AI Act checklist (transparency, provenance, no high-risk scoring) + wire the aia-provenance-logging code gate; split out a dedicated reviewer only on demonstrated need (ADR 0022).",
+      "refs": ["docs/decisions/0022-eu-ai-act-posture.md", ".claude/agents/privacy-reviewer.md"]
+    },
+    {
+      "id": "harness-vale",
+      "title": "Adopt Vale for prose/slop/terminology linting (warn-first, baseline-ratcheted)",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "Best-practice prose linter (replaces ad-hoc regex). Bans world-class/crown jewel/vibe-coded + enforces terminology; warn-first with a baseline. Deferred: needs the Vale binary + a CI action (errata-ai/vale-action). The repo-lint slop + rule-glob warnings cover the basics until then.",
+      "refs": ["tools/repo-lint.mjs", "docs/quality-bar.md"]
+    },
+    {
+      "id": "docs-consolidate-build-spec",
+      "title": "Consolidate saldo-build-specification.md (stale tree + inlined harness copies)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "Spec is the vision doc but has drifted: 14 repo tree shows app/ (real: apps/web/app) and 5/5/4 rules/agents/skills (real 12/7/10); 15 inlines now-stale full copies of CLAUDE.md/settings/rules (CLAUDE.md is now a thin @AGENTS.md import). Delete the inlined copies (link instead), fix the tree, collapse the 3 stacked revision banners into one. Reframe as PRD-only (the 'what'); architecture/ADRs own the 'how'.",
+      "refs": ["docs/saldo-build-specification.md", "AGENTS.md"]
+    },
+    {
+      "id": "docs-dedup-invariants-deep",
+      "title": "Finish invariant de-duplication (quality-bar, domain-model -> pointers)",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "README + CONTRIBUTING already point to AGENTS.md (done). Remaining restatements of the hard invariants in quality-bar.md / domain-model.md / architecture.md should become pointers too, so AGENTS.md + .claude/rules are the only normative source.",
+      "refs": ["AGENTS.md", "docs/quality-bar.md"]
     }
   ]
 }

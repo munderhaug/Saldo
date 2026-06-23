@@ -50,4 +50,4 @@ jobs:
       - run: pnpm db:migrate # migration check against real Postgres
       - run: pnpm db:introspect # schema generation stays in sync with migrations
       - run: pnpm build
-      - run: pnpm saft:validate # SAF-T XSD validation
+      - run: pnpm saft:validate # SAF-T validate (SCAFFOLD — prints PENDING; validates nothing yet)

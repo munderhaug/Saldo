@@ -10,6 +10,10 @@
 > guaranteed by the SAF-T + raw data export — but "self-host every layer" is relaxed to "EU-resident,
 > managed where it lowers ops, portable by export." Self-host Hetzner/Kamal is retained as the
 > sovereignty fallback.
+>
+> **See ADR 0023:** Saldo's *own application code* is **proprietary**. ADR 0008 governs the
+> open-source **stack/dependencies** and self-hostability of the architecture — not Saldo's own
+> source licence.
 
 ## Context
 Saldo holds immutable financial records that must survive a decade and a tax audit, with EU data

@@ -17,6 +17,10 @@ coverage/
 playwright-report/
 test-results/
 
+# Generated review artifacts (html-report / design-review / saft-validate skills) — transient,
+# regenerable, delivered to the reviewer; not committed.
+reports/
+
 # Tooling scratch
 sbom.json
 .type-coverage/

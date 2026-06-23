@@ -3,7 +3,7 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: `feat-tax-estimate` (source-grounded ENK income-tax estimate, ADR 0029)
+**Last updated:** 2026-06-23 — session: `feat-tax-estimate` + `vat-sectoral-exemptions` (ADR 0029, 0030)
 **Branch:** `claude/practical-edison-20f9p6` (off `main` at PR #18 / `3e86e1b` — per-line VAT engine).
 Lands via a reviewed PR — never a direct push to `main`. (Trust `git log` over any hash here.)
 
@@ -12,7 +12,7 @@ Lands via a reviewed PR — never a direct push to `main`. (Trust `git log` over
 > statute text fetches verbatim; Skatteetaten reachable for cross-confirm; data.brreg reachable). Don't
 > assume egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
 
-## This session — `feat-tax-estimate`: source-grounded ENK income-tax estimate (ADR 0029)
+## This session (1/2) — `feat-tax-estimate`: source-grounded ENK income-tax estimate (ADR 0029)
 Grounded the **ENK personal-tax layer** and encoded it, taking the honest-number's `estimatedTax` from
 **INJECTED** to **source-grounded**. A full vertical slice: capture verbatim primaries → distil a cited
 page → pure domain estimator (exhaustive + property tests) → ADR. **Domain-only, no migration.** Full gate
@@ -50,6 +50,36 @@ captures; clean on all 7 axes).
 - **Next:** wire `feat-honest-number-surface` (aggregation query + the reveal UI — now has a real number to
   show); or continue the regulatory foundation — `vat-sectoral-exemptions` (mval kap. 3, on the new gate) or
   the VAT/bokføring Tier-1 gaps (tidfesting / tap på krav / uttak / justering / EHF-Peppol; `bokforingslov-doc`).
+
+## This session (2/2) — `vat-sectoral-exemptions`: the activity dimension on the VAT gate (ADR 0030)
+Extended the freshly-landed line-treatment gate with the **sectoral-exemption (activity)** dimension, so a
+user can't charge VAT on an *unntatt* activity (the § 3-7 musician problem, generalized to helse / sosiale /
+undervisning / finansielle / idrett / fast eiendom). **Domain-only, no migration, DB-independent.** Same
+discipline as 1/2: capture verbatim → distil cited page → pure gate → ADR. Full gate green (typecheck, lint,
+format, `test` **158 domain** / 23 web, `lint:repo` 61 docs / 9 sourced / 0 warn). **`vat-reviewer`: SHIP**
+(source-grounding, logic, test-independence clean; one boundary disclosed + locked — see below).
+- **Captured mval kap. 3 unntak verbatim** from Lovdata (`db/reference/mva/2026-06-23-mval-kap3-unntak.md`:
+  §§ 3-2 helse, 3-4 sosiale, 3-5 undervisning, 3-6 finansielle, 3-8 idrett, 3-11 fast eiendom; § 3-7 already
+  captured). Distilled **`docs/regulatory/mva-sektorunntak.md`** (cited, verify-by 2026-12-31).
+- **`packages/domain/src/vat/activity.ts`** — `VatActivity` enum (the named kap. 3 sectors + `avgiftspliktig`)
+  + `activityIsExempt` + `checkVatActivityLine(activity, code)`: blocks an exempt-sector line coded as
+  output/fritatt VAT, and a taxable line coded *unntatt* (code 6). **Composes with `checkVatLine`** (a line
+  is valid iff both pass) — the activity gate catches what registration alone can't (a *registered* org still
+  may not VAT a § 3-2 health line). Derived from the committed SAF-T list, never memory.
+- **Scope (ADR 0030):** the **revenue/output gate only**. Reduced-rate (12/15 %) sector↔rate matching (mval
+  kap. 5) + rule/DB wiring → new task **`vat-reduced-rate-activity`**; input-VAT apportionment (§ 8-2) →
+  `vat-mixed-activity`; reverse charge → `vat-reverse-charge`. **Disclosed + test-locked boundary:** domestic
+  reverse-charge *turnover* (code 51) classifies as reverse-charge, so it isn't gated against exempt sectors
+  yet (a `vat-reviewer` catch — fixed by disclosure in code/doc/ADR + an explicit test, not a silent gap).
+- **Tests:** `vat/activity.test.ts` — **13 tests**: exhaustive (8 activities × 30 committed codes vs. an
+  independent hand-listed oracle) + the two-gate composition + the code-51 boundary + 4 fast-check properties.
+- **Files:** new — `db/reference/mva/2026-06-23-mval-kap3-unntak.md`, `docs/regulatory/mva-sektorunntak.md`,
+  `docs/decisions/0030-sectoral-vat-exemptions.md`, `packages/domain/src/vat/activity.{ts,test.ts}`; edited —
+  `packages/domain/src/index.ts`, `db/reference/mva/SOURCE.md`, `docs/regulatory/README.md`,
+  `docs/decisions/README.md`, `docs/backlog/tasks.json` (sectoral done + `vat-reduced-rate-activity` added).
+- **Next:** `vat-reduced-rate-activity` (capture mval kap. 5, then rate-matching + the rules/DB activity
+  wiring); or `feat-honest-number-surface` (needs org provisioning + a ledger-aggregation query first — note
+  `vat_code`/`account` are per-org and not yet seeded; provisioning is `feat-org-onboarding`).
 
 ## Previous session — `vat-line-level-model`: per-line VAT in @saldo/domain (ADR 0027 → engine code)
 Turned the freshly-merged **ADR 0027** into engine code: VAT treatment is now a property of the

@@ -226,16 +226,28 @@
     {
       "id": "vat-sectoral-exemptions",
       "title": "Rules-engine knowledge of sectoral VAT exemptions (mval kap. 3)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "L",
       "phase": "P2",
       "depends_on": ["vat-line-level-model"],
-      "notes": "No code today knows which activities are unntatt (helse, undervisning, finans, kunst §3-7) or which qualify for 12%/15%. Capture mval kap. 3 sources first, then enforce valid code↔activity combinations so a user can't apply the wrong rate to an exempt activity.",
+      "notes": "DONE (ADR 0030) — revenue gate. Captured mval kap. 3 unntak verbatim (db/reference/mva/2026-06-23-mval-kap3-unntak.md), distilled docs/regulatory/mva-sektorunntak.md. VatActivity enum (helse/sosiale/undervisning/finansielle/kunst-kultur/idrett/utleie-fast-eiendom + avgiftspliktig) + checkVatActivityLine in packages/domain/src/vat/activity.ts: blocks charging output/fritatt VAT on an exempt activity, and booking taxable turnover as unntatt; composes with checkVatLine. 12 tests (exhaustive activity×code + properties). Reduced-rate matching (12/15%) and rule/DB wiring sequenced — see vat-reduced-rate-activity, vat-mixed-activity.",
       "refs": [
-        "docs/regulatory/mva-kunstneriske-tjenester.md",
-        "db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv"
+        "docs/decisions/0030-sectoral-vat-exemptions.md",
+        "docs/regulatory/mva-sektorunntak.md",
+        "packages/domain/src/vat/activity.ts"
       ]
+    },
+    {
+      "id": "vat-reduced-rate-activity",
+      "title": "Reduced-rate (12%/15%) sector↔rate matching + activity rule/DB wiring",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P2",
+      "depends_on": ["vat-sectoral-exemptions"],
+      "notes": "Extend the activity gate (ADR 0030) to the reduced-rate sectors: capture mval kap. 5 scope (§5-2 næringsmidler 15%, §5-3/5-5 ff persontransport/overnatting/etc. 12%) FIRST, then validate that a reduced-rate activity's output line carries the matching rate category (not 25%). Also wire checkVatActivityLine into the rules engine (a vatActivityRule over a voucher) once a per-line activity field exists on the posting/voucher model + DB.",
+      "refs": ["packages/domain/src/vat/activity.ts", "docs/regulatory/mva-rates.md"]
     },
     {
       "id": "vat-threshold-watcher",

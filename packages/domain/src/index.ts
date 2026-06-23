@@ -6,6 +6,7 @@ export * from './ids/org-nr.js';
 export * from './ids/kid.js';
 export * from './vat/status.js';
 export * from './vat/line-treatment.js';
+export * from './vat/activity.js';
 export * from './honest-number/honest-number.js';
 export * from './tax/params.js';
 export * from './tax/income-estimate.js';

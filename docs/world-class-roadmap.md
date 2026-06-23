@@ -118,7 +118,7 @@ solo-maintained, agent-built, 10-year horizon).
 | LLM/OCR | local Ollama/vLLM + Qwen2.5-VL | **Keep option; decide at Phase 4** | ADR 0009 stands; keep the OpenAI-compatible abstraction so hosted-EU is a base-URL swap. |
 | Auth | openid-client + ~~oslo~~ + PG sessions | **Keep shape; fix lib** | `oslo` is deprecated → `@oslojs/crypto` + `@oslojs/encoding`; openid-client **v6**. |
 | Validation | Zod | **Keep; extend to env** | Add a Zod-validated `env.ts` (the one boundary Zod is missing). |
-| Forms/tables | RHF+Zod / TanStack Table | **Keep — build when needed** | Installed but unused today; wire when the UI lands (don't carry dead deps before then). |
+| Forms/tables | RHF+Zod / TanStack Table | **Keep — add when needed** | Choice fixed (tech-stack.md + frontend.md); **not installed** (removed to keep the dep tree knip-clean). Each is `pnpm add`-ed in the feature PR that first uses it. |
 | Observability | OTel/SigNoz/pino | **Start with `pino` now**; OTel later | Not one log line exists yet; logging is foundational. |
 | Testing | Vitest/fast-check/Testcontainers/Playwright | **Keep; add stateful + e2e + axe + mutation** | Property tests are the safety net; extend them (P1/P2). |
 

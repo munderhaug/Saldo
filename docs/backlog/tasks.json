@@ -139,7 +139,7 @@
       "effort": "L",
       "phase": "P1-feature",
       "depends_on": ["pr5-auth", "feat-enhetsregisteret"],
-      "notes": "The membership UI that makes withOrgTx real per logged-in user.",
+      "notes": "The membership UI that makes withOrgTx real per logged-in user. First real forms/tables surface: pnpm add react-hook-form + @hookform/resolvers + @tanstack/react-table here (chosen in frontend.md; removed until used).",
       "refs": ["docs/STATUS.md"]
     },
     {
@@ -150,7 +150,7 @@
       "effort": "L",
       "phase": "P1-feature",
       "depends_on": ["feat-honest-number"],
-      "notes": "Built per feature, not all at once (adaptive two-surface design system).",
+      "notes": "Built per feature, not all at once (adaptive two-surface design system). Native-feel polish: pnpm add motion + vaul here (chosen in frontend.md/tech-stack.md; removed until used).",
       "refs": ["docs/decisions/0016-adaptive-two-surface-design-system.md"]
     },
     {

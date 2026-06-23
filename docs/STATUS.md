@@ -3,9 +3,9 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: P0 hardening PRs 3–6 (gates, ledger integrity, auth, observability)
-**Branch:** `claude/epic-bell-u2bbx9` (off `main`). Lands via reviewed PR — never a direct push to
-`main`. (HEAD moves each commit — trust `git log` over any hash written here.)
+**Last updated:** 2026-06-23 — session: P0 hardening PRs 3–6 + agentic-memory + design-lint + honest-number (epic PR opened)
+**Branch:** `claude/epic-bell-u2bbx9` (off `main`). **Open as a reviewed PR to `main`** — never a direct
+push. (HEAD moves each commit — trust `git log` over any hash written here.)
 
 > ⚠️ **Live external integrations are not exercised in these sessions.** The Neon control plane,
 > Criipto OIDC, and Brønnøysund (`data.brreg.no`) are not reachable/configured here, so auth and
@@ -14,9 +14,12 @@
 > stand in for DB work.)
 
 ## Verified state (this session — full production gate green)
-- ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (40 docs,
-  0 warnings), `format:check`, `test` (**90 domain** incl. fast-check; Testcontainers skip locally
-  without Docker — they run in CI), web `build` (**React 19** SSR + **Tailwind v4** token CSS compiles).
+- ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (**47 docs**,
+  0 warnings), `format:check`, **`type-coverage` 98.62%**, `db:lint` (squawk), `backlog validate`,
+  `test` (**101 domain** incl. fast-check + **4 web unit**; the **34 Testcontainers integration tests**
+  skip without Docker — they run in CI), web `build` (React 19 SSR + Tailwind v4 + **argon2/pino
+  externalized**). Every DB change was also proven against a real **local Postgres** (PR4: 8 bad-case
+  checks; PR5: 17 auth checks; RLS-coverage query) since Docker is absent here.
 - ✅ **Ledger integrity proven (unchanged):** Testcontainers prove balance / immutability / period-lock /
   gapless-counter + RLS tenant isolation against real Postgres (`apps/web/test/integrity/`).
 - ✅ **Zero contradictions, now ENFORCED:** `tools/repo-lint.mjs` fails CI if an `ADR NNNN` cross-ref

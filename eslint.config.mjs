@@ -84,11 +84,14 @@ export default tseslint.config(
   // ── Accessibility backstop (deterministic; the a11y-reviewer covers the rest) ──
   {
     files: ['apps/web/app/**/*.{tsx,jsx}'],
-    plugins: { 'jsx-a11y': jsxA11y },
+    plugins: { 'jsx-a11y': jsxA11y, saldo },
     rules: {
       ...jsxA11y.flatConfigs.recommended.rules,
-      // Design-system gate: no inline styles — use Tailwind tokens / shadcn components.
-      // See .claude/rules/design-system.md. Tokens live in app/app.css.
+      // Design-system gates (.claude/rules/design-system.md; tokens live in app/app.css). Enforced
+      // now so the first component written is already on-bar — the UI lands soon.
+      //  · no inline styles — use Tailwind tokens / shadcn components;
+      //  · no arbitrary Tailwind values (bg-[#fff], h-[100vh]) — add a token instead;
+      //  · no raw colour utilities (text-black, bg-red-500) — use the semantic tokens.
       'no-restricted-syntax': [
         'error',
         {
@@ -97,6 +100,8 @@ export default tseslint.config(
             'No inline styles — use Tailwind token utilities / shadcn components (.claude/rules/design-system.md).',
         },
       ],
+      'saldo/no-arbitrary-tailwind': 'error',
+      'saldo/no-raw-color-utility': 'error',
     },
   },
 );

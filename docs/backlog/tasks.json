@@ -165,6 +165,17 @@
       "depends_on": [],
       "notes": "A restore you have never tested is not a backup. R2 lifecycle + 5-year retention vs immutability procedure.",
       "refs": ["docs/decisions/0013-hosted-postgres-neon.md"]
+    },
+    {
+      "id": "harness-design-lint",
+      "title": "RuleTester coverage for eslint-plugin-saldo + expand design-lint",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "The custom rules (no-money-arithmetic, no-arbitrary-tailwind, no-raw-color-utility) are verified by fixtures but have no committed RuleTester tests; wire a tools test runner. Expand korrodesign-style rules (focus-visible, font-family, element semantics) as UI surface grows.",
+      "refs": ["tools/eslint-plugin-saldo/index.js", ".claude/rules/design-system.md"]
     }
   ]
 }

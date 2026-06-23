@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
@@ -29,6 +29,19 @@ function upMigrationSql(): string {
 const APP_ROLE = 'saldo_app';
 /** Test-only password for the app role (set after migrating; never used in production). */
 const APP_ROLE_PASSWORD = 'saldo_app_test';
+/** Advisory-lock key serializing setup across parallel test files that share one external cluster. */
+const LEDGER_SETUP_LOCK = 5_212_026;
+
+/**
+ * Can the integration suites get a real Postgres? True when **either** Docker is present (the
+ * Testcontainers default, ADR 0014) **or** `SALDO_TEST_PG_URI` points at an existing Postgres (the
+ * Docker-less escape hatch — e.g. a local PG started by the environment setup script). The suites
+ * `skipIf(!ledgerDbAvailable)` so they run wherever a database is reachable and skip cleanly otherwise.
+ */
+export const ledgerDbAvailable =
+  Boolean(process.env.SALDO_TEST_PG_URI) ||
+  Boolean(process.env.DOCKER_HOST) ||
+  existsSync('/var/run/docker.sock');
 
 export interface LedgerDb {
   /**
@@ -53,6 +66,9 @@ export interface LedgerDb {
  * here so it can connect over TCP.
  */
 export async function startLedgerDb(): Promise<LedgerDb> {
+  const externalUri = process.env.SALDO_TEST_PG_URI;
+  if (externalUri) return startOnExternalPg(externalUri);
+
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
     'postgres:16',
   ).start();
@@ -85,6 +101,54 @@ export async function startLedgerDb(): Promise<LedgerDb> {
       await container.stop();
     },
   };
+}
+
+/**
+ * Docker-less path (`SALDO_TEST_PG_URI`): run the suite against an EXISTING local Postgres by creating
+ * a throwaway database per run, applying the migrations into it, and dropping it on stop. Intended for
+ * a local/trusted PG (e.g. the one the environment setup script starts) — not SSL/remote. CI keeps the
+ * Testcontainers path (ADR 0014). `adminUri` is any database on the cluster (used to CREATE/DROP).
+ */
+async function startOnExternalPg(adminUri: string): Promise<LedgerDb> {
+  // max:1 so the session-level advisory lock is taken and released on the same connection.
+  const admin = postgres(adminUri, { prepare: false, onnotice: () => {}, max: 1 });
+  const dbName = `saldo_test_${crypto.randomUUID().replace(/-/g, '')}`;
+
+  // Serialize setup across parallel test files sharing this cluster: the migration creates the
+  // cluster-global `saldo_app` role, so concurrent CREATE ROLE would race. The lock lives on the
+  // shared admin database, so it's mutually exclusive regardless of advisory-lock scoping.
+  await admin`SELECT pg_advisory_lock(${LEDGER_SETUP_LOCK})`;
+  try {
+    await admin.unsafe(`CREATE DATABASE ${dbName}`);
+    const url = new URL(adminUri);
+    url.pathname = `/${dbName}`;
+    const sql = postgres(url.toString(), { prepare: false, onnotice: () => {} });
+    await sql.unsafe(upMigrationSql()).simple();
+    await sql.unsafe(`ALTER ROLE ${APP_ROLE} WITH PASSWORD '${APP_ROLE_PASSWORD}'`);
+
+    const appSql = postgres({
+      host: url.hostname,
+      port: Number(url.port) || 5432,
+      database: dbName,
+      username: APP_ROLE,
+      password: APP_ROLE_PASSWORD,
+      prepare: false,
+      onnotice: () => {},
+    });
+
+    return {
+      sql,
+      appSql,
+      stop: async () => {
+        await appSql.end({ timeout: 5 });
+        await sql.end({ timeout: 5 });
+        await admin.unsafe(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
+        await admin.end({ timeout: 5 });
+      },
+    };
+  } finally {
+    await admin`SELECT pg_advisory_unlock(${LEDGER_SETUP_LOCK})`;
+  }
 }
 
 export interface SeededOrg {

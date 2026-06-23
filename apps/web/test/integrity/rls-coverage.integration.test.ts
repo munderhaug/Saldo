@@ -1,9 +1,7 @@
-import { existsSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { type LedgerDb, startLedgerDb } from './db-harness.js';
+import { type LedgerDb, ledgerDbAvailable, startLedgerDb } from './db-harness.js';
 
-// Needs a Docker daemon (Testcontainers); skips gracefully where unavailable (CI has Docker).
-const dockerAvailable = Boolean(process.env.DOCKER_HOST) || existsSync('/var/run/docker.sock');
+// Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Skips cleanly otherwise.
 
 /**
  * RLS-coverage gate (ADR 0018). The ledger-integrity rule says EVERY tenant-scoped table MUST, in the
@@ -14,7 +12,7 @@ const dockerAvailable = Boolean(process.env.DOCKER_HOST) || existsSync('/var/run
  * `schema_migrations` (dbmate bookkeeping) is excluded — it is not present in this harness (the
  * migrations are applied as raw SQL, not via dbmate) but is excluded defensively.
  */
-describe.skipIf(!dockerAvailable)('RLS coverage — every public table is locked down', () => {
+describe.skipIf(!ledgerDbAvailable)('RLS coverage — every public table is locked down', () => {
   let db: LedgerDb;
 
   beforeAll(async () => {

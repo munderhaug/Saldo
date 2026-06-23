@@ -1,8 +1,7 @@
-import { existsSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { type LedgerDb, seedOrg, startLedgerDb } from './db-harness.js';
+import { type LedgerDb, ledgerDbAvailable, seedOrg, startLedgerDb } from './db-harness.js';
 import * as schema from '../../app/db/schema.js';
 import {
   createSession,
@@ -18,12 +17,11 @@ import {
   getMemberships,
 } from '../../app/auth/users.server.js';
 
-// Needs Docker (Testcontainers); skips gracefully where unavailable. Exercises the auth tables on the
-// non-owner `saldo_app` connection — the real app path (ADR 0020).
-const dockerAvailable = Boolean(process.env.DOCKER_HOST) || existsSync('/var/run/docker.sock');
+// Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Exercises the auth tables on
+// the non-owner `saldo_app` connection — the real app path (ADR 0020).
 const DAY = 86_400_000;
 
-describe.skipIf(!dockerAvailable)('Identity & sessions (real Postgres, app role)', () => {
+describe.skipIf(!ledgerDbAvailable)('Identity & sessions (real Postgres, app role)', () => {
   let ledger: LedgerDb;
   let db: ReturnType<typeof drizzle<typeof schema>>;
 

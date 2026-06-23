@@ -16,10 +16,10 @@ push. (HEAD moves each commit — trust `git log` over any hash written here.)
 ## Verified state (this session — full production gate green)
 - ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (**47 docs**,
   0 warnings), `format:check`, **`type-coverage` 98.62%**, `db:lint` (squawk), `backlog validate`,
-  `test` (**101 domain** incl. fast-check + **4 web unit**; the **34 Testcontainers integration tests**
-  skip without Docker — they run in CI), web `build` (React 19 SSR + Tailwind v4 + **argon2/pino
-  externalized**). Every DB change was also proven against a real **local Postgres** (PR4: 8 bad-case
-  checks; PR5: 17 auth checks; RLS-coverage query) since Docker is absent here.
+  `test` (**101 domain** incl. fast-check + **4 web unit**; the **34 integration tests** now run against
+  a real **local Postgres** via the `SALDO_TEST_PG_URI` escape hatch — **all 38 web tests pass** — and
+  still run on Testcontainers in CI, skipping cleanly where neither is present), web `build` (React 19
+  SSR + Tailwind v4 + **argon2/pino externalized**).
 - ✅ **Ledger integrity proven (unchanged):** Testcontainers prove balance / immutability / period-lock /
   gapless-counter + RLS tenant isolation against real Postgres (`apps/web/test/integrity/`).
 - ✅ **Zero contradictions, now ENFORCED:** `tools/repo-lint.mjs` fails CI if an `ADR NNNN` cross-ref
@@ -40,6 +40,14 @@ auth/identity first lock, observability) **+ a meta-PR** (agentic task graph + r
 org-onboarding behind it.
 
 ## Done (this session)
+- **Dev-infra: run the real integration tests without Docker + the Neon path.** Added a
+  `SALDO_TEST_PG_URI` escape hatch to `db-harness.ts` (creates a throwaway DB per run on an existing
+  Postgres, advisory-locked for parallel safety; CI keeps Testcontainers) — the 34 integration tests now
+  pass against a local PG, de-risking the suites that previously only ran in CI. Added the
+  **deploy-migrate** workflow (`dbmate up` against Neon, manual + protected `production` env) and a
+  **Neon provisioning runbook** (`docs/runbooks/neon-provisioning.md`). Recommended **cloud-env setup**:
+  a setup script that installs deps + starts a local Postgres; `DATABASE_URL` as a non-secret env var;
+  **remove the Neon API key from the shared env-vars box** (it's a credential — rotate it).
 - **`feat-honest-number` — the honest-number domain feature (the feature track begins).** Pure
   `packages/domain/src/honest-number/` — `honestNumber({income, outputVatCollected, deductibleInputVat,
   estimatedTax, mvaStatus})` → `{vatHeld, estimatedTax, spendable, rawRemainder}` (experience-principles

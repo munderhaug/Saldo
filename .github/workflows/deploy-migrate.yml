@@ -1,0 +1,39 @@
+name: Deploy migrations
+
+# Apply db/migrations/*.sql to the hosted Postgres (Neon EU, ADR 0013) with dbmate. Migrating a real
+# database is consequential, so this is MANUAL (workflow_dispatch) and runs inside a protected
+# `production` Environment — add a required reviewer to it in repo Settings → Environments. dbmate is
+# idempotent (it only applies migrations not yet in schema_migrations), so re-running is safe.
+#
+# To wire continuous delivery later, add `push: { branches: [main], paths: ['db/migrations/**'] }` —
+# the Environment protection still gates it.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-migrate # never two migration runs at once
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: production # gate with a required reviewer / protection rules
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply migrations to Neon
+        env:
+          # The OWNER connection string (migrations create roles/policies; the app later connects as
+          # the non-owner saldo_app role — ADR 0012/0020). Neon needs SSL: include ?sslmode=require.
+          # Set this as the `production` Environment secret NEON_DATABASE_URL.
+          DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: pnpm db:migrate

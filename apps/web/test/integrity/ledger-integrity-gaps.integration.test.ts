@@ -1,9 +1,13 @@
-import { existsSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { insertVoucher, type LedgerDb, seedOrg, startLedgerDb } from './db-harness.js';
+import {
+  insertVoucher,
+  type LedgerDb,
+  ledgerDbAvailable,
+  seedOrg,
+  startLedgerDb,
+} from './db-harness.js';
 
-// Needs a Docker daemon (Testcontainers); skips gracefully where unavailable (CI has Docker).
-const dockerAvailable = Boolean(process.env.DOCKER_HOST) || existsSync('/var/run/docker.sock');
+// Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Skips cleanly otherwise.
 
 /**
  * Ledger-integrity GAPS (ADR 0018). Each test proves the BAD case is now blocked by SQL — the four
@@ -11,7 +15,7 @@ const dockerAvailable = Boolean(process.env.DOCKER_HOST) || existsSync('/var/run
  * overlapping fiscal periods, and cross-org period references. Run by the owner (superuser) connection,
  * which bypasses RLS but is fully subject to triggers/constraints.
  */
-describe.skipIf(!dockerAvailable)('SQL ledger integrity — closed gaps (real Postgres)', () => {
+describe.skipIf(!ledgerDbAvailable)('SQL ledger integrity — closed gaps (real Postgres)', () => {
   let db: LedgerDb;
 
   beforeAll(async () => {

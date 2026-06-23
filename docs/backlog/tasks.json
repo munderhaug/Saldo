@@ -84,14 +84,16 @@
     {
       "id": "feat-tax-estimate",
       "title": "Norwegian ENK income-tax estimation (source-grounded)",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": [],
-      "notes": "The injected estimatedTax for honestNumber. MUST be grounded in a committed Skatteetaten source (regulatory-update skill) — trygdeavgift + trinnskatt + 22% alminnelig inntekt for an ENK; NEVER rates from memory. Needs egress/committed source.",
+      "notes": "DONE (ADR 0029). Captured 2026 rates verbatim from Lovdata (Stortingets skattevedtak FOR-2025-12-18-2747; avgifter til folketrygden FOR-2025-12-18-2748; folketrygdloven § 23-3) into db/reference/skatt/, distilled docs/regulatory/skatt-enk-personskatt.md. Pure estimateEnkIncomeTax(profit, year) in packages/domain/src/tax/: 22% alminnelig inntekt (after personfradrag 114540) + 5-step trinnskatt + trygdeavgift 10.8% with nedre grense 99650 / 25% opptrapping. 19 tests (hand oracle + fast-check). Conservative; mainland/klasse-1/single-source assumptions documented. Still INJECTED into honestNumber by the caller — wiring is feat-honest-number-surface.",
       "refs": [
-        ".claude/skills/regulatory-update/SKILL.md",
+        "docs/decisions/0029-enk-income-tax-estimate.md",
+        "docs/regulatory/skatt-enk-personskatt.md",
+        "packages/domain/src/tax/income-estimate.ts",
         "packages/domain/src/honest-number/honest-number.ts"
       ]
     },
@@ -224,16 +226,28 @@
     {
       "id": "vat-sectoral-exemptions",
       "title": "Rules-engine knowledge of sectoral VAT exemptions (mval kap. 3)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "L",
       "phase": "P2",
       "depends_on": ["vat-line-level-model"],
-      "notes": "No code today knows which activities are unntatt (helse, undervisning, finans, kunst §3-7) or which qualify for 12%/15%. Capture mval kap. 3 sources first, then enforce valid code↔activity combinations so a user can't apply the wrong rate to an exempt activity.",
+      "notes": "DONE (ADR 0030) — revenue gate. Captured mval kap. 3 unntak verbatim (db/reference/mva/2026-06-23-mval-kap3-unntak.md), distilled docs/regulatory/mva-sektorunntak.md. VatActivity enum (helse/sosiale/undervisning/finansielle/kunst-kultur/idrett/utleie-fast-eiendom + avgiftspliktig) + checkVatActivityLine in packages/domain/src/vat/activity.ts: blocks charging output/fritatt VAT on an exempt activity, and booking taxable turnover as unntatt; composes with checkVatLine. 12 tests (exhaustive activity×code + properties). Reduced-rate matching (12/15%) and rule/DB wiring sequenced — see vat-reduced-rate-activity, vat-mixed-activity.",
       "refs": [
-        "docs/regulatory/mva-kunstneriske-tjenester.md",
-        "db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv"
+        "docs/decisions/0030-sectoral-vat-exemptions.md",
+        "docs/regulatory/mva-sektorunntak.md",
+        "packages/domain/src/vat/activity.ts"
       ]
+    },
+    {
+      "id": "vat-reduced-rate-activity",
+      "title": "Reduced-rate (12%/15%) sector↔rate matching + activity rule/DB wiring",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P2",
+      "depends_on": ["vat-sectoral-exemptions"],
+      "notes": "Extend the activity gate (ADR 0030) to the reduced-rate sectors: capture mval kap. 5 scope (§5-2 næringsmidler 15%, §5-3/5-5 ff persontransport/overnatting/etc. 12%) FIRST, then validate that a reduced-rate activity's output line carries the matching rate category (not 25%). Also wire checkVatActivityLine into the rules engine (a vatActivityRule over a voucher) once a per-line activity field exists on the posting/voucher model + DB.",
+      "refs": ["packages/domain/src/vat/activity.ts", "docs/regulatory/mva-rates.md"]
     },
     {
       "id": "vat-threshold-watcher",
@@ -259,6 +273,44 @@
         "docs/saldo-build-specification.md",
         "docs/decisions/0007-gapless-invoice-counter.md"
       ]
+    },
+    {
+      "id": "harness-doc-freshness",
+      "title": "Derive repo-status from the task graph + gate it (kill doc staleness at the root)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "A of the owner-decided A→B plan. Root cause of recurring staleness: STATUS/roadmap RESTATE facts that live in tasks.json (the DAG, ADR 0019) / git / ADRs, so they rot (violates AGENTS.md 'state once, link, don't restate'). Fix: tools/status-block.mjs generates the volatile facts (ADR count+range; backlog total/done/todo + highest-value ready task) from committed sources into an AUTOGEN block in docs/STATUS.md; repo-lint --check fails on drift. Export load/readyTasks from backlog.mjs (GUARD its CLI-runs-on-import first). Add status:refresh/status:check scripts; update the handover skill. Full plan + gotchas in the 'Next session (assigned)' brief in docs/STATUS.md. Land with an ADR (/new-adr).",
+      "refs": [
+        "docs/STATUS.md",
+        "tools/repo-lint.mjs",
+        "tools/backlog.mjs",
+        ".claude/skills/handover/SKILL.md"
+      ]
+    },
+    {
+      "id": "harness-knowledge-graph",
+      "title": "Enrich the task graph with typed links + evidence-based drift checks",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["harness-doc-freshness"],
+      "notes": "B of A→B. Add typed edges to tasks.json (implements_adr, touches[files/globs], sources[db/reference|regulatory]) and verify status against EVIDENCE in repo-lint/backlog: a 'done' task whose touches/refs are gone; an ADR file with no implementing task; a regulatory page past verify-by with dependents. This 'verified status' is the quality alternative to blind auto-flip (C). See the 'Next session (assigned)' brief in docs/STATUS.md.",
+      "refs": ["docs/backlog/tasks.json", "tools/repo-lint.mjs"]
+    },
+    {
+      "id": "harness-status-autopr",
+      "title": "Optional: auto-suggest task status from PR/commit state",
+      "status": "todo",
+      "value": "low",
+      "effort": "M",
+      "phase": "P2",
+      "depends_on": ["harness-knowledge-graph"],
+      "notes": "C of A→B — DEFERRED/OPTIONAL (owner-decided). Only if task↔PR proves worth the GitHub coupling, and even then a GATE-CONFIRMED SUGGESTION, never a blind write: not every task is one PR (research/doc/regulatory-capture, multi-PR features), and 'done' here = gates green + ADR + merged, richer than 'PR merged'. Link via a commit/PR trailer 'Task: <id>'.",
+      "refs": ["docs/STATUS.md"]
     },
     {
       "id": "ci-pr-template",

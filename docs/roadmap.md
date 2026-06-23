@@ -5,6 +5,11 @@
 > a durable system of record — both the work to do **now** and the discipline to stay
 > high-quality **going forward**. It supersedes the ad-hoc review notes from this session.
 >
+> **Status (updated 2026-06-23 — feature track): Part 2 (P0 foundation hardening) is COMPLETE** — all six
+> PRs landed (see ADRs 0013–0021 + `git log`). Current work is the **feature + regulatory-engine track**,
+> tracked in `docs/backlog/tasks.json` (`pnpm backlog`); the Part 3 (P1/P2) items remain the forward plan.
+> This is the point-in-time plan that produced P0 — for live repo status see `docs/STATUS.md`.
+>
 > **Status vocabulary** (replaces "Locked", per this session's decision):
 > **Current** = active choice, in effect now (revisable via ADR) · **Intended** = planned, not
 > yet adopted/built · **Superseded** = replaced by a later ADR.

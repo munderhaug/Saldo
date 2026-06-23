@@ -19,9 +19,8 @@ deducts no input VAT.
   (fritatt) turnover.
 
 ## Sources
-- Skatteetaten, "Registrering i Merverdiavgiftsregisteret — beløpsgrense" (50 000 / 140 000 NOK).
-  Raw: db/reference/mva/ (capture the current Skatteetaten page before relying on this). verify-by: 2026-12-31
-- Merverdiavgiftsloven § 2-1. Raw: db/reference/mva/ (commit the lovdata text). verify-by: 2026-12-31
-
-> **Note:** Capture the cited primary sources into `db/reference/mva/` via the `regulatory-update`
-> skill — this page states the well-established rule, but the raw captures are not yet committed.
+- Merverdiavgiftsloven (LOV-2009-06-19-58) **§ 2-1** _Registreringsplikt_ — the 50 000 / 140 000 kr
+  thresholds and the "omsetning og uttak som er omfattet av loven" basis, captured verbatim.
+  Raw: db/reference/mva/2026-06-23-mval-2-1-registreringsplikt.md. verify-by: 2026-12-31
+- Skatteetaten, "Registrering i Merverdiavgiftsregisteret — beløpsgrense" — cross-confirmed (summarised,
+  not reproduced; Skatteetaten content is copyrighted). verify-by: 2026-12-31

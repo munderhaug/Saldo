@@ -20,7 +20,8 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0013 | Hosted Postgres: Neon (EU region) | Accepted |
 | 0014 | CI ephemeral database: Testcontainers (replaces Neon branching) | Accepted |
 | 0015 | Deploy: persistent Node on an EU PaaS, Cloudflare edge/CDN + R2 (revises 0008) | Accepted |
+| 0016 | Adaptive two-surface design system (desktop workbench + mobile companion) | Accepted |
 
 ADRs 0001–0004 restate decisions from `saldo-build-specification.md` §17; 0005–0011 capture the
-stack-shaping calls from the tech-stack review; 0012–0015 harden tenancy and record the hosting,
-CI-database, and deployment decisions.
+stack-shaping calls from the tech-stack review; 0012–0016 harden tenancy and record the hosting,
+CI-database, deployment, and design-system decisions.

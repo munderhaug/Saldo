@@ -16,6 +16,7 @@ mobile PWA for receipt capture.
 and files their own taxes — phone for capture, desktop for everything else.
 
 - Full product spec & scope: `docs/saldo-build-specification.md` (§1–§2, §8).
+- Experience, voice & safety-framing: `docs/experience-principles.md`.
 - Norwegian terms: `docs/glossary.md`.
 - Domain rules & data model: `docs/domain-model.md`.
 - Current stack: `docs/tech-stack.md`. Architecture: `docs/architecture.md`.

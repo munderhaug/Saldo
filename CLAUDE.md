@@ -1,7 +1,7 @@
 # Saldo — accounting/invoicing for small Norwegian enkeltpersonforetak
 
 TypeScript monorepo (pnpm + Turborepo). React Router 7 (framework mode) + shadcn/ui
-(Tailwind v4) + PostgreSQL. Native-feel PWA. Full stack: `docs/tech-stack.md`.
+(Tailwind v4) + PostgreSQL. Native-feel PWA. Full stack: `docs/tech-stack.md`. Experience & voice: `docs/experience-principles.md`.
 
 ## Architecture (full map: docs/architecture.md)
 - **packages/domain** (`@saldo/domain`) — PURE accounting core (money, ids, VAT, posting,
@@ -21,7 +21,9 @@ TypeScript monorepo (pnpm + Turborepo). React Router 7 (framework mode) + shadcn
   NOT a Postgres SEQUENCE (sequences leave gaps on rollback).
 - Posting is server-authoritative AND enforced in SQL. Client validation is UX only.
 - MVA status {under_threshold | unntatt | registered_standard | registered_zero_rated} drives all posting.
-- AI proposes; the rules engine validates; a human confirms. AI never writes to the ledger.
+- AI proposes; the rules engine validates; a human confirms — explicitly for consequential actions
+  (money leaving, filing), passively via a grace-window/untap for high-confidence routine items
+  (ADR 0002). AI never writes to the ledger.
 - VAT codes & accounts come from the committed SAF-T code lists — never hardcode from memory.
 - UI keeps a semantic-HTML, server-authoritative substrate; native polish is layered on top, never replaces it.
 

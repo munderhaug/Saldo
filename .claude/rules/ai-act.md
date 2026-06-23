@@ -6,7 +6,7 @@ paths: ["apps/web/app/integrations/**", "apps/web/app/jobs/**", "apps/web/app/co
 You are editing code on Saldo's **AI surface**. Under **Regulation (EU) 2024/1689** (the AI Act),
 these LLM features **are AI systems** (Art. 3(1)); the deterministic `@saldo/domain` rules engine is
 **not** (Recital 12 — rules defined solely by humans). Full analysis: `docs/regulatory/eu-ai-act.md`;
-posture: ADR 0017; oversight model: ADR 0002. Honour these — prefer the gate over the reminder.
+posture: ADR 0022; oversight model: ADR 0002. Honour these — prefer the gate over the reminder.
 
 ## MUST (build these into any AI feature)
 - **Disclose the AI interaction** (Art. 50(1)): the UI tells the user, at first interaction, that a
@@ -23,7 +23,7 @@ posture: ADR 0017; oversight model: ADR 0002. Honour these — prefer the gate o
   capture its Annex XII documentation under `db/reference/llm/` — do not infer capabilities/limits
   from memory.
 
-## STOP — re-open ADR 0017 first
+## STOP — re-open ADR 0022 first
 - **Never** build an AI feature that **evaluates a natural person's creditworthiness / credit score**
   or **profiles a natural person** (e.g. scoring a customer before extending credit terms). That is
   **Annex III(5)(b)** + **Art. 6(3)** high-risk and would make Saldo a **high-risk provider**

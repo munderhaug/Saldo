@@ -16,7 +16,10 @@ Follow the workflow loop; keep the domain pure and the integrity in SQL.
    the domain, persist via Drizzle, enqueue jobs if needed.
 6. **UI** — shadcn components; RHF + Zod; TanStack Table for lists; tabular-nums for figures;
    semantic-HTML baseline, native polish layered on.
-7. **Verify** — `test-runner` subagent; relevant reviewer subagent; hooks gate typecheck/lint.
+7. **Verify (maker ≠ judge)** — `test-runner` subagent; the relevant reviewer subagent; hooks gate
+   typecheck/lint. Then run **`/verify`** as an INDEPENDENT judge: it drives the actual app/route and
+   observes behavior rather than trusting the diff that just claimed success. The author asserting
+   "done" is not evidence; an independent observation is. Don't skip it for "obvious" changes.
 8. **Commit** a focused checkpoint.
 
 ## Invariants to honor

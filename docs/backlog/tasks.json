@@ -1,0 +1,315 @@
+{
+  "$comment": "Saldo's queryable task graph (ADR 0019). A dependency-aware DAG so 'what is the highest-value READY task' is computable, not buried in prose. Validated + queried by tools/backlog.mjs (pnpm backlog). Edit by hand; keep it honest. status: todo|in_progress|done|cancelled. value: high|medium|low. effort: S|M|L. depends_on: ids that must be done|cancelled first. cancelled tasks carry cancelled_reason (and optionally superseded_by).",
+  "tasks": [
+    {
+      "id": "pr3-gates",
+      "title": "Mechanical gates & supply-chain hardening",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Fail-closed hooks, Stop green-bar, type-coverage, squawk, SHA-pinned actions, CodeQL/gitleaks/SBOM, freshness cron.",
+      "refs": ["docs/decisions/0017-mechanical-gates-supply-chain.md"]
+    },
+    {
+      "id": "pr4-ledger-integrity",
+      "title": "Close four ledger-integrity gaps in SQL",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Posting-side period lock, posted-completeness, period non-overlap, cross-org period FK, RLS-coverage gate.",
+      "refs": ["docs/decisions/0018-ledger-integrity-gaps.md"]
+    },
+    {
+      "id": "meta-agentic-memory",
+      "title": "Agentic memory: committed task graph + rejected-approaches log",
+      "status": "done",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "This file + tools/backlog.mjs + docs/decisions/rejected.md. Piyaz's ideas, built natively (no SaaS).",
+      "refs": ["docs/decisions/0019-agentic-memory-task-graph.md"]
+    },
+    {
+      "id": "pr5-auth",
+      "title": "Identity & session foundation (auth) — the missing first lock",
+      "status": "done",
+      "value": "high",
+      "effort": "L",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "DONE (ADR 0020): app_user/user_session/membership; SHA-256 sessions + sliding expiry; argon2id dev provider; openid-client v6 OIDC (wired, not live); Zod env.ts; requireUser->withUserOrg->withOrgTx; /auth routes; RLS-coverage updated. OIDC live round-trip still needs Criipto + egress.",
+      "refs": ["docs/decisions/0020-session-identity-model.md"]
+    },
+    {
+      "id": "pr6-observability",
+      "title": "Observability baseline (pino + redaction + request-id)",
+      "status": "done",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "DONE (ADR 0021): pino logger.server.ts with REDACT_PATHS backstop + requestLogger(x-request-id), wired into /auth routes (outcomes only, never PII). Always-on redaction unit test. OTel later (P2).",
+      "refs": ["docs/decisions/0021-observability-baseline-pino.md"]
+    },
+    {
+      "id": "test-stateful-ledger",
+      "title": "Stateful property testing of the ledger (fast-check model-based)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr4-ledger-integrity"],
+      "notes": "Random sequences of post/reverse/lock against the invariants — the highest-value test for a system of record.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "feat-honest-number",
+      "title": "Honest-number domain feature (spendable = income - VAT held - estimated tax)",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "DONE: pure packages/domain/src/honest-number (11 exhaustive + property tests; vat-reviewed). estimatedTax is INJECTED (no memory tax model); caller-precondition docs for reverse-charge/non-deductible aggregation. Reveal UI + aggregation are feat-honest-number-surface.",
+      "refs": [
+        "packages/domain/src/honest-number/honest-number.ts",
+        "docs/experience-principles.md"
+      ]
+    },
+    {
+      "id": "feat-tax-estimate",
+      "title": "Norwegian ENK income-tax estimation (source-grounded)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "The injected estimatedTax for honestNumber. MUST be grounded in a committed Skatteetaten source (regulatory-update skill) — trygdeavgift + trinnskatt + 22% alminnelig inntekt for an ENK; NEVER rates from memory. Needs egress/committed source.",
+      "refs": [
+        ".claude/skills/regulatory-update/SKILL.md",
+        "packages/domain/src/honest-number/honest-number.ts"
+      ]
+    },
+    {
+      "id": "feat-honest-number-surface",
+      "title": "Honest-number reveal: ledger aggregation + the 'what's actually yours' UI",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-tax-estimate", "feat-keyed-microcopy"],
+      "notes": "Aggregate income/output-VAT/deductible-input per the documented preconditions (reverse-charge BOTH legs symmetrically; deductible portion only) with a Testcontainers test; feed honestNumber; render the §6 reveal (permission/relief framing).",
+      "refs": [
+        "docs/experience-principles.md",
+        "packages/domain/src/honest-number/honest-number.ts"
+      ]
+    },
+    {
+      "id": "feat-keyed-microcopy",
+      "title": "Norwegian-first keyed microcopy system",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "Keyed strings (not ad-hoc literals), Norwegian as original work. Foundational for every UI surface.",
+      "refs": [".claude/rules/experience-voice.md"]
+    },
+    {
+      "id": "feat-enhetsregisteret",
+      "title": "Enhetsregisteret (brreg) org lookup",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "data.brreg.no lookup for org onboarding. Live calls need egress (deferred env). db/reference/brreg/ exists.",
+      "refs": ["db/reference/brreg"]
+    },
+    {
+      "id": "feat-org-onboarding",
+      "title": "Org & contacts onboarding (user -> org membership UI)",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P1-feature",
+      "depends_on": ["pr5-auth", "feat-enhetsregisteret"],
+      "notes": "The membership UI that makes withOrgTx real per logged-in user.",
+      "refs": ["docs/STATUS.md"]
+    },
+    {
+      "id": "feat-mobile-companion",
+      "title": "Mobile companion surface (components/mobile, ADR 0016)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "L",
+      "phase": "P1-feature",
+      "depends_on": ["feat-honest-number"],
+      "notes": "Built per feature, not all at once (adaptive two-surface design system).",
+      "refs": ["docs/decisions/0016-adaptive-two-surface-design-system.md"]
+    },
+    {
+      "id": "vat-reverse-charge",
+      "title": "Reverse-charge dual-leg + non-deductible VAT rules",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P2",
+      "depends_on": [],
+      "notes": "Phase 2 carry-overs in @saldo/domain (new-vat-scenario skill; exhaustive + property tests).",
+      "refs": [".claude/skills/new-vat-scenario/SKILL.md"]
+    },
+    {
+      "id": "ci-pr-template",
+      "title": "Make the quality bar mechanical (PR template + migration-touches-test gate)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr3-gates"],
+      "notes": "PR template requiring linked ADR/tests; a CI check that a migration PR also touches test/integrity/.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "test-e2e-axe",
+      "title": "Playwright e2e + @axe-core/playwright (WCAG 2.2 AA in CI)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr5-auth"],
+      "notes": "e2e for the auth + first-invoice flow; axe gate once UI lands.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "ops-dr-runbook",
+      "title": "DR runbook: Neon PITR + restore drills, R2 retention",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "A restore you have never tested is not a backup. R2 lifecycle + 5-year retention vs immutability procedure.",
+      "refs": ["docs/decisions/0013-hosted-postgres-neon.md"]
+    },
+    {
+      "id": "harness-design-lint",
+      "title": "RuleTester coverage for eslint-plugin-saldo + expand design-lint",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "The custom rules (no-money-arithmetic, no-arbitrary-tailwind, no-raw-color-utility) are verified by fixtures but have no committed RuleTester tests; wire a tools test runner. Expand korrodesign-style rules (focus-visible, font-family, element semantics) as UI surface grows.",
+      "refs": ["tools/eslint-plugin-saldo/index.js", ".claude/rules/design-system.md"]
+    },
+    {
+      "id": "compliance-eu-ai-act",
+      "title": "EU AI Act readiness & compliance",
+      "status": "done",
+      "value": "high",
+      "effort": "L",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "DONE (ADR 0022): source-grounded against Regulation (EU) 2024/1689 (eur-lex CELEX 32024R1689 + AI Act Explorer; raw captures in db/reference/eu-ai-act/). Only the LLM features are AI systems (Art 3(1)/Recital 12); NOT prohibited (Art 5), NOT high-risk (Art 6/Annex III); provider+deployer, not a GPAI provider (relies on Art 53 docs). Binding duties: transparency (Art 50, 2 Aug 2026) + AI literacy (Art 4, in force). Delivered the cited knowledge page, ADR 0022, the .claude/rules/ai-act.md gate + CLAUDE.md invariant. Forward product/repo work = the aia-* tasks.",
+      "refs": [
+        "docs/decisions/0022-eu-ai-act-posture.md",
+        "docs/regulatory/eu-ai-act.md",
+        ".claude/rules/ai-act.md"
+      ]
+    },
+    {
+      "id": "feat-receipt-extraction",
+      "title": "Receipt/invoice -> structured proposal via vision-LLM (propose-only)",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P2-feature",
+      "depends_on": [],
+      "notes": "The first AI-system surface (spec 8.5 / Phase 4; ADR 0009 local-first). image -> extraction -> Zod -> rules engine -> proposed voucher -> human confirms. AI never writes the ledger (ADR 0002). Carries the EU AI Act obligations (aia-*).",
+      "refs": ["docs/integrations/llm-extraction.md", "docs/decisions/0009-local-first-llm.md"]
+    },
+    {
+      "id": "aia-transparency-ui",
+      "title": "EU AI Act: disclose AI interaction in the UI (Art 50(1))",
+      "status": "todo",
+      "value": "high",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": ["feat-receipt-extraction"],
+      "notes": "Tell the user, at first interaction, that a value/proposal is AI-generated (unless obvious). Applies by 2 Aug 2026. See eu-ai-act.md s4.",
+      "refs": ["docs/regulatory/eu-ai-act.md", "docs/decisions/0022-eu-ai-act-posture.md"]
+    },
+    {
+      "id": "aia-provenance-logging",
+      "title": "EU AI Act: AI-output provenance + 'AI-assisted' label + logging (Art 50(2))",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "compliance",
+      "depends_on": ["feat-receipt-extraction", "pr6-observability"],
+      "notes": "Every AI-proposed value carries machine-readable provenance (model+version+confidence) in its Zod contract, is labelled AI-assisted, and is logged (pino). This is where the code-level provenance gate lands (a required field + a lint/test check).",
+      "refs": ["docs/regulatory/eu-ai-act.md", ".claude/rules/ai-act.md"]
+    },
+    {
+      "id": "aia-gpai-docs",
+      "title": "EU AI Act: capture the upstream GPAI model's Annex XII docs (Art 53)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "At the LLM-hosting decision (Phase 4): capture the chosen model's capabilities/limitations docs under db/reference/llm/ — rely on the provider's documentation, never infer from memory.",
+      "refs": ["db/reference/llm", "docs/regulatory/eu-ai-act.md"]
+    },
+    {
+      "id": "aia-literacy-note",
+      "title": "EU AI Act: proportionate AI-literacy note (Art 4, in force)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "A short dated competence note: what the AI features do, their limits, the propose-only/confirm model. Art 4 in force since 2 Feb 2025; proportionate for a solo/small team.",
+      "refs": ["docs/regulatory/eu-ai-act.md"]
+    },
+    {
+      "id": "aia-conformity-checklist",
+      "title": "EU AI Act: conformity self-assessment checklist",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": ["compliance-eu-ai-act"],
+      "notes": "A dated checklist re-run before each AI feature ships and at each Art 113 milestone: prohibitions clear (Art 5), still not high-risk (Art 6/Annex III), transparency met (Art 50).",
+      "refs": ["docs/regulatory/eu-ai-act.md"]
+    },
+    {
+      "id": "aia-highrisk-guard",
+      "title": "EU AI Act: high-risk guard — never score/profile a natural person",
+      "status": "done",
+      "value": "high",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "DONE: CLAUDE.md invariant + .claude/rules/ai-act.md (auto-loads on AI/LLM code). No feature may evaluate a natural person's creditworthiness or profile them (Annex III 5(b); Art 6(3)) without re-opening ADR 0022.",
+      "refs": ["CLAUDE.md", ".claude/rules/ai-act.md"]
+    },
+    {
+      "id": "aia-review-fold",
+      "title": "EU AI Act: fold the AI Act review into privacy-reviewer when AI code lands",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "compliance",
+      "depends_on": ["feat-receipt-extraction"],
+      "notes": "When the AI surface exists, extend the existing privacy-reviewer subagent with the AI Act checklist (transparency, provenance, no high-risk scoring) + wire the aia-provenance-logging code gate; split out a dedicated reviewer only on demonstrated need (ADR 0022).",
+      "refs": ["docs/decisions/0022-eu-ai-act-posture.md", ".claude/agents/privacy-reviewer.md"]
+    }
+  ]
+}

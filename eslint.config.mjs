@@ -60,14 +60,49 @@ export default tseslint.config(
     files: ['packages/domain/src/money/ore.ts'],
     rules: { 'saldo/no-money-arithmetic': 'off', 'no-restricted-properties': 'off' },
   },
+  {
+    // React Router idiom: loaders/actions/guards throw a `Response` (incl. redirect()) to
+    // short-circuit a request. Allow it; everything else must still throw an Error.
+    files: ['apps/web/app/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/only-throw-error': [
+        'error',
+        { allow: [{ from: 'lib', name: 'Response' }] },
+      ],
+    },
+  },
+  {
+    // ── Architectural boundary: packages/domain ↛ apps/web ─────────────────────
+    // The domain is the one hard boundary (CLAUDE.md): a PURE accounting core with no I/O that runs
+    // in route actions AND the browser. It must never depend on the web app — the dependency is
+    // strictly one-way (web → domain). Enforce it mechanically so the purity can't silently rot.
+    files: ['packages/domain/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@saldo/web', '@saldo/web/**', '**/apps/web/**'],
+              message:
+                'packages/domain must not import apps/web — the domain is a pure, one-way dependency (CLAUDE.md). Move shared logic into the domain instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // ── Accessibility backstop (deterministic; the a11y-reviewer covers the rest) ──
   {
     files: ['apps/web/app/**/*.{tsx,jsx}'],
-    plugins: { 'jsx-a11y': jsxA11y },
+    plugins: { 'jsx-a11y': jsxA11y, saldo },
     rules: {
       ...jsxA11y.flatConfigs.recommended.rules,
-      // Design-system gate: no inline styles — use Tailwind tokens / shadcn components.
-      // See .claude/rules/design-system.md. Tokens live in app/app.css.
+      // Design-system gates (.claude/rules/design-system.md; tokens live in app/app.css). Enforced
+      // now so the first component written is already on-bar — the UI lands soon.
+      //  · no inline styles — use Tailwind tokens / shadcn components;
+      //  · no arbitrary Tailwind values (bg-[#fff], h-[100vh]) — add a token instead;
+      //  · no raw colour utilities (text-black, bg-red-500) — use the semantic tokens.
       'no-restricted-syntax': [
         'error',
         {
@@ -76,6 +111,8 @@ export default tseslint.config(
             'No inline styles — use Tailwind token utilities / shadcn components (.claude/rules/design-system.md).',
         },
       ],
+      'saldo/no-arbitrary-tailwind': 'error',
+      'saldo/no-raw-color-utility': 'error',
     },
   },
 );

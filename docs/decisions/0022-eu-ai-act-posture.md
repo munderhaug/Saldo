@@ -1,4 +1,4 @@
-# ADR 0017 — EU AI Act posture: not high-risk; transparency + provenance on AI features
+# ADR 0022 — EU AI Act posture: not high-risk; transparency + provenance on AI features
 
 - **Status:** Accepted
 - **Date:** 2026-06-23
@@ -33,7 +33,7 @@ Saldo adopts the following posture, grounded in the Act:
 
 ## Relationship to ADR 0002 (propose-only AI)
 ADR 0002 already gives us most of what the Act wants: AI **proposes**, the rules engine
-**validates**, a human **confirms**, and **AI never writes the ledger**. ADR 0017 **sharpens** it
+**validates**, a human **confirms**, and **AI never writes the ledger**. ADR 0022 **sharpens** it
 with two AI-Act-specific requirements that sit on top of that model: every AI-proposed value is
 **disclosed as an AI interaction** (Art. 50(1)) and **labelled "AI-assisted" with logged provenance**
 (Art. 50(2)). The oversight model is unchanged; transparency and provenance are added.
@@ -41,7 +41,7 @@ with two AI-Act-specific requirements that sit on top of that model: every AI-pr
 ## Consequences
 - **Easier:** a defensible, cited classification; a small, well-bounded compliance surface; the
   propose-only architecture already satisfies the spirit of the Act.
-- **Required work (tracked in the backlog, `docs/world-class-roadmap.md`):** AI-interaction
+- **Required work (tracked in the backlog, `docs/backlog/tasks.json` as the `aia-*` tasks):** AI-interaction
   disclosure in the UI, AI-output provenance/labelling + logging, capture of the upstream model's
   Annex XII documentation, an AI-literacy note, and a conformity self-assessment checklist re-run per
   AI release and per Art. 113 milestone.

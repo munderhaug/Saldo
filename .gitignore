@@ -17,6 +17,10 @@ coverage/
 playwright-report/
 test-results/
 
+# Tooling scratch
+sbom.json
+.type-coverage/
+
 # Env & secrets — NEVER commit
 .env
 .env.*

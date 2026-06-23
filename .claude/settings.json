@@ -36,7 +36,15 @@
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": "./.claude/scripts/precommit-check.sh" }]
+        "hooks": [
+          { "type": "command", "command": "./.claude/scripts/precommit-check.sh" },
+          { "type": "command", "command": "./.claude/scripts/lint-repo-on-docs.sh" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [{ "type": "command", "command": "./.claude/scripts/green-bar.sh" }]
       }
     ]
   }

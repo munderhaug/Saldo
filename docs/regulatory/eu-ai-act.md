@@ -2,8 +2,8 @@
 
 Saldo's source-grounded analysis of **Regulation (EU) 2024/1689** (the "Artificial Intelligence
 Act"). Every claim cites an article, annex point, or recital; the verbatim text is captured under
-`db/reference/eu-ai-act/`. The compliance **posture** is recorded in ADR 0017; the **work** is
-tracked in the backlog (`docs/world-class-roadmap.md`, "EU AI Act compliance").
+`db/reference/eu-ai-act/`. The compliance **posture** is recorded in ADR 0022; the **work** is
+tracked in the backlog (`docs/backlog/tasks.json`, the `aia-*` tasks).
 
 > **Bottom line.** Only Saldo's **LLM features** are AI systems under the Act; the deterministic
 > ledger/rules core is out of scope (Art. 3(1), Recital 12). Saldo is **not** prohibited (Art. 5)
@@ -65,7 +65,7 @@ fraud" (Annex III(5)(b)). Saldo's planned **honest-number / estimated-tax** feat
 ledger. It does **not** evaluate the creditworthiness of a natural person, nor establish a credit
 score about anyone — so it falls **outside** 5(b). (Insurance pricing, 5(c), is likewise N/A.)
 
-**The line never to cross (durable invariant — see §9, CLAUDE.md, ADR 0017):** an AI feature that
+**The line never to cross (durable invariant — see §9, CLAUDE.md, ADR 0022):** an AI feature that
 **scores a natural person's creditworthiness** — e.g. ranking a *customer* before extending credit
 terms — would land squarely in Annex III(5)(b) and make Saldo a **high-risk provider**. And under
 Art. 6(3), even tasks that might otherwise qualify for the "no significant risk" derogation (narrow
@@ -155,8 +155,8 @@ exposure is the 3% tier, avoided by the transparency work in §4/§9.
 
 Saldo starts from a strong posture (AI never writes the ledger — ADR 0002; the rules engine is the
 boundary; human confirmation is built in). Most of the work is **documenting/verifying the posture
-and adding small gates**, not new features. Tracked in `docs/world-class-roadmap.md` ("EU AI Act
-compliance"); posture in **ADR 0017**.
+and adding small gates**, not new features. Tracked in `docs/backlog/tasks.json` (the `aia-*` tasks);
+posture in **ADR 0022**.
 
 | # | Work | Repo / Product | When | Cite |
 |---|---|---|---|---|

@@ -21,9 +21,18 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0014 | CI ephemeral database: Testcontainers (replaces Neon branching) | Accepted |
 | 0015 | Deploy: persistent Node on an EU PaaS, Cloudflare edge/CDN + R2 (revises 0008) | Accepted |
 | 0016 | Adaptive two-surface design system (desktop workbench + mobile companion) | Accepted |
-| 0017 | EU AI Act posture: not high-risk; transparency + provenance on AI features | Accepted |
+| 0017 | Mechanical quality gates & supply-chain hardening | Accepted |
+| 0018 | Closing four ledger-integrity gaps in SQL | Accepted |
+| 0019 | Agentic memory: a committed task graph + a rejected-approaches log | Accepted |
+| 0020 | Session & identity model (the first lock) | Accepted |
+| 0021 | Observability baseline: pino with redaction | Accepted |
+| 0022 | EU AI Act posture: not high-risk; transparency + provenance on AI features | Accepted |
 
 ADRs 0001–0004 restate decisions from `saldo-build-specification.md` §17; 0005–0011 capture the
 stack-shaping calls from the tech-stack review; 0012–0016 harden tenancy and record the hosting,
-CI-database, deployment, and design-system decisions; 0017 records the EU AI Act classification and
-compliance approach (sharpening 0002).
+CI-database, deployment, and design-system decisions; 0017 makes the quality bar deterministic
+(fail-closed hooks, turn-end green-bar, CI supply-chain hardening); 0018 closes four ledger-integrity
+gaps (posting-side period lock, posted-completeness, period non-overlap, cross-org period FK); 0019
+adds the committed task graph + rejected-approaches log; 0020 adds the auth/identity first lock; 0021
+adds the pino observability baseline; 0022 records the EU AI Act classification + compliance posture
+(sharpening 0002). Approaches we **rejected** live in `rejected.md` (the anti-ADR).

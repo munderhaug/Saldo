@@ -24,11 +24,14 @@ harness-design knowledge base; deviations from its defaults are noted with a rea
 - **Must be a hook, not a prompt:** typecheck/lint after edits, blocking edits to generated files,
   denying `.env`/secret reads.
 - Skills use progressive disclosure, one default + escape hatch (never a menu of equals). The
-  load-bearing skills (`new-vat-scenario`, `saft-validate`) get trigger + with/without-skill evals
-  before they're trusted.
-- **Evidence before done.** Every load-bearing skill ends with a **Rationalizations** table
-  (excuse → reality), **Red flags — STOP**, and **Done means (evidence required)** — so a task can't be
-  claimed done without the listed proof (tests green, validator passed, reviewer run).
+  **load-bearing** skills — the ones that gate correctness: `add-migration`, `new-vat-scenario`,
+  `saft-validate`, `new-feature`, `regulatory-update` — get trigger + with/without-skill evals before
+  they're trusted.
+- **Evidence before done.** Each load-bearing skill ends with **Red flags — STOP** and **Done means
+  (evidence required)** — so a task can't be claimed done without the listed proof (tests green,
+  validator passed, reviewer run) — plus a **Rationalizations** table (excuse → reality) where the
+  failure mode warrants one. The utility skills (`backlog`, `handover`, `new-adr`, `html-report`,
+  `design-review`) are procedural and need only clear steps.
 - **Knowledge is cited & dated, never from memory.** Regulatory/integration facts live in
   `docs/regulatory/` + `docs/integrations/` with a `## Sources` section + `verify-by:` date, grounded in
   raw captures under `db/reference/`. `pnpm lint:repo` enforces this and link integrity. Use the

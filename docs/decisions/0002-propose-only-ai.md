@@ -22,6 +22,10 @@ safe *because* the rules layer exists.
 > action is reversible. The AI still only **proposes**; the deterministic rules engine plus the user's
 > (active or passive) consent commit — never the model.
 
+**Sharpened by later ADRs:** ADR 0022 layers the EU AI Act transparency + provenance duties onto this
+oversight model; ADR 0028 fixes the deciding path as deterministic code grounded in captured sources
+(an LLM may explain a rule, never be it).
+
 ## Consequences
 - Model choice (local vs hosted) becomes a swappable detail, not a correctness risk.
 - Every extraction output must pass the rules engine before any commit.

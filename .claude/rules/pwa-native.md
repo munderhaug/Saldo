@@ -1,7 +1,10 @@
 ---
-paths: ["apps/web/app/pwa/**", "apps/web/app/components/mobile/**", "apps/web/public/manifest.webmanifest"]
+paths: ["apps/web/public/manifest.webmanifest"]
 ---
 # Native-feel PWA rules
+
+> Scope note: `app/pwa/` and `components/mobile/` don't exist yet — add them to this rule's `paths:`
+> when `feat-mobile-companion` creates them (a path-scoped rule shouldn't glob absent code).
 
 - The native feel is layered enhancement — never break the semantic-HTML/SSR baseline.
 - Transitions: View Transitions API (RR7) for page-level; **Motion** for interaction-level

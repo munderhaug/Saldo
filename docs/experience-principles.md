@@ -3,7 +3,7 @@
 
 This document defines the product's tone, interaction design, and the rules that govern them. It is the source of truth for how Saldo behaves and how it talks to the people who use it. When a design choice is unclear, apply the Feeling Test (§9).
 
-> **Where this sits:** the **experiential** source of truth — tone, interaction design, and the safety-framing that govern how Saldo *feels, behaves, and speaks*. It complements `saldo-build-specification.md` (functional scope — *what* to build) and the hard invariants in `../CLAUDE.md`; on feel, voice, and interaction, this document governs. The operational distillation that loads while building UI lives in `.claude/rules/experience-voice.md`.
+> **Where this sits:** the **experiential** source of truth — tone, interaction design, and the safety-framing that govern how Saldo *feels, behaves, and speaks*. It complements `saldo-build-specification.md` (functional scope — *what* to build) and the hard invariants in `../AGENTS.md`; on feel, voice, and interaction, this document governs. The operational distillation that loads while building UI lives in `.claude/rules/experience-voice.md`.
 
 ---
 

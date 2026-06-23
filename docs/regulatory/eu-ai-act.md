@@ -65,7 +65,7 @@ fraud" (Annex III(5)(b)). Saldo's planned **honest-number / estimated-tax** feat
 ledger. It does **not** evaluate the creditworthiness of a natural person, nor establish a credit
 score about anyone — so it falls **outside** 5(b). (Insurance pricing, 5(c), is likewise N/A.)
 
-**The line never to cross (durable invariant — see §9, CLAUDE.md, ADR 0022):** an AI feature that
+**The line never to cross (durable invariant — see §9, AGENTS.md, ADR 0022):** an AI feature that
 **scores a natural person's creditworthiness** — e.g. ranking a *customer* before extending credit
 terms — would land squarely in Annex III(5)(b) and make Saldo a **high-risk provider**. And under
 Art. 6(3), even tasks that might otherwise qualify for the "no significant risk" derogation (narrow
@@ -167,7 +167,7 @@ posture in **ADR 0022**.
 | AIA-5 | **Conformity self-assessment checklist** re-run before each AI feature ships and at each Art. 113 milestone | Governance | this PR (checklist) → per release | Art. 5/6/50 |
 | AIA-6 | **High-risk guard**: no AI feature scores/profiles a natural person (creditworthiness) | Repo (invariant + rule) | **delivered this PR**; revisit if AI scope expands | Annex III(5)(b), Art. 6(3) |
 
-The durable invariant from AIA-2/AIA-6 is recorded in CLAUDE.md and enforced at the point of change
+The durable invariant from AIA-2/AIA-6 is recorded in AGENTS.md and enforced at the point of change
 by `.claude/rules/ai-act.md` (loads when LLM/AI code is touched). The **code-level** gate (a required
 provenance field on every AI proposal; a lint check) lands **with** the AI feature — asserting it on
 code that does not yet exist would be speculative.

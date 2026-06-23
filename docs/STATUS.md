@@ -13,16 +13,24 @@ never a direct push to `main`. (Trust `git log` over any hash here.)
 > the npm registry, and Cloudflare docs MCP were available this session; local Postgres + Testcontainers
 > stand in for DB work.)
 
-## This session — EU AI Act compliance + reconcile onto `main`
-Branched off `9c30903`, did the **EU AI Act** review source-grounded (Reg (EU) 2024/1689; raw captures
-in `db/reference/eu-ai-act/`), then **merged `main` in** and resolved every conflict. Classification:
-only the LLM features are AI systems (Art 3(1)/Recital 12); **not** prohibited (Art 5), **not** high-risk
-(Art 6/Annex III); provider+deployer, not a GPAI provider. Binding duties: **transparency** (Art 50,
-2 Aug 2026) + **AI literacy** (Art 4, in force). Delivered `docs/regulatory/eu-ai-act.md`, **ADR 0022**
-(renumbered from a draft 0017 to avoid colliding with main's 0017), the `.claude/rules/ai-act.md` gate, a
-CLAUDE.md invariant, and the `aia-*` backlog tasks (`compliance-eu-ai-act` → **done**). A
-**repo-standards consolidation** (LICENSE, kill stale `runbook.md`, AGENTS.md-canonical, make `knip`
-bite, de-dup invariants, strip slop) is **in progress** on this branch (field-guide review).
+## This session — EU AI Act compliance + reconcile onto `main` + repo-standards consolidation
+Branched off `9c30903`, reviewed the **EU AI Act** source-grounded (Reg (EU) 2024/1689; raw captures in
+`db/reference/eu-ai-act/`), **merged `main` in** (resolving every conflict), then ran a field-guide
+**standards consolidation**. **Full gate green:** typecheck, lint, `lint:repo` (51 docs, **0 warnings**),
+format, `test` (101 domain + 4 web), `knip` (deps clean), `backlog validate` (28 tasks), build.
+- **EU AI Act (`compliance-eu-ai-act` → done):** only the LLM features are AI systems (Art 3(1)/Recital
+  12); **not** prohibited (Art 5), **not** high-risk (Art 6/Annex III); provider+deployer, not a GPAI
+  provider. Duties: transparency (Art 50, 2 Aug 2026) + AI literacy (Art 4, in force). Delivered
+  `docs/regulatory/eu-ai-act.md`, **ADR 0022**, the `.claude/rules/ai-act.md` gate, an AGENTS.md
+  invariant, and the forward `aia-*` tasks.
+- **Reconcile:** merged main (#11) cleanly; ADR draft 0017 → **0022** (main took 0017 for mech-gates);
+  backlog moved to `docs/backlog/tasks.json`.
+- **Standards:** proprietary **`LICENSE`** + **ADR 0023** (scopes ADR 0008 to the stack); rewrote stale
+  `runbook.md`/`architecture.md`/`data-handling.md` to ADR 0015 (EU PaaS + Cloudflare + R2 + Neon);
+  honest `saft:validate`; pruned **8** unused deps (re-added per feature); **AGENTS.md now canonical**
+  (CLAUDE.md imports it); renamed the roadmap doc → `roadmap.md` + stripped slop repo-wide;
+  de-duplicated invariants (README/CONTRIBUTING → pointers); repo-lint **rule-glob + slop** warnings
+  (caught a mis-targeted `vat.md` glob); queued **Vale** (`harness-vale`).
 
 ## Verified state (PR #11 — merged to `main`)
 - ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (**47 docs**,
@@ -171,10 +179,11 @@ dated ADOPT/MINE/SKIP, adoption gated by an ADR) + a `docs/improvements.md` ledg
   runs migrations as a separate OWNER `DATABASE_URL`; the app process uses the `saldo_app` one.
 - **Live integrations deferred** — verify Neon EU + custom-role RLS, and that **Hyperdrive preserves
   `SET LOCAL`**, when wiring auth/DB live (needs egress + tenants).
-- `saft:validate` is still a **scaffold** (returns 0) — implement SAF-T generation + XSD validation.
-- **Unused frontend deps** (motion, vaul, recharts, lucide-react, react-hook-form, @hookform/resolvers,
-  @tanstack/react-table) remain in `apps/web/package.json` — wire or prune per feature (RHF + TanStack
-  are imminent; `knip` in PR 3 tracks this).
+- `saft:validate` is a **scaffold** — now prints `NOT YET IMPLEMENTED` loudly (no longer a silent
+  fake-green; CI label says SCAFFOLD). Implement SAF-T generation + XSD validation (Phase 8).
+- ~~Unused frontend deps~~ — **pruned this session** (knip-clean). The choice is preserved in
+  `tech-stack.md` + `.claude/rules/frontend.md`; each is `pnpm add`-ed in the feature PR that first uses
+  it (annotated on `feat-org-onboarding` / `feat-mobile-companion`).
 - `home.tsx` is a **throwaway scaffold** — the real home is "You're caught up" + the honest-number
   reveal, not a ledger (experience-principles §4.2 / §6).
 - Local commits are **unsigned** (no signing key here); they verify on push through the proxy.

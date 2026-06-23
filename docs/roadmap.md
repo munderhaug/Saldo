@@ -258,7 +258,7 @@ vision-LLM (propose-only). Each lands in its spec'd phase, gated by the foundati
 ### EU AI Act compliance — see ADR 0022 + `docs/regulatory/eu-ai-act.md`
 Saldo is **not** prohibited (Art. 5) and **not** high-risk (Art. 6 + Annex III); only the LLM features
 are AI systems (Art. 3(1)). Binding duties: **transparency** (Art. 50, applies 2 Aug 2026) + **AI
-literacy** (Art. 4, in force). The posture, the CLAUDE.md invariant, and the path-scoped gate
+literacy** (Art. 4, in force). The posture, the AGENTS.md invariant, and the path-scoped gate
 (`.claude/rules/ai-act.md`) have landed; the forward work is tracked as the `aia-*` tasks in
 `docs/backlog/tasks.json`. Enforcement is **gate-first**; a standalone AI Act subagent is deferred
 (fold into `privacy-reviewer` when AI code lands — `aia-review-fold`). **Line never to cross:** an AI

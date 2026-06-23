@@ -216,7 +216,7 @@
       "effort": "L",
       "phase": "compliance",
       "depends_on": [],
-      "notes": "DONE (ADR 0022): source-grounded against Regulation (EU) 2024/1689 (eur-lex CELEX 32024R1689 + AI Act Explorer; raw captures in db/reference/eu-ai-act/). Only the LLM features are AI systems (Art 3(1)/Recital 12); NOT prohibited (Art 5), NOT high-risk (Art 6/Annex III); provider+deployer, not a GPAI provider (relies on Art 53 docs). Binding duties: transparency (Art 50, 2 Aug 2026) + AI literacy (Art 4, in force). Delivered the cited knowledge page, ADR 0022, the .claude/rules/ai-act.md gate + CLAUDE.md invariant. Forward product/repo work = the aia-* tasks.",
+      "notes": "DONE (ADR 0022): source-grounded against Regulation (EU) 2024/1689 (eur-lex CELEX 32024R1689 + AI Act Explorer; raw captures in db/reference/eu-ai-act/). Only the LLM features are AI systems (Art 3(1)/Recital 12); NOT prohibited (Art 5), NOT high-risk (Art 6/Annex III); provider+deployer, not a GPAI provider (relies on Art 53 docs). Binding duties: transparency (Art 50, 2 Aug 2026) + AI literacy (Art 4, in force). Delivered the cited knowledge page, ADR 0022, the .claude/rules/ai-act.md gate + AGENTS.md invariant. Forward product/repo work = the aia-* tasks.",
       "refs": [
         "docs/decisions/0022-eu-ai-act-posture.md",
         "docs/regulatory/eu-ai-act.md",
@@ -297,8 +297,8 @@
       "effort": "S",
       "phase": "compliance",
       "depends_on": [],
-      "notes": "DONE: CLAUDE.md invariant + .claude/rules/ai-act.md (auto-loads on AI/LLM code). No feature may evaluate a natural person's creditworthiness or profile them (Annex III 5(b); Art 6(3)) without re-opening ADR 0022.",
-      "refs": ["CLAUDE.md", ".claude/rules/ai-act.md"]
+      "notes": "DONE: AGENTS.md invariant + .claude/rules/ai-act.md (auto-loads on AI/LLM code). No feature may evaluate a natural person's creditworthiness or profile them (Annex III 5(b); Art 6(3)) without re-opening ADR 0022.",
+      "refs": ["AGENTS.md", ".claude/rules/ai-act.md"]
     },
     {
       "id": "aia-review-fold",
@@ -310,6 +310,17 @@
       "depends_on": ["feat-receipt-extraction"],
       "notes": "When the AI surface exists, extend the existing privacy-reviewer subagent with the AI Act checklist (transparency, provenance, no high-risk scoring) + wire the aia-provenance-logging code gate; split out a dedicated reviewer only on demonstrated need (ADR 0022).",
       "refs": ["docs/decisions/0022-eu-ai-act-posture.md", ".claude/agents/privacy-reviewer.md"]
+    },
+    {
+      "id": "harness-vale",
+      "title": "Adopt Vale for prose/slop/terminology linting (warn-first, baseline-ratcheted)",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "Best-practice prose linter (replaces ad-hoc regex). Bans world-class/crown jewel/vibe-coded + enforces terminology; warn-first with a baseline. Deferred: needs the Vale binary + a CI action (errata-ai/vale-action). The repo-lint slop + rule-glob warnings cover the basics until then.",
+      "refs": ["tools/repo-lint.mjs", "docs/quality-bar.md"]
     }
   ]
 }

@@ -28,7 +28,7 @@ Saldo adopts the following posture, grounded in the Act:
    timing.
 5. **The line we never cross (invariant):** no AI feature **evaluates a natural person's
    creditworthiness or profiles a natural person** — either would make Saldo a high-risk provider
-   (Annex III(5)(b); Art. 6(3) final subparagraph; Art. 25(1)). Recorded as a CLAUDE.md invariant and
+   (Annex III(5)(b); Art. 6(3) final subparagraph; Art. 25(1)). Recorded as an invariant in AGENTS.md and
    gated by `.claude/rules/ai-act.md`.
 
 ## Relationship to ADR 0002 (propose-only AI)

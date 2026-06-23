@@ -34,4 +34,4 @@ posture: ADR 0022; oversight model: ADR 0002. Honour these — prefer the gate o
 ## Note
 The **code-level** enforcement of provenance (a required `aiAssisted` + model field on every AI
 proposal, plus a lint/test check) lands **with** the first AI feature. Until then this rule + the
-CLAUDE.md invariant hold the line.
+AGENTS.md invariant hold the line.

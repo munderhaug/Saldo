@@ -1,14 +1,11 @@
-import { existsSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TransactionSql } from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { type LedgerDb, seedOrg, startLedgerDb } from './db-harness.js';
+import { type LedgerDb, ledgerDbAvailable, seedOrg, startLedgerDb } from './db-harness.js';
 import * as schema from '../../app/db/schema.js';
 import { withOrgTx } from '../../app/auth/middleware.js';
 
-// Needs a Docker daemon (Testcontainers). Skip gracefully where unavailable so `pnpm test` still
-// runs the pure suites; CI has Docker and runs this for real.
-const dockerAvailable = Boolean(process.env.DOCKER_HOST) || existsSync('/var/run/docker.sock');
+// Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Skips cleanly otherwise.
 
 /**
  * Guarantee 5 — runtime tenant isolation via RLS. The first four guarantees are exercised by the
@@ -16,7 +13,7 @@ const dockerAvailable = Boolean(process.env.DOCKER_HOST) || existsSync('/var/run
  * `saldo_app` connection (db.appSql), for which RLS is FORCEd, and assert that an org sees and
  * touches only its own rows. Reproduces, against real Postgres, the isolation we rely on in prod.
  */
-describe.skipIf(!dockerAvailable)('RLS tenant isolation (non-owner app role)', () => {
+describe.skipIf(!ledgerDbAvailable)('RLS tenant isolation (non-owner app role)', () => {
   let db: LedgerDb;
 
   beforeAll(async () => {

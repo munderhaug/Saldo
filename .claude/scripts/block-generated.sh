@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 # PreToolUse hook (matcher: Edit|Write). Receives the tool-call payload as JSON on stdin.
 # Vetoes edits to generated/derived files by exiting non-zero (which surfaces as feedback).
+# Fails CLOSED: if the payload can't be parsed as JSON, block rather than wave the edit through
+# unchecked (that was the old fail-open bug — a parse error silently allowed any edit).
 set -euo pipefail
 
 payload="$(cat)"
-# Extract the target path from either Edit or Write payloads.
-path="$(printf '%s' "$payload" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);process.stdout.write(j.tool_input?.file_path||"")}catch{process.stdout.write("")}})')"
+# Extract the target path from either Edit or Write payloads. On a JSON parse error, emit a sentinel
+# so the guard below can fail closed instead of treating it as an empty (therefore allowed) path.
+path="$(printf '%s' "$payload" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);process.stdout.write(j.tool_input?.file_path||"")}catch{process.stdout.write("__PARSE_ERROR__")}})')"
+
+if [ "$path" = "__PARSE_ERROR__" ]; then
+  echo "BLOCKED: could not parse the tool payload as JSON — failing closed rather than allowing an unchecked edit." >&2
+  exit 2
+fi
 
 case "$path" in
   *"/app/db/schema.ts")

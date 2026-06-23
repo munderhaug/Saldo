@@ -1,0 +1,226 @@
+{
+  "$comment": "Saldo's queryable task graph (ADR 0019). A dependency-aware DAG so 'what is the highest-value READY task' is computable, not buried in prose. Validated + queried by tools/backlog.mjs (pnpm backlog). Edit by hand; keep it honest. status: todo|in_progress|done|cancelled. value: high|medium|low. effort: S|M|L. depends_on: ids that must be done|cancelled first. cancelled tasks carry cancelled_reason (and optionally superseded_by).",
+  "tasks": [
+    {
+      "id": "pr3-gates",
+      "title": "Mechanical gates & supply-chain hardening",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Fail-closed hooks, Stop green-bar, type-coverage, squawk, SHA-pinned actions, CodeQL/gitleaks/SBOM, freshness cron.",
+      "refs": ["docs/decisions/0017-mechanical-gates-supply-chain.md"]
+    },
+    {
+      "id": "pr4-ledger-integrity",
+      "title": "Close four ledger-integrity gaps in SQL",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Posting-side period lock, posted-completeness, period non-overlap, cross-org period FK, RLS-coverage gate.",
+      "refs": ["docs/decisions/0018-ledger-integrity-gaps.md"]
+    },
+    {
+      "id": "meta-agentic-memory",
+      "title": "Agentic memory: committed task graph + rejected-approaches log",
+      "status": "done",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "This file + tools/backlog.mjs + docs/decisions/rejected.md. Piyaz's ideas, built natively (no SaaS).",
+      "refs": ["docs/decisions/0019-agentic-memory-task-graph.md"]
+    },
+    {
+      "id": "pr5-auth",
+      "title": "Identity & session foundation (auth) — the missing first lock",
+      "status": "done",
+      "value": "high",
+      "effort": "L",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "DONE (ADR 0020): app_user/user_session/membership; SHA-256 sessions + sliding expiry; argon2id dev provider; openid-client v6 OIDC (wired, not live); Zod env.ts; requireUser->withUserOrg->withOrgTx; /auth routes; RLS-coverage updated. OIDC live round-trip still needs Criipto + egress.",
+      "refs": ["docs/decisions/0020-session-identity-model.md"]
+    },
+    {
+      "id": "pr6-observability",
+      "title": "Observability baseline (pino + redaction + request-id)",
+      "status": "done",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "DONE (ADR 0021): pino logger.server.ts with REDACT_PATHS backstop + requestLogger(x-request-id), wired into /auth routes (outcomes only, never PII). Always-on redaction unit test. OTel later (P2).",
+      "refs": ["docs/decisions/0021-observability-baseline-pino.md"]
+    },
+    {
+      "id": "test-stateful-ledger",
+      "title": "Stateful property testing of the ledger (fast-check model-based)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr4-ledger-integrity"],
+      "notes": "Random sequences of post/reverse/lock against the invariants — the highest-value test for a system of record.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "feat-honest-number",
+      "title": "Honest-number domain feature (spendable = income - VAT held - estimated tax)",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "DONE: pure packages/domain/src/honest-number (11 exhaustive + property tests; vat-reviewed). estimatedTax is INJECTED (no memory tax model); caller-precondition docs for reverse-charge/non-deductible aggregation. Reveal UI + aggregation are feat-honest-number-surface.",
+      "refs": [
+        "packages/domain/src/honest-number/honest-number.ts",
+        "docs/experience-principles.md"
+      ]
+    },
+    {
+      "id": "feat-tax-estimate",
+      "title": "Norwegian ENK income-tax estimation (source-grounded)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "The injected estimatedTax for honestNumber. MUST be grounded in a committed Skatteetaten source (regulatory-update skill) — trygdeavgift + trinnskatt + 22% alminnelig inntekt for an ENK; NEVER rates from memory. Needs egress/committed source.",
+      "refs": [
+        ".claude/skills/regulatory-update/SKILL.md",
+        "packages/domain/src/honest-number/honest-number.ts"
+      ]
+    },
+    {
+      "id": "feat-honest-number-surface",
+      "title": "Honest-number reveal: ledger aggregation + the 'what's actually yours' UI",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-tax-estimate", "feat-keyed-microcopy"],
+      "notes": "Aggregate income/output-VAT/deductible-input per the documented preconditions (reverse-charge BOTH legs symmetrically; deductible portion only) with a Testcontainers test; feed honestNumber; render the §6 reveal (permission/relief framing).",
+      "refs": [
+        "docs/experience-principles.md",
+        "packages/domain/src/honest-number/honest-number.ts"
+      ]
+    },
+    {
+      "id": "feat-keyed-microcopy",
+      "title": "Norwegian-first keyed microcopy system",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "Keyed strings (not ad-hoc literals), Norwegian as original work. Foundational for every UI surface.",
+      "refs": [".claude/rules/experience-voice.md"]
+    },
+    {
+      "id": "feat-enhetsregisteret",
+      "title": "Enhetsregisteret (brreg) org lookup",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "data.brreg.no lookup for org onboarding. Live calls need egress (deferred env). db/reference/brreg/ exists.",
+      "refs": ["db/reference/brreg"]
+    },
+    {
+      "id": "feat-org-onboarding",
+      "title": "Org & contacts onboarding (user -> org membership UI)",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P1-feature",
+      "depends_on": ["pr5-auth", "feat-enhetsregisteret"],
+      "notes": "The membership UI that makes withOrgTx real per logged-in user.",
+      "refs": ["docs/STATUS.md"]
+    },
+    {
+      "id": "feat-mobile-companion",
+      "title": "Mobile companion surface (components/mobile, ADR 0016)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "L",
+      "phase": "P1-feature",
+      "depends_on": ["feat-honest-number"],
+      "notes": "Built per feature, not all at once (adaptive two-surface design system).",
+      "refs": ["docs/decisions/0016-adaptive-two-surface-design-system.md"]
+    },
+    {
+      "id": "vat-reverse-charge",
+      "title": "Reverse-charge dual-leg + non-deductible VAT rules",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P2",
+      "depends_on": [],
+      "notes": "Phase 2 carry-overs in @saldo/domain (new-vat-scenario skill; exhaustive + property tests).",
+      "refs": [".claude/skills/new-vat-scenario/SKILL.md"]
+    },
+    {
+      "id": "ci-pr-template",
+      "title": "Make the quality bar mechanical (PR template + migration-touches-test gate)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr3-gates"],
+      "notes": "PR template requiring linked ADR/tests; a CI check that a migration PR also touches test/integrity/.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "test-e2e-axe",
+      "title": "Playwright e2e + @axe-core/playwright (WCAG 2.2 AA in CI)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr5-auth"],
+      "notes": "e2e for the auth + first-invoice flow; axe gate once UI lands.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "ops-dr-runbook",
+      "title": "DR runbook: Neon PITR + restore drills, R2 retention",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "A restore you have never tested is not a backup. R2 lifecycle + 5-year retention vs immutability procedure.",
+      "refs": ["docs/decisions/0013-hosted-postgres-neon.md"]
+    },
+    {
+      "id": "harness-design-lint",
+      "title": "RuleTester coverage for eslint-plugin-saldo + expand design-lint",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "The custom rules (no-money-arithmetic, no-arbitrary-tailwind, no-raw-color-utility) are verified by fixtures but have no committed RuleTester tests; wire a tools test runner. Expand korrodesign-style rules (focus-visible, font-family, element semantics) as UI surface grows.",
+      "refs": ["tools/eslint-plugin-saldo/index.js", ".claude/rules/design-system.md"]
+    },
+    {
+      "id": "compliance-eu-ai-act",
+      "title": "EU AI Act readiness & compliance",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "compliance",
+      "depends_on": [],
+      "notes": "NEXT SESSION FOCUS. Make the repo ready for + compliant with the EU AI Act. SOURCE-GROUNDED against the official AI Act text + EU/AI-Office guidance (regulatory-update skill) — never from memory. Classify Saldo's AI use (propose-only, ADR 0002: AI proposes -> rules engine validates -> human confirms; LLM receipt-OCR later): likely limited-risk -> transparency + human-oversight + logging obligations, not Annex III high-risk. Document the posture (an ADR + a cited regulatory page), check the propose-only/grace-window design against the oversight requirements, and add any gates (e.g. AI-output provenance/logging).",
+      "refs": [
+        "docs/decisions/0002-propose-only-ai.md",
+        ".claude/skills/regulatory-update/SKILL.md"
+      ]
+    }
+  ]
+}

@@ -9,7 +9,12 @@ paths: ["db/migrations/**", "apps/web/app/db/**"]
   - **Balance:** a CONSTRAINT TRIGGER verifies Σ debit = Σ credit per voucher at commit.
   - **Immutability:** a trigger BLOCKS UPDATE/DELETE on `voucher`/`posting` once `posted_at` is set;
     same for issued `invoice`/`credit_note`.
-  - **Period lock:** a trigger blocks postings into a locked period.
+  - **Period lock (ADR 0018):** triggers on BOTH `voucher` AND `posting` block any
+    INSERT/UPDATE/DELETE touching a locked period (a voucher-only check left the posting side open).
+  - **Posted completeness (ADR 0018):** a deferred constraint trigger requires a `posted_at` voucher
+    to have **≥ 2 postings and balance** (drafts may be incomplete).
+  - **Period sanity (ADR 0018):** a tenant's `fiscal_period` ranges may not overlap (`EXCLUDE` +
+    `btree_gist`); a voucher's period must be the same org (composite FK, not just RLS visibility).
   - **Invoice numbering:** gapless per-org via the `invoice_counter` row, allocated with
     `UPDATE invoice_counter SET next = next + 1 WHERE organization_id = $1 RETURNING next`
     inside the issuing transaction. NEVER a Postgres SEQUENCE (sequences leave gaps on rollback).

@@ -13,3 +13,11 @@ export const orgNrInput = z
   .pipe(z.string().regex(/^\d{9}$/, 'Organisasjonsnummer må være 9 siffer'));
 
 export type OrgNrInput = z.infer<typeof orgNrInput>;
+
+/** Email + password for the dev auth provider (production login is BankID via OIDC, no password). */
+export const credentialsInput = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.string().email('Ugyldig e-postadresse')),
+  password: z.string().min(8, 'Passordet må være minst 8 tegn'),
+});
+
+export type CredentialsInput = z.infer<typeof credentialsInput>;

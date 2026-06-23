@@ -1,12 +1,14 @@
-import { existsSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { insertVoucher, type LedgerDb, seedOrg, startLedgerDb } from './db-harness.js';
+import {
+  insertVoucher,
+  type LedgerDb,
+  ledgerDbAvailable,
+  seedOrg,
+  startLedgerDb,
+} from './db-harness.js';
 
-// These tests need a Docker daemon (Testcontainers). Skip gracefully where it is
-// unavailable so `pnpm test` still runs the pure suites; CI has Docker and runs them.
-const dockerAvailable = Boolean(process.env.DOCKER_HOST) || existsSync('/var/run/docker.sock');
-
-describe.skipIf(!dockerAvailable)('SQL ledger integrity (real Postgres)', () => {
+// Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Skips cleanly otherwise.
+describe.skipIf(!ledgerDbAvailable)('SQL ledger integrity (real Postgres)', () => {
   let db: LedgerDb;
 
   beforeAll(async () => {

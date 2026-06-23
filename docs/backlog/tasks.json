@@ -321,6 +321,28 @@
       "depends_on": [],
       "notes": "Best-practice prose linter (replaces ad-hoc regex). Bans world-class/crown jewel/vibe-coded + enforces terminology; warn-first with a baseline. Deferred: needs the Vale binary + a CI action (errata-ai/vale-action). The repo-lint slop + rule-glob warnings cover the basics until then.",
       "refs": ["tools/repo-lint.mjs", "docs/quality-bar.md"]
+    },
+    {
+      "id": "docs-consolidate-build-spec",
+      "title": "Consolidate saldo-build-specification.md (stale tree + inlined harness copies)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "Spec is the vision doc but has drifted: 14 repo tree shows app/ (real: apps/web/app) and 5/5/4 rules/agents/skills (real 12/7/10); 15 inlines now-stale full copies of CLAUDE.md/settings/rules (CLAUDE.md is now a thin @AGENTS.md import). Delete the inlined copies (link instead), fix the tree, collapse the 3 stacked revision banners into one. Reframe as PRD-only (the 'what'); architecture/ADRs own the 'how'.",
+      "refs": ["docs/saldo-build-specification.md", "AGENTS.md"]
+    },
+    {
+      "id": "docs-dedup-invariants-deep",
+      "title": "Finish invariant de-duplication (quality-bar, domain-model -> pointers)",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "README + CONTRIBUTING already point to AGENTS.md (done). Remaining restatements of the hard invariants in quality-bar.md / domain-model.md / architecture.md should become pointers too, so AGENTS.md + .claude/rules are the only normative source.",
+      "refs": ["AGENTS.md", "docs/quality-bar.md"]
     }
   ]
 }

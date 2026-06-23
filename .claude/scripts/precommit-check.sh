@@ -13,8 +13,13 @@ case "$path" in
   *) exit 0 ;;
 esac
 
-# Skip if dependencies aren't installed yet (fresh scaffold).
-[ -d node_modules ] || exit 0
+# Fail CLOSED when dependencies are not installed: a gate that cannot run must not pass silently
+# (that was the old fail-open bug). Surface it loudly so the agent installs before relying on green.
+if [ ! -d node_modules ]; then
+  echo "precommit-check: node_modules is missing — cannot run typecheck/lint." >&2
+  echo "precommit-check: run 'pnpm install' before editing TypeScript (this gate fails closed)." >&2
+  exit 2
+fi
 
 fail=0
 pnpm -s typecheck || fail=1

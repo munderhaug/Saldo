@@ -1,0 +1,22 @@
+# Squawk — Postgres migration linter (CI gate; ADR 0017). Catches unsafe DDL against live data:
+# table/column drops, type changes, NOT-NULL/UNIQUE added without NOT VALID, missing concurrency,
+# etc. We lint only the FORWARD (`-- migrate:up`) sections via tools/migrations-up.mjs, so the
+# rollback DROPs don't trip the (intentionally kept-active) destructive-op rules.
+#
+# The exclusions below are deliberate project choices or are irrelevant to a GREENFIELD initial
+# schema (no populated tables to lock yet). Revisit each the first time a migration alters a table
+# that already holds data.
+excluded_rules = [
+  # dbmate runs each migration in its own transaction (atomic up/down); the down section is the
+  # rollback path, so we neither wrap statements in explicit BEGIN/COMMIT nor add IF NOT EXISTS.
+  "prefer-robust-stmts",
+  # No live tables to lock on the initial schema; we don't set lock_timeout/statement_timeout yet.
+  "require-timeout-settings",
+  # `org_nr char(9)` is a fixed-width Norwegian organisasjonsnummer — a deliberate, correct choice.
+  "ban-char-field",
+  # `fiscal_period.year int` is a calendar year, not money; int is correct (money is always bigint øre).
+  "prefer-bigint-over-int",
+  # An index created in the SAME migration as its (empty) table needs no CONCURRENTLY — and CONCURRENTLY
+  # can't run inside dbmate's transaction. Re-enable thinking when adding an index to a populated table.
+  "require-concurrent-index-creation",
+]

@@ -3,8 +3,8 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: world-class review + foundation hardening (PRs 1, 2, 2.5)
-**Branch:** `claude/vigilant-curie-gydm6s` (off `main`). Lands via reviewed PR — never a direct push to
+**Last updated:** 2026-06-23 — session: P0 hardening PRs 3–6 (gates, ledger integrity, auth, observability)
+**Branch:** `claude/epic-bell-u2bbx9` (off `main`). Lands via reviewed PR — never a direct push to
 `main`. (HEAD moves each commit — trust `git log` over any hash written here.)
 
 > ⚠️ **Live external integrations are not exercised in these sessions.** The Neon control plane,
@@ -22,6 +22,11 @@
 - ✅ **Zero contradictions, now ENFORCED:** `tools/repo-lint.mjs` fails CI if an `ADR NNNN` cross-ref
   doesn't resolve, a "Locked" status label reappears, or a cited `db/reference/<dir>` is missing.
 - ✅ **No inline CSS, ENFORCED:** ESLint bans the JSX `style` prop in `apps/web/app/**` (negative-tested).
+- ✅ **Mechanical gates (PR 3):** fail-**closed** hooks; a `Stop` green-bar (typecheck+lint+domain tests);
+  `PostToolUse` `lint:repo` on docs/.claude edits; ESLint `domain ↛ web` boundary; CI now runs
+  `type-coverage` (≥97%, at 98.19%) + `db:lint` (squawk, forward-migrations-only); SHA-pinned actions;
+  isolated **CodeQL** + **gitleaks** + **CycloneDX SBOM** workflows; a weekly **freshness** cron
+  (lint:repo+audit+knip → one rolling issue). `knip` is advisory (cron), not a blocking gate (ADR 0017).
 
 ## Active phase
 **Phase 0 (Foundation) — hardening.** Prior sessions delivered steps 1–5 (ledger schema, SQL-integrity
@@ -30,6 +35,20 @@ review + the foundation-hardening PRs 1 / 2 / 2.5. Next: the remaining hardening
 feature track (auth → Enhetsregisteret → Phase 1).
 
 ## Done (this session)
+- **PR 3 — mechanical gates & supply chain (ADR 0017).** Fixed both fail-open hooks
+  (`precommit-check.sh` blocks when `node_modules` is missing; `block-generated.sh` fails closed on a
+  JSON parse error). New `Stop` green-bar hook (`green-bar.sh`: typecheck + lint + domain tests, skips
+  Testcontainers, honors `stop_hook_active`). New `PostToolUse` `lint:repo` hook for docs/.claude edits.
+  ESLint `no-restricted-imports` enforcing **domain ↛ web**. Added **type-coverage** (≥97%) and
+  **squawk** (`db:lint`, forward-migrations-only via `tools/migrations-up.mjs` + `squawk.toml`) to the
+  core gate; **SHA-pinned** all 3 setup actions. New isolated workflows: **codeql.yml** (SAST),
+  **security.yml** (gitleaks + CycloneDX SBOM via `cdxgen -t pnpm`), **freshness.yml** (weekly cron →
+  one rolling issue). New **`/new-adr`** skill; wired **`/verify`** into the new-feature loop (maker≠judge).
+  `knip` is advisory (cron), not blocking — see ADR 0017 (would force suppressing real pending findings).
+  ⚠️ **Action needed:** the `Stop` + new `PostToolUse` hooks are wired in `.claude/settings.json` and
+  active next session.
+
+## Done (prior session — PRs 1 / 2 / 2.5)
 - **World-class roadmap** — `docs/world-class-roadmap.md` (architecture decision, hardening plan, the
   24-item contradiction kill-list, master backlog).
 - **PR 1 — decisions & consistency.** Option 2 architecture (**ADR 0015** persistent Node on an EU PaaS
@@ -45,18 +64,9 @@ feature track (auth → Enhetsregisteret → Phase 1).
   refined** to the grace-window confirmation model (+ matching CLAUDE.md invariant).
 
 ## In progress
-- (nothing mid-change — clean tree after the handover/STATUS commit)
+- (PR 3 committed; PRs 4–6 next this session)
 
 ## Next up (ordered) — remaining P0 hardening, then the feature track
-**PR 3 — Mechanical gates & continuous-improvement (Layers 1–2):**
-- **`Stop` hook = green-bar gate** (typecheck + lint + affected tests at turn-end — the top harness keeper).
-- **Fail-closed hook fixes:** `precommit-check.sh` must not silently `exit 0` when `node_modules` is
-  missing; `block-generated.sh` must fail-**closed** on a JSON parse error.
-- **PostToolUse `lint:repo`** after edits to `docs/**` / `.claude/**`.
-- **CI tooling:** `knip` (unused files/exports/deps), `dependency-cruiser` (enforce `domain ↛ web`),
-  `type-coverage`, `squawk` (migration linter), **gitleaks**, **CodeQL**, **CycloneDX SBOM**, **SHA-pin**
-  all Actions. A scheduled **freshness/health** workflow (verify-by + audit + knip → one rolling issue).
-  The **`/new-adr`** skill. Wire **`/verify`** into the new-feature loop (maker≠judge).
 **PR 4 — Ledger integrity gaps** (each with a Testcontainers proof of the bad case):
 - **Period-lock hole (real bug):** the lock trigger fires on `voucher`, not `posting`, so postings can be
   added to an existing *unposted* voucher in a now-locked period. Add a posting-side check.

@@ -60,6 +60,27 @@ export default tseslint.config(
     files: ['packages/domain/src/money/ore.ts'],
     rules: { 'saldo/no-money-arithmetic': 'off', 'no-restricted-properties': 'off' },
   },
+  {
+    // ── Architectural boundary: packages/domain ↛ apps/web ─────────────────────
+    // The domain is the one hard boundary (CLAUDE.md): a PURE accounting core with no I/O that runs
+    // in route actions AND the browser. It must never depend on the web app — the dependency is
+    // strictly one-way (web → domain). Enforce it mechanically so the purity can't silently rot.
+    files: ['packages/domain/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@saldo/web', '@saldo/web/**', '**/apps/web/**'],
+              message:
+                'packages/domain must not import apps/web — the domain is a pure, one-way dependency (CLAUDE.md). Move shared logic into the domain instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // ── Accessibility backstop (deterministic; the a11y-reviewer covers the rest) ──
   {
     files: ['apps/web/app/**/*.{tsx,jsx}'],

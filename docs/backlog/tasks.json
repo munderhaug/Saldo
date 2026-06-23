@@ -127,13 +127,24 @@
     {
       "id": "feat-enhetsregisteret",
       "title": "Enhetsregisteret (brreg) org lookup",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": [],
-      "notes": "data.brreg.no lookup for org onboarding. Live calls need egress (deferred env). db/reference/brreg/ exists.",
-      "refs": ["db/reference/brreg"]
+      "notes": "DONE: read-only /oppslag lookup (org-nr + free-text name). Integration client (app/integrations/enhetsregisteret/client.server.ts: Zod at the boundary, AbortController timeout, typed not-found/error results), contract (contracts/enhetsregisteret.ts), captures in db/reference/brreg/ (real Equinor/REMA + a synthetic redacted ENK). Verified live end-to-end. Caching/rate-limit deferred → feat-enhetsregisteret-cache.",
+      "refs": ["db/reference/brreg", "docs/integrations/enhetsregisteret.md"]
+    },
+    {
+      "id": "feat-enhetsregisteret-cache",
+      "title": "Enhetsregisteret: EU-resident response cache + rate-limit",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "P1-feature",
+      "depends_on": ["feat-enhetsregisteret"],
+      "notes": "/oppslag is unauthenticated and hits brreg per request with no cache (currently Cache-Control: private, no-store — responses carry ENK personal data, so must NOT be edge/CDN-cached: residency). Add an EU-resident server-side TTL cache (register is stable) + a basic per-IP/session throttle. Flagged by integration-auditor + privacy-reviewer in the feat-enhetsregisteret PR.",
+      "refs": ["docs/integrations/enhetsregisteret.md", ".claude/rules/data-handling.md"]
     },
     {
       "id": "feat-org-onboarding",

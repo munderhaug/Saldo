@@ -3,17 +3,44 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: typography (Fraunces + IBM Plex Sans, ADR 0026)
-**Branch:** `claude/typography` (off `main` at PR #14 / `1f4d812`). Lands via a reviewed PR —
-never a direct push to `main`. (Trust `git log` over any hash here.)
+**Last updated:** 2026-06-23 — session: Enhetsregisteret (brreg) org lookup — first integration + UI surface
+**Branch:** `claude/clever-darwin-swpvyf` (off `main` at PR #15 / `5128eae` — typography ADR 0026).
+Lands via a reviewed PR — never a direct push to `main`. (Trust `git log` over any hash here.)
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
-> not configured here. **This session DID have outbound egress** — `data.brreg.no` returned live data
-> (200) and a `brreg` MCP was present — so `feat-enhetsregisteret` is viable in such an env; it was not
-> taken this session (microcopy is the higher-leverage, egress-independent foundation). Don't assume
-> egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
+> not configured here. **This session HAD outbound egress** — `data.brreg.no` returned live data (200)
+> and a `brreg` MCP was present — so `feat-enhetsregisteret` was built + verified live this session.
+> Don't assume egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
 
-## This session — typography (Fraunces + IBM Plex Sans, ADR 0026)
+## This session — Enhetsregisteret (brreg) org lookup (`feat-enhetsregisteret`, done)
+The **first real integration + the first real UI surface.** A read-only `/oppslag` page that searches the
+Brønnøysund open-data register by **org number or company name** and shows name / form / address / NACE /
+**MVA-register status** — exercising the carnival tokens, the type system, and `~/copy` together for the
+first time. **Full gate green** (typecheck, lint, `lint:repo` 54 docs/0 warn, `format`, `test` **101
+domain + 23 web**; 34 integration skipped — no DB, `db:lint`, `build`) and **verified live end-to-end**
+against `data.brreg.no`: Equinor org-nr lookup, "Viser 10 av 188 treff" name search, and the
+invalid-mod11 / not-found / no-match / register-error states.
+- **Integration client** `app/integrations/enhetsregisteret/client.server.ts` — server-only, **Zod at the
+  boundary** (`contracts/enhetsregisteret.ts`), AbortController timeout, typed `{ok} | not-found | error`
+  results (expected outcomes never throw). `lookupByOrgNr` (mod11 via `@saldo/domain` first) + `searchByName`.
+- **Route** `routes/oppslag.tsx` — one smart box (9 digits → org-nr; else name), real `<Form method=get>`
+  (works without JS), shadcn Card/Table, semantic tokens, Fraunces `h1`, keyed copy (nb **and** en).
+  Amber **heads-up** flags for konkurs/avvikling/slettet (colour + word, never colour alone).
+- **Source-grounding** `db/reference/brreg/` — real captures (Equinor ASA, a REMA name search, an empty
+  envelope showing `_embedded` is absent on zero matches) + a **synthetic, PII-redacted ENK** (no real
+  natural person's data committed; mod11-valid *unassigned* org-nr `311000004`). Tests assert the contract
+  still accepts the captures, so live-API drift trips a test, not production.
+- **Reviews (maker≠judge):** integration-auditor + privacy-reviewer + a11y-reviewer. Fixed before commit:
+  dropped a link `aria-label` that clobbered the company name (WCAG 2.4.4/2.5.3); added a global
+  `:focus-visible` outline (app.css); persistent `aria-live` region for status text; `nameSearchInput.max(200)`
+  (outbound-query cap). **Privacy:** responses can carry an ENK's name/home address → `Cache-Control:
+  private, no-store` (never edge-cache PII — residency); nothing logged (names/org-nr/query) and nothing persisted.
+- **Config:** `vitest.config.ts` now loads `vite-tsconfig-paths` so unit tests resolve the `~/*` alias.
+- **Deferred → backlog:** `feat-enhetsregisteret-cache` (EU-resident server cache + per-IP/session rate-limit;
+  the doc's "cache results" directive, done residency-safely). **Next:** `feat-org-onboarding` (consumes this
+  lookup; brings in React Hook Form + @hookform/resolvers + @tanstack/react-table).
+
+## Previous session — typography (Fraunces + IBM Plex Sans, ADR 0026)
 Locked the type system with the product owner and wired it in. **Full gate green:** typecheck, lint,
 `lint:repo`, `format:check`, `test` (101 domain + 10 web), `db:lint`, `build` (fonts bundle + self-host),
 `backlog validate`. **SSR-verified.**

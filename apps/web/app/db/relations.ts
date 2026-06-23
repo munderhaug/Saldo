@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, account, vatCode, fiscalPeriod, voucher, posting, invoiceCounter } from "./schema";
+import { organization, account, vatCode, fiscalPeriod, voucher, posting, invoiceCounter, appUser, userSession, membership } from "./schema";
 
 export const accountRelations = relations(account, ({one, many}) => ({
 	organization: one(organization, {
@@ -16,6 +16,7 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	vouchers: many(voucher),
 	postings: many(posting),
 	invoiceCounters: many(invoiceCounter),
+	memberships: many(membership),
 }));
 
 export const vatCodeRelations = relations(vatCode, ({one, many}) => ({
@@ -87,6 +88,29 @@ export const postingRelations = relations(posting, ({one}) => ({
 export const invoiceCounterRelations = relations(invoiceCounter, ({one}) => ({
 	organization: one(organization, {
 		fields: [invoiceCounter.organizationId],
+		references: [organization.id]
+	}),
+}));
+
+export const userSessionRelations = relations(userSession, ({one}) => ({
+	appUser: one(appUser, {
+		fields: [userSession.userId],
+		references: [appUser.id]
+	}),
+}));
+
+export const appUserRelations = relations(appUser, ({many}) => ({
+	userSessions: many(userSession),
+	memberships: many(membership),
+}));
+
+export const membershipRelations = relations(membership, ({one}) => ({
+	appUser: one(appUser, {
+		fields: [membership.userId],
+		references: [appUser.id]
+	}),
+	organization: one(organization, {
+		fields: [membership.organizationId],
 		references: [organization.id]
 	}),
 }));

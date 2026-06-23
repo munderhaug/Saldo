@@ -37,13 +37,13 @@
     {
       "id": "pr5-auth",
       "title": "Identity & session foundation (auth) — the missing first lock",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P0-hardening",
       "depends_on": [],
-      "notes": "app_user/user_session/membership migration (SHA-256 token via @oslojs/*); HttpOnly/Secure/SameSite cookies; openid-client v6 provider iface + dev email/password (argon2id); Zod env.ts; requireUser -> withOrgTx; /auth routes. Criipto/BankID needs egress.",
-      "refs": ["docs/world-class-roadmap.md", "docs/STATUS.md"]
+      "notes": "DONE (ADR 0020): app_user/user_session/membership; SHA-256 sessions + sliding expiry; argon2id dev provider; openid-client v6 OIDC (wired, not live); Zod env.ts; requireUser->withUserOrg->withOrgTx; /auth routes; RLS-coverage updated. OIDC live round-trip still needs Criipto + egress.",
+      "refs": ["docs/decisions/0020-session-identity-model.md"]
     },
     {
       "id": "pr6-observability",

@@ -1,4 +1,4 @@
-import { pgTable, varchar, unique, pgPolicy, check, uuid, char, text, timestamp, foreignKey, numeric, integer, date, index, bigint } from "drizzle-orm/pg-core"
+import { pgTable, varchar, unique, pgPolicy, check, uuid, char, text, timestamp, foreignKey, numeric, integer, date, index, bigint, primaryKey } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -152,4 +152,51 @@ export const invoiceCounter = pgTable("invoice_counter", {
 			name: "invoice_counter_organization_id_fkey"
 		}),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+]);
+
+export const appUser = pgTable("app_user", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	email: text().notNull(),
+	passwordHash: text("password_hash"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	unique("app_user_email_key").on(table.email),
+	check("app_user_email_check", sql`(email = lower(email)) AND (email <> ''::text)`),
+]);
+
+export const userSession = pgTable("user_session", {
+	id: text().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
+}, (table) => [
+	index("user_session_expires_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamptz_ops")),
+	index("user_session_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [appUser.id],
+			name: "user_session_user_id_fkey"
+		}).onDelete("cascade"),
+	check("user_session_id_check", sql`id ~ '^[0-9a-f]{64}$'::text`),
+]);
+
+export const membership = pgTable("membership", {
+	userId: uuid("user_id").notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	role: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("membership_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [appUser.id],
+			name: "membership_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "membership_organization_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.userId, table.organizationId], name: "membership_pkey"}),
+	check("membership_role_check", sql`role = ANY (ARRAY['owner'::text, 'member'::text])`),
 ]);

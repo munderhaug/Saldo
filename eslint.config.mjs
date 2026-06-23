@@ -61,6 +61,17 @@ export default tseslint.config(
     rules: { 'saldo/no-money-arithmetic': 'off', 'no-restricted-properties': 'off' },
   },
   {
+    // React Router idiom: loaders/actions/guards throw a `Response` (incl. redirect()) to
+    // short-circuit a request. Allow it; everything else must still throw an Error.
+    files: ['apps/web/app/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/only-throw-error': [
+        'error',
+        { allow: [{ from: 'lib', name: 'Response' }] },
+      ],
+    },
+  },
+  {
     // ── Architectural boundary: packages/domain ↛ apps/web ─────────────────────
     // The domain is the one hard boundary (CLAUDE.md): a PURE accounting core with no I/O that runs
     // in route actions AND the browser. It must never depend on the web app — the dependency is

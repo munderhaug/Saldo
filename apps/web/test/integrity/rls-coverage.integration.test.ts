@@ -35,8 +35,9 @@ describe.skipIf(!dockerAvailable)('RLS coverage — every public table is locked
          AND c.relname <> 'schema_migrations'
        ORDER BY c.relname`;
 
-    // Sanity: the seven business tables exist (guards against an empty/over-broad query passing vacuously).
-    expect(tables.map((t) => t.relname)).toEqual([
+    // Tenant tables MUST be FORCE-RLS'd + policied (ADR 0012). Auth/system tables are pre-org and
+    // protected differently (grant + secret-key lookup, ADR 0020) — they sit on an explicit allowlist.
+    const TENANT_TABLES = [
       'account',
       'fiscal_period',
       'invoice_counter',
@@ -44,20 +45,33 @@ describe.skipIf(!dockerAvailable)('RLS coverage — every public table is locked
       'posting',
       'vat_code',
       'voucher',
-    ]);
+    ];
+    const AUTH_TABLES = ['app_user', 'membership', 'user_session'];
+
+    // Every public table is classified — a FUTURE table that is neither tenant-RLS'd nor an
+    // acknowledged auth table fails here, forcing a deliberate decision rather than a silent open table.
+    expect(tables.map((t) => t.relname)).toEqual([...TENANT_TABLES, ...AUTH_TABLES].sort());
 
     for (const t of tables) {
-      // 1. RLS enabled AND forced (so the owner is subject too — ADR 0012).
-      expect(t.rowsecurity, `${t.relname}: RLS must be ENABLED`).toBe(true);
-      expect(t.forced, `${t.relname}: RLS must be FORCED`).toBe(true);
+      const isTenant = TENANT_TABLES.includes(t.relname);
 
-      // 2. At least one policy.
-      const [pol] = await db.sql<{ n: number }[]>`
-        SELECT count(*)::int AS n FROM pg_policies
-         WHERE schemaname = 'public' AND tablename = ${t.relname}`;
-      expect(pol!.n, `${t.relname}: must have an RLS policy`).toBeGreaterThan(0);
+      if (isTenant) {
+        // RLS enabled AND forced (so the owner is subject too — ADR 0012) + a policy.
+        expect(t.rowsecurity, `${t.relname}: RLS must be ENABLED`).toBe(true);
+        expect(t.forced, `${t.relname}: RLS must be FORCED`).toBe(true);
+        const [pol] = await db.sql<{ n: number }[]>`
+          SELECT count(*)::int AS n FROM pg_policies
+           WHERE schemaname = 'public' AND tablename = ${t.relname}`;
+        expect(pol!.n, `${t.relname}: must have an RLS policy`).toBeGreaterThan(0);
+      } else {
+        // Auth table: intentionally NOT org-RLS'd (there is no tenant context when it is queried).
+        expect(
+          t.forced,
+          `${t.relname}: auth table must not be FORCE-RLS'd by design (ADR 0020)`,
+        ).toBe(false);
+      }
 
-      // 3. The app role can at least read it (the per-table DML grant exists).
+      // Every table: the app role holds a grant (it could not function otherwise).
       const [grant] = await db.sql<{ ok: boolean }[]>`
         SELECT has_table_privilege('saldo_app', ${'public.' + t.relname}, 'SELECT') AS ok`;
       expect(grant!.ok, `${t.relname}: saldo_app must hold a grant`).toBe(true);

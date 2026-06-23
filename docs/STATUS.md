@@ -35,6 +35,15 @@ review + the foundation-hardening PRs 1 / 2 / 2.5. Next: the remaining hardening
 feature track (auth → Enhetsregisteret → Phase 1).
 
 ## Done (this session)
+- **PR 5 — identity & session foundation / auth (ADR 0020).** The missing FIRST lock. Migration
+  `app_user` / `user_session` / `membership` (auth tables, intentionally NOT org-RLS'd — allowlisted in
+  the RLS-coverage test). Lucia-pattern sessions (160-bit opaque token stored only as SHA-256 via
+  `@oslojs/*`; HttpOnly/Secure/SameSite=Lax cookie; 30d absolute + 15d sliding). argon2id dev
+  email/password provider (`@node-rs/argon2`); **openid-client v6** OIDC (PKCE+state+nonce) wired but
+  not live-verified. Zod **`env.ts`**; `requireUser → requireOrgAccess(membership) → withUserOrg →
+  withOrgTx`; CSRF via SameSite + Origin check. Routes `/auth/login|callback|logout`. Validated against
+  real local PG (17 checks incl. membership FK-under-RLS) + an always-on argon2id unit test + a 7-case
+  Testcontainers suite; **build externalizes argon2** cleanly. `DATABASE_URL` now = the `saldo_app` role.
 - **Agentic memory — task graph + rejected-approaches log (ADR 0019).** Reviewed 3 external repos for
   repo/harness (not product) value: **piyaz** (dependency-aware task DAG + abandoned-approach records —
   valuable *idea*, but a SaaS; built natively instead), **vibecoded-design-tells** (anti-vibe checklist
@@ -83,13 +92,8 @@ feature track (auth → Enhetsregisteret → Phase 1).
 - (PR 3 committed; PRs 4–6 next this session)
 
 ## Next up (ordered) — remaining P0 hardening, then the feature track
-**PR 5 — Identity & session foundation (auth)** — the missing *first* lock (RLS is a strong 2nd lock with
-no 1st lock today). `app_user` / `user_session` / `membership` migration (opaque token → SHA-256 via
-`@oslojs/*`; session tables NOT org-RLS'd; grant `saldo_app`); `HttpOnly`/`Secure`/`SameSite=Lax` cookies,
-rotate on login; **openid-client v6** provider interface (PKCE + state + nonce) + a dev email/password
-provider (argon2id); Zod **`env.ts`** (owner + `saldo_app` URLs); `requireUser` → `withOrgTx`; routes
-`/auth/login|callback|logout`; an ADR (session & identity model). Point `DATABASE_URL` at `saldo_app`.
-**PR 6 — Observability baseline** — `pino` + redaction + request-id (OTel later).
+**PR 6 — Observability baseline** — `pino` + redaction (personal data + secrets) + request-id from the
+first real route (OTel later). `pnpm backlog next` and the feature track follow.
 **Then the feature track (Phase 1+):** Enhetsregisteret lookup; org & contacts onboarding (the user→org
 membership UI); the **honest-number domain feature** (spendable = income − VAT held − estimated tax —
 pure + exhaustively tested) + its reveal; the Norwegian-first **keyed microcopy** system; the **mobile
@@ -111,9 +115,13 @@ dated ADOPT/MINE/SKIP, adoption gated by an ADR) + a `docs/improvements.md` ledg
   Altinn onboarding** (Phase 9); **product name** ("Saldo" is a working name).
 
 ## Known issues / to verify
-- **No auth yet** — tenancy RLS is the *second* lock; the *first* (authn + user→org authz) lands in PR 5.
-  Until then `withOrgTx` trusts a caller-supplied org id.
+- ~~No auth yet~~ — **first lock landed in PR 5** (ADR 0020). `withUserOrg` now resolves the org from the
+  authenticated user's membership before `withOrgTx`. Remaining: **OIDC is not live-verified** (needs a
+  Criipto tenant + egress); org-**selection** UX (multi-membership) is the org-onboarding feature.
 - ~~Period-lock SQL hole~~ — **closed in PR 4** (ADR 0018; posting-side trigger + proof).
+- **`.env.example` not updated for auth** — `env.ts` is the Zod contract (`DATABASE_URL`=saldo_app,
+  `APP_URL`, optional `OIDC_*`, `NODE_ENV`); `.env.example` is agent-deny'd so update it by hand. Deploy
+  runs migrations as a separate OWNER `DATABASE_URL`; the app process uses the `saldo_app` one.
 - **Live integrations deferred** — verify Neon EU + custom-role RLS, and that **Hyperdrive preserves
   `SET LOCAL`**, when wiring auth/DB live (needs egress + tenants).
 - `saft:validate` is still a **scaffold** (returns 0) — implement SAF-T generation + XSD validation.

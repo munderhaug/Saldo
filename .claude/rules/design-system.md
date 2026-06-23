@@ -12,6 +12,13 @@ A restrained, trustworthy financial UI — not a mood-driven brand. Consistency 
   depth-on-demand ledger** (accountant/auditor view) — the everyday surface never shows
   konto/debit/credit (experience-principles §4.2).
 - **Palette:** neutral base + one trustworthy accent. No decorative gradients in data views.
+- **No AI-design "tells."** Default-shadcn-looking screens read as vibe-coded (CLAUDE.md: never that).
+  Ship customized tokens/spacing/type — not stock components. Specifically avoid: the un-themed shadcn
+  default look, "AI-purple" violet gradients, gradient hero text, unprompted neon glows, emoji used as
+  UI icons (use a real icon set), and the centered-hero-plus-three-cards layout. Distinctive and
+  intentional beats trendy. (Mechanical design-lint — e.g. korrodesign-style ESLint rules:
+  `no-div-as-button`, `require-focus-visible`, `no-pure-black`, `no-generic-fonts` — is worth adding
+  once there's real UI to lint; tracked in the backlog, not built while the UI is a scaffold.)
 - **Numbers:** every figure uses the `tabular` utility (tabular-nums, lining); right-align money columns;
   format via the domain money helpers, never raw `toFixed`.
 - **Components:** compose from `components/ui` (shadcn). Add new primitives via `npx shadcn add`, then

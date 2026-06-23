@@ -35,6 +35,14 @@ review + the foundation-hardening PRs 1 / 2 / 2.5. Next: the remaining hardening
 feature track (auth → Enhetsregisteret → Phase 1).
 
 ## Done (this session)
+- **Agentic memory — task graph + rejected-approaches log (ADR 0019).** Reviewed 3 external repos for
+  repo/harness (not product) value: **piyaz** (dependency-aware task DAG + abandoned-approach records —
+  valuable *idea*, but a SaaS; built natively instead), **vibecoded-design-tells** (anti-vibe checklist
+  → folded into `design-system.md`), **korrodesign** (design-lint ESLint rules → noted for when UI
+  lands). Built `docs/backlog/tasks.json` + `tools/backlog.mjs` (`pnpm backlog` next/ready/list/validate;
+  orders by value→leverage→effort; CI-validated) and `docs/decisions/rejected.md` (seeded with 7 real
+  rejections from this session). Wired into the `/backlog` skill + handover ritual. `backlog next`
+  currently → **pr5-auth** (highest value, unblocks the most downstream work).
 - **PR 4 — ledger integrity gaps (ADR 0018).** One migration closes four holes, each proven by a
   Testcontainers test of the BAD case (10 new assertions): (1) **period-lock** now fires on `posting`
   too (and voucher DELETE), so postings can't be added to an unposted voucher in a now-locked period;

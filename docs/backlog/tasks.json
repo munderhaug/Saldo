@@ -1,0 +1,170 @@
+{
+  "$comment": "Saldo's queryable task graph (ADR 0019). A dependency-aware DAG so 'what is the highest-value READY task' is computable, not buried in prose. Validated + queried by tools/backlog.mjs (pnpm backlog). Edit by hand; keep it honest. status: todo|in_progress|done|cancelled. value: high|medium|low. effort: S|M|L. depends_on: ids that must be done|cancelled first. cancelled tasks carry cancelled_reason (and optionally superseded_by).",
+  "tasks": [
+    {
+      "id": "pr3-gates",
+      "title": "Mechanical gates & supply-chain hardening",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Fail-closed hooks, Stop green-bar, type-coverage, squawk, SHA-pinned actions, CodeQL/gitleaks/SBOM, freshness cron.",
+      "refs": ["docs/decisions/0017-mechanical-gates-supply-chain.md"]
+    },
+    {
+      "id": "pr4-ledger-integrity",
+      "title": "Close four ledger-integrity gaps in SQL",
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Posting-side period lock, posted-completeness, period non-overlap, cross-org period FK, RLS-coverage gate.",
+      "refs": ["docs/decisions/0018-ledger-integrity-gaps.md"]
+    },
+    {
+      "id": "meta-agentic-memory",
+      "title": "Agentic memory: committed task graph + rejected-approaches log",
+      "status": "done",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "This file + tools/backlog.mjs + docs/decisions/rejected.md. Piyaz's ideas, built natively (no SaaS).",
+      "refs": ["docs/decisions/0019-agentic-memory-task-graph.md"]
+    },
+    {
+      "id": "pr5-auth",
+      "title": "Identity & session foundation (auth) — the missing first lock",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "app_user/user_session/membership migration (SHA-256 token via @oslojs/*); HttpOnly/Secure/SameSite cookies; openid-client v6 provider iface + dev email/password (argon2id); Zod env.ts; requireUser -> withOrgTx; /auth routes. Criipto/BankID needs egress.",
+      "refs": ["docs/world-class-roadmap.md", "docs/STATUS.md"]
+    },
+    {
+      "id": "pr6-observability",
+      "title": "Observability baseline (pino + redaction + request-id)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "pino with redaction of personal data + secrets, request-id from the first real route. OTel later (P2).",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "test-stateful-ledger",
+      "title": "Stateful property testing of the ledger (fast-check model-based)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr4-ledger-integrity"],
+      "notes": "Random sequences of post/reverse/lock against the invariants — the highest-value test for a system of record.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "feat-honest-number",
+      "title": "Honest-number domain feature (spendable = income - VAT held - estimated tax)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "Pure @saldo/domain + exhaustive/property tests, then its reveal. The product's emotional core (experience-principles).",
+      "refs": ["docs/experience-principles.md"]
+    },
+    {
+      "id": "feat-keyed-microcopy",
+      "title": "Norwegian-first keyed microcopy system",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "Keyed strings (not ad-hoc literals), Norwegian as original work. Foundational for every UI surface.",
+      "refs": [".claude/rules/experience-voice.md"]
+    },
+    {
+      "id": "feat-enhetsregisteret",
+      "title": "Enhetsregisteret (brreg) org lookup",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": [],
+      "notes": "data.brreg.no lookup for org onboarding. Live calls need egress (deferred env). db/reference/brreg/ exists.",
+      "refs": ["db/reference/brreg"]
+    },
+    {
+      "id": "feat-org-onboarding",
+      "title": "Org & contacts onboarding (user -> org membership UI)",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P1-feature",
+      "depends_on": ["pr5-auth", "feat-enhetsregisteret"],
+      "notes": "The membership UI that makes withOrgTx real per logged-in user.",
+      "refs": ["docs/STATUS.md"]
+    },
+    {
+      "id": "feat-mobile-companion",
+      "title": "Mobile companion surface (components/mobile, ADR 0016)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "L",
+      "phase": "P1-feature",
+      "depends_on": ["feat-honest-number"],
+      "notes": "Built per feature, not all at once (adaptive two-surface design system).",
+      "refs": ["docs/decisions/0016-adaptive-two-surface-design-system.md"]
+    },
+    {
+      "id": "vat-reverse-charge",
+      "title": "Reverse-charge dual-leg + non-deductible VAT rules",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P2",
+      "depends_on": [],
+      "notes": "Phase 2 carry-overs in @saldo/domain (new-vat-scenario skill; exhaustive + property tests).",
+      "refs": [".claude/skills/new-vat-scenario/SKILL.md"]
+    },
+    {
+      "id": "ci-pr-template",
+      "title": "Make the quality bar mechanical (PR template + migration-touches-test gate)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr3-gates"],
+      "notes": "PR template requiring linked ADR/tests; a CI check that a migration PR also touches test/integrity/.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "test-e2e-axe",
+      "title": "Playwright e2e + @axe-core/playwright (WCAG 2.2 AA in CI)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": ["pr5-auth"],
+      "notes": "e2e for the auth + first-invoice flow; axe gate once UI lands.",
+      "refs": ["docs/world-class-roadmap.md"]
+    },
+    {
+      "id": "ops-dr-runbook",
+      "title": "DR runbook: Neon PITR + restore drills, R2 retention",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1",
+      "depends_on": [],
+      "notes": "A restore you have never tested is not a backup. R2 lifecycle + 5-year retention vs immutability procedure.",
+      "refs": ["docs/decisions/0013-hosted-postgres-neon.md"]
+    }
+  ]
+}

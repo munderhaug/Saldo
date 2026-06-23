@@ -19,6 +19,7 @@
     "lint:repo": "node tools/repo-lint.mjs",
     "type-coverage": "type-coverage",
     "knip": "knip",
+    "backlog": "node tools/backlog.mjs",
     "db:lint": "node tools/migrations-up.mjs | pnpm dlx squawk-cli@2.58.0 --config squawk.toml --stdin-filepath migrations-up.sql",
     "db:migrate": "dbmate up",
     "db:migrate:new": "dbmate new",

@@ -3,8 +3,8 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: world-class review + foundation hardening (PRs 1, 2, 2.5)
-**Branch:** `claude/vigilant-curie-gydm6s` (off `main`). Lands via reviewed PR — never a direct push to
+**Last updated:** 2026-06-23 — session: EU AI Act readiness & compliance
+**Branch:** `claude/nice-davinci-6hsjbn` (off `main`). Lands via reviewed PR — never a direct push to
 `main`. (HEAD moves each commit — trust `git log` over any hash written here.)
 
 > ⚠️ **Live external integrations are not exercised in these sessions.** The Neon control plane,
@@ -13,7 +13,29 @@
 > the npm registry, and Cloudflare docs MCP were available this session; local Postgres + Testcontainers
 > stand in for DB work.)
 
-## Verified state (this session — full production gate green)
+## This session — EU AI Act readiness & compliance (new PR off `main`)
+Reviewed **Regulation (EU) 2024/1689** source-grounded (eur-lex CELEX `32024R1689` + AI Act Explorer;
+raw verbatim captures committed under `db/reference/eu-ai-act/`) and built the posture into the repo.
+**Full gate green this session:** `lint:repo` (42 docs, 6 sourced, 0 warnings), `format:check`,
+`typecheck`, `lint`, `test` (90 domain pass; Testcontainers skip locally — CI runs them); `audit`
+unchanged (zero dependency changes).
+- **Classification (every claim cited):** only the LLM features are AI systems (Art. 3(1); Recital 12
+  excludes the deterministic rules engine). **Not** prohibited (Art. 5), **not** high-risk (Art. 6 +
+  Annex III). Saldo = **provider** of its AI system + **deployer** of the model; **not** a GPAI
+  provider (relies on the model provider's Art. 53 docs). Binding duties: **transparency** (Art. 50,
+  applies **2 Aug 2026**) + **AI literacy** (Art. 4, in force since 2 Feb 2025). Penalties up to
+  €15M/3% for Art. 50 (Art. 99). **EEA:** relevant; incorporation under scrutiny — build to the EU
+  dates. **Line never to cross:** AI scoring/profiling a natural person's creditworthiness →
+  high-risk (Annex III §5(b)).
+- **Deliverables:** `docs/regulatory/eu-ai-act.md` (cited, dated knowledge page); **ADR 0017** (posture,
+  sharpens ADR 0002) + ADR index; backlog **AIA-1…6** in `docs/world-class-roadmap.md`; a **CLAUDE.md
+  invariant** + path-scoped gate `.claude/rules/ai-act.md`.
+- **Reconciled task vs repo:** the task referenced `pnpm backlog` / a `compliance-eu-ai-act` task and
+  a pino-logging ADR numbered 0021 — none exist here. Mapped to the roadmap master backlog and ADR
+  **0017** (next free number; logging/`pino` is still **Intended**, PR 6 — referenced as such, not as
+  an ADR, so the repo-lint cross-ref gate stays green).
+
+## Verified state (previous session — PRs 1/2/2.5, merged as #10)
 - ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (40 docs,
   0 warnings), `format:check`, `test` (**90 domain** incl. fast-check; Testcontainers skip locally
   without Docker — they run in CI), web `build` (**React 19** SSR + **Tailwind v4** token CSS compiles).
@@ -29,7 +51,7 @@ proofs, SAF-T reference data, VAT engine, RLS tenancy + `withOrgTx`). This sessi
 review + the foundation-hardening PRs 1 / 2 / 2.5. Next: the remaining hardening PRs 3–6, then the
 feature track (auth → Enhetsregisteret → Phase 1).
 
-## Done (this session)
+## Done (previous session — PRs 1/2/2.5, merged as #10)
 - **World-class roadmap** — `docs/world-class-roadmap.md` (architecture decision, hardening plan, the
   24-item contradiction kill-list, master backlog).
 - **PR 1 — decisions & consistency.** Option 2 architecture (**ADR 0015** persistent Node on an EU PaaS

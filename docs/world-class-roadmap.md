@@ -255,6 +255,15 @@ Enhetsregisteret, BankID-via-Criipto, MVA-melding + Skatteetaten validate, PEPPO
 GoCardless/camt.054 banking, Vipps, recurring invoices/reminders (Workflows), receipt-capture +
 vision-LLM (propose-only). Each lands in its spec'd phase, gated by the foundations above.
 
+### EU AI Act compliance (P1) — see `docs/regulatory/eu-ai-act.md` + ADR 0017
+Saldo is **not** prohibited (Art. 5) and **not** high-risk (Art. 6 + Annex III); only the LLM
+features are AI systems (Art. 3(1)). The binding duties are **transparency** (Art. 50, applies
+**2 Aug 2026**) and **AI literacy** (Art. 4, in force). Posture, invariant, and the path-scoped gate
+(`.claude/rules/ai-act.md`) landed with the analysis; the rest is small, mostly documenting/verifying
+the existing propose-only posture (ADR 0002). Tasks (AIA-1…6) are in the master table below.
+The **line never to cross**: an AI feature that scores/profiles a natural person's creditworthiness
+would make Saldo a high-risk provider (Annex III §5(b)) — re-open ADR 0017 before ever going there.
+
 ---
 
 ## Part 4 — Contradiction elimination (zero, and kept at zero)
@@ -298,6 +307,12 @@ gate. Going forward, any reintroduced contradiction fails CI.
 | 13 | DR runbook + restore drills | P1 | ★★★★ | M | #1 | — |
 | 14 | OTel tracing (SigNoz/Grafana) | P2 | ★★ | M | #8 | — |
 | 15 | Mutation testing (Stryker) | P2 | ★★ | S | #10 | — |
+| AIA-1 | AI-interaction disclosure in the UI (Art. 50(1)) | P1 | ★★★ | S | first AI feature | — |
+| AIA-2 | AI-output provenance + labelling + logging (Art. 50(2)) | P1 | ★★★ | M | #8, first AI feature | — |
+| AIA-3 | Capture upstream GPAI model docs (Annex XII) under `db/reference/llm/` (Art. 53) | P2 | ★★ | S | LLM-hosting decision (Phase 4) | — |
+| AIA-4 | AI-literacy note (proportionate competence record, Art. 4) | P1 | ★★ | S | — | — |
+| AIA-5 | Conformity self-assessment checklist (re-run per AI release + Art. 113 milestone) | P1 | ★★★ | S | eu-ai-act.md | — |
+| AIA-6 | High-risk guard (no scoring/profiling of natural persons) — invariant + `.claude/rules/ai-act.md` | P1 | ★★★★ | S | — | **done** |
 
 ---
 

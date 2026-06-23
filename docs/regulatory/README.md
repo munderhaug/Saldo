@@ -1,8 +1,9 @@
 # Regulatory knowledge (cited & dated)
 
-Compiled, **source-grounded** knowledge of the Norwegian rules Saldo must implement correctly:
+Compiled, **source-grounded** knowledge of the rules Saldo must implement correctly: the Norwegian
 bokføring/MVA law, registration thresholds, filing cadences, retention, and the moving parts of
-Skatteetaten/Altinn. Adapted from the "LLM wiki" pattern (see `.claude/skills/regulatory-update`).
+Skatteetaten/Altinn — plus the EU/EEA regulations that bind Saldo's product (the **EU AI Act**).
+Adapted from the "LLM wiki" pattern (see `.claude/skills/regulatory-update`).
 
 ## The discipline
 - Every claim is **cited** to a primary source captured under `db/reference/` (the immutable raw store;
@@ -17,6 +18,7 @@ Skatteetaten/Altinn. Adapted from the "LLM wiki" pattern (see `.claude/skills/re
 |---|---|---|
 | `mva-registration-threshold.md` | 50k rolling-12-month MVA registration threshold | see page |
 | `mva-rates.md` | MVA rates (2026) mapped to the SAF-T rate categories | 2026-12-31 |
+| `eu-ai-act.md` | EU AI Act (Reg 2024/1689) — classification, obligations, timeline | 2026-12-31 |
 
 Integration-specific knowledge (auth, endpoints, rate limits) lives in `docs/integrations/` under the
 same Sources/verify-by convention.

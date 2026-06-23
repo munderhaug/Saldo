@@ -24,6 +24,10 @@ TypeScript monorepo (pnpm + Turborepo). React Router 7 (framework mode) + shadcn
 - AI proposes; the rules engine validates; a human confirms — explicitly for consequential actions
   (money leaving, filing), passively via a grace-window/untap for high-confidence routine items
   (ADR 0002). AI never writes to the ledger.
+- EU AI Act: only the LLM features are AI systems (Art. 3(1)); the rules engine is NOT (Recital 12).
+  Every AI-proposed value is disclosed as AI and labelled **AI-assisted** with logged provenance
+  (Art. 50). AI must NEVER score/profile a natural person's creditworthiness — that makes Saldo a
+  high-risk provider (Annex III §5(b)). See ADR 0017 / docs/regulatory/eu-ai-act.md.
 - VAT codes & accounts come from the committed SAF-T code lists — never hardcode from memory.
 - UI keeps a semantic-HTML, server-authoritative substrate; native polish is layered on top, never replaces it.
 

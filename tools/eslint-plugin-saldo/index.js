@@ -156,11 +156,49 @@ const noRawColorUtility = classRule(
   (token) => RAW_COLOR.test(baseUtility(token)),
 );
 
+// ── Microcopy rule (syntactic; no type info) ─────────────────────────────────
+// User-facing text in JSX must be keyed microcopy (t() from ~/copy), never an ad-hoc literal — Saldo
+// is Norwegian-first and strings are keyed (ADR 0024, .claude/rules/experience-voice.md). Flags any
+// JSXText containing a letter; ignores whitespace/punctuation/number-only text (e.g. `&nbsp;`, `—`,
+// figures) and text inside code-ish elements (code/pre/kbd/samp), where a literal identifier or path
+// is intended. Dynamic values stay in `{expr}` containers, which are not JSXText and so never flag.
+const HAS_LETTER = /\p{L}/u;
+const LITERAL_TEXT_PARENTS = new Set(['code', 'pre', 'kbd', 'samp', 'script', 'style']);
+
+const noUnkeyedJsxText = {
+  meta: {
+    type: 'problem',
+    docs: { description: 'Disallow ad-hoc user-facing text in JSX; use keyed microcopy via t().' },
+    schema: [],
+    messages: {
+      unkeyed:
+        "Ad-hoc JSX text “{{text}}”. Use keyed microcopy: t('…') from ~/copy (.claude/rules/experience-voice.md, ADR 0024).",
+    },
+  },
+  create(context) {
+    return {
+      JSXText(node) {
+        if (!HAS_LETTER.test(node.value)) return;
+        const parent = node.parent;
+        const tag = parent?.type === 'JSXElement' ? parent.openingElement?.name?.name : undefined;
+        if (typeof tag === 'string' && LITERAL_TEXT_PARENTS.has(tag)) return;
+        const text = node.value.trim().replace(/\s+/g, ' ');
+        context.report({
+          node,
+          messageId: 'unkeyed',
+          data: { text: text.length > 32 ? `${text.slice(0, 32)}…` : text },
+        });
+      },
+    };
+  },
+};
+
 export default {
   meta: { name: 'eslint-plugin-saldo' },
   rules: {
     'no-money-arithmetic': noMoneyArithmetic,
     'no-arbitrary-tailwind': noArbitraryTailwind,
     'no-raw-color-utility': noRawColorUtility,
+    'no-unkeyed-jsx-text': noUnkeyedJsxText,
   },
 };

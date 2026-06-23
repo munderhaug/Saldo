@@ -3,34 +3,41 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: EU AI Act compliance + reconcile onto `main` + repo-standards consolidation
-**Branch:** `claude/nice-davinci-6hsjbn` (off `main`; merges `main` in). Lands via reviewed **PR #12** —
+**Last updated:** 2026-06-23 — session: keyed microcopy system (`feat-keyed-microcopy`)
+**Branch:** `claude/gallant-tesla-gv4zsp` (off `main` at PR #12 / `0dc15c9`). Lands via a reviewed PR —
 never a direct push to `main`. (Trust `git log` over any hash here.)
 
-> ⚠️ **Live external integrations are not exercised in these sessions.** The Neon control plane,
-> Criipto OIDC, and Brønnøysund (`data.brreg.no`) are not reachable/configured here, so auth and
-> Enhetsregisteret **live** work is deferred to an env with egress + real tenants. (Web search/fetch,
-> the npm registry, and Cloudflare docs MCP were available this session; local Postgres + Testcontainers
-> stand in for DB work.)
+> ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
+> not configured here. **This session DID have outbound egress** — `data.brreg.no` returned live data
+> (200) and a `brreg` MCP was present — so `feat-enhetsregisteret` is viable in such an env; it was not
+> taken this session (microcopy is the higher-leverage, egress-independent foundation). Don't assume
+> egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
 
-## This session — EU AI Act compliance + reconcile onto `main` + repo-standards consolidation
-Branched off `9c30903`, reviewed the **EU AI Act** source-grounded (Reg (EU) 2024/1689; raw captures in
-`db/reference/eu-ai-act/`), **merged `main` in** (resolving every conflict), then ran a field-guide
-**standards consolidation**. **Full gate green:** typecheck, lint, `lint:repo` (51 docs, **0 warnings**),
-format, `test` (101 domain + 4 web), `knip` (deps clean), `backlog validate` (28 tasks), build.
-- **EU AI Act (`compliance-eu-ai-act` → done):** only the LLM features are AI systems (Art 3(1)/Recital
-  12); **not** prohibited (Art 5), **not** high-risk (Art 6/Annex III); provider+deployer, not a GPAI
-  provider. Duties: transparency (Art 50, 2 Aug 2026) + AI literacy (Art 4, in force). Delivered
-  `docs/regulatory/eu-ai-act.md`, **ADR 0022**, the `.claude/rules/ai-act.md` gate, an AGENTS.md
-  invariant, and the forward `aia-*` tasks.
-- **Reconcile:** merged main (#11) cleanly; ADR draft 0017 → **0022** (main took 0017 for mech-gates);
-  backlog moved to `docs/backlog/tasks.json`.
-- **Standards:** proprietary **`LICENSE`** + **ADR 0023** (scopes ADR 0008 to the stack); rewrote stale
-  `runbook.md`/`architecture.md`/`data-handling.md` to ADR 0015 (EU PaaS + Cloudflare + R2 + Neon);
-  honest `saft:validate`; pruned **8** unused deps (re-added per feature); **AGENTS.md now canonical**
-  (CLAUDE.md imports it); renamed the roadmap doc → `roadmap.md` + stripped slop repo-wide;
-  de-duplicated invariants (README/CONTRIBUTING → pointers); repo-lint **rule-glob + slop** warnings
-  (caught a mis-targeted `vat.md` glob); queued **Vale** (`harness-vale`).
+## This session — keyed microcopy system (`feat-keyed-microcopy` → done)
+Built the foundational microcopy layer the experience-voice + a11y rules already mandate (*"strings are
+keyed microcopy, not ad-hoc literals"*; *"content translatable NO/EN"*), and migrated every existing UI
+surface onto it. **Full gate green:** typecheck, lint, `lint:repo` (52 docs, **0 warnings**), `format:check`,
+`test` (**101 domain + 10 web unit** incl. 6 new copy tests; 34 integration skipped cleanly — no DB here),
+`db:lint`, `build`, `backlog validate` (30 tasks). **Independently verified by SSR:** the built server
+rendered `/` and `/auth/login` with the keyed Norwegian copy and **no leaked `{placeholder}`/keys** (`lang="nb"`).
+- **The system (`apps/web/app/copy`, ADR 0024):** a flat dotted-key catalog — `nb` is shipped (original
+  work), `en` is a **reference** (not runtime-selectable) pinned to `nb`'s key set by `satisfies` and to
+  its placeholders by a parity test. `t(key, params?)` is pure (runs server + browser like `@saldo/domain`):
+  **typed keys** (typo = compile error) and **placeholder-typed params** (missing/extra param = compile error).
+  Single-locale by design — **no i18n framework** (rejected `R-0008`); money formatting stays in `formatKr`.
+- **Mechanical gate:** new ESLint rule `saldo/no-unkeyed-jsx-text` (positive+negative tested) flags ad-hoc
+  user-facing JSX text in `apps/web/app/**` (ignores `{expr}` + `code`/`pre`/`kbd`/`samp`), wired in `eslint.config.mjs`.
+- **Migrated:** `home.tsx`, `auth.login.tsx`, `root.tsx` (ErrorBoundary). Fixed two **English** strings in a
+  NB-first product (`'OIDC is not configured'`, `'Password login is disabled'` → Norwegian).
+- **Docs:** ADR 0024, `rejected.md` R-0008, experience-voice pointer, backlog marked done (unblocks
+  `feat-honest-number-surface`, which depends on it).
+- **Next:** egress was available, so `feat-enhetsregisteret` (brreg) is a strong pick if egress persists;
+  otherwise `feat-tax-estimate` (source-grounded) or the `docs-*` cleanups. Other UI surfaces now key via `~/copy`.
+
+## Previous session — EU AI Act compliance + repo-standards consolidation (PR #12, merged)
+ADR 0022 (EU AI Act posture) + `docs/regulatory/eu-ai-act.md` + `.claude/rules/ai-act.md`; proprietary
+`LICENSE` + ADR 0023; AGENTS.md made canonical (CLAUDE.md imports it); roadmap renamed; 8 unused deps
+pruned; repo-lint rule-glob + slop guardrails. (Detail in the ADRs / `git log`.)
 
 ## Verified state (PR #11 — merged to `main`)
 - ✅ `pnpm audit --audit-level=high` (no known vulns), `typecheck`, `lint`, `lint:repo` (**47 docs**,

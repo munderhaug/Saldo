@@ -9,6 +9,7 @@ import { buildSessionCookie } from '~/auth/cookies.server';
 import { beginOidcLogin, buildOidcCookie } from '~/auth/oidc.server';
 import { requestLogger } from '~/observability/logger.server';
 import { credentialsInput } from '~/contracts';
+import { t } from '~/copy';
 
 export async function loader({ request }: Route.LoaderArgs) {
   if (await getOptionalUser(request)) throw redirect('/');
@@ -22,7 +23,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   // Start the OIDC redirect dance (BankID/Vipps via Criipto).
   if (form.get('intent') === 'oidc') {
-    if (!oidcConfigured) throw new Response('OIDC is not configured', { status: 400 });
+    if (!oidcConfigured) throw new Response(t('auth.login.oidcNotConfigured'), { status: 400 });
     const { authorizationUrl, transaction } = await beginOidcLogin();
     log.info({ provider: 'oidc' }, 'login started');
     return redirect(authorizationUrl, {
@@ -31,20 +32,20 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   // Dev email/password. (Never log the email or password — only the outcome.)
-  if (!devAuthEnabled) throw new Response('Password login is disabled', { status: 403 });
+  if (!devAuthEnabled) throw new Response(t('auth.login.passwordDisabled'), { status: 403 });
   const parsed = credentialsInput.safeParse({
     email: form.get('email'),
     password: form.get('password'),
   });
   if (!parsed.success) {
     log.warn({ provider: 'password', outcome: 'invalid_input' }, 'login failed');
-    return { error: 'Sjekk e-post og passord.' };
+    return { error: t('auth.login.errorInvalidInput') };
   }
 
   const result = await authenticateWithPassword(db, parsed.data.email, parsed.data.password);
   if (!result) {
     log.warn({ provider: 'password', outcome: 'invalid_credentials' }, 'login failed');
-    return { error: 'Feil e-post eller passord.' };
+    return { error: t('auth.login.errorBadCredentials') };
   }
 
   const token = generateSessionToken();
@@ -60,7 +61,7 @@ export default function Login() {
   const actionData = useActionData<typeof action>();
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Logg inn</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{t('auth.login.title')}</h1>
 
       {data.oidcConfigured && (
         <Form method="post">
@@ -69,7 +70,7 @@ export default function Login() {
             type="submit"
             className="border-input bg-background w-full rounded-md border px-4 py-2 text-sm font-medium"
           >
-            Fortsett med BankID
+            {t('auth.login.bankid')}
           </button>
         </Form>
       )}
@@ -78,7 +79,7 @@ export default function Login() {
         <Form method="post" className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="email" className="text-sm font-medium">
-              E-post
+              {t('auth.login.email')}
             </label>
             <input
               id="email"
@@ -91,7 +92,7 @@ export default function Login() {
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="password" className="text-sm font-medium">
-              Passord
+              {t('auth.login.password')}
             </label>
             <input
               id="password"
@@ -111,7 +112,7 @@ export default function Login() {
             type="submit"
             className="bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium"
           >
-            Logg inn
+            {t('auth.login.submit')}
           </button>
         </Form>
       )}

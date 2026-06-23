@@ -8,6 +8,7 @@ import {
   useRouteError,
 } from 'react-router';
 import type { LinksFunction } from 'react-router';
+import { t } from '~/copy';
 import './app.css';
 
 export const links: LinksFunction = () => [{ rel: 'manifest', href: '/manifest.webmanifest' }];
@@ -39,15 +40,15 @@ export default function App() {
 export function ErrorBoundary() {
   const error = useRouteError();
   const heading = isRouteErrorResponse(error)
-    ? `${error.status} ${error.statusText}`
-    : 'Noe gikk galt';
+    ? t('error.statusHeading', { status: error.status, statusText: error.statusText })
+    : t('error.title');
   const message = isRouteErrorResponse(error)
     ? typeof error.data === 'string'
       ? error.data
-      : 'Forespørselen kunne ikke fullføres.'
+      : t('error.requestFailed')
     : error instanceof Error
       ? error.message
-      : 'En ukjent feil oppstod.';
+      : t('error.unknown');
 
   return (
     <main className="mx-auto grid max-w-xl gap-3 p-6 sm:p-10">

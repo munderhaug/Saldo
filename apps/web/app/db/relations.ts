@@ -1,20 +1,29 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, invoiceCounter, fiscalPeriod, voucher, posting, account, vatCode } from "./schema";
+import { organization, account, vatCode, fiscalPeriod, voucher, posting, invoiceCounter } from "./schema";
 
-export const invoiceCounterRelations = relations(invoiceCounter, ({one}) => ({
+export const accountRelations = relations(account, ({one, many}) => ({
 	organization: one(organization, {
-		fields: [invoiceCounter.organizationId],
+		fields: [account.organizationId],
 		references: [organization.id]
 	}),
+	postings: many(posting),
 }));
 
 export const organizationRelations = relations(organization, ({many}) => ({
-	invoiceCounters: many(invoiceCounter),
+	accounts: many(account),
+	vatCodes: many(vatCode),
 	fiscalPeriods: many(fiscalPeriod),
 	vouchers: many(voucher),
 	postings: many(posting),
-	accounts: many(account),
-	vatCodes: many(vatCode),
+	invoiceCounters: many(invoiceCounter),
+}));
+
+export const vatCodeRelations = relations(vatCode, ({one, many}) => ({
+	organization: one(organization, {
+		fields: [vatCode.organizationId],
+		references: [organization.id]
+	}),
+	postings: many(posting),
 }));
 
 export const fiscalPeriodRelations = relations(fiscalPeriod, ({one, many}) => ({
@@ -22,7 +31,12 @@ export const fiscalPeriodRelations = relations(fiscalPeriod, ({one, many}) => ({
 		fields: [fiscalPeriod.organizationId],
 		references: [organization.id]
 	}),
-	vouchers: many(voucher),
+	vouchers_periodId: many(voucher, {
+		relationName: "voucher_periodId_fiscalPeriod_id"
+	}),
+	vouchers_organizationId: many(voucher, {
+		relationName: "voucher_organizationId_fiscalPeriod_id"
+	}),
 }));
 
 export const voucherRelations = relations(voucher, ({one, many}) => ({
@@ -30,9 +44,10 @@ export const voucherRelations = relations(voucher, ({one, many}) => ({
 		fields: [voucher.organizationId],
 		references: [organization.id]
 	}),
-	fiscalPeriod: one(fiscalPeriod, {
+	fiscalPeriod_periodId: one(fiscalPeriod, {
 		fields: [voucher.periodId],
-		references: [fiscalPeriod.id]
+		references: [fiscalPeriod.id],
+		relationName: "voucher_periodId_fiscalPeriod_id"
 	}),
 	voucher: one(voucher, {
 		fields: [voucher.reversesVoucherId],
@@ -41,6 +56,11 @@ export const voucherRelations = relations(voucher, ({one, many}) => ({
 	}),
 	vouchers: many(voucher, {
 		relationName: "voucher_reversesVoucherId_voucher_id"
+	}),
+	fiscalPeriod_organizationId: one(fiscalPeriod, {
+		fields: [voucher.organizationId],
+		references: [fiscalPeriod.id],
+		relationName: "voucher_organizationId_fiscalPeriod_id"
 	}),
 	postings: many(posting),
 }));
@@ -64,18 +84,9 @@ export const postingRelations = relations(posting, ({one}) => ({
 	}),
 }));
 
-export const accountRelations = relations(account, ({one, many}) => ({
-	postings: many(posting),
+export const invoiceCounterRelations = relations(invoiceCounter, ({one}) => ({
 	organization: one(organization, {
-		fields: [account.organizationId],
-		references: [organization.id]
-	}),
-}));
-
-export const vatCodeRelations = relations(vatCode, ({one, many}) => ({
-	postings: many(posting),
-	organization: one(organization, {
-		fields: [vatCode.organizationId],
+		fields: [invoiceCounter.organizationId],
 		references: [organization.id]
 	}),
 }));

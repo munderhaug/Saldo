@@ -22,8 +22,10 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0015 | Deploy: persistent Node on an EU PaaS, Cloudflare edge/CDN + R2 (revises 0008) | Accepted |
 | 0016 | Adaptive two-surface design system (desktop workbench + mobile companion) | Accepted |
 | 0017 | Mechanical quality gates & supply-chain hardening | Accepted |
+| 0018 | Closing four ledger-integrity gaps in SQL | Accepted |
 
 ADRs 0001–0004 restate decisions from `saldo-build-specification.md` §17; 0005–0011 capture the
 stack-shaping calls from the tech-stack review; 0012–0016 harden tenancy and record the hosting,
 CI-database, deployment, and design-system decisions; 0017 makes the quality bar deterministic
-(fail-closed hooks, turn-end green-bar, CI supply-chain hardening).
+(fail-closed hooks, turn-end green-bar, CI supply-chain hardening); 0018 closes four ledger-integrity
+gaps (posting-side period lock, posted-completeness, period non-overlap, cross-org period FK).

@@ -35,6 +35,14 @@ review + the foundation-hardening PRs 1 / 2 / 2.5. Next: the remaining hardening
 feature track (auth → Enhetsregisteret → Phase 1).
 
 ## Done (this session)
+- **PR 4 — ledger integrity gaps (ADR 0018).** One migration closes four holes, each proven by a
+  Testcontainers test of the BAD case (10 new assertions): (1) **period-lock** now fires on `posting`
+  too (and voucher DELETE), so postings can't be added to an unposted voucher in a now-locked period;
+  (2) **posted ⇒ ≥2 postings & balanced** (deferred constraint trigger); (3) **no overlapping**
+  `fiscal_period` ranges (`EXCLUDE` + `btree_gist`); (4) **same-org `period_id`** (composite FK). Plus
+  an **RLS-coverage** test asserting every `public` table has ENABLE+FORCE RLS + policy + `saldo_app`
+  grant. Validated end-to-end against a real local PG (apply, all bad cases blocked, down/up round-trip,
+  squawk clean via inline greenfield ignores).
 - **PR 3 — mechanical gates & supply chain (ADR 0017).** Fixed both fail-open hooks
   (`precommit-check.sh` blocks when `node_modules` is missing; `block-generated.sh` fails closed on a
   JSON parse error). New `Stop` green-bar hook (`green-bar.sh`: typecheck + lint + domain tests, skips
@@ -67,12 +75,6 @@ feature track (auth → Enhetsregisteret → Phase 1).
 - (PR 3 committed; PRs 4–6 next this session)
 
 ## Next up (ordered) — remaining P0 hardening, then the feature track
-**PR 4 — Ledger integrity gaps** (each with a Testcontainers proof of the bad case):
-- **Period-lock hole (real bug):** the lock trigger fires on `voucher`, not `posting`, so postings can be
-  added to an existing *unposted* voucher in a now-locked period. Add a posting-side check.
-- `posted ⇒ ≥2 postings & balanced` (forbid empty / dangling / half-posted vouchers).
-- `EXCLUDE` (btree_gist) so a tenant's `fiscal_period` ranges can't overlap; same-org `period_id` FK.
-- **RLS-coverage gate:** a test asserting *every* `public` table has ENABLE+FORCE RLS + a policy + grants.
 **PR 5 — Identity & session foundation (auth)** — the missing *first* lock (RLS is a strong 2nd lock with
 no 1st lock today). `app_user` / `user_session` / `membership` migration (opaque token → SHA-256 via
 `@oslojs/*`; session tables NOT org-RLS'd; grant `saldo_app`); `HttpOnly`/`Secure`/`SameSite=Lax` cookies,
@@ -103,7 +105,7 @@ dated ADOPT/MINE/SKIP, adoption gated by an ADR) + a `docs/improvements.md` ledg
 ## Known issues / to verify
 - **No auth yet** — tenancy RLS is the *second* lock; the *first* (authn + user→org authz) lands in PR 5.
   Until then `withOrgTx` trusts a caller-supplied org id.
-- **Period-lock SQL hole** (above) — open until PR 4.
+- ~~Period-lock SQL hole~~ — **closed in PR 4** (ADR 0018; posting-side trigger + proof).
 - **Live integrations deferred** — verify Neon EU + custom-role RLS, and that **Hyperdrive preserves
   `SET LOCAL`**, when wiring auth/DB live (needs egress + tenants).
 - `saft:validate` is still a **scaffold** (returns 0) — implement SAF-T generation + XSD validation.

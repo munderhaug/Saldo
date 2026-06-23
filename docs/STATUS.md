@@ -3,7 +3,7 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: `repo-consistency-remediation` (whole-repo audit + voice / state-once / staleness fixes, a repo-lint voice gate, and mval § 2-1 grounding)
+**Last updated:** 2026-06-23 — session: `doc-freshness-knowledge-graph` (generated repo-status block + evidence-based graph drift checks, ADR 0031)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
@@ -13,55 +13,42 @@ are not restated here, where they would only go stale.
 > statute text fetches verbatim; Skatteetaten reachable for cross-confirm; data.brreg reachable). Don't
 > assume egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
 
-## Next session (assigned) — implement doc-freshness: derive repo-status from the graph + gate it (A→B)
-**This is the next session's task.** Mandate: end the recurring doc-staleness *mechanically*. Root cause:
-STATUS/roadmap **restate** facts that already live in `docs/backlog/tasks.json` (the dependency DAG, ADR
-0019) / git / ADRs — counts, what's-next, decisions, history — so they rot, violating AGENTS.md's *"state a
-fact once; link, don't restate."* Owner-decided path: **A then B; C deferred/optional.** Tasks:
-`harness-doc-freshness` (A) → `harness-knowledge-graph` (B) → `harness-status-autopr` (C). Land as a reviewed
-PR; record the decision in an ADR (`/new-adr`).
+## Repo status (generated — do not edit; `pnpm status:refresh`)
+The volatile facts below are rendered from committed sources (ADR files + the task DAG) by
+`tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
+<!-- AUTOGEN:repo-status -->
+<!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
+- **Decisions:** 31 ADRs (0001–0031) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 48 tasks (20 done, 28 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-receipt-extraction` [high/L] — Receipt/invoice -> structured proposal via vision-LLM (propose-only)
+<!-- /AUTOGEN:repo-status -->
 
-**A — derive + gate (do first):**
-1. `tools/status-block.mjs` (dependency-free ESM, like `backlog.mjs`/`repo-lint.mjs`): render the volatile
-   facts from committed sources — ADR count+range (`docs/decisions/0*.md`) + backlog total/done/todo +
-   highest-value ready task — into an `<!-- AUTOGEN:repo-status -->…<!-- /AUTOGEN:repo-status -->` block in
-   `docs/STATUS.md`. CLI: default writes the block; `--check` re-renders and exits 1 on drift. Export
-   `renderBlock()` for the gate.
-2. Reuse the graph logic: export `load` + `readyTasks` from `backlog.mjs` — **but first guard its CLI**: it
-   runs its command dispatch at top-level (~L103–147), which executes on import; wrap it in
-   `if (resolve(process.argv[1]) === fileURLToPath(import.meta.url))` before importing it anywhere.
-3. Add the check to `tools/repo-lint.mjs` (a new lettered check importing `renderBlock` + the markers,
-   comparing against the block in STATUS). It is already enforced everywhere: CI `pnpm lint:repo`
-   (`.github/workflows/ci.yml:44`) + the `PostToolUse` hook on docs/.claude edits. Add `status:refresh` /
-   `status:check` npm scripts.
-4. Insert the AUTOGEN block in STATUS and **delete the hand-written facts it replaces** (the "Decisions
-   current: ADRs …" line, hand-typed counts) so nothing is left to drift.
-5. Update `.claude/skills/handover/SKILL.md`: add a `pnpm status:refresh` step + the rule "current-status is
-   generated/pointered, never restated; dated session blocks keep their snapshot numbers."
+## This session — doc-freshness mechanism + knowledge graph (ADR 0031, A→B)
+Closed the recurring doc-staleness at its root, *mechanically*. STATUS/roadmap used to **restate** facts
+that already live in the ADR set + the task DAG (counts, what's-next), so they rotted. Now those volatile
+facts are **generated** from committed sources and **gated** — they cannot drift from the graph. Both
+assigned tasks (`harness-doc-freshness` A, `harness-knowledge-graph` B) are done; `harness-status-autopr`
+(C) stays deferred (the "why" is in ADR 0031 / `rejected.md`). Landing as a reviewed PR.
+- **A — generate + gate.** `tools/status-block.mjs` (dependency-free ESM) renders the volatile facts —
+  ADR count+range (from `docs/decisions/0*.md`), backlog total/done/todo, and the highest-value ready
+  task (reusing `load`/`readyTasks` from `backlog.mjs`) — into the `AUTOGEN:repo-status` block near the
+  top of this file. `pnpm status:refresh` writes it; `pnpm status:check` (and `repo-lint` **check J**)
+  re-render and fail on drift, with whitespace normalized so a `pnpm format` tweak can't false-fail.
+  `backlog.mjs`'s CLI is now **guarded** (`import.meta.url`) so it imports without side effects. The
+  hand-typed "Decisions: ADRs …" line is gone — the block is the only home for those numbers.
+- **B — typed edges + evidence checks.** `tasks.json` gained optional `implements_adr` / `touches` /
+  `sources` edges (populated on the clear cases). `backlog validate` type-checks their shapes;
+  `repo-lint` **check K** verifies them against the repo: `implements_adr` must resolve to a real ADR;
+  **stale-done** (a done/in_progress task whose `touches` are gone) is an error; **orphan-ADR** (an ADR
+  no task implements/references) is one warning — 8 foundational ADRs (0001/0004/0005/0006/0008/0010/0011/0023)
+  are accepted as task-less. The regulatory-page-past-`verify-by`-with-dependents check is left for later.
+- **Gotchas honored:** no HEAD/branch/commit-date/test-counts in the gated block (self-reference +
+  live-run traps); facts derive only from committed files; both tools are plain-Node ESM.
+- **Proof it works:** flipping the two harness tasks to `done` without refreshing made `pnpm lint:repo`
+  fail (stale block) until `pnpm status:refresh` re-rendered it — the staleness is now caught by a gate,
+  not an audit. **Next:** the product keystone `feat-org-onboarding` (see "Next up").
 
-**Gotchas already hit this session (don't rediscover):**
-- **Self-reference:** never put HEAD sha / commit date / branch in the gated block — it can't contain the
-  commit that writes it (always 1 behind), and `branch` false-positives in CI on `main`. Use only facts
-  derivable from committed files.
-- **Prettier** `proseWrap` is unset (= preserve; no reflow), but make `--check` **normalize whitespace**
-  (trim each line) so a prettier tweak can't false-fail; numeric drift still fails. Run `pnpm format` then
-  `pnpm status:check` to confirm stable.
-- Keep both tools dependency-free plain-Node ESM, matching `repo-lint.mjs` / `backlog.mjs`.
-
-**B — typed links + evidence-based drift checks (after A):** add optional edges to the task schema
-(`implements_adr`, `touches` [files/globs], `sources`) and make repo-lint/backlog **verify status against
-evidence** — a `done` task whose `touches`/`refs` are gone; an ADR with no implementing task; a regulatory
-page past `verify-by` with dependents. This *verified* status is the quality alternative to C's blind flip.
-
-**C — auto-status from PRs:** deferred/optional; only as a gate-confirmed suggestion, never a blind write
-(not every task = one PR; "done" here = gates green + ADR + merged, richer than "PR merged").
-
-**Done means:** generator + repo-lint gate green; editing `tasks.json`/ADRs *without* `status:refresh` fails
-`lint:repo`; handover skill updated; ADR recorded; full gate green; reviewed PR. **Why A first (not just
-convenience):** A is the prerequisite (B/C are worthless until docs derive from a gated source) and fixes
-the *proven* failure; for a system of record, *verified* status (A+B) beats *blindly-automated* status (C).
-
-## This session — repo-wide consistency audit + remediation (doc-quality)
+## Previous session — repo-wide consistency audit + remediation (doc-quality)
 An owner-requested audit of the **entire repo** against the AGENTS.md standard, then a full remediation —
 landing as a reviewed PR to `main`. Audit report: `docs/repo-consistency-audit-2026-06-23.md` (carries a
 resolution banner). Full gate green (typecheck · lint · test · lint:repo · format:check · backlog validate).
@@ -281,8 +268,8 @@ Full gate green at HEAD:
   (run them or see CI for the live counts — not restated here).
 - `pnpm test` green (domain: exhaustive + fast-check; web; the integration suite skips cleanly with no
   DB and runs on **Testcontainers in CI**).
-- **Decisions:** the ADR index is `docs/decisions/README.md` (the current range is derivable from
-  `docs/decisions/0*.md`).
+- **Decisions / backlog counts:** see the generated "Repo status" block near the top (ADR count+range
+  and backlog totals are rendered from committed sources by `pnpm status:refresh`, never hand-typed).
 - **Enduring proven invariants** (unchanged): ledger balance / immutability / period-lock /
   gapless-counter + tenant **FORCE-RLS** isolation, proven by Testcontainers (`apps/web/test/integrity/`);
   the **no-contradiction** repo-lint gate (every `ADR NNNN` ref resolves, no "Locked" label, cited
@@ -318,18 +305,13 @@ frontend tokens + shadcn + React 19; identity & sessions (0020); four ledger-int
 typography foundations of the UI followed in ADRs **0024–0026** (PRs #13–#15).
 
 ## In progress
-- The **doc-consistency remediation** (this session) is landing via a reviewed PR to `main` — see the
-  "This session" block above. Nothing else is mid-flight.
-- **Next session's assignment: the doc-freshness mechanism (A→B)** — see the "Next session (assigned)" brief
-  at the top + tasks `harness-doc-freshness` / `harness-knowledge-graph`. Not yet started.
+- The **doc-freshness mechanism + knowledge graph** (this session, ADR 0031) is landing via a reviewed
+  PR to `main` — see the "This session" block above. Nothing else is mid-flight.
 
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**
 Don't re-derive "what's next" in prose here; this is just the orientation.
-- **Immediate (assigned this handover): doc-freshness A→B** — `harness-doc-freshness` then
-  `harness-knowledge-graph` (full brief at the top of this doc). Fixes the systemic doc-staleness — and is
-  what makes everything below this line stay honest — before more feature work.
-- **Product keystone (after): `feat-org-onboarding`** [high/L] — the gateway that turns the foundation into a
+- **Product keystone: `feat-org-onboarding`** [high/L] — the gateway that turns the foundation into a
   usable product (org + membership + per-org `vat_code`/`account` provisioning, consuming `/oppslag`).
   Unblocks `feat-honest-number-surface` (the reveal now has a real, source-grounded number behind it) and
   all invoicing/posting. (`backlog next` mechanically returns `feat-receipt-extraction`, the vision-LLM

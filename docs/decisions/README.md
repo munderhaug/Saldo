@@ -35,6 +35,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0028 | Regulatory knowledge: capture-and-encode, not runtime RAG | Accepted |
 | 0029 | ENK income-tax estimate: model and stated assumptions | Accepted |
 | 0030 | Sectoral VAT exemptions: the activity dimension, revenue gate first | Accepted |
+| 0031 | Doc-freshness: generated repo-status block + evidence-based graph drift checks | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

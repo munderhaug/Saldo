@@ -7,6 +7,8 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { load as loadTasks } from './backlog.mjs';
+import { renderBlock, extractBlock, normalizeBlock } from './status-block.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = [];
@@ -155,6 +157,54 @@ for (const f of docFiles) {
         `${rel(f)}:${i + 1}: reader-addressing second person ("you/your") — use neutral documentation voice`,
       );
   }
+}
+
+// J) the generated repo-status block in STATUS.md must match a fresh render (ADR 0031). Editing the
+// ADR set or tasks.json without `pnpm status:refresh` fails here. Whitespace is normalized so a
+// `pnpm format` tweak can't false-fail; numeric/textual drift does.
+{
+  const statusFile = join(root, 'docs/STATUS.md');
+  const current = existsSync(statusFile) ? extractBlock(read(statusFile)) : null;
+  if (current === null)
+    errors.push('docs/STATUS.md: AUTOGEN:repo-status block missing — run `pnpm status:refresh`');
+  else if (normalizeBlock(current) !== normalizeBlock(renderBlock()))
+    errors.push('docs/STATUS.md: repo-status block is stale — run `pnpm status:refresh`');
+}
+
+// K) task-graph evidence (the knowledge graph, ADR 0031). Typed edges in tasks.json must hold up
+// against the repo: implements_adr must resolve to a real ADR; a done/in_progress task's touches must
+// still exist (stale-done); an ADR no task implements or references is reported once (orphan-ADR).
+{
+  let tasks = [];
+  try {
+    tasks = loadTasks();
+  } catch {
+    /* backlog validate owns parse errors; skip the evidence pass if it can't load */
+  }
+  const referencedAdrs = new Set();
+  for (const t of tasks) {
+    for (const a of t.implements_adr ?? []) {
+      referencedAdrs.add(a);
+      if (!adrNums.has(a))
+        errors.push(`${t.id}: implements_adr ${a} has no file in docs/decisions/`);
+    }
+    // Any ADR a task names in refs/notes also counts as "referenced" for orphan detection.
+    const blob = [...(t.refs ?? []), t.notes ?? ''].join(' ');
+    for (const m of blob.matchAll(/(?:ADR[-\s]?|decisions\/)(\d{4})/g)) referencedAdrs.add(m[1]);
+    // stale-done: a completed task must not claim files that are gone.
+    if (t.status === 'done' || t.status === 'in_progress')
+      for (const glob of t.touches ?? []) {
+        const base = glob.split('*')[0].replace(/\/+$/, '');
+        if (base && !existsSync(join(root, base)))
+          errors.push(`${t.id}: ${t.status} but touches "${glob}" matches nothing (stale-done)`);
+      }
+  }
+  const orphans = [...adrNums].filter((a) => !referencedAdrs.has(a)).sort();
+  if (orphans.length)
+    warnings.push(
+      `docs/decisions: ${orphans.length} ADR(s) have no implementing/referencing task (orphan): ` +
+        `${orphans.join(', ')} — add an implements_adr edge in tasks.json or accept as foundational`,
+    );
 }
 
 for (const w of warnings) console.warn('warn: ' + w);

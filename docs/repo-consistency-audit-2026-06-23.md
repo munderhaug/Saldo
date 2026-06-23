@@ -4,6 +4,18 @@
 
 Measured against the standard set by `AGENTS.md`, `CLAUDE.md`, and `.claude/rules/engineering-discipline.md` — in particular **"state a fact once; link, don't restate"**, the canonical-source map, neutral documentation voice, and source-grounded (cited, dated) regulatory facts.
 
+> **Resolution (2026-06-23):** most findings below are now fixed on this branch (commits `baa22b3` →
+> `6c577f6`): the correctness issues (bokføringsplikt vs the 50k MVA threshold, the LLM default, the
+> deploy docs, the CI-step order, the auth ADR ref); the neutral-voice sweep (roadmap "You chose…", the
+> ADR "we/our", and the rest) **plus a `repo-lint` voice gate** so it can't recur; the "state a fact
+> once" condensation (build-spec §4.2/§6/§14/§15/§17/§18, domain-model, decisions/README, tech-stack,
+> house-standards); the STATUS staleness; the dead integration refs; the emoji; the missing status
+> banners; and ADR supersession reciprocity. **Still open** (owner-gated or larger, see §5): the two
+> `.claude/settings.json` permission tweaks (blocked by the self-modification guard) and `.env.example`
+> (agent-denied); the full `tools/status-block.mjs` doc-freshness generator (STATUS's assigned task —
+> interim, its volatile facts were removed by hand); and capturing the not-yet-committed regulatory
+> primaries (the MVA threshold, the Criipto/LLM endpoints), which need network egress.
+
 ---
 
 ## 1. Method & branch scope

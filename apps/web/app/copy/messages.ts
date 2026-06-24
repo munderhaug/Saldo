@@ -45,6 +45,32 @@ export const nb = {
     'Du har holdt av mer enn du har tatt inn så langt. Det ordner seg når mer inntekt kommer inn.',
   'home.viewOrg': 'Se foretaket',
   'home.switchOrg': 'Bytt foretak',
+  // Reach the first posting surface from home — from the reveal and from the calm empty state.
+  'home.recordCta': 'Registrer inntekt eller utgift',
+  'home.empty.cta': 'Registrer din første inntekt',
+  'home.navLabel': 'Snarveier',
+
+  // ── Manual voucher entry — record income/expense (the first posting surface) ──────────────────
+  // A §5.5 money-touching act: plain, sober copy throughout — no jokes, no flourish.
+  'vouchers.new.title': 'Registrer en føring',
+  'vouchers.new.intro': 'Før opp en inntekt eller en utgift. Den blir bokført med en gang.',
+  'vouchers.new.kindLegend': 'Hva gjelder det?',
+  'vouchers.new.kind.income.label': 'Inntekt',
+  'vouchers.new.kind.income.desc': 'Penger du har tatt inn — et salg eller et oppdrag.',
+  'vouchers.new.kind.expense.label': 'Utgift',
+  'vouchers.new.kind.expense.desc': 'Penger du har brukt — et kjøp eller en kostnad.',
+  'vouchers.new.amountLabel': 'Beløp',
+  'vouchers.new.amountHintRegistered': 'I kroner, uten merverdiavgift. Jeg legger til MVA for deg.',
+  'vouchers.new.amountHintPlain': 'I kroner.',
+  // Append-only ledger, stated calmly: a posting is corrected with a ny føring, never edited away.
+  'vouchers.new.confirmNote':
+    'Når du bokfører, blir føringen stående. Trenger du å rette den, gjør du det med en ny føring.',
+  'vouchers.new.submit': 'Bokfør',
+  'vouchers.new.cancel': 'Avbryt',
+  'vouchers.new.errorInvalidInput': 'Sjekk beløpet og hva føringen gjelder.',
+  'vouchers.new.errorVatNotRegistered':
+    'Denne MVA-behandlingen krever at foretaket er registrert i Merverdiavgiftsregisteret.',
+  'vouchers.new.errorGeneric': 'Jeg fikk ikke bokført føringen. Prøv igjen om et øyeblikk.',
 
   // ── Auth — log in ────────────────────────────────────────────────────────────
   'auth.login.title': 'Logg inn',
@@ -189,6 +215,28 @@ export const en = {
     "You've set aside more than you've taken in so far. It evens out as more income comes in.",
   'home.viewOrg': 'View business',
   'home.switchOrg': 'Switch business',
+  'home.recordCta': 'Record income or an expense',
+  'home.empty.cta': 'Record your first income',
+  'home.navLabel': 'Shortcuts',
+
+  'vouchers.new.title': 'Record an entry',
+  'vouchers.new.intro': "Record income or an expense. It's booked right away.",
+  'vouchers.new.kindLegend': 'What is it?',
+  'vouchers.new.kind.income.label': 'Income',
+  'vouchers.new.kind.income.desc': "Money you've taken in — a sale or a job.",
+  'vouchers.new.kind.expense.label': 'Expense',
+  'vouchers.new.kind.expense.desc': "Money you've spent — a purchase or a cost.",
+  'vouchers.new.amountLabel': 'Amount',
+  'vouchers.new.amountHintRegistered': "In kroner, excluding VAT. I'll add VAT for you.",
+  'vouchers.new.amountHintPlain': 'In kroner.',
+  'vouchers.new.confirmNote':
+    'Once you book it, the entry stands. If you need to correct it, you do so with a new entry.',
+  'vouchers.new.submit': 'Book it',
+  'vouchers.new.cancel': 'Cancel',
+  'vouchers.new.errorInvalidInput': 'Check the amount and what the entry is for.',
+  'vouchers.new.errorVatNotRegistered':
+    'This VAT treatment requires the business to be in the VAT Register.',
+  'vouchers.new.errorGeneric': "I couldn't book the entry. Try again in a moment.",
 
   'auth.login.title': 'Log in',
   'auth.login.submit': 'Log in',

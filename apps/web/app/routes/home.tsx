@@ -125,14 +125,26 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </Card>
       ) : (
         <Card>
-          <CardContent className="grid gap-2 pt-6">
+          <CardContent className="grid gap-3 pt-6">
             <h2 className="font-text text-lg">{t('home.empty.title')}</h2>
             <p className="text-muted-foreground text-sm">{t('home.empty.body')}</p>
+            <Link
+              to={`/orgs/${orgId}/vouchers/new`}
+              className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
+            >
+              {t('home.empty.cta')}
+            </Link>
           </CardContent>
         </Card>
       )}
 
-      <nav className="flex flex-wrap gap-4">
+      <nav aria-label={t('home.navLabel')} className="flex flex-wrap gap-4">
+        <Link
+          to={`/orgs/${orgId}/vouchers/new`}
+          className="text-primary font-text inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
+        >
+          {t('home.recordCta')}
+        </Link>
         <Link
           to={`/orgs/${orgId}`}
           className="text-primary font-text inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"

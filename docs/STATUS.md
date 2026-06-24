@@ -3,7 +3,7 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-24 — session: `feat-honest-number-surface` (ledger-aggregation query + the "what's actually yours" reveal replacing the home scaffold, ADR 0033)
+**Last updated:** 2026-06-24 — session: `feat-manual-voucher-entry` (the first posting surface — record income/expense → a balanced, posted voucher; the reveal now shows real numbers, ADR 0034)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
@@ -18,44 +18,59 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 33 ADRs (0001–0033) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 51 tasks (22 done, 29 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 34 ADRs (0001–0034) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 51 tasks (23 done, 28 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-receipt-extraction` [high/L] — Receipt/invoice -> structured proposal via vision-LLM (propose-only)
 <!-- /AUTOGEN:repo-status -->
 
-## This session — `feat-honest-number-surface`: the reveal (ADR 0033)
+## This session — `feat-manual-voucher-entry`: the first posting surface (ADR 0034)
+Filled the empty ledger: the user records an **income** or an **expense** with a net amount, and the
+server derives → validates → posts a balanced voucher — so `home.tsx`'s reveal stops showing the zero
+state and shows real income / VAT-held / estimated-tax / spendable. **App-layer + one pure domain
+addition; NO schema change** (every table/trigger already existed). Full gate green (typecheck · lint ·
+format:check · `test` **176 domain / 33 web unit + posting-path Testcontainers suite** · lint:repo ·
+status:check · backlog validate). vat-reviewed + a11y-reviewed. Landing as a reviewed PR.
+- **Event-framed, not double-entry.** The form asks *income or expense?* + *how much?* — never
+  konto/debit/credit, no SAF-T VAT-code jargon (experience §4.2 / voice). `orgs/:orgId/vouchers/new`
+  mirrors `orgs.new.tsx`: server-authoritative real `<Form>` (works without JS), RHF + Zod-resolver
+  mirror over the `app/contracts/voucher.ts` schema the action re-validates.
+- **The posting path.** `db/posting.server.ts#recordManualVoucher` (mirrors `organizations.server.ts`):
+  read `mva_status` → `ensureFiscalPeriod(year)` → derive via `deriveSales`/`derivePurchase` at the
+  org's **status-driven standard rate** (25% from `rateForCategory('regular')`, never a literal) →
+  `runRules(vatLineRule)` gate (ADR 0002) → insert voucher + postings POSTED inside `withUserOrg`, so the
+  **deferred** balance + posted-completeness triggers verify at COMMIT.
+- **Source-grounded accounts/codes.** Designated plumbing — receivable 1500 / revenue 3000 / output-VAT
+  2700 (sale); cost 7798 / input-VAT 2710 / payable 2400 (purchase); codes 3 (output) / 1 (input) —
+  **verified to exist in the committed SAF-T lists** by `posting-accounts.test.ts` (not memory). NO
+  `invoice_counter` allocated: a manual voucher is not an issued invoice (ADR 0007).
+- **Pure domain addition.** `parseKroner` in `@saldo/domain` (money/ore.ts) — the integer-safe inverse of
+  `formatKr` (assembled by string, never float; `parseKroner(formatKr(x)) === x`). Exhaustive +
+  fast-check tests.
+- **Integrity test.** `posting-path.integration.test.ts` (Testcontainers, non-owner `saldo_app` + RLS):
+  registered sale/purchase post balanced + posted with the correct VAT split and aggregate; an
+  unregistered org books gross; a **locked period** blocks the post (and leaves nothing behind); the
+  balance + posted-completeness triggers still reject the bad cases; one tenant's postings are invisible
+  to another.
+- **Scope cuts (sequenced, in ADR 0034):** standard rate only (reduced/zero/reverse-charge → the VAT
+  tasks), one default revenue/cost account (category pick → `feat-account-chart-curation`), single net
+  line, AR/AP counter side, current-year period. Each keeps the slice minimal while exercising the full
+  derive→validate→post path.
+- **Next:** `feat-receipt-extraction` (now legitimately unblocked — vision-LLM proposals have an org AND
+  a posting surface to land into); a persisted active org is still `feat-org-active-context` (home reveals
+  the alphabetically-first org).
+
+## Previous session — `feat-honest-number-surface`: the reveal (ADR 0033)
 Delivered org-onboarding's payoff — the honest-number reveal ("what's actually yours",
 experience-principles §6). **App + domain + docs; no schema change** (read-only over the existing
-ledger). Full gate green (typecheck · lint · format · `test` **171 domain / 23 web + 43 Testcontainers
-integrity incl. the new aggregation suite** · lint:repo · status:check · backlog validate). a11y-reviewed.
-Landing as a reviewed PR.
-- **Sequencing decision surfaced + recorded (ADR 0033): option (a).** The ledger is empty (no posting
-  surface exists yet), so the reveal ships against a real-but-seedable ledger and a minimal
-  manual-voucher slice is sequenced next (`feat-manual-voucher-entry`, added). Pulling a full posting
-  surface into this `M` task (option b) was rejected as scope-blowing.
-- **Aggregation (the keystone).** `db/ledger.server.ts#aggregateLedger` sums one fiscal year's POSTED
-  vouchers by **kontoklasse (`account.type`) + `vat_code.direction`** — net revenue (klasse 3) / net
-  expense (4–7), and the output/input VAT legs restricted to the liability accounts (klasse 2). The
-  restriction matters: a sales line books the output SAF-T code on BOTH the revenue and the VAT posting,
-  so keying VAT off direction alone double-counts revenue. Read through `withUserOrg` + RLS (no
-  cross-tenant assumption); no hardcoded account numbers (the invariant).
-- **Pure bridge.** `packages/domain/src/honest-number/from-ledger.ts#honestNumberFromLedger` composes the
-  totals: `income = revenueNet + outputVatCollected` (the gross "taken in"), `profit = revenueNet −
-  expenseNet` → `estimateEnkIncomeTax(profit, year).total` → `honestNumber`. **The user's own arithmetic,
-  NOT AI / NOT profiling** (ADR 0022 / Annex III §5(b)). 10 exhaustive + fast-check tests.
-- **Reveal UI.** `home.tsx` rewritten: the spendable headline in Fraunces (the earned peak), a calm
-  "you're caught up" empty state (the current reality until vouchers exist), permission/relief framing,
-  keyed nb+en microcopy. a11y fixes from review: `<h2>` section heading, screen-reader currency word
-  ("kroner", not "k r"), `role="note"` on the heads-up. Reveals the alphabetically-first org with a
-  "switch business" link (persisted active org stays `feat-org-active-context`).
-- **Integrity test.** `honest-number-aggregation.integration.test.ts` (Testcontainers): partition
-  correctness, drafts excluded, year-scoped, **RLS-isolated between tenants** — run via the non-owner
-  `saldo_app` connection.
-- **Next:** `feat-manual-voucher-entry` (the posting surface that fills the ledger so the reveal shows
-  real numbers), then `feat-receipt-extraction` (vision-LLM proposals now have both an org and a posting
-  surface to land into).
+ledger). `db/ledger.server.ts#aggregateLedger` sums one fiscal year's POSTED vouchers by **kontoklasse
+(`account.type`) + `vat_code.direction`** (output/input VAT restricted to the klasse-2 liability legs, so
+the output code on the revenue line doesn't double-count); the pure `honestNumberFromLedger` composes
+`income = revenueNet + outputVatCollected`, `profit = revenueNet − expenseNet → estimateEnkIncomeTax`.
+`home.tsx` is the reveal (Fraunces spendable peak + a calm "you're caught up" empty state). **NOT AI /
+NOT profiling** (ADR 0022). Testcontainers aggregation suite: partition correctness, drafts excluded,
+year-scoped, RLS-isolated.
 
-## Previous session — `feat-org-onboarding`: the product gateway (ADR 0032)
+## Earlier session — `feat-org-onboarding`: the product gateway (ADR 0032)
 Turned the foundation into a usable product: a logged-in user creates an org, becomes its `owner`, and
 the org is provisioned with a complete, standards-grounded chart + VAT codes — making `withOrgTx` real
 per user. **App-layer + domain + docs; no schema change** (every table already existed). Full gate green

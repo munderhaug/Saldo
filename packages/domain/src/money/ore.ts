@@ -83,3 +83,21 @@ export function formatKr(amount: Øre): string {
     maximumFractionDigits: 2,
   });
 }
+
+/**
+ * Input boundary (the inverse of {@link formatKr}): parse a user-entered, non-negative kroner amount
+ * into integer øre, or `null` when it isn't a well-formed amount. Accepts a comma or dot decimal
+ * separator and ignores whitespace grouping (incl. the non-breaking space `formatKr` emits), so
+ * `parseKroner(formatKr(x)) === x`. Integer-safe: the øre are assembled by string, never by float
+ * multiplication — the domain core stays float-free. A thousands separator other than whitespace
+ * (e.g. a grouping dot) is rejected rather than guessed.
+ */
+export function parseKroner(input: string): Øre | null {
+  const cleaned = input.replace(/\s/g, '').replace(',', '.');
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(cleaned);
+  if (!match) return null;
+  const kroner = match[1]!;
+  const fraction = (match[2] ?? '').padEnd(2, '0'); // "5" → "50", "" → "00"
+  const value = Number(`${kroner}${fraction}`);
+  return Number.isSafeInteger(value) ? øre(value) : null;
+}

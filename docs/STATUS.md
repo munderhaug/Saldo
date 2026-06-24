@@ -3,7 +3,7 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-24 — session: `feat-manual-voucher-entry` (the first posting surface — record income/expense → a balanced, posted voucher; the reveal now shows real numbers, ADR 0034)
+**Last updated:** 2026-06-24 — session: `feat-receipt-extraction` (the first AI-system surface — image → vision-LLM proposal → Zod → rules → human-confirmed voucher; propose-only, provenance in the contract, ADR 0035)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
@@ -18,46 +18,46 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 34 ADRs (0001–0034) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 51 tasks (23 done, 28 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `feat-receipt-extraction` [high/L] — Receipt/invoice -> structured proposal via vision-LLM (propose-only)
+- **Decisions:** 35 ADRs (0001–0035) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 51 tasks (24 done, 27 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `aia-transparency-ui` [high/S] — EU AI Act: disclose AI interaction in the UI (Art 50(1))
 <!-- /AUTOGEN:repo-status -->
 
-## This session — `feat-manual-voucher-entry`: the first posting surface (ADR 0034)
-Filled the empty ledger: the user records an **income** or an **expense** with a net amount, and the
-server derives → validates → posts a balanced voucher — so `home.tsx`'s reveal stops showing the zero
-state and shows real income / VAT-held / estimated-tax / spendable. **App-layer + one pure domain
-addition; NO schema change** (every table/trigger already existed). Full gate green (typecheck · lint ·
-format:check · `test` **176 domain / 33 web unit + posting-path Testcontainers suite** · lint:repo ·
-status:check · backlog validate). vat-reviewed + a11y-reviewed. Landing as a reviewed PR.
-- **Event-framed, not double-entry.** The form asks *income or expense?* + *how much?* — never
-  konto/debit/credit, no SAF-T VAT-code jargon (experience §4.2 / voice). `orgs/:orgId/vouchers/new`
-  mirrors `orgs.new.tsx`: server-authoritative real `<Form>` (works without JS), RHF + Zod-resolver
-  mirror over the `app/contracts/voucher.ts` schema the action re-validates.
-- **The posting path.** `db/posting.server.ts#recordManualVoucher` (mirrors `organizations.server.ts`):
-  read `mva_status` → `ensureFiscalPeriod(year)` → derive via `deriveSales`/`derivePurchase` at the
-  org's **status-driven standard rate** (25% from `rateForCategory('regular')`, never a literal) →
-  `runRules(vatLineRule)` gate (ADR 0002) → insert voucher + postings POSTED inside `withUserOrg`, so the
-  **deferred** balance + posted-completeness triggers verify at COMMIT.
-- **Source-grounded accounts/codes.** Designated plumbing — receivable 1500 / revenue 3000 / output-VAT
-  2700 (sale); cost 7798 / input-VAT 2710 / payable 2400 (purchase); codes 3 (output) / 1 (input) —
-  **verified to exist in the committed SAF-T lists** by `posting-accounts.test.ts` (not memory). NO
-  `invoice_counter` allocated: a manual voucher is not an issued invoice (ADR 0007).
-- **Pure domain addition.** `parseKroner` in `@saldo/domain` (money/ore.ts) — the integer-safe inverse of
-  `formatKr` (assembled by string, never float; `parseKroner(formatKr(x)) === x`). Exhaustive +
-  fast-check tests.
-- **Integrity test.** `posting-path.integration.test.ts` (Testcontainers, non-owner `saldo_app` + RLS):
-  registered sale/purchase post balanced + posted with the correct VAT split and aggregate; an
-  unregistered org books gross; a **locked period** blocks the post (and leaves nothing behind); the
-  balance + posted-completeness triggers still reject the bad cases; one tenant's postings are invisible
-  to another.
-- **Scope cuts (sequenced, in ADR 0034):** standard rate only (reduced/zero/reverse-charge → the VAT
-  tasks), one default revenue/cost account (category pick → `feat-account-chart-curation`), single net
-  line, AR/AP counter side, current-year period. Each keeps the slice minimal while exercising the full
-  derive→validate→post path.
-- **Next:** `feat-receipt-extraction` (now legitimately unblocked — vision-LLM proposals have an org AND
-  a posting surface to land into); a persisted active org is still `feat-org-active-context` (home reveals
-  the alphabetically-first org).
+## This session — `feat-receipt-extraction`: the first AI-system surface (ADR 0035)
+Shipped Saldo's **first AI system** (EU AI Act Art. 3(1)): a user uploads a receipt image; a vision-LLM
+proposes a structured extraction that flows **image → `extractReceipt` (OpenAI-compatible) → Zod at the
+boundary → `mapExtractionToProposal` (@saldo/domain) → a human reviews/edits/confirms → `recordManualVoucher`**
+(the EXISTING posting path, ADR 0034). AI proposes, the rules engine validates, a human confirms (ADR 0002)
+— the model never writes the ledger. **App + integration + one pure domain module; NO schema change.** Full
+gate green (typecheck · lint · format:check · `test` **195 domain / 105 web (16 files incl. the new
+propose→validate→confirm Testcontainers path)** · lint:repo · status:check · backlog validate). Reviewed by
+vat- (SOUND), privacy-, integration-, and a11y-reviewers; their substantive findings were fixed (below).
+Landing as a reviewed PR.
+- **Propose-only, local-first (ADR 0009).** `integrations/llm/client.server.ts` speaks the
+  OpenAI-compatible `/v1/chat/completions` vision wire format; backend is config not code
+  (`LLM_BASE_URL/_API_KEY/_MODEL`), default a **local** Ollama/vLLM → zero external calls out of the box.
+  Unset/blocked → the surface is cleanly unavailable (UI points to the manual path).
+- **Provenance is in the contract (Art. 50(2)).** `contracts/receipt-extraction.ts`: `aiProvenance` with
+  `aiAssisted` as a **literal `true`** + model/version/confidence is a REQUIRED field — an undisclosed
+  proposal can't type-check or parse (a unit test pins this code-level gate). The UI **discloses
+  AI-assisted at first interaction** (Art. 50(1)) on the review step.
+- **Pure domain mapping.** `packages/domain/src/extraction/mapExtractionToProposal` — direction→event
+  (sale→income/purchase→expense), NOK-only + positive-net gate, and a **status-independent** 25 %
+  sanity signal (the org's VAT fork stays solely in `deriveStandard*`). Exhaustive + fast-check tested.
+- **Residency is a mechanical fail-closed gate** (privacy review): an on-prem host (loopback/RFC1918/
+  `.internal`/`.local`) is allowed; any other host needs `LLM_EU_RESIDENT=true` or the feature stays
+  off — receipt image bytes never silently leave the EU. Image is **transient, never persisted, never
+  logged**; `supplier` tagged `// personal` at the boundary.
+- **a11y fixes applied:** the review step moves focus to the AI-disclosure `<h2>` on the server
+  round-trip (2.4.3/4.1.3), and the kind radio group now links a `role="alert"` error (mirrors the
+  manual voucher form).
+- **Capture (Art. 53):** `db/reference/llm/2026-06-24-…md` — the OpenAI-compatible vision wire contract
+  + the Qwen2.5-VL model card (Apache-2.0), dated, cited.
+- **Sequenced (depends on this task):** durable provenance **logging** = `aia-provenance-logging`
+  (paired with the observability baseline); systematic disclosure = `aia-transparency-ui` (now the
+  highest-value ready task); receipt **image storage** (EU R2) is later work.
+- **Next:** `aia-transparency-ui` [high/S] is the highest-value ready task; or sales-invoice issuance /
+  `feat-org-active-context` (home still reveals the alphabetically-first org).
 
 ## Previous session — `feat-honest-number-surface`: the reveal (ADR 0033)
 Delivered org-onboarding's payoff — the honest-number reveal ("what's actually yours",

@@ -477,13 +477,25 @@
     {
       "id": "feat-receipt-extraction",
       "title": "Receipt/invoice -> structured proposal via vision-LLM (propose-only)",
-      "status": "todo",
+      "implements_adr": ["0035"],
+      "touches": [
+        "apps/web/app/integrations/llm",
+        "apps/web/app/contracts/receipt-extraction.ts",
+        "apps/web/app/routes/orgs.$orgId.receipts.new.tsx",
+        "packages/domain/src/extraction"
+      ],
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P2-feature",
       "depends_on": [],
-      "notes": "The first AI-system surface (spec 8.5 / Phase 4; ADR 0009 local-first). image -> extraction -> Zod -> rules engine -> proposed voucher -> human confirms. AI never writes the ledger (ADR 0002). Carries the EU AI Act obligations (aia-*).",
-      "refs": ["docs/integrations/llm-extraction.md", "docs/decisions/0009-local-first-llm.md"]
+      "notes": "DONE (ADR 0035). The first AI-system surface. image -> extractReceipt (OpenAI-compatible client, ADR 0009 local-first; LLM_BASE_URL/_API_KEY/_MODEL, default LOCAL Ollama/vLLM so zero external calls) -> Zod at the boundary (llmExtractionFields, amounts parsed to ore via parseKroner) -> mapExtractionToProposal (@saldo/domain, pure: direction->income/expense, NOK-only gate, status-independent 25% sanity signal) -> the human reviews/edits/confirms -> recordManualVoucher (the EXISTING posting path, ADR 0034). AI never writes the ledger (ADR 0002). Provenance (aiAssisted literal true + model/version/confidence) is a REQUIRED field of the Zod contract = the code-level Art.50(2) gate; the UI discloses AI-assisted at first interaction (Art.50(1)). Image is personal data: transient, EU-resident, never persisted, never logged (no schema change). Extraction only, never scores/profiles a person (Annex III 5b). Upstream model card + wire contract captured under db/reference/llm/ (Art.53). Tests: domain map exhaustive+property; contract incl. provenance gate; LLM client mocked/deterministic; Testcontainers propose->validate->confirm path + validate-gate rejection. Sequenced: durable provenance LOGGING = aia-provenance-logging; systematic disclosure = aia-transparency-ui; image storage later.",
+      "refs": [
+        "docs/decisions/0035-receipt-extraction-ai-surface.md",
+        "docs/integrations/llm-extraction.md",
+        "docs/decisions/0009-local-first-llm.md",
+        ".claude/rules/ai-act.md"
+      ]
     },
     {
       "id": "aia-transparency-ui",
@@ -493,7 +505,7 @@
       "effort": "S",
       "phase": "compliance",
       "depends_on": ["feat-receipt-extraction"],
-      "notes": "Tell the user, at first interaction, that a value/proposal is AI-generated (unless obvious). Applies by 2 Aug 2026. See eu-ai-act.md s4.",
+      "notes": "First-interaction AI disclosure landed for the receipt surface with feat-receipt-extraction (ADR 0035). This task generalises it: a shared disclosure treatment across every AI surface as more are added, by 2 Aug 2026. See eu-ai-act.md s4.",
       "refs": ["docs/regulatory/eu-ai-act.md", "docs/decisions/0022-eu-ai-act-posture.md"]
     },
     {
@@ -504,7 +516,7 @@
       "effort": "M",
       "phase": "compliance",
       "depends_on": ["feat-receipt-extraction", "pr6-observability"],
-      "notes": "Every AI-proposed value carries machine-readable provenance (model+version+confidence) in its Zod contract, is labelled AI-assisted, and is logged (pino). This is where the code-level provenance gate lands (a required field + a lint/test check).",
+      "notes": "The code-level provenance gate (aiAssisted literal true + model/version/confidence as a REQUIRED Zod field, with a test) landed in the contract with feat-receipt-extraction (ADR 0035). This task adds the DURABLE half: persist+log that provenance (pino + a queryable record) when a confirmed AI proposal posts, paired with the observability baseline.",
       "refs": ["docs/regulatory/eu-ai-act.md", ".claude/rules/ai-act.md"]
     },
     {

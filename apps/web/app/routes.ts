@@ -8,6 +8,7 @@ export default [
   route('orgs/new', 'routes/orgs.new.tsx'),
   route('orgs/:orgId', 'routes/orgs.$orgId.tsx'),
   route('orgs/:orgId/vouchers/new', 'routes/orgs.$orgId.vouchers.new.tsx'),
+  route('orgs/:orgId/receipts/new', 'routes/orgs.$orgId.receipts.new.tsx'),
   route('auth/login', 'routes/auth.login.tsx'),
   route('auth/callback', 'routes/auth.callback.tsx'),
   route('auth/logout', 'routes/auth.logout.tsx'),

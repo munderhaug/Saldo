@@ -24,6 +24,10 @@ const schema = z.object({
   OIDC_CLIENT_ID: z.string().min(1).optional(),
   OIDC_CLIENT_SECRET: z.string().min(1).optional(),
   // LOG_LEVEL is read directly by the logger (foundational infra; see observability/logger.server.ts).
+  // LLM_BASE_URL / LLM_API_KEY / LLM_MODEL / LLM_EU_RESIDENT are read directly by the receipt-extraction
+  // client (optional integration; see integrations/llm/config.server.ts). Unset → the AI surface is
+  // disabled, with no external default (ADR 0009 — local-first; zero external LLM calls out of the box).
+  // A non-on-prem LLM_BASE_URL is enabled only with LLM_EU_RESIDENT=true (the residency gate).
 });
 
 export const env = schema.parse(process.env);

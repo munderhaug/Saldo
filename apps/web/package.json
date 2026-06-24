@@ -17,12 +17,14 @@
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.2.9",
     "@fontsource-variable/ibm-plex-sans": "^5.2.8",
+    "@hookform/resolvers": "^5.4.0",
     "@node-rs/argon2": "2.0.2",
     "@oslojs/crypto": "1.0.1",
     "@oslojs/encoding": "1.1.0",
     "@react-router/node": "^7.0.0",
     "@react-router/serve": "^7.0.0",
     "@saldo/domain": "workspace:*",
+    "@tanstack/react-table": "^8.21.3",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "isbot": "^5.1.17",
@@ -31,6 +33,7 @@
     "postgres": "^3.4.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-hook-form": "^7.80.0",
     "react-router": "^7.0.0",
     "tailwind-merge": "^2.5.4",
     "zod": "^3.23.8"

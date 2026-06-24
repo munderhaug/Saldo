@@ -1,6 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { indexAccounts, parseStandardAccounts, type SaftStandardAccount } from './accounts.js';
+import {
+  classifyAccountType,
+  indexAccounts,
+  parseStandardAccounts,
+  type SaftStandardAccount,
+} from './accounts.js';
+import type { AccountNo } from '../posting/types.js';
 
 const read = (p: string): string =>
   readFileSync(new URL(`../../../../db/reference/saf-t/accounts/${p}`, import.meta.url), 'utf8');
@@ -31,6 +37,36 @@ describe('parseStandardAccounts — official lists', () => {
       expect(a.id.length).toBeGreaterThan(0);
       expect(a.descriptionNo.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('classifyAccountType — kontoklasse from the leading digit', () => {
+  it('classifies the anchor accounts of each class', () => {
+    const cases: ReadonlyArray<[string, ReturnType<typeof classifyAccountType>]> = [
+      ['1000', 'asset'], // Utvikling, ervervet — eiendeler
+      ['2700', 'equity_liability'], // Utgående mva — skyldige offentlige avgifter
+      ['3000', 'revenue'], // Salgsinntekt
+      ['4000', 'expense'], // Varekostnad
+      ['5000', 'expense'], // Lønn
+      ['6000', 'expense'], // Annen driftskostnad
+      ['8160', 'financial'], // Finansposter
+    ];
+    for (const [id, expected] of cases) {
+      expect(classifyAccountType(id as AccountNo)).toBe(expected);
+    }
+  });
+
+  it('classifies every committed standard account into a known class (never "other")', () => {
+    for (const a of fourChar) {
+      const type = classifyAccountType(a.id);
+      expect(type).not.toBe('other');
+      // The leading digit and the class must agree.
+      expect(type).toBe(classifyAccountType(a.id.charAt(0) as AccountNo));
+    }
+  });
+
+  it('falls open to "other" for an unexpected leading digit', () => {
+    expect(classifyAccountType('9999' as AccountNo)).toBe('other');
   });
 });
 

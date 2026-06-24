@@ -3,7 +3,7 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: `doc-freshness-knowledge-graph` (generated repo-status block + evidence-based graph drift checks, ADR 0031)
+**Last updated:** 2026-06-23 — session: `feat-org-onboarding` (org + membership + per-org SAF-T provisioning; first RHF/TanStack forms+tables surface, ADR 0032)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
@@ -18,12 +18,44 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 31 ADRs (0001–0031) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 48 tasks (20 done, 28 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 32 ADRs (0001–0032) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 50 tasks (21 done, 29 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-receipt-extraction` [high/L] — Receipt/invoice -> structured proposal via vision-LLM (propose-only)
 <!-- /AUTOGEN:repo-status -->
 
-## This session — doc-freshness mechanism + knowledge graph (ADR 0031, A→B)
+## This session — `feat-org-onboarding`: the product gateway (ADR 0032)
+Turned the foundation into a usable product: a logged-in user creates an org, becomes its `owner`, and
+the org is provisioned with a complete, standards-grounded chart + VAT codes — making `withOrgTx` real
+per user. **App-layer + domain + docs; no schema change** (every table already existed). Full gate green
+(typecheck · lint · format · `test` **161 domain / 61 web** incl. the new Testcontainers provisioning
+suite · lint:repo · backlog validate · status:check). Landing as a reviewed PR.
+- **Provisioning (the keystone, ADR 0032).** `createOrganization` runs ONE `withOrgTx(newOrgId)`
+  bootstrap: insert the `organization` row, then the **full committed SAF-T 4-char kontoplan (745
+  accounts)** + **all 30 standard tax codes**, then the creator's `membership` (`owner`) — atomic. Data
+  is mechanical + source-grounded (numbers/names/rates from the committed CSVs via the pure
+  `@saldo/domain` parsers + `rateForCategory`; **no curation**). Account `type` = kontoklasse via a new,
+  exhaustively-tested `classifyAccountType` in the domain. A duplicate org-nr is a typed outcome that
+  rolls back wholesale (no partial chart). CSVs are inlined with Vite `?raw` (no runtime fs).
+- **First real forms/tables surface.** `pnpm add react-hook-form @hookform/resolvers @tanstack/react-table`
+  (chosen in `frontend.md`, installed here in their first consumer). `/orgs/new` = RHF + zodResolver over
+  the `app/contracts/organization.ts` schema, but the real `<Form>` + server action is authoritative
+  (works without JS). `/orgs/:orgId` = a TanStack Table of the provisioned VAT codes. `/orgs` = the
+  multi-membership selection list.
+- **Consumes `/oppslag`.** The brreg detail card now has a "Bruk dette foretaket" CTA → `/orgs/new?orgnr=…`;
+  the create loader prefills name + a **proposed** MVA status from the public VAT-register flag (a
+  deterministic register read, **not** AI). MVA status forks all posting, so the human confirms it
+  explicitly (sober §5.5 framing, each option explained in plain language; keyed nb+en microcopy).
+- **Tenancy.** Multi-membership listing reads each org through its own `withOrgTx` (RLS-correct on every
+  topology — no SECURITY-DEFINER/BYPASSRLS assumption, which stays unverified on Neon). The integrity
+  test proves: provisioned counts scoped to the org, the owner membership, **RLS isolation** between two
+  tenants, and **atomic rollback** on a duplicate org-nr — run via the non-owner `saldo_app` connection.
+- **Follow-ups added:** `feat-org-active-context` (session-scoped active org) and
+  `feat-account-chart-curation` (filter pickers to a used/favourites subset over the full chart).
+- **Next:** `feat-honest-number-surface` (now has org + provisioned codes/accounts to aggregate against —
+  it needs a ledger-aggregation query + the reveal UI), or `feat-receipt-extraction` (the vision-LLM
+  track — `backlog next`; now has a posting surface forming + a real org to receive proposals).
+
+## Previous session — doc-freshness mechanism + knowledge graph (ADR 0031, A→B)
 Closed the recurring doc-staleness at its root, *mechanically*. STATUS/roadmap used to **restate** facts
 that already live in the ADR set + the task DAG (counts, what's-next), so they rotted. Now those volatile
 facts are **generated** from committed sources and **gated** — they cannot drift from the graph. Both
@@ -287,11 +319,13 @@ The honest picture of where the build is:
 - **Persistence + tenancy proven**: the SQL ledger (voucher/posting/account/period/invoice-counter),
   integrity triggers, gapless counter, FORCE-RLS — proven by Testcontainers.
 - **Auth/identity landed**: sessions + argon2id dev provider; OIDC wired but **not live-verified**.
-- **The application/UI surface is still thin** — only the read-only `/oppslag` (brreg lookup) is a real
-  feature route; `home.tsx` is a throwaway scaffold; there is **no org, invoice, posting, or reveal UI yet**.
-- **Keystone next:** `feat-org-onboarding` — create an org + membership + provision its per-org
-  `vat_code`/`account` lists from the committed SAF-T data; it unblocks every DB-dependent feature
-  (`feat-honest-number-surface`, invoicing, posting).
+- **The application/UI surface is growing** — `/oppslag` (brreg lookup) and now the **org-onboarding
+  gateway** (`/orgs`, `/orgs/new`, `/orgs/:orgId`: create + provision + multi-membership selection) are
+  real feature routes. `home.tsx` is still a throwaway scaffold; there is **no invoice, posting, or
+  reveal UI yet**.
+- **Keystone DONE:** `feat-org-onboarding` (ADR 0032) — create an org + owner membership + provision its
+  per-org `vat_code`/`account` lists from the committed SAF-T data, atomically. This unblocks the
+  DB-dependent features (`feat-honest-number-surface`, invoicing, posting).
 
 ## Phase 0 — Foundation (done; detail in `git log` + ADRs, not duplicated here)
 Per the handover rule, STATUS is forward-looking and git/ADRs are the record. The foundation + hardening
@@ -338,11 +372,12 @@ Don't re-derive "what's next" in prose here; this is just the orientation.
   ("Saldo" is a working name).
 
 ## Known issues / to verify
-- **`vat_code` / `account` are per-org and NOT yet seeded.** The tables exist (FORCE-RLS); a static
-  migration can't seed per-org rows, so provisioning from the committed SAF-T lists must run inside the
-  org-creation transaction — i.e. it belongs to `feat-org-onboarding`.
+- **`vat_code` / `account` per-org provisioning — DONE** (ADR 0032, `feat-org-onboarding`). A fresh org
+  is seeded with the full committed SAF-T kontoplan + 30 tax codes inside the org-creation `withOrgTx`.
+  Open refinement: a fresh org carries all 745 accounts — `feat-account-chart-curation` filters pickers.
 - **OIDC is not live-verified** — needs a Criipto tenant + egress. Org-**selection** UX (multi-membership)
-  is part of `feat-org-onboarding`.
+  landed in `feat-org-onboarding`; a persisted *active* org (so feature routes need no `orgId` in the
+  path) is `feat-org-active-context`.
 - **`.env.example` not updated for auth** — `env.ts` is the Zod contract (`DATABASE_URL`=saldo_app,
   `APP_URL`, optional `OIDC_*`, `NODE_ENV`); `.env.example` is agent-deny'd, so update it by hand. Deploy
   runs migrations as a separate OWNER `DATABASE_URL`; the app process uses the `saldo_app` one.

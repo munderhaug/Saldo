@@ -137,15 +137,23 @@
     {
       "id": "feat-manual-voucher-entry",
       "title": "Manual voucher entry: the first posting surface (produce real ledger data)",
-      "status": "todo",
+      "implements_adr": ["0034"],
+      "touches": [
+        "apps/web/app/routes/orgs.$orgId.vouchers.new.tsx",
+        "apps/web/app/db/posting.server.ts",
+        "apps/web/app/contracts/voucher.ts",
+        "packages/domain/src/money/ore.ts",
+        "apps/web/test/integrity/posting-path.integration.test.ts"
+      ],
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": ["feat-honest-number-surface"],
-      "notes": "The honest-number reveal (ADR 0033) and the org are live, but the ledger is empty — nothing posts vouchers yet. Build a minimal manual-voucher/posting surface: a route+action that creates a fiscal_period if needed, derives a balanced voucher via @saldo/domain (deriveSales/derivePurchase, the rules-engine gate), inserts voucher+postings inside withUserOrg, and sets posted_at. Server-authoritative; Zod at the boundary; gapless invoice_counter when issuing. Then the reveal shows real numbers. Testcontainers integrity test for the posting path. Sales-invoice issuance + receipt-extraction landing build on this.",
+      "notes": "DONE (ADR 0034). Event-framed surface (orgs/:orgId/vouchers/new): the user records income or an expense + a net amount; no konto/debit/credit, no VAT-code jargon (experience §4.2). recordManualVoucher (db/posting.server.ts) reads mva_status, ensures the year's fiscal_period, derives a balanced voucher via deriveSales/derivePurchase (status-driven standard-rate VAT — 25% from rateForCategory('regular'), never a literal), gates it through runRules(vatLineRule), and inserts voucher+postings POSTED inside withUserOrg so the deferred balance/posted-completeness triggers verify at COMMIT. Designated accounts (1500/3000/2700 sale, 7798/2710/2400 purchase) + codes (3/1) are verified against the committed SAF-T lists (posting-accounts.test.ts) — source-grounded, not memory. New pure parseKroner in @saldo/domain (integer-safe inverse of formatKr, exhaustive + fast-check). §5.5 sober confirm; server-authoritative <Form> + RHF/Zod mirror. NO invoice_counter (a manual voucher is not an issued invoice). No schema change. Testcontainers posting-path test (7): balanced/posted VAT split + aggregation, unregistered gross, period-lock block, balance + completeness triggers, RLS isolation via saldo_app. home.tsx empty-state + reveal now link here; the reveal shows real numbers. Unblocks feat-receipt-extraction + sales-invoice issuance.",
       "refs": [
+        "docs/decisions/0034-manual-voucher-entry.md",
         "packages/domain/src/posting/derive.ts",
-        "apps/web/app/db/ledger.server.ts",
         ".claude/rules/ledger-integrity.md"
       ]
     },

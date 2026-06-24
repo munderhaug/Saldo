@@ -9,6 +9,7 @@ import { z } from 'zod';
 // Per-feature contract modules.
 export * from './enhetsregisteret';
 export * from './organization';
+export * from './voucher';
 
 /** Norwegian org number: 9 digits (mod11 validated in @saldo/domain at construction). */
 export const orgNrInput = z

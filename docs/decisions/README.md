@@ -38,6 +38,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0031 | Doc-freshness: generated repo-status block + evidence-based graph drift checks | Accepted |
 | 0032 | Per-org provisioning: seed the SAF-T kontoplan + VAT codes in the org-creation transaction | Accepted |
 | 0033 | Honest-number ledger aggregation (kontoklasse + VAT direction) + reveal against an empty ledger | Accepted |
+| 0034 | Manual voucher entry: event-framed first posting surface, status-driven VAT, designated accounts | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

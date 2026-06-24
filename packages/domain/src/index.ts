@@ -14,6 +14,7 @@ export * from './tax/income-estimate.js';
 export * from './posting/types.js';
 export * from './posting/balance.js';
 export * from './posting/derive.js';
+export * from './posting/manual.js';
 export * from './rules/types.js';
 export * from './rules/vat-line.js';
 export * from './saft/tax-codes.js';

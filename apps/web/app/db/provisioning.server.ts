@@ -10,9 +10,11 @@
  */
 import {
   classifyAccountType,
+  indexTaxCodes,
   parseStandardAccounts,
   parseStandardTaxCodes,
   rateForCategory,
+  type SaftTaxCode,
 } from '@saldo/domain';
 import accountsCsv from '../../../../db/reference/saf-t/accounts/General_Ledger_Standard_Accounts_4_character.csv?raw';
 import taxCodesCsv from '../../../../db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv?raw';
@@ -40,12 +42,19 @@ export const STANDARD_ACCOUNTS: readonly AccountSeed[] = parseStandardAccounts(a
   }),
 );
 
+/** The committed standard SAF-T tax codes, parsed once (the typed records, not yet seed rows). */
+const STANDARD_TAX_CODES: readonly SaftTaxCode[] = parseStandardTaxCodes(taxCodesCsv);
+
+/**
+ * The committed SAF-T tax codes indexed by code — the single source the rules engine
+ * (`vatLineRule`) needs to validate a proposed voucher's coded lines against the org's MVA status.
+ */
+export const STANDARD_TAX_CODE_INDEX = indexTaxCodes(STANDARD_TAX_CODES);
+
 /** Every committed standard SAF-T tax code, with its numeric rate resolved from the cited rate table. */
-export const STANDARD_VAT_CODES: readonly VatCodeSeed[] = parseStandardTaxCodes(taxCodesCsv).map(
-  (c) => ({
-    code: c.code,
-    // numeric(5,4): 0.25 → "0.2500". toFixed is a presentation cast, not money arithmetic.
-    rate: (rateForCategory(c.rateCategory) as number).toFixed(4),
-    direction: c.direction,
-  }),
-);
+export const STANDARD_VAT_CODES: readonly VatCodeSeed[] = STANDARD_TAX_CODES.map((c) => ({
+  code: c.code,
+  // numeric(5,4): 0.25 → "0.2500". toFixed is a presentation cast, not money arithmetic.
+  rate: (rateForCategory(c.rateCategory) as number).toFixed(4),
+  direction: c.direction,
+}));

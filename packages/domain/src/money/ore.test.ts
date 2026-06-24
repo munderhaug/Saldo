@@ -3,8 +3,10 @@ import fc from 'fast-check';
 import {
   addØre,
   eqØre,
+  formatKr,
   mulRate,
   negØre,
+  parseKroner,
   rate,
   roundØre,
   subØre,
@@ -84,6 +86,42 @@ describe('mulRate', () => {
       fc.property(safeØre(), fc.double({ min: 0, max: 2, noNaN: true }), (a, r) => {
         expect(Number.isInteger(mulRate(a, rate(r)))).toBe(true);
       }),
+    );
+  });
+});
+
+describe('parseKroner', () => {
+  it('parses whole and fractional kroner into øre', () => {
+    expect(parseKroner('1500')).toBe(150000);
+    expect(parseKroner('1500,50')).toBe(150050);
+    expect(parseKroner('1500.50')).toBe(150050);
+    expect(parseKroner('0')).toBe(0);
+    expect(parseKroner('0,01')).toBe(1);
+  });
+
+  it('pads a single-digit fraction to two øre digits', () => {
+    expect(parseKroner('12,5')).toBe(1250);
+  });
+
+  it('ignores whitespace grouping (incl. the non-breaking space formatKr emits)', () => {
+    expect(parseKroner('1 234,50')).toBe(123450);
+    expect(parseKroner('1 234,50')).toBe(123450);
+  });
+
+  it('rejects malformed amounts', () => {
+    for (const bad of ['', 'abc', '-5', '1,234', '1.2.3', '12,345', '1e3', '1 234.5,0']) {
+      expect(parseKroner(bad)).toBeNull();
+    }
+  });
+
+  it('round-trips any non-negative øre through formatKr', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 1_000_000_000 }).map((n) => øre(n)),
+        (amount) => {
+          expect(parseKroner(formatKr(amount))).toBe(amount);
+        },
+      ),
     );
   });
 });

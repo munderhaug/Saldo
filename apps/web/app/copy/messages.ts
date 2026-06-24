@@ -73,6 +73,11 @@ export const nb = {
     'Denne MVA-behandlingen krever at foretaket er registrert i Merverdiavgiftsregisteret.',
   'vouchers.new.errorGeneric': 'Jeg fikk ikke bokført føringen. Prøv igjen om et øyeblikk.',
 
+  // ── AI transparency (shared) — the EU AI Act Art. 50 disclosure treatment for EVERY AI surface ──
+  // The machine-readable "AI-assisted" label (Art. 50(2)); rendered by the shared <AiAssisted>
+  // primitive so every current and future AI surface labels its proposals identically (ADR 0036).
+  'ai.assistedLabel': 'AI-assistert',
+
   // ── Receipt extraction — AI proposes a voucher from an image (first AI surface, ADR 0035) ──────
   'receipts.new.title': 'Les av en kvittering',
   'receipts.new.intro': 'Last opp et bilde, så foreslår jeg en føring du kan se over.',
@@ -85,7 +90,6 @@ export const nb = {
   'receipts.new.unavailableCta': 'Før opp manuelt',
   // ── Review the proposal (Art. 50(1): disclose AI at the first interaction) ──
   'receipts.new.reviewHeading': 'Forslag fra kvitteringen',
-  'receipts.new.aiAssisted': 'AI-assistert',
   // The first-interaction disclosure — plain, the user stays in charge (experience-voice §5.5).
   'receipts.new.aiDisclosure':
     'Dette forslaget er laget av AI ut fra bildet. Se det over — du bestemmer hva som blir bokført.',
@@ -279,6 +283,9 @@ export const en = {
     'This VAT treatment requires the business to be in the VAT Register.',
   'vouchers.new.errorGeneric': "I couldn't book the entry. Try again in a moment.",
 
+  // ── AI transparency (shared, reference) ──
+  'ai.assistedLabel': 'AI-assisted',
+
   // ── Receipt extraction (reference) ──
   'receipts.new.title': 'Read a receipt',
   'receipts.new.intro': "Upload a photo and I'll suggest an entry for you to review.",
@@ -289,7 +296,6 @@ export const en = {
     "Reading receipts isn't switched on here yet. You can record it manually instead.",
   'receipts.new.unavailableCta': 'Record manually',
   'receipts.new.reviewHeading': 'Suggestion from the receipt',
-  'receipts.new.aiAssisted': 'AI-assisted',
   'receipts.new.aiDisclosure':
     'This suggestion was made by AI from the image. Review it — you decide what gets booked.',
   'receipts.new.aiProvenance': 'Suggested by {model}. Estimated confidence {confidence}.',

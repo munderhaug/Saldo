@@ -500,13 +500,22 @@
     {
       "id": "aia-transparency-ui",
       "title": "EU AI Act: disclose AI interaction in the UI (Art 50(1))",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "S",
       "phase": "compliance",
       "depends_on": ["feat-receipt-extraction"],
-      "notes": "First-interaction AI disclosure landed for the receipt surface with feat-receipt-extraction (ADR 0035). This task generalises it: a shared disclosure treatment across every AI surface as more are added, by 2 Aug 2026. See eu-ai-act.md s4.",
-      "refs": ["docs/regulatory/eu-ai-act.md", "docs/decisions/0022-eu-ai-act-posture.md"]
+      "implements_adr": ["0036"],
+      "touches": [
+        "apps/web/app/components/ui/ai-assisted.tsx",
+        "apps/web/app/routes/orgs.$orgId.receipts.new.tsx"
+      ],
+      "notes": "Done (ADR 0036): the bespoke receipt disclosure (ADR 0035) is generalised into one shared, accessible primitive <AiAssisted> (components/ui) — a real labelled <h2> region, the machine-readable 'AI-assistert' label (shared ai.assistedLabel key + data-ai-assisted marker, Art 50(2)), the first-interaction disclosure (Art 50(1)) and provenance line, with focus-on-mount for the round-trip reveal. Receipt review migrated to it (no regression). Render test + nb/en parity. Durable provenance LOGGING is the separate aia-provenance-logging.",
+      "refs": [
+        "docs/regulatory/eu-ai-act.md",
+        "docs/decisions/0022-eu-ai-act-posture.md",
+        "docs/decisions/0036-ai-transparency-disclosure-primitive.md"
+      ]
     },
     {
       "id": "aia-provenance-logging",

@@ -15,7 +15,7 @@
  * confirmed kind+amount → posted voucher). The confirm step reuses `manualVoucherInput` so the AI path
  * posts through exactly the same server-authoritative truth as the manual surface.
  */
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { Form, Link, redirect, useSubmit } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,6 +33,7 @@ import type { Route } from './+types/orgs.$orgId.receipts.new';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { extractReceipt } from '~/integrations/llm/client.server';
 import { llmConfig } from '~/integrations/llm/config.server';
+import { AiAssisted } from '~/components/ui/ai-assisted';
 import { recordManualVoucher } from '~/db/posting.server';
 import { organization } from '~/db/schema';
 import { asMvaStatus } from '~/lib/org-format';
@@ -290,24 +291,20 @@ function ReviewStep({
     defaultValues: { kind: review.kind, amount: review.amount },
   });
   const onValid = () => submit(formRef.current, { method: 'post' });
-  // The review step replaces the upload step on a server round-trip; move focus to the AI disclosure
-  // so keyboard/SR users land on the new (and legally required, Art. 50) content, not the page top.
-  const headingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => headingRef.current?.focus(), []);
   return (
     <div className="grid gap-6">
-      {/* Art. 50(1): disclose the AI interaction, clearly, at the first exposure to the proposal. */}
-      <section
-        aria-labelledby="ai-disclosure-heading"
-        className="border-border grid gap-2 rounded-md border p-4"
+      {/* Art. 50(1)+(2): the shared disclosure primitive (ADR 0036). `focusOnMount` moves focus here
+          on the server round-trip, so keyboard/SR users land on the new, legally required content. */}
+      <AiAssisted
+        id="ai-disclosure"
+        heading={t('receipts.new.reviewHeading')}
+        disclosure={t('receipts.new.aiDisclosure')}
+        provenance={t('receipts.new.aiProvenance', {
+          model: review.model,
+          confidence: confidencePct,
+        })}
+        focusOnMount
       >
-        <h2 id="ai-disclosure-heading" ref={headingRef} tabIndex={-1} className="font-text text-sm">
-          <span className="bg-secondary text-secondary-foreground mr-2 rounded px-1.5 py-0.5 text-xs">
-            {t('receipts.new.aiAssisted')}
-          </span>
-          {t('receipts.new.reviewHeading')}
-        </h2>
-        <p className="text-muted-foreground text-sm">{t('receipts.new.aiDisclosure')}</p>
         <dl className="grid gap-1 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">{t('receipts.new.fieldSupplier')}</dt>
@@ -331,10 +328,7 @@ function ReviewStep({
             {t('receipts.new.vatHeadsUp')}
           </p>
         )}
-        <p className="text-muted-foreground text-xs">
-          {t('receipts.new.aiProvenance', { model: review.model, confidence: confidencePct })}
-        </p>
-      </section>
+      </AiAssisted>
 
       <Form
         method="post"

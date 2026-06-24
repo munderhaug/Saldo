@@ -1,0 +1,429 @@
+/**
+ * Receipt extraction — the first AI-system surface (feat-receipt-extraction, ADR 0035). A user uploads
+ * a receipt/invoice image; a vision-LLM proposes a structured extraction that flows:
+ *
+ *   image → extractReceipt (OpenAI-compatible, ADR 0009) → Zod at the boundary (~/contracts)
+ *         → mapExtractionToProposal (@saldo/domain) → a proposed voucher the human REVIEWS, edits,
+ *         and explicitly confirms → recordManualVoucher (the EXISTING posting path, ADR 0034).
+ *
+ * AI proposes, the rules engine validates, a human confirms (ADR 0002) — the model never writes the
+ * ledger. The proposal is disclosed as **AI-assisted at the first interaction** (EU AI Act Art. 50(1));
+ * its provenance is carried in the contract (Art. 50(2)). The image is personal data
+ * (`data-handling.md`): processed transiently in this action, never persisted, never logged.
+ *
+ * Two POST intents on one route: `extract` (image → reviewable proposal) and `confirm` (the human's
+ * confirmed kind+amount → posted voucher). The confirm step reuses `manualVoucherInput` so the AI path
+ * posts through exactly the same server-authoritative truth as the manual surface.
+ */
+import { useEffect, useRef } from 'react';
+import { Form, Link, redirect, useSubmit } from 'react-router';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { eq } from 'drizzle-orm';
+import {
+  chargesOutputVat,
+  formatKr,
+  mapExtractionToProposal,
+  parseKroner,
+  systemClock,
+  type ProposedKind,
+} from '@saldo/domain';
+import type { Route } from './+types/orgs.$orgId.receipts.new';
+import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
+import { extractReceipt } from '~/integrations/llm/client.server';
+import { llmConfig } from '~/integrations/llm/config.server';
+import { recordManualVoucher } from '~/db/posting.server';
+import { organization } from '~/db/schema';
+import { asMvaStatus } from '~/lib/org-format';
+import { manualVoucherInput, VOUCHER_KINDS, type ManualVoucherInput } from '~/contracts';
+import { t } from '~/copy';
+
+export function meta() {
+  return [{ title: t('receipts.new.title') }];
+}
+
+/** Receipt extraction touches personal/financial data; keep the page off any shared cache. */
+export function headers() {
+  return { 'Cache-Control': 'private, no-store' };
+}
+
+const orgIdSchema = z.string().uuid();
+/** Receipts are small; cap the upload so a stray large file can't exhaust memory. */
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+interface ReviewProposal {
+  readonly kind: ProposedKind;
+  /** Pre-filled amount, formatted so `parseKroner` round-trips it at confirm. */
+  readonly amount: string;
+  readonly netFormatted: string;
+  readonly vatFormatted: string;
+  readonly supplier: string | null;
+  readonly documentDate: string | null;
+  readonly vatLooksStandard: boolean;
+  readonly model: string;
+  readonly confidence: number;
+}
+
+type ActionData =
+  | { readonly ok: false; readonly error: string }
+  | { readonly ok: true; readonly review: ReviewProposal };
+
+export async function loader({ request, params }: Route.LoaderArgs) {
+  if (!orgIdSchema.safeParse(params.orgId).success) {
+    throw new Response('Not found', { status: 404 });
+  }
+  const org = await withUserOrg(request, params.orgId, async (tx) => {
+    const [row] = await tx
+      .select({ name: organization.name, mvaStatus: organization.mvaStatus })
+      .from(organization)
+      .where(eq(organization.id, params.orgId))
+      .limit(1);
+    return row ?? null;
+  });
+  if (!org) throw new Response('Not found', { status: 404 });
+  return {
+    orgId: params.orgId,
+    orgName: org.name,
+    isRegistered: chargesOutputVat(asMvaStatus(org.mvaStatus)),
+    // Whether the AI backend is configured here — gates the upload UI vs the calm "not switched on" path.
+    available: llmConfig() !== null,
+  };
+}
+
+export async function action({
+  request,
+  params,
+}: Route.ActionArgs): Promise<ActionData | Response> {
+  assertSameOrigin(request);
+  if (!orgIdSchema.safeParse(params.orgId).success) {
+    throw new Response('Not found', { status: 404 });
+  }
+  const form = await request.formData();
+  const intent = form.get('intent');
+
+  if (intent === 'confirm') {
+    const parsed = manualVoucherInput.safeParse({
+      kind: form.get('kind'),
+      amount: form.get('amount'),
+    });
+    if (!parsed.success) return { ok: false, error: t('vouchers.new.errorInvalidInput') };
+    const net = parseKroner(parsed.data.amount)!; // passed the boundary's parseKroner refine
+    const year = systemClock.now().getFullYear();
+    const result = await withUserOrg(request, params.orgId, (tx) =>
+      recordManualVoucher(tx, { organizationId: params.orgId, kind: parsed.data.kind, net, year }),
+    );
+    if (!result.ok) {
+      return {
+        ok: false,
+        error:
+          result.reason === 'vat-not-registered'
+            ? t('vouchers.new.errorVatNotRegistered')
+            : t('vouchers.new.errorGeneric'),
+      };
+    }
+    return redirect('/');
+  }
+
+  // Default intent: extract. Validate the upload, run the vision-LLM, map to a proposal.
+  const file = form.get('receipt');
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: t('receipts.new.errorNoImage') };
+  }
+  if (!file.type.startsWith('image/')) {
+    return { ok: false, error: t('receipts.new.errorImageType') };
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { ok: false, error: t('receipts.new.errorImageTooLarge') };
+  }
+
+  const extracted = await extractReceipt({
+    bytes: new Uint8Array(await file.arrayBuffer()),
+    mediaType: file.type,
+  });
+  if (!extracted.ok) {
+    return {
+      ok: false,
+      error:
+        extracted.reason === 'not-configured'
+          ? t('receipts.new.unavailable')
+          : t('receipts.new.errorRead'),
+    };
+  }
+
+  const { extraction } = extracted;
+  const mapped = mapExtractionToProposal({
+    direction: extraction.direction,
+    net: extraction.net,
+    vat: extraction.vat,
+    currency: extraction.currency,
+  });
+  if (!mapped.ok) {
+    return {
+      ok: false,
+      error:
+        mapped.reason === 'unsupported-currency'
+          ? t('receipts.new.errorCurrency')
+          : t('receipts.new.errorAmount'),
+    };
+  }
+
+  const { proposal } = mapped;
+  return {
+    ok: true,
+    review: {
+      kind: proposal.kind,
+      amount: formatKr(proposal.net),
+      netFormatted: formatKr(proposal.net),
+      vatFormatted: formatKr(extraction.vat),
+      supplier: extraction.supplier,
+      documentDate: extraction.documentDate,
+      vatLooksStandard: proposal.vatLooksStandard,
+      model: extraction.provenance.model,
+      confidence: extraction.provenance.confidence,
+    },
+  };
+}
+
+export default function NewReceipt({ loaderData, actionData }: Route.ComponentProps) {
+  const { orgId, orgName, isRegistered, available } = loaderData;
+  const review = actionData?.ok ? actionData.review : null;
+  const error = actionData && !actionData.ok ? actionData.error : null;
+
+  return (
+    <main className="mx-auto grid max-w-xl gap-6 p-6 sm:p-10">
+      <header className="grid gap-1">
+        <p className="font-text text-muted-foreground text-sm">{orgName}</p>
+        <h1 className="font-text text-2xl tracking-tight">{t('receipts.new.title')}</h1>
+        <p className="text-muted-foreground">{t('receipts.new.intro')}</p>
+      </header>
+
+      {!available ? (
+        <div className="grid gap-3">
+          <p className="text-muted-foreground text-sm">{t('receipts.new.unavailable')}</p>
+          <Link
+            to={`/orgs/${orgId}/vouchers/new`}
+            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
+          >
+            {t('receipts.new.unavailableCta')}
+          </Link>
+        </div>
+      ) : review ? (
+        <ReviewStep orgId={orgId} review={review} isRegistered={isRegistered} error={error} />
+      ) : (
+        <UploadStep orgId={orgId} error={error} />
+      )}
+    </main>
+  );
+}
+
+function UploadStep({ orgId, error }: { orgId: string; error: string | null }) {
+  return (
+    <Form method="post" encType="multipart/form-data" className="grid gap-5">
+      <div className="grid gap-1.5">
+        <label htmlFor="receipt" className="font-text text-sm">
+          {t('receipts.new.uploadLabel')}
+        </label>
+        <input
+          id="receipt"
+          name="receipt"
+          type="file"
+          accept="image/png,image/jpeg"
+          required
+          aria-describedby={error ? 'receipt-hint receipt-error' : 'receipt-hint'}
+          aria-invalid={error ? true : undefined}
+          className="border-input bg-background rounded-md border px-3 py-2 text-sm"
+        />
+        <p id="receipt-hint" className="text-muted-foreground text-sm">
+          {t('receipts.new.uploadHint')}
+        </p>
+        {error && (
+          <p id="receipt-error" role="alert" className="text-destructive text-sm">
+            {error}
+          </p>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          type="submit"
+          name="intent"
+          value="extract"
+          className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
+        >
+          {t('receipts.new.submit')}
+        </button>
+        <Link
+          to={`/orgs/${orgId}`}
+          className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
+        >
+          {t('vouchers.new.cancel')}
+        </Link>
+      </div>
+    </Form>
+  );
+}
+
+function ReviewStep({
+  orgId,
+  review,
+  isRegistered,
+  error,
+}: {
+  orgId: string;
+  review: ReviewProposal;
+  isRegistered: boolean;
+  error: string | null;
+}) {
+  // Confidence is a plain 0..1 ratio (not money) shown as a whole-percent — toFixed(0), no money helper.
+  const confidencePct = `${(review.confidence * 100).toFixed(0)} %`;
+  const submit = useSubmit();
+  const formRef = useRef<HTMLFormElement>(null);
+  // RHF drives inline validation over the SAME `manualVoucherInput` the action re-validates (the truth),
+  // pre-filled from the AI proposal; the real <Form> stays server-authoritative (works without JS).
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ManualVoucherInput>({
+    resolver: zodResolver(manualVoucherInput),
+    mode: 'onTouched',
+    defaultValues: { kind: review.kind, amount: review.amount },
+  });
+  const onValid = () => submit(formRef.current, { method: 'post' });
+  // The review step replaces the upload step on a server round-trip; move focus to the AI disclosure
+  // so keyboard/SR users land on the new (and legally required, Art. 50) content, not the page top.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => headingRef.current?.focus(), []);
+  return (
+    <div className="grid gap-6">
+      {/* Art. 50(1): disclose the AI interaction, clearly, at the first exposure to the proposal. */}
+      <section
+        aria-labelledby="ai-disclosure-heading"
+        className="border-border grid gap-2 rounded-md border p-4"
+      >
+        <h2 id="ai-disclosure-heading" ref={headingRef} tabIndex={-1} className="font-text text-sm">
+          <span className="bg-secondary text-secondary-foreground mr-2 rounded px-1.5 py-0.5 text-xs">
+            {t('receipts.new.aiAssisted')}
+          </span>
+          {t('receipts.new.reviewHeading')}
+        </h2>
+        <p className="text-muted-foreground text-sm">{t('receipts.new.aiDisclosure')}</p>
+        <dl className="grid gap-1 text-sm">
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">{t('receipts.new.fieldSupplier')}</dt>
+            <dd>{review.supplier ?? t('receipts.new.supplierUnknown')}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">{t('receipts.new.fieldDate')}</dt>
+            <dd className="tabular">{review.documentDate ?? t('receipts.new.dateUnknown')}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">{t('receipts.new.fieldNet')}</dt>
+            <dd className="tabular">{review.netFormatted}</dd>
+          </div>
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted-foreground">{t('receipts.new.fieldVat')}</dt>
+            <dd className="tabular">{review.vatFormatted}</dd>
+          </div>
+        </dl>
+        {!review.vatLooksStandard && (
+          <p role="status" className="text-sm">
+            {t('receipts.new.vatHeadsUp')}
+          </p>
+        )}
+        <p className="text-muted-foreground text-xs">
+          {t('receipts.new.aiProvenance', { model: review.model, confidence: confidencePct })}
+        </p>
+      </section>
+
+      <Form
+        method="post"
+        ref={formRef}
+        onSubmit={(event) => void handleSubmit(onValid)(event)}
+        className="grid gap-5"
+      >
+        {/* Programmatic submit drops the button's value, so the intent travels as a hidden field. */}
+        <input type="hidden" name="intent" value="confirm" />
+        <p className="text-muted-foreground text-sm">{t('receipts.new.confirmIntro')}</p>
+        <fieldset className="grid gap-3">
+          <legend className="font-text text-sm">{t('vouchers.new.kindLegend')}</legend>
+          {VOUCHER_KINDS.map((kind) => (
+            <label key={kind} className="flex items-start gap-3">
+              <input
+                type="radio"
+                value={kind}
+                aria-describedby={
+                  errors.kind ? `kind-${kind}-desc kind-error` : `kind-${kind}-desc`
+                }
+                className="mt-1"
+                {...register('kind')}
+              />
+              <span className="grid gap-0.5">
+                <span className="font-text text-sm">{t(`vouchers.new.kind.${kind}.label`)}</span>
+                <span id={`kind-${kind}-desc`} className="text-muted-foreground text-sm">
+                  {t(`vouchers.new.kind.${kind}.desc`)}
+                </span>
+              </span>
+            </label>
+          ))}
+          {errors.kind && (
+            <p id="kind-error" role="alert" className="text-destructive text-sm">
+              {errors.kind.message}
+            </p>
+          )}
+        </fieldset>
+
+        <div className="grid gap-1.5">
+          <label htmlFor="amount" className="font-text text-sm">
+            {t('vouchers.new.amountLabel')}
+          </label>
+          <input
+            id="amount"
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            aria-describedby={errors.amount ? 'amount-error amount-hint' : 'amount-hint'}
+            aria-invalid={errors.amount ? true : undefined}
+            className="border-input bg-background tabular rounded-md border px-3 py-2 text-sm"
+            {...register('amount')}
+          />
+          <p id="amount-hint" className="text-muted-foreground text-sm">
+            {isRegistered
+              ? t('vouchers.new.amountHintRegistered')
+              : t('vouchers.new.amountHintPlain')}
+          </p>
+          {errors.amount && (
+            <p id="amount-error" role="alert" className="text-destructive text-sm">
+              {errors.amount.message}
+            </p>
+          )}
+        </div>
+
+        <p className="text-muted-foreground text-sm">{t('vouchers.new.confirmNote')}</p>
+
+        {/* Server-side failure (a rare rule/chart block on confirm) — surfaced calmly, system owns it. */}
+        {error && (
+          <p role="alert" className="text-destructive text-sm">
+            {error}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-4">
+          <button
+            type="submit"
+            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
+          >
+            {t('receipts.new.confirmSubmit')}
+          </button>
+          <Link
+            to={`/orgs/${orgId}/receipts/new`}
+            className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
+            reloadDocument
+          >
+            {t('receipts.new.startOver')}
+          </Link>
+        </div>
+      </Form>
+    </div>
+  );
+}

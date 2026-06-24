@@ -146,6 +146,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {t('home.recordCta')}
         </Link>
         <Link
+          to={`/orgs/${orgId}/receipts/new`}
+          className="text-primary font-text inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
+        >
+          {t('home.readReceiptCta')}
+        </Link>
+        <Link
           to={`/orgs/${orgId}`}
           className="text-primary font-text inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
         >

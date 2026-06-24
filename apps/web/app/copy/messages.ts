@@ -47,6 +47,7 @@ export const nb = {
   'home.switchOrg': 'Bytt foretak',
   // Reach the first posting surface from home — from the reveal and from the calm empty state.
   'home.recordCta': 'Registrer inntekt eller utgift',
+  'home.readReceiptCta': 'Les av en kvittering',
   'home.empty.cta': 'Registrer din første inntekt',
   'home.navLabel': 'Snarveier',
 
@@ -71,6 +72,45 @@ export const nb = {
   'vouchers.new.errorVatNotRegistered':
     'Denne MVA-behandlingen krever at foretaket er registrert i Merverdiavgiftsregisteret.',
   'vouchers.new.errorGeneric': 'Jeg fikk ikke bokført føringen. Prøv igjen om et øyeblikk.',
+
+  // ── Receipt extraction — AI proposes a voucher from an image (first AI surface, ADR 0035) ──────
+  'receipts.new.title': 'Les av en kvittering',
+  'receipts.new.intro': 'Last opp et bilde, så foreslår jeg en føring du kan se over.',
+  'receipts.new.uploadLabel': 'Bilde av kvitteringen',
+  'receipts.new.uploadHint': 'JPG eller PNG, maks 10 MB.',
+  'receipts.new.submit': 'Les av kvitteringen',
+  // The AI surface is off (no backend configured) — point calmly to the manual path.
+  'receipts.new.unavailable':
+    'Avlesning av kvitteringer er ikke slått på her ennå. Du kan føre den opp manuelt i stedet.',
+  'receipts.new.unavailableCta': 'Før opp manuelt',
+  // ── Review the proposal (Art. 50(1): disclose AI at the first interaction) ──
+  'receipts.new.reviewHeading': 'Forslag fra kvitteringen',
+  'receipts.new.aiAssisted': 'AI-assistert',
+  // The first-interaction disclosure — plain, the user stays in charge (experience-voice §5.5).
+  'receipts.new.aiDisclosure':
+    'Dette forslaget er laget av AI ut fra bildet. Se det over — du bestemmer hva som blir bokført.',
+  'receipts.new.aiProvenance': 'Foreslått av {model}. Anslått sikkerhet {confidence}.',
+  'receipts.new.fieldSupplier': 'Leverandør',
+  'receipts.new.fieldDate': 'Dato',
+  'receipts.new.fieldNet': 'Beløp uten mva',
+  'receipts.new.fieldVat': 'Mva på kvitteringen',
+  'receipts.new.supplierUnknown': 'Fant ikke navnet',
+  'receipts.new.dateUnknown': 'Fant ikke datoen',
+  // Calm heads-up when the document VAT isn't a plain 25 % — the system owns the doubt, not the user.
+  'receipts.new.vatHeadsUp': 'Mva-en ser ikke ut som vanlige 25 %. Sjekk beløpet før du bokfører.',
+  'receipts.new.confirmIntro': 'Stemmer ikke typen eller beløpet? Endre det før du bokfører.',
+  'receipts.new.confirmSubmit': 'Bekreft og bokfør',
+  'receipts.new.startOver': 'Prøv et annet bilde',
+  // ── Errors — the system owns the fault, every time ──
+  'receipts.new.errorNoImage': 'Last opp et bilde av kvitteringen (JPG eller PNG).',
+  'receipts.new.errorImageType': 'Det ser ikke ut som et bilde. Last opp en JPG eller PNG.',
+  'receipts.new.errorImageTooLarge': 'Bildet er for stort. Maks 10 MB.',
+  'receipts.new.errorRead':
+    'Jeg klarte ikke å lese kvitteringen. Prøv et tydeligere bilde, eller før den opp manuelt.',
+  'receipts.new.errorCurrency':
+    'Kvitteringen er ikke i kroner. Den kan jeg ikke føre automatisk ennå — før den opp manuelt.',
+  'receipts.new.errorAmount':
+    'Jeg fant ikke et tydelig beløp på kvitteringen. Før den opp manuelt, så er du trygg.',
 
   // ── Auth — log in ────────────────────────────────────────────────────────────
   'auth.login.title': 'Logg inn',
@@ -216,6 +256,7 @@ export const en = {
   'home.viewOrg': 'View business',
   'home.switchOrg': 'Switch business',
   'home.recordCta': 'Record income or an expense',
+  'home.readReceiptCta': 'Read a receipt',
   'home.empty.cta': 'Record your first income',
   'home.navLabel': 'Shortcuts',
 
@@ -237,6 +278,41 @@ export const en = {
   'vouchers.new.errorVatNotRegistered':
     'This VAT treatment requires the business to be in the VAT Register.',
   'vouchers.new.errorGeneric': "I couldn't book the entry. Try again in a moment.",
+
+  // ── Receipt extraction (reference) ──
+  'receipts.new.title': 'Read a receipt',
+  'receipts.new.intro': "Upload a photo and I'll suggest an entry for you to review.",
+  'receipts.new.uploadLabel': 'Photo of the receipt',
+  'receipts.new.uploadHint': 'JPG or PNG, max 10 MB.',
+  'receipts.new.submit': 'Read the receipt',
+  'receipts.new.unavailable':
+    "Reading receipts isn't switched on here yet. You can record it manually instead.",
+  'receipts.new.unavailableCta': 'Record manually',
+  'receipts.new.reviewHeading': 'Suggestion from the receipt',
+  'receipts.new.aiAssisted': 'AI-assisted',
+  'receipts.new.aiDisclosure':
+    'This suggestion was made by AI from the image. Review it — you decide what gets booked.',
+  'receipts.new.aiProvenance': 'Suggested by {model}. Estimated confidence {confidence}.',
+  'receipts.new.fieldSupplier': 'Supplier',
+  'receipts.new.fieldDate': 'Date',
+  'receipts.new.fieldNet': 'Amount excl. VAT',
+  'receipts.new.fieldVat': 'VAT on the receipt',
+  'receipts.new.supplierUnknown': "Couldn't read the name",
+  'receipts.new.dateUnknown': "Couldn't read the date",
+  'receipts.new.vatHeadsUp':
+    "The VAT doesn't look like a plain 25 %. Check the amount before you book it.",
+  'receipts.new.confirmIntro': 'Type or amount not right? Change it before you book it.',
+  'receipts.new.confirmSubmit': 'Confirm and book',
+  'receipts.new.startOver': 'Try another photo',
+  'receipts.new.errorNoImage': 'Upload a photo of the receipt (JPG or PNG).',
+  'receipts.new.errorImageType': "That doesn't look like an image. Upload a JPG or PNG.",
+  'receipts.new.errorImageTooLarge': 'The image is too large. Max 10 MB.',
+  'receipts.new.errorRead':
+    "I couldn't read the receipt. Try a clearer photo, or record it manually.",
+  'receipts.new.errorCurrency':
+    "The receipt isn't in kroner. I can't book that automatically yet — record it manually.",
+  'receipts.new.errorAmount':
+    "I couldn't find a clear amount on the receipt. Record it manually to be safe.",
 
   'auth.login.title': 'Log in',
   'auth.login.submit': 'Log in',

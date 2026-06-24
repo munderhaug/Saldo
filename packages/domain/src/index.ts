@@ -15,6 +15,8 @@ export * from './posting/types.js';
 export * from './posting/balance.js';
 export * from './posting/derive.js';
 export * from './posting/manual.js';
+export * from './extraction/types.js';
+export * from './extraction/map.js';
 export * from './rules/types.js';
 export * from './rules/vat-line.js';
 export * from './saft/tax-codes.js';

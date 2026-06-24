@@ -6,7 +6,7 @@ import { MVA_STATUSES, type MvaStatus } from '@saldo/domain';
 import { t } from '~/copy';
 
 /** Narrow a DB `mva_status` string (CHECK-constrained) to the branded union, fail-safe. */
-function asMvaStatus(status: string): MvaStatus {
+export function asMvaStatus(status: string): MvaStatus {
   return (MVA_STATUSES as readonly string[]).includes(status)
     ? (status as MvaStatus)
     : 'under_threshold';

@@ -3,7 +3,7 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-23 — session: `feat-org-onboarding` (org + membership + per-org SAF-T provisioning; first RHF/TanStack forms+tables surface, ADR 0032)
+**Last updated:** 2026-06-24 — session: `feat-honest-number-surface` (ledger-aggregation query + the "what's actually yours" reveal replacing the home scaffold, ADR 0033)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
@@ -18,12 +18,44 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 32 ADRs (0001–0032) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 50 tasks (21 done, 29 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 33 ADRs (0001–0033) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 51 tasks (22 done, 29 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-receipt-extraction` [high/L] — Receipt/invoice -> structured proposal via vision-LLM (propose-only)
 <!-- /AUTOGEN:repo-status -->
 
-## This session — `feat-org-onboarding`: the product gateway (ADR 0032)
+## This session — `feat-honest-number-surface`: the reveal (ADR 0033)
+Delivered org-onboarding's payoff — the honest-number reveal ("what's actually yours",
+experience-principles §6). **App + domain + docs; no schema change** (read-only over the existing
+ledger). Full gate green (typecheck · lint · format · `test` **171 domain / 23 web + 43 Testcontainers
+integrity incl. the new aggregation suite** · lint:repo · status:check · backlog validate). a11y-reviewed.
+Landing as a reviewed PR.
+- **Sequencing decision surfaced + recorded (ADR 0033): option (a).** The ledger is empty (no posting
+  surface exists yet), so the reveal ships against a real-but-seedable ledger and a minimal
+  manual-voucher slice is sequenced next (`feat-manual-voucher-entry`, added). Pulling a full posting
+  surface into this `M` task (option b) was rejected as scope-blowing.
+- **Aggregation (the keystone).** `db/ledger.server.ts#aggregateLedger` sums one fiscal year's POSTED
+  vouchers by **kontoklasse (`account.type`) + `vat_code.direction`** — net revenue (klasse 3) / net
+  expense (4–7), and the output/input VAT legs restricted to the liability accounts (klasse 2). The
+  restriction matters: a sales line books the output SAF-T code on BOTH the revenue and the VAT posting,
+  so keying VAT off direction alone double-counts revenue. Read through `withUserOrg` + RLS (no
+  cross-tenant assumption); no hardcoded account numbers (the invariant).
+- **Pure bridge.** `packages/domain/src/honest-number/from-ledger.ts#honestNumberFromLedger` composes the
+  totals: `income = revenueNet + outputVatCollected` (the gross "taken in"), `profit = revenueNet −
+  expenseNet` → `estimateEnkIncomeTax(profit, year).total` → `honestNumber`. **The user's own arithmetic,
+  NOT AI / NOT profiling** (ADR 0022 / Annex III §5(b)). 10 exhaustive + fast-check tests.
+- **Reveal UI.** `home.tsx` rewritten: the spendable headline in Fraunces (the earned peak), a calm
+  "you're caught up" empty state (the current reality until vouchers exist), permission/relief framing,
+  keyed nb+en microcopy. a11y fixes from review: `<h2>` section heading, screen-reader currency word
+  ("kroner", not "k r"), `role="note"` on the heads-up. Reveals the alphabetically-first org with a
+  "switch business" link (persisted active org stays `feat-org-active-context`).
+- **Integrity test.** `honest-number-aggregation.integration.test.ts` (Testcontainers): partition
+  correctness, drafts excluded, year-scoped, **RLS-isolated between tenants** — run via the non-owner
+  `saldo_app` connection.
+- **Next:** `feat-manual-voucher-entry` (the posting surface that fills the ledger so the reveal shows
+  real numbers), then `feat-receipt-extraction` (vision-LLM proposals now have both an org and a posting
+  surface to land into).
+
+## Previous session — `feat-org-onboarding`: the product gateway (ADR 0032)
 Turned the foundation into a usable product: a logged-in user creates an org, becomes its `owner`, and
 the org is provisioned with a complete, standards-grounded chart + VAT codes — making `withOrgTx` real
 per user. **App-layer + domain + docs; no schema change** (every table already existed). Full gate green
@@ -313,7 +345,7 @@ Full gate green at HEAD:
 auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act posture; merged through
 GitHub PR #12). We are now in the **feature + regulatory-engine track** (GitHub PRs #13–#18 + this branch).
 The honest picture of where the build is:
-- **Domain core is well-developed** (`packages/domain`, pure + 158 tests): money/`Øre`, ids, the VAT engine
+- **Domain core is well-developed** (`packages/domain`, pure + 171 tests): money/`Øre`, ids, the VAT engine
   (`status` → per-line `line-treatment` → sectoral `activity` gate), the ENK income-`tax` estimate,
   `honest-number`, `posting`/balance, the `rules` engine, the `saft` code/account/rate model.
 - **Persistence + tenancy proven**: the SQL ledger (voucher/posting/account/period/invoice-counter),
@@ -321,8 +353,8 @@ The honest picture of where the build is:
 - **Auth/identity landed**: sessions + argon2id dev provider; OIDC wired but **not live-verified**.
 - **The application/UI surface is growing** — `/oppslag` (brreg lookup) and now the **org-onboarding
   gateway** (`/orgs`, `/orgs/new`, `/orgs/:orgId`: create + provision + multi-membership selection) are
-  real feature routes. `home.tsx` is still a throwaway scaffold; there is **no invoice, posting, or
-  reveal UI yet**.
+  real feature routes, and `home.tsx` is now the **honest-number reveal** (ADR 0033). There is still
+  **no invoice or posting UI** — the reveal reads a ledger that stays empty until `feat-manual-voucher-entry`.
 - **Keystone DONE:** `feat-org-onboarding` (ADR 0032) — create an org + owner membership + provision its
   per-org `vat_code`/`account` lists from the committed SAF-T data, atomically. This unblocks the
   DB-dependent features (`feat-honest-number-surface`, invoicing, posting).
@@ -345,13 +377,13 @@ typography foundations of the UI followed in ADRs **0024–0026** (PRs #13–#15
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**
 Don't re-derive "what's next" in prose here; this is just the orientation.
-- **Product keystone: `feat-org-onboarding`** [high/L] — the gateway that turns the foundation into a
-  usable product (org + membership + per-org `vat_code`/`account` provisioning, consuming `/oppslag`).
-  Unblocks `feat-honest-number-surface` (the reveal now has a real, source-grounded number behind it) and
-  all invoicing/posting. (`backlog next` mechanically returns `feat-receipt-extraction`, the vision-LLM
-  track — hold it until a posting surface + org exist to receive proposals.)
-- **Other high-value ready:** `feat-honest-number-surface` (needs org + a ledger-aggregation query first),
-  `test-stateful-ledger` (model-based ledger testing), `ops-dr-runbook`.
+- **Fill the ledger: `feat-manual-voucher-entry`** [high/M] — the first posting surface (added this
+  session). The org gateway (ADR 0032) and the honest-number reveal (ADR 0033) are both live, but the
+  ledger is empty: nothing posts vouchers yet, so the reveal shows zero. A minimal manual-voucher slice
+  (derive via `@saldo/domain` → rules-engine gate → `withUserOrg` insert → `posted_at`) makes the reveal
+  show real numbers and is the base for invoice issuance + receipt-extraction landing.
+- **Other high-value ready:** `feat-receipt-extraction` (vision-LLM proposals — now has both an org and a
+  forming posting surface to land into), `test-stateful-ledger` (model-based ledger testing), `ops-dr-runbook`.
 - **VAT/tax engine continuation:** `vat-reduced-rate-activity` (capture mval kap. 5 → rate-matching + the
   rules/DB activity wiring), `vat-threshold-watcher` (the 50k registration threshold), `vat-reverse-charge`,
   `vat-mixed-activity` (§ 8-2 apportionment).
@@ -385,8 +417,9 @@ Don't re-derive "what's next" in prose here; this is just the orientation.
   `SET LOCAL`**, when wiring auth/DB live (needs egress + tenants).
 - **`saft:validate` is a scaffold** — prints `NOT YET IMPLEMENTED` loudly (CI label: SCAFFOLD). Implement
   SAF-T generation + XSD validation (Phase 8).
-- **`home.tsx` is a throwaway scaffold** — the real home is "You're caught up" + the honest-number reveal
-  (experience-principles §4.2 / §6).
+- **The honest-number reveal shows zero until there's posting data** — `home.tsx` is the real reveal now
+  (ADR 0033), but the ledger is empty until `feat-manual-voucher-entry` lands a posting surface. The
+  empty state ("you're caught up") is intentional, not a bug.
 - **Build-spec consolidation pending** — `docs/saldo-build-specification.md` has a stale dir tree + inlined
   harness copies (tracked: `docs-consolidate-build-spec`).
 - **Local commits are unsigned** (no signing key here); they verify on push through the proxy.

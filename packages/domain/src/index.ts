@@ -8,6 +8,7 @@ export * from './vat/status.js';
 export * from './vat/line-treatment.js';
 export * from './vat/activity.js';
 export * from './honest-number/honest-number.js';
+export * from './honest-number/from-ledger.js';
 export * from './tax/params.js';
 export * from './tax/income-estimate.js';
 export * from './posting/types.js';

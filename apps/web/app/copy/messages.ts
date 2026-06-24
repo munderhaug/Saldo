@@ -19,23 +19,32 @@ export const nb = {
 
   // Currency unit shown after a `formatKr()` figure (the figure itself comes from @saldo/domain).
   'common.currency': 'kr',
+  // Spelled-out unit for screen readers, so "kr" isn't read as the letters "k r".
+  'common.currencyLong': 'kroner',
 
-  // ── Home (the domain-core demo surface) ──────────────────────────────────────
-  'home.demo.title': 'Domenekjernen kjører',
-  // descPre + <code>@saldo/domain</code> + descPost form one sentence around an inline code token.
-  'home.demo.descPre': 'Den rene',
-  'home.demo.descPost':
-    '-kjernen beregner 25 % MVA på 100,00 kr — identisk i nettleseren og på serveren.',
-  'home.demo.caption': 'Beløp i kroner, øre-presist (tabulære tall).',
-  'home.demo.colItem': 'Post',
-  'home.demo.colAmount': 'Beløp',
-  'home.demo.netto': 'Netto',
-  'home.demo.vat': 'MVA (25 %)',
-  'home.demo.brutto': 'Brutto',
-  // nextPre + <code>docs/…</code> + nextPost, same inline-code pattern.
-  'home.next.pre': 'Neste steg: Fase 0 (se',
-  'home.next.post': '§16).',
-  'home.ctaOrgs': 'Til foretakene dine',
+  // ── Home — the honest-number reveal ("what's actually yours", experience-principles §6) ──────
+  'home.heading': 'Du er à jour',
+  'home.subhead': 'Ingenting trenger oppmerksomheten din akkurat nå.',
+  // No org yet → gentle onboarding nudge.
+  'home.onboard.title': 'Velkommen',
+  'home.onboard.body': 'La oss sette opp foretaket ditt, så kommer vi i gang.',
+  'home.onboard.cta': 'Sett opp foretaket',
+  // An org exists but the ledger has no posted activity yet — calm, honest, no fake number.
+  'home.empty.title': 'Klar når du er det',
+  'home.empty.body':
+    'Så snart du registrerer inntekt, viser jeg her hva som faktisk er ditt å bruke.',
+  // The reveal itself — permission/relief framing, never a tax warning.
+  'home.reveal.heading': 'Hva som faktisk er ditt',
+  'home.reveal.spendableLabel': 'Ditt å bruke',
+  'home.reveal.spendableHelp': 'Dette kan du trygt ta ut i {year}.',
+  'home.reveal.incomeLabel': 'Tatt inn i {year}',
+  'home.reveal.vatLabel': 'MVA du holder av for staten',
+  'home.reveal.taxLabel': 'Skatt, satt til side',
+  'home.reveal.taxNote': 'Et forsiktig anslag, ikke en regning.',
+  'home.reveal.overcommitted':
+    'Du har holdt av mer enn du har tatt inn så langt. Det ordner seg når mer inntekt kommer inn.',
+  'home.viewOrg': 'Se foretaket',
+  'home.switchOrg': 'Bytt foretak',
 
   // ── Auth — log in ────────────────────────────────────────────────────────────
   'auth.login.title': 'Logg inn',
@@ -159,20 +168,27 @@ export const en = {
   'app.tagline': 'Accounting and invoicing for small Norwegian sole proprietorships.',
 
   'common.currency': 'kr',
+  'common.currencyLong': 'kroner',
 
-  'home.demo.title': 'The domain core is running',
-  'home.demo.descPre': 'The pure',
-  'home.demo.descPost':
-    ' core computes 25 % VAT on 100.00 kr — identically in the browser and on the server.',
-  'home.demo.caption': 'Amounts in kroner, øre-precise (tabular figures).',
-  'home.demo.colItem': 'Item',
-  'home.demo.colAmount': 'Amount',
-  'home.demo.netto': 'Net',
-  'home.demo.vat': 'VAT (25 %)',
-  'home.demo.brutto': 'Gross',
-  'home.next.pre': 'Next: Phase 0 (see',
-  'home.next.post': '§16).',
-  'home.ctaOrgs': 'To your businesses',
+  'home.heading': "You're caught up",
+  'home.subhead': 'Nothing needs your attention right now.',
+  'home.onboard.title': 'Welcome',
+  'home.onboard.body': "Let's set up your business, and we'll get going.",
+  'home.onboard.cta': 'Set up your business',
+  'home.empty.title': 'Ready when you are',
+  'home.empty.body':
+    "As soon as you record income, this is where I'll show what's actually yours to spend.",
+  'home.reveal.heading': "What's actually yours",
+  'home.reveal.spendableLabel': 'Yours to spend',
+  'home.reveal.spendableHelp': 'You can safely take this out in {year}.',
+  'home.reveal.incomeLabel': 'Taken in in {year}',
+  'home.reveal.vatLabel': "VAT you're holding for the state",
+  'home.reveal.taxLabel': 'Tax, set aside',
+  'home.reveal.taxNote': 'A careful estimate, not a bill.',
+  'home.reveal.overcommitted':
+    "You've set aside more than you've taken in so far. It evens out as more income comes in.",
+  'home.viewOrg': 'View business',
+  'home.switchOrg': 'Switch business',
 
   'auth.login.title': 'Log in',
   'auth.login.submit': 'Log in',

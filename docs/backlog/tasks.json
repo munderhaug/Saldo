@@ -115,15 +115,38 @@
     {
       "id": "feat-honest-number-surface",
       "title": "Honest-number reveal: ledger aggregation + the 'what's actually yours' UI",
+      "implements_adr": ["0033"],
+      "touches": [
+        "packages/domain/src/honest-number/from-ledger.ts",
+        "apps/web/app/db/ledger.server.ts",
+        "apps/web/app/routes/home.tsx",
+        "apps/web/test/integrity/honest-number-aggregation.integration.test.ts"
+      ],
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-tax-estimate", "feat-keyed-microcopy", "feat-org-onboarding"],
+      "notes": "DONE (ADR 0033). aggregateLedger (db/ledger.server.ts) sums one fiscal year's POSTED ledger by kontoklasse (account.type) + vat_code.direction — revenue/expense net, output/input VAT on the liability legs only (the revenue line also carries the output code, so direction alone double-counts). Read via withUserOrg + RLS. Pure honestNumberFromLedger (packages/domain) reconstructs gross income = revenueNet + outputVatCollected and feeds profit = revenueNet - expenseNet into estimateEnkIncomeTax(.).total; 10 exhaustive + fast-check tests. home.tsx replaced with the §6 reveal (Fraunces spendable peak, permission framing) + a calm 'you're caught up' empty state. Testcontainers test: partition correctness, drafts excluded, year-scoped, RLS-isolated. NOT AI / not profiling (ADR 0022). Sequences feat-manual-voucher-entry to produce real data; active-org is feat-org-active-context.",
+      "refs": [
+        "docs/experience-principles.md",
+        "docs/decisions/0033-honest-number-ledger-aggregation.md",
+        "packages/domain/src/honest-number/honest-number.ts"
+      ]
+    },
+    {
+      "id": "feat-manual-voucher-entry",
+      "title": "Manual voucher entry: the first posting surface (produce real ledger data)",
       "status": "todo",
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": ["feat-tax-estimate", "feat-keyed-microcopy"],
-      "notes": "Aggregate income/output-VAT/deductible-input per the documented preconditions (reverse-charge BOTH legs symmetrically; deductible portion only) with a Testcontainers test; feed honestNumber; render the §6 reveal (permission/relief framing).",
+      "depends_on": ["feat-honest-number-surface"],
+      "notes": "The honest-number reveal (ADR 0033) and the org are live, but the ledger is empty — nothing posts vouchers yet. Build a minimal manual-voucher/posting surface: a route+action that creates a fiscal_period if needed, derives a balanced voucher via @saldo/domain (deriveSales/derivePurchase, the rules-engine gate), inserts voucher+postings inside withUserOrg, and sets posted_at. Server-authoritative; Zod at the boundary; gapless invoice_counter when issuing. Then the reveal shows real numbers. Testcontainers integrity test for the posting path. Sales-invoice issuance + receipt-extraction landing build on this.",
       "refs": [
-        "docs/experience-principles.md",
-        "packages/domain/src/honest-number/honest-number.ts"
+        "packages/domain/src/posting/derive.ts",
+        "apps/web/app/db/ledger.server.ts",
+        ".claude/rules/ledger-integrity.md"
       ]
     },
     {

@@ -3,17 +3,47 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-25 — session: `ops-dr-runbook` (disaster-recovery runbook + a TESTED restore drill: Neon PITR procedure, `db/dr/verify-restore.sql` + `tools/restore-drill.sh`, R2 bucket-lock WORM for the 5-year statutory hold vs ledger immutability; ADR 0038)
+**Last updated:** 2026-06-25 — session: `test-stateful-ledger` (stateful, model-based property testing of the ledger: fast-check `asyncModelRun` drives random post/reverse/lock/allocate sequences through the REAL Postgres triggers and asserts balance · append-only · gapless numbering across every reachable history; ADR 0039)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
 
-> ⚠️ **Live external integrations vary by environment.** This session **confirmed** the warning: the
-> Neon control plane is NOT wired here (`DATABASE_URL` points at a LOCAL Postgres, not Neon) and there
-> is no live R2 bucket — so the DR work is docs + ops tooling, with the restore *mechanics* tested
-> against local Postgres and every live-only step flagged for verification. Don't assume egress.
+> ⚠️ **Live external integrations vary by environment.** Still confirmed this session: the Neon control
+> plane is NOT wired here (`DATABASE_URL`/`SALDO_TEST_PG_URI` point at a LOCAL Postgres, not Neon) and
+> there is no live R2 bucket. The stateful-ledger work needs only a real Postgres, which the local
+> cluster provides — but don't assume egress for the Neon/R2 follow-ons.
 
-## This session — `ops-dr-runbook`: the tested-restore DR runbook (ADR 0038)
+## This session — `test-stateful-ledger`: model-based property testing of the ledger (ADR 0039)
+Built the **highest-value test for a system of record**: stateful, model-based property testing
+(fast-check `fc.asyncModelRun`) that drives **random sequences** of post / reverse / lock / allocate
+through the **real Postgres** and asserts the hard invariants hold across *every reachable history* —
+the dynamic dimension the example suites (single transitions) and `verify-restore.sql` (static snapshot)
+can't reach. PR #28 (DR runbook, ADR 0038) was confirmed merged to `main` (`527c2c6`); local `main`
+fast-forwarded; this branch is based on it. Full gate green; landing as a reviewed PR.
+- **Decision (ADR 0039): a REAL-DB command model, not a pure-domain one.** The invariant under test is
+  precisely that posting is *server-authoritative / SQL-enforced*; a pure in-memory model would only
+  re-test the domain's copy of the rules (already covered by `packages/domain` property tests) and prove
+  nothing about the database that IS the system of record. So the model drives the actual triggers,
+  constraints and `allocate_invoice_number`. (Pure-domain stateful model + more hand-written examples
+  considered and rejected — see the ADR.)
+- **`apps/web/test/integrity/ledger-stateful.integration.test.ts`** — reuses the `db-harness`
+  (`startLedgerDb` / `seedOrg`), seeds a **fresh tenant per run** (isolation by `organization_id` → clean
+  slate on every shrink replay, no per-run container churn). Commands: balanced post, motbilag reversal
+  (the only legal correction — swapped legs), illegal voucher/posting mutate+delete (must be rejected),
+  unbalanced post (deferred trigger rejects at commit), period lock, post-into-locked (rejected), invoice
+  allocate, and **allocate-inside-a-rolled-back-tx** (the counter must NOT advance — gaplessness under
+  rollback, where a SEQUENCE would leak a gap).
+- **Global invariant sweep after every command:** every voucher with postings balances (integer øre),
+  the committed posted-voucher set matches the model (append-only — nothing vanished/mutated), and the
+  invoice counter equals the model's committed-allocation count (gapless = `1..n`). Plus a static check
+  that **no invoice SEQUENCE exists** in the schema.
+- **Proved it bites (not a vacuous pass):** a mutation-test sanity check (expected next invoice nr `+1`
+  → `+2`) made fast-check fail and shrink to the minimal counterexample `[allocInvoice]`; reverted.
+- **Gate:** typecheck · lint · format · web `test` **125 passing** (123 + 2 new) · domain **195** ·
+  lint:repo · status:check · backlog validate · audit (no vulns). Added `fast-check` to `apps/web`
+  devDeps (it was only in `packages/domain`).
+
+## Previous session — `ops-dr-runbook`: the tested-restore DR runbook (ADR 0038)
 Wrote the disaster-recovery + document-retention runbook and, crucially, made the restore **testable**:
 "a restore you have never tested is not a backup." PR #27 (durable AI provenance, ADR 0037) was confirmed
 green and **merged to main** first; this branch rebased onto it. App/domain untouched — **docs + ops
@@ -101,9 +131,9 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 38 ADRs (0001–0038) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 51 tasks (27 done, 24 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `test-stateful-ledger` [high/M] — Stateful property testing of the ledger (fast-check model-based)
+- **Decisions:** 39 ADRs (0001–0039) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 51 tasks (28 done, 23 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `design-visual-spike` [medium/M] — Visual-identity spike — illustration style + the companion's look (on carnival tokens + type)
 <!-- /AUTOGEN:repo-status -->
 
 ## This session — `feat-receipt-extraction`: the first AI-system surface (ADR 0035)
@@ -469,17 +499,14 @@ frontend tokens + shadcn + React 19; identity & sessions (0020); four ledger-int
 typography foundations of the UI followed in ADRs **0024–0026** (PRs #13–#15).
 
 ## In progress
-- The **doc-freshness mechanism + knowledge graph** (this session, ADR 0031) is landing via a reviewed
-  PR to `main` — see the "This session" block above. Nothing else is mid-flight.
+- The **stateful ledger property testing** (this session, ADR 0039) is landing via a reviewed PR to
+  `main` — see the "This session" block above. Nothing else is mid-flight.
 
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**
 Don't re-derive "what's next" in prose here; this is just the orientation.
-- **Highest-value ready: `test-stateful-ledger`** [high/M] — model-based (fast-check) stateful property
-  testing of the ledger: drive sequences of posts/reversals and assert the invariants (balance,
-  append-only, gapless counter, period locks) hold across arbitrary histories. The posting surface
-  (ADR 0034), receipt extraction (ADR 0035), and provenance (ADR 0037) have all landed, so there is now
-  a real ledger to model.
+- **`test-stateful-ledger` is now DONE** (ADR 0039). Next highest-value ready task comes from
+  `pnpm backlog next` — likely the AI-Act follow-ons or the `bokforingslov-doc` regulatory grounding.
 - **AI-Act follow-ons (transparency thread):** `aia-conformity-checklist` (Art. 5/6/50 self-assessment),
   `aia-gpai-docs` (capture the upstream GPAI model's Annex XII docs, Art. 53), `aia-literacy-note` (Art. 4).
 - **VAT/tax engine continuation:** `vat-reduced-rate-activity` (capture mval kap. 5 → rate-matching + the

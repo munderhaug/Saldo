@@ -18,6 +18,13 @@ SAF-T must be XSD-valid on demand (for a bokettersyn). Validate, don't assume.
 - The SAF-T standard-accounts list is copyright Regnskap Norge AS, licensed only for SAF-T mapping.
 - For a reviewable summary, pair with the `html-report` skill to emit a pass/fail matrix.
 
+## Rationalizations (don't)
+| Excuse | Reality |
+|---|---|
+| "The export looks right; skip validation." | XSD validation catches structural + code-mapping errors the eye misses — always run it. |
+| "I'll validate at deploy, not pre-merge." | It's a CI gate on export logic — validate before the PR so a failure surfaces early, not in prod. |
+| "I'll map this line to a VAT code/account from memory." | Codes/accounts come from the committed SAF-T lists; memory drifts and corrupts the export. |
+
 ## Red flags — STOP
 - Claiming SAF-T/MVA output is correct without running validation. Mapping to a VAT code/account from
   memory instead of the committed SAF-T lists. A schema bump not re-validated.

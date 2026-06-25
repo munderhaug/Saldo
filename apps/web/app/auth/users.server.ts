@@ -20,7 +20,7 @@ export interface MembershipRow {
 }
 
 /** Normalise an email the way the DB CHECK expects (lower-cased, trimmed). */
-export function normalizeEmail(email: string): string {
+function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 

@@ -32,6 +32,13 @@ append-only log); `docs/regulatory/` and `docs/integrations/` are the compiled, 
 - [ ] `pnpm lint:repo` passes
 - [ ] If the change affects posting/VAT codes, the SAF-T reference lists were used (not hardcoded)
 
+## Rationalizations (don't)
+| Excuse | Reality |
+|---|---|
+| "I'll paraphrase the rule from memory." | Capture the primary source under `db/reference/` first; memory drifts and outdates. |
+| "This rule hasn't changed — skip the verify-by." | Set a realistic `verify-by`; lint flags it when due, so in-flux flows get re-confirmed. |
+| "The page reads fine without a citation." | A regulatory claim with no committed source fails `lint:repo` and isn't trustworthy. |
+
 ## Red flags — STOP
 - Writing a regulatory claim with no committed source. Trusting a flow that's "in flux" (Altinn 2→3,
   systembruker/tilgangspakke) without re-confirming. A page with a past-due verify-by left unaddressed.

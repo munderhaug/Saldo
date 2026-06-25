@@ -10,7 +10,7 @@ import { nb } from './messages';
 import type { MessageKey, Messages } from './messages';
 
 export { nb, en } from './messages';
-export type { MessageKey, Messages } from './messages';
+export type { MessageKey } from './messages';
 
 /** Placeholder names (`{name}`) extracted from a template's literal string type. */
 type Placeholder<S extends string> = S extends `${string}{${infer P}}${infer Rest}`

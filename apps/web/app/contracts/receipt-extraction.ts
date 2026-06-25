@@ -35,7 +35,6 @@ export const aiProvenance = z.object({
   /** Model's self-reported confidence, 0..1 — surfaced so the human weighs the proposal. */
   confidence: z.number().min(0).max(1),
 });
-export type AiProvenance = z.infer<typeof aiProvenance>;
 
 /** A kroner amount from the model (string or number) parsed to integer `Øre` — never float math. */
 const kronerAmount = z
@@ -51,7 +50,7 @@ const kronerAmount = z
   });
 
 /** Whether the document is bought (receipt/supplier invoice) or sold (issued invoice). */
-export const EXTRACTION_DIRECTIONS = ['purchase', 'sale'] as const;
+const EXTRACTION_DIRECTIONS = ['purchase', 'sale'] as const;
 
 /**
  * The raw structured fields the vision model emits in `choices[0].message.content` (see the captured
@@ -76,7 +75,6 @@ export const llmExtractionFields = z.object({
   vat: kronerAmount,
   confidence: z.number().min(0).max(1),
 });
-export type LlmExtractionFields = z.infer<typeof llmExtractionFields>;
 
 /**
  * Confirm-step input for the receipt path: the human's confirmed kind+amount (the SAME `manualVoucherInput`
@@ -92,7 +90,6 @@ export const receiptConfirmInput = manualVoucherInput.extend({
   modelVersion: z.string().min(1),
   confidence: z.coerce.number().min(0).max(1),
 });
-export type ReceiptConfirmInput = z.infer<typeof receiptConfirmInput>;
 
 /** The validated extraction the client returns and the UI discloses — fields plus their provenance. */
 export const receiptExtraction = z.object({

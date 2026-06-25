@@ -52,6 +52,20 @@ Do NOT create subagents for "repo structure", "app design", or "accounting rules
 constraints (rules/docs/tests/ADRs), not recurring reviews. Add a new subagent only on a demonstrated
 need, and pair it with a deterministic backstop.
 
+### When to invoke a subagent (proactively, after the matching change)
+The authoritative trigger lives in each agent's own `description`; in brief: `vat-reviewer` after
+`packages/domain` vat/posting/rules; `privacy-reviewer` after db / integrations / jobs / contracts that
+move personal data; `a11y-reviewer` after routes / components (forms, tables, dialogs); `integration-
+auditor` after `app/integrations` or `app/jobs`; `migration-author` to draft SQL (the parent reviews +
+applies); `test-runner` / `explore` on demand to keep the main context clean.
+
+### Which path-scoped rules load for a file
+They **compose** — every matching rule loads, no precedence needed (the concerns are orthogonal). A
+route file pulls accessibility + design-system + frontend + experience-voice (+ data-handling when it
+touches personal data); a `components/ui` file pulls accessibility + design-system + frontend; an
+`app/integrations`/`app/jobs` file pulls integrations + data-handling (+ ai-act on the LLM surface);
+`packages/domain` money/VAT code pulls money / vat.
+
 ## 3a. Definition of Done
 Every change meets `docs/quality-bar.md` before merge — enforced by CI required checks + hooks, not
 reminders.

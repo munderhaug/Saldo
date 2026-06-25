@@ -8,6 +8,7 @@ import {
   useRouteError,
 } from 'react-router';
 import type { LinksFunction } from 'react-router';
+import { useEffect, useRef } from 'react';
 import { t } from '~/copy';
 // Self-hosted brand fonts (ADR 0026): Fraunces (display/peaks) + IBM Plex Sans (body/UI + tabular
 // figures). Variable files, bundled by Vite — no external CDN (EU-resident, offline PWA).
@@ -43,6 +44,13 @@ export default function App() {
 // Root error boundary: a thrown loader/action error or an unmatched route renders here inside Layout.
 export function ErrorBoundary() {
   const error = useRouteError();
+  // Move focus to the error heading when this renders on a client transition, so a keyboard/
+  // screen-reader user is taken to the message rather than left where the failed action was
+  // (WCAG 2.4.3). `tabIndex={-1}` makes the heading programmatically focusable, never a tab stop.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
   const heading = isRouteErrorResponse(error)
     ? t('error.statusHeading', { status: error.status, statusText: error.statusText })
     : t('error.title');
@@ -56,7 +64,9 @@ export function ErrorBoundary() {
 
   return (
     <main className="mx-auto grid max-w-xl gap-3 p-6 sm:p-10">
-      <h1 className="font-serif text-2xl tracking-tight">{heading}</h1>
+      <h1 ref={headingRef} tabIndex={-1} className="font-serif text-2xl tracking-tight">
+        {heading}
+      </h1>
       <p className="text-muted-foreground">{message}</p>
     </main>
   );

@@ -46,7 +46,7 @@ export const REDACT_PATHS = [
   '*.email',
 ];
 
-export const logger: Logger = pino({
+const logger: Logger = pino({
   level,
   base: null, // drop pid/hostname noise
   redact: { paths: REDACT_PATHS, censor: '[redacted]' },

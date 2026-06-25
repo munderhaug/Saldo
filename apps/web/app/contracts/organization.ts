@@ -3,7 +3,7 @@
  *
  * Shape only: the 9-digit org number's mod11 check digit is validated in `@saldo/domain`
  * (`isValidOrgNr`) at the action boundary, the way `routes/oppslag.tsx` does — keeping this schema a
- * pure shape (build-spec §4.3, mirroring `contracts/index.ts`'s `orgNrInput`). The MVA status is a
+ * pure shape (build-spec §4.3). The MVA status is a
  * consequential choice (it forks all posting, hard invariant): the form proposes a default from the
  * Enhetsregisteret VAT-register flag, but the human confirms it explicitly.
  */

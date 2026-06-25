@@ -32,12 +32,16 @@ jobs:
       # All third-party actions are SHA-pinned (supply-chain hardening, ADR 0017). Dependabot's
       # github-actions ecosystem keeps the pins fresh; the trailing comment tracks the human version.
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0 # full history so commit-lint can resolve origin/main..HEAD
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: git fetch --no-tags origin main 2>/dev/null || true # so origin/main..HEAD resolves below
+      - run: pnpm commitlint # Conventional Commits on this branch's commits (safe no-op if unresolved)
       - run: pnpm audit --audit-level=high # supply-chain gate
       - run: pnpm typecheck
       - run: pnpm lint
@@ -45,6 +49,7 @@ jobs:
       - run: pnpm backlog validate # task graph: schema + no dangling deps + acyclic
       - run: pnpm format:check
       - run: pnpm type-coverage # no implicit-any leaks past the strict bar (>= 97%)
+      - run: pnpm knip # dead-code gate: no unused files / exports / types (runs after typegen)
       - run: pnpm test
       - run: pnpm db:lint # squawk: unsafe-migration linter (forward migrations only)
       - run: pnpm db:migrate # migration check against real Postgres

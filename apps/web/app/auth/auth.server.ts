@@ -3,7 +3,7 @@ import { db } from '../db/client.js';
 import { withOrgTx, type OrgTx } from './middleware.js';
 import { readSessionToken } from './cookies.server.js';
 import { type SessionUser, validateSessionToken } from './session.server.js';
-import { getMembership, getMemberships, type MembershipRow } from './users.server.js';
+import { getMembership, type MembershipRow } from './users.server.js';
 
 /**
  * The authn/authz wiring (ADR 0020) — the FIRST lock, in front of RLS (the second). This module binds
@@ -25,12 +25,8 @@ export async function requireUser(request: Request): Promise<SessionUser> {
   return user;
 }
 
-export function listMemberships(userId: string): Promise<MembershipRow[]> {
-  return getMemberships(db, userId);
-}
-
 /** Authz gate: the user must be a member of `organizationId`, else 403. Returns the user + role. */
-export async function requireOrgAccess(
+async function requireOrgAccess(
   request: Request,
   organizationId: string,
 ): Promise<{ user: SessionUser; membership: MembershipRow }> {

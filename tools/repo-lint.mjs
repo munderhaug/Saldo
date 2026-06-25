@@ -199,11 +199,19 @@ for (const f of docFiles) {
           errors.push(`${t.id}: ${t.status} but touches "${glob}" matches nothing (stale-done)`);
       }
   }
-  const orphans = [...adrNums].filter((a) => !referencedAdrs.has(a)).sort();
+  // Foundational ADRs are architecture/charter decisions no single task implements (online-first,
+  // integer-øre, RR7, shadcn, OSS-self-hostable, drizzle-SQL-source-of-truth, proprietary license).
+  // Allowlisting them keeps this warning meaningful — it fires only for a NEW orphan (e.g. a freshly
+  // added ADR with no implementing/referencing task), not the known-foundational set every run.
+  const FOUNDATIONAL_ADRS = new Set(['0001', '0004', '0005', '0006', '0008', '0011', '0023']);
+  const orphans = [...adrNums]
+    .filter((a) => !referencedAdrs.has(a) && !FOUNDATIONAL_ADRS.has(a))
+    .sort();
   if (orphans.length)
     warnings.push(
       `docs/decisions: ${orphans.length} ADR(s) have no implementing/referencing task (orphan): ` +
-        `${orphans.join(', ')} — add an implements_adr edge in tasks.json or accept as foundational`,
+        `${orphans.join(', ')} — add an implements_adr edge in tasks.json, or (if foundational) ` +
+        `add it to FOUNDATIONAL_ADRS in tools/repo-lint.mjs`,
     );
 }
 

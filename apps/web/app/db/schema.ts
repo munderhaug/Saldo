@@ -1,4 +1,4 @@
-import { pgTable, varchar, unique, pgPolicy, check, uuid, char, text, timestamp, foreignKey, numeric, integer, date, index, bigint, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, varchar, index, foreignKey, pgPolicy, check, uuid, boolean, char, text, integer, timestamp, unique, numeric, date, bigint, primaryKey } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -6,6 +6,52 @@ import { sql } from "drizzle-orm"
 export const schemaMigrations = pgTable("schema_migrations", {
 	version: varchar().primaryKey().notNull(),
 });
+
+export const contact = pgTable("contact", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	isCustomer: boolean("is_customer").default(false).notNull(),
+	isSupplier: boolean("is_supplier").default(false).notNull(),
+	orgNr: char("org_nr", { length: 9 }),
+	name: text().notNull(),
+	email: text(),
+	phone: text(),
+	addressLine: text("address_line"),
+	postalCode: text("postal_code"),
+	city: text(),
+	countryCode: char("country_code", { length: 2 }).default('NO').notNull(),
+	mvaStatus: text("mva_status").notNull(),
+	paymentTermsDays: integer("payment_terms_days").default(14).notNull(),
+	defaultAccountId: uuid("default_account_id"),
+	defaultVatCodeId: uuid("default_vat_code_id"),
+	currency: char({ length: 3 }).default('NOK').notNull(),
+	language: text().default('nb').notNull(),
+	notes: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("contact_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "contact_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.defaultAccountId],
+			foreignColumns: [account.id, account.organizationId],
+			name: "contact_default_account_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.defaultVatCodeId],
+			foreignColumns: [vatCode.id, vatCode.organizationId],
+			name: "contact_default_vat_code_same_org"
+		}),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("contact_language_check", sql`language = ANY (ARRAY['nb'::text, 'en'::text])`),
+	check("contact_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
+	check("contact_payment_terms_days_check", sql`(payment_terms_days >= 0) AND (payment_terms_days <= 365)`),
+	check("contact_check", sql`is_customer OR is_supplier`),
+]);
 
 export const organization = pgTable("organization", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
@@ -31,6 +77,7 @@ export const account = pgTable("account", {
 			foreignColumns: [organization.id],
 			name: "account_organization_id_fkey"
 		}),
+	unique("account_id_org_uniq").on(table.id, table.organizationId),
 	unique("account_organization_id_number_key").on(table.organizationId, table.number),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 ]);
@@ -47,6 +94,7 @@ export const vatCode = pgTable("vat_code", {
 			foreignColumns: [organization.id],
 			name: "vat_code_organization_id_fkey"
 		}),
+	unique("vat_code_id_org_uniq").on(table.id, table.organizationId),
 	unique("vat_code_organization_id_code_key").on(table.organizationId, table.code),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("vat_code_direction_check", sql`direction = ANY (ARRAY['output'::text, 'input'::text, 'none'::text])`),

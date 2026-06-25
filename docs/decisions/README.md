@@ -44,6 +44,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0037 | Persisted AI provenance — durable, queryable EU AI Act Art. 50(2) audit trail (`ai_provenance` table + log) | Accepted |
 | 0038 | Disaster recovery + document retention: Neon PITR, a tested restore drill, R2 WORM lock | Accepted |
 | 0039 | Stateful, model-based property testing of the ledger (a real-DB command model) | Accepted |
+| 0040 | Contacts register data model: one register (role flags), per-contact MVA + defaults, same-org composite FK | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

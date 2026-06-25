@@ -10,6 +10,7 @@ import { z } from 'zod';
 // Per-feature contract modules.
 export * from './enhetsregisteret';
 export * from './organization';
+export * from './contact';
 export * from './voucher';
 export * from './receipt-extraction';
 

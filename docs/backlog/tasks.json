@@ -726,13 +726,51 @@
     {
       "id": "feat-contacts-register",
       "title": "Contacts register — customers & suppliers (brreg autofill + per-contact defaults)",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
+      "implements_adr": ["0040"],
       "depends_on": ["feat-org-onboarding"],
-      "notes": "Build-spec §8.2 (Phase 1). One register for customers & suppliers; Enhetsregisteret autofill (reuse the /oppslag client) + per-contact MVA status; per-contact defaults (terms, account, VAT code, currency, language); ELMA/PEPPOL capability lookup; contact persons & multiple addresses. PREREQUISITE for sales invoicing (§8.4) and supplier invoices (§8.5). Contact names/addresses of an ENK are personal data (data-handling.md). Not yet modelled before this — it is the first half of the §16 Phase-1 'organization & contacts' scope that feat-org-onboarding (org only) left open.",
-      "refs": ["docs/saldo-build-specification.md", "docs/integrations/enhetsregisteret.md"]
+      "notes": "Build-spec §8.2 (Phase 1). DONE (ADR 0040): one `contact` register for customers & suppliers (role flags); Enhetsregisteret autofill (reuses the /oppslag client) + per-contact MVA status (shared proposeMvaStatusFromVatRegister); per-contact defaults (terms, account, VAT code, currency, language) with same-org composite FK; RLS tenancy + Testcontainers isolation test; personal data tagged at the Zod boundary; NO/EN microcopy; list/new/edit routes. PREREQUISITE for sales invoicing (§8.4) and supplier invoices (§8.5). DEFERRED to their own tasks: feat-contacts-peppol-capability, feat-contacts-persons, feat-contacts-addresses.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/integrations/enhetsregisteret.md",
+        "docs/decisions/0040-contacts-register.md"
+      ]
+    },
+    {
+      "id": "feat-contacts-peppol-capability",
+      "title": "Contacts — ELMA/PEPPOL capability lookup",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P3",
+      "depends_on": ["feat-contacts-register"],
+      "notes": "Build-spec §8.2, deferred from feat-contacts-register (ADR 0040). Look up a contact's PEPPOL/ELMA receiving capability (can we send them an EHF invoice?) and store it on the contact. Feeds EHF/PEPPOL send in sales invoicing (§8.4). External lookup — Zod-validated at the boundary, no personal data to a non-EU endpoint.",
+      "refs": ["docs/saldo-build-specification.md"]
+    },
+    {
+      "id": "feat-contacts-persons",
+      "title": "Contacts — multiple contact persons per contact",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "P3",
+      "depends_on": ["feat-contacts-register"],
+      "notes": "Build-spec §8.2, deferred from feat-contacts-register (ADR 0040). A child table of named contact persons (name/email/phone/role) per contact — for addressing invoices and reminders. Personal data (data-handling.md); same tenancy regime as `contact`.",
+      "refs": ["docs/saldo-build-specification.md"]
+    },
+    {
+      "id": "feat-contacts-addresses",
+      "title": "Contacts — multiple addresses per contact",
+      "status": "todo",
+      "value": "low",
+      "effort": "S",
+      "phase": "P3",
+      "depends_on": ["feat-contacts-register"],
+      "notes": "Build-spec §8.2, deferred from feat-contacts-register (ADR 0040). A child table of addresses (postal/visiting/delivery) per contact; `contact` ships with a single inline primary address. Personal data (data-handling.md); same tenancy regime.",
+      "refs": ["docs/saldo-build-specification.md"]
     },
     {
       "id": "feat-products-catalog",

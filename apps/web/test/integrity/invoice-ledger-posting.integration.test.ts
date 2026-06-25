@@ -201,11 +201,10 @@ describe.skipIf(!ledgerDbAvailable)('invoice → ledger posting (app role + RLS)
     expect(legs.find((l) => l.number === '3000')?.credit).toBe(50_000);
   });
 
-  it('a reverse-charge line (advisory, non-zero rate) posts NO output-VAT leg and ties out', async () => {
-    // SAF-T '81' (Regular rate, reverse charge) passes the sales gate as a non-blocking advisory, so it
-    // is issuable — but `computeLine` charges NO VAT on it (treatment ≠ output-vat). The voucher must
-    // mirror that: a 25 % rate category must NOT silently become an ordinary output-VAT leg (.claude/
-    // rules/vat.md), and the document's vat_ore is 0.
+  it('BLOCKS a buyer-self-account reverse-charge purchase code (81) on a sales document', async () => {
+    // SAF-T '81' (import of goods, basis) is a reverse-charge PURCHASE code — the BUYER self-accounts
+    // both legs (vat-reverse-charge). The sales gate (`checkSalesLine`) must refuse it on a sale, so the
+    // draft never persists (it would otherwise mis-state the seller's revenue).
     const orgId = await provisionOrg('registered_standard');
     const input = oneLineInput({
       accountId: await accountId(orgId, '3000'),
@@ -213,6 +212,22 @@ describe.skipIf(!ledgerDbAvailable)('invoice → ledger posting (app role + RLS)
       unitPriceKr: '1000',
     });
     const created = await withOrgTx(appDb, orgId, (tx) => createDraft(tx, orgId, input));
+    expect(created.ok).toBe(false);
+    if (!created.ok) expect(created.error).toBe('reverse-charge-not-a-sale');
+  });
+
+  it('a domestic reverse-charge SALE (51) posts revenue at net — no output-VAT leg, ties out', async () => {
+    // SAF-T '51' (Innenlandsk omsetning med omvendt avgiftplikt) is the seller side: the seller invoices
+    // net and the BUYER self-accounts the VAT, so the seller's voucher is revenue at net with NO VAT leg
+    // (correct — ADR 0043 / vat-reverse-charge). The 0 % rate must not become a phantom VAT leg.
+    const orgId = await provisionOrg('registered_standard');
+    const input = oneLineInput({
+      accountId: await accountId(orgId, '3000'),
+      vatCodeId: await vatCodeId(orgId, '51'),
+      unitPriceKr: '1000',
+    });
+    const created = await withOrgTx(appDb, orgId, (tx) => createDraft(tx, orgId, input));
+    expect(created.ok).toBe(true);
     const invoiceId = created.ok ? created.id : '';
     await withOrgTx(appDb, orgId, (tx) =>
       issueInvoice(tx, orgId, invoiceId, { issueDate: '2026-06-25', dueDate: '2026-07-09' }),
@@ -220,11 +235,11 @@ describe.skipIf(!ledgerDbAvailable)('invoice → ledger posting (app role + RLS)
 
     const [doc] = await db.sql<{ vat: number; gross: number }[]>`
       SELECT vat_ore::int AS vat, gross_ore::int AS gross FROM invoice WHERE id = ${invoiceId}`;
-    expect(doc?.vat).toBe(0); // no VAT charged on the document
+    expect(doc?.vat).toBe(0); // no VAT charged on the document — the buyer self-accounts
 
     const v = await voucherFor(invoiceId);
     const legs = await legsOf(v!.id);
-    expect(legs).toHaveLength(2); // receivable + revenue only — no phantom 25 % VAT leg
+    expect(legs).toHaveLength(2); // receivable + revenue only — no output-VAT leg
     expect(legs.some((l) => l.number.startsWith('27'))).toBe(false);
     expect(legs.find((l) => l.number === SALES_INVOICE_ACCOUNTS.receivable)?.debit).toBe(100_000);
     expect(legs.reduce((s, l) => s + l.debit, 0)).toBe(doc!.gross); // ties out to the document gross

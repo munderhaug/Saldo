@@ -39,8 +39,16 @@ export function lineNet(unitPriceNet: Øre, q: Quantity): Øre {
   return mulRate(unitPriceNet, q);
 }
 
-/** Why a sales line is rejected: a VAT-engine block (registration), or an input code on a sale. */
-export type SalesLineReason = VatLineReason | 'input-code-not-a-sale';
+/**
+ * Why a sales line is rejected: a VAT-engine registration block, an input code on a sale, or a
+ * buyer-self-account (reverse-charge purchase) code on a sale. The reverse-charge *advisory*
+ * (`reverse-charge-deferred`) is never produced here — the sales gate decides every reverse-charge
+ * code (allow the domestic RC sale, block the purchase ones), so it is excluded from the union.
+ */
+export type SalesLineReason =
+  | Exclude<VatLineReason, 'reverse-charge-deferred'>
+  | 'input-code-not-a-sale'
+  | 'reverse-charge-not-a-sale';
 
 /** A sales line's VAT verdict — `ok: false` is a HARD BLOCK the action must honour. */
 export interface SalesLineVerdict {
@@ -51,19 +59,31 @@ export interface SalesLineVerdict {
 
 /**
  * The sales-side gate: may a line carrying `code` be sold by an org in `status`? Builds on the shared
- * `checkVatLine` registration gate (output-VAT / fritatt require registration) and adds the one
- * sales-specific rule: an **input-deductible** code is a purchase code, never a sale, so it is blocked
- * here even for a registered org. Exempt (unntatt) and technical no-VAT codes pass for any status; a
- * reverse-charge sale keeps `checkVatLine`'s non-blocking advisory (its dual-leg posting is deferred).
+ * `checkVatLine` registration gate (output-VAT / fritatt require registration) and adds the
+ * sales-specific rules:
+ *  - an **input-deductible** code is a purchase code, never a sale → blocked even for a registered org;
+ *  - a **reverse-charge** code is a SALE only for the domestic omvendt-avgiftsplikt code (51,
+ *    `direction === 'output'`): the seller invoices net and the BUYER self-accounts both legs, so it
+ *    posts revenue at net — a legitimate sale. Every other reverse-charge code (goods/services bought
+ *    from abroad, gold/emission allowances — 81/82/86/87/91/92) is a BUYER self-account code that
+ *    belongs on a purchase voucher's dual leg, NEVER on a sales document → blocked here.
+ * Exempt (unntatt) and technical no-VAT codes pass for any status.
  */
 export function checkSalesLine(status: MvaStatus, code: SaftTaxCode): SalesLineVerdict {
   const base = checkVatLine(status, code);
   if (base.treatment === 'input-deductible') {
     return { ok: false, treatment: base.treatment, reason: 'input-code-not-a-sale' };
   }
-  return base.reason === undefined
-    ? { ok: base.ok, treatment: base.treatment }
-    : { ok: base.ok, treatment: base.treatment, reason: base.reason };
+  if (base.treatment === 'reverse-charge') {
+    return code.direction === 'output'
+      ? { ok: true, treatment: base.treatment } // code 51 — domestic reverse-charge sale, revenue at net
+      : { ok: false, treatment: base.treatment, reason: 'reverse-charge-not-a-sale' };
+  }
+  // Every other treatment carries at most a registration block; the reverse-charge advisory was
+  // handled above, so it can never reach here (narrowed out of the reason union).
+  return base.reason !== undefined && base.reason !== 'reverse-charge-deferred'
+    ? { ok: base.ok, treatment: base.treatment, reason: base.reason }
+    : { ok: base.ok, treatment: base.treatment };
 }
 
 /** A computed invoice line: its money split, the rate that produced the VAT, and the sales verdict. */

@@ -386,7 +386,8 @@ export const nb = {
     'Fradrag for inngående mva krever at foretaket er MVA-registrert.',
   'invoices.error.input-code-not-a-sale':
     'Denne MVA-koden er for kjøp, ikke salg. Velg en salgskode.',
-  'invoices.error.reverse-charge-deferred': 'Snudd avregning støttes ikke på faktura enda.',
+  'invoices.error.reverse-charge-not-a-sale':
+    'Denne MVA-koden gjelder kjøp med snudd avregning (du regner ut mva selv), ikke salg. Velg en salgskode.',
   'invoices.error.unknown-vat-code': 'Ukjent MVA-kode på en linje.',
   'invoices.error.notADraft':
     'Bare utkast kan endres. Et utstedt dokument rettes med en kreditnota.',
@@ -776,7 +777,8 @@ export const en = {
     'Deducting input VAT requires the business to be VAT-registered.',
   'invoices.error.input-code-not-a-sale':
     'This VAT code is for purchases, not sales. Pick a sales code.',
-  'invoices.error.reverse-charge-deferred': 'Reverse charge is not yet supported on an invoice.',
+  'invoices.error.reverse-charge-not-a-sale':
+    'This VAT code is for reverse-charge purchases (you self-account the VAT), not sales. Pick a sales code.',
   'invoices.error.unknown-vat-code': 'Unknown VAT code on a line.',
   'invoices.error.notADraft':
     'Only a draft can be changed. Correct an issued document with a credit note.',

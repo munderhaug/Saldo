@@ -260,13 +260,17 @@
     {
       "id": "vat-reverse-charge",
       "title": "Reverse-charge dual-leg + non-deductible VAT rules",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P2",
       "depends_on": [],
-      "notes": "Phase 2 carry-overs in @saldo/domain (new-vat-scenario skill; exhaustive + property tests).",
-      "refs": [".claude/skills/new-vat-scenario/SKILL.md"]
+      "implements_adr": ["0044"],
+      "notes": "DONE (ADR 0044): deriveReverseChargePurchase posts the dual leg (output 2704-2709 + input 2714-2718) for import/foreign-service/gold purchases; reverseChargeKind/reverseChargeInputDeductible classify from the committed SAF-T descriptions; checkSalesLine allows the domestic RC sale (51, revenue-at-net) and blocks the buyer-self-account purchase codes; recordReverseChargePurchase + Testcontainers integrity test prove both legs balance and land on the MVA basis. Below-threshold §3-30 self-accounting deferred to vat-threshold-watcher; supplier-invoice entry UI is feat-supplier-invoices.",
+      "refs": [
+        ".claude/skills/new-vat-scenario/SKILL.md",
+        "docs/decisions/0044-vat-reverse-charge.md"
+      ]
     },
     {
       "id": "mva-kunst-sectoral-doc",

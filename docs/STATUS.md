@@ -6,7 +6,7 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-25 — session `feat-invoice-ledger-posting` (ADR 0043). Branch + HEAD live in `git`
+**Last updated:** 2026-06-25 — session `vat-reverse-charge` (ADR 0044). Branch + HEAD live in `git`
 (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Confirmed locally: the Neon control plane is
@@ -44,7 +44,15 @@ auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act
   line, credit output VAT per rate — atomically in the issuing tx, via the pure `deriveSalesInvoice`
   reusing `deriveSales`; a credit note posts the reversing motbilag; `voucher.invoice_id` links the
   document to its ledger entry; VAT is treatment-gated so the voucher ties out to the frozen `vat_ore`;
-  ADR 0043). The org page carries a registers nav linking all three. EU AI Act Art. 50 disclosure +
+  ADR 0043), and **reverse-charge / non-deductible VAT** (snudd avregning) hardening the slice:
+  `deriveReverseChargePurchase` posts the buyer's DUAL leg (self-accounted output 2704–2709 + deductible
+  input 2714–2718) so both land on the MVA basis even when net cash is zero; non-deductible (`uten
+  fradragsrett`, representasjon/vehicle/private) books the VAT to cost; deductibility + the VAT-account
+  kind are classified from the committed SAF-T descriptions (`reverseChargeInputDeductible` /
+  `reverseChargeKind`); `checkSalesLine` now allows the domestic RC sale (51, revenue-at-net) and BLOCKS
+  the buyer-self-account purchase codes on a sales document; `recordReverseChargePurchase` + a
+  Testcontainers integrity test prove both legs balance and aggregate (ADR 0044). The org page carries a
+  registers nav linking all three. EU AI Act Art. 50 disclosure +
   Art. 50(2) audit trail are in place. The invoicing→ledger loop is now closed; PDF/email + recurring
   remain split out.
 
@@ -58,17 +66,19 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 43 ADRs (0001–0043) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 78 tasks (32 done, 46 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 44 ADRs (0001–0044) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 78 tasks (33 done, 45 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-invoice-pdf-email` [high/M] — Invoice PDF generation + email delivery (EU provider) + EHF/PEPPOL validate
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — **invoice → ledger posting** (ADR 0043) — landed via a
-reviewed PR; see `git log` for the detail. Still split out of §8.4: PDF + email (`feat-invoice-pdf-email`,
-blocked on the transactional-email-provider decision), recurring/reminders
-(`feat-recurring-invoices-reminders`). Reverse-charge sales post seller-side revenue-only; the dual-leg
-derivation + tightening the sales-line gate are sequenced to `vat-reverse-charge`. The project-wide
+Nothing mid-flight. The most recent work — **reverse-charge / non-deductible VAT** (ADR 0044) — landed
+via a reviewed PR; see `git log` for the detail. The reverse-charge dual leg + sales-gate tightening are
+now DONE in `@saldo/domain` and proven by integrity tests; `recordReverseChargePurchase` is the posting
+primitive that **`feat-supplier-invoices`** (the supplier-invoice entry route/UI) will build on. Still
+split out of §8.4: PDF + email (`feat-invoice-pdf-email`, blocked on the transactional-email-provider
+decision), recurring/reminders (`feat-recurring-invoices-reminders`). Below-threshold § 3-30
+self-accounting on foreign-service purchases is sequenced to `vat-threshold-watcher`. The project-wide
 privacy gap is still tracked: data export in `feat-audit-trail-export`, GDPR erasure in `feat-gdpr-erasure`.
 
 ## Next up
@@ -79,7 +89,7 @@ Don't re-derive "what's next" in prose here; this is orientation, not the record
   `aia-gpai-docs` (capture the upstream GPAI model's Annex XII docs, Art. 53), `aia-literacy-note` (Art. 4).
 - **VAT/tax engine continuation:** `vat-reduced-rate-activity` (capture mval kap. 5 → rate-matching +
   the rules/DB activity wiring), `vat-threshold-watcher` (the 50k registration threshold),
-  `vat-reverse-charge`, `vat-mixed-activity` (§ 8-2 apportionment).
+  `vat-mixed-activity` (§ 8-2 apportionment). (`vat-reverse-charge` is DONE — ADR 0044.)
 - **Regulatory grounding gaps:** `bokforingslov-doc` + the uncaptured Tier-1 sources (tidfesting,
   tap på krav § 4-7, uttak, justering kap. 9, EHF/Peppol B2G).
 - **Sustaining discipline (roadmap Part 3, P1/P2):** make the quality bar mechanical (`ci-pr-template`),

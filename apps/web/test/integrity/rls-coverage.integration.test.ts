@@ -43,6 +43,7 @@ describe.skipIf(!ledgerDbAvailable)('RLS coverage — every public table is lock
       'invoice_counter',
       'organization',
       'posting',
+      'product',
       'vat_code',
       'voucher',
     ];

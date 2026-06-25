@@ -124,6 +124,28 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
         </Table>
       </section>
 
+      <nav aria-label={t('orgs.overview.registersTitle')} className="grid gap-3">
+        <CardTitle className="font-text text-lg">{t('orgs.overview.registersTitle')}</CardTitle>
+        <ul className="grid gap-2">
+          <li>
+            <Link
+              to={`/orgs/${org.id}/contacts`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('contacts.title')}
+            </Link>
+          </li>
+          <li>
+            <Link
+              to={`/orgs/${org.id}/products`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('products.title')}
+            </Link>
+          </li>
+        </ul>
+      </nav>
+
       <Link
         to="/orgs"
         className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"

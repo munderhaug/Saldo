@@ -6,7 +6,7 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-25 — session `feat-contacts-register` (ADR 0040). Branch + HEAD live in `git`
+**Last updated:** 2026-06-25 — session `feat-products-catalog` (ADR 0041). Branch + HEAD live in `git`
 (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Confirmed locally: the Neon control plane is
@@ -31,9 +31,12 @@ auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act
   (`/orgs`, `/orgs/new`, `/orgs/:orgId`: create + provision + multi-membership), `home.tsx` = the
   honest-number reveal (ADR 0033), manual voucher entry (ADR 0034), receipt extraction — the first
   AI system (ADR 0035) — with the shared AI-transparency primitive (ADR 0036) and durable provenance
-  (ADR 0037), and the **contacts register** (`/orgs/:orgId/contacts` list/new/edit — customers &
-  suppliers in one table, brreg autofill, per-contact MVA status + defaults, ADR 0040). EU AI Act
-  Art. 50 disclosure + Art. 50(2) audit trail are in place.
+  (ADR 0037), the **contacts register** (`/orgs/:orgId/contacts` list/new/edit — customers &
+  suppliers in one table, brreg autofill, per-contact MVA status + defaults, ADR 0040), and the
+  **products & services catalogue** (`/orgs/:orgId/products` list/new/edit — goods/service items with
+  a net øre price, a derived incl-VAT preview, unit, and same-org default account/VAT code, ADR 0041);
+  the org page now carries a registers nav linking both. EU AI Act Art. 50 disclosure + Art. 50(2)
+  audit trail are in place.
 
 **Gates (run them or see CI for live counts — not restated here):** `pnpm typecheck` · `lint` ·
 `format:check` · `lint:repo` (harness + cited-docs + link integrity + no-contradiction + the generated
@@ -45,8 +48,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 40 ADRs (0001–0040) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 74 tasks (29 done, 45 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 41 ADRs (0001–0041) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 76 tasks (30 done, 46 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-sales-invoicing` [high/L] — Sales & invoicing — quotes -> immutable gapless invoices -> credit notes (the product core)
 <!-- /AUTOGEN:repo-status -->
 

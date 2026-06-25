@@ -775,13 +775,36 @@
     {
       "id": "feat-products-catalog",
       "title": "Products & services catalogue (default account + VAT code + price)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
+      "implements_adr": ["0041"],
       "depends_on": ["feat-org-onboarding"],
-      "notes": "Build-spec §8.3 (Phase 1). Catalogue of goods/services with a default account + VAT code + unit + price; goods/service classification; line/document discounts; reusable line templates. Feeds sales-invoice lines (§8.4). Defaults must reference the org's provisioned SAF-T accounts/VAT codes (feat-org-onboarding), source-grounded, never memory.",
-      "refs": ["docs/saldo-build-specification.md"]
+      "notes": "Build-spec §8.3 (Phase 1). DONE (ADR 0041): one `product` table for goods/services (kind CHECK); net unit_price_ore (bigint øre, parsed via parseKroner), pure domain grossFromNet helper for the browser incl-VAT preview; per-item defaults (account, VAT code) with same-org composite FK reusing the contacts (id, organization_id) unique targets; source-grounded VAT codes; RLS tenancy + Testcontainers isolation test; no personal data; NO/EN microcopy; list/new/edit routes + a registers nav on the org page. The catalogue item doubles as a reusable invoice-line template; it feeds sales-invoice lines (§8.4) as a defaults layer (feat-sales-invoicing does NOT hard-depend on it). DEFERRED to their own tasks: feat-product-discounts, feat-line-templates.",
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0041-products-catalogue.md"]
+    },
+    {
+      "id": "feat-product-discounts",
+      "title": "Line & document discounts on catalogue items / invoice lines",
+      "status": "todo",
+      "value": "low",
+      "effort": "M",
+      "phase": "P3",
+      "depends_on": ["feat-products-catalog", "feat-sales-invoicing"],
+      "notes": "Build-spec §8.3/§8.4. Per-line and whole-document discounts (percentage or amount) applied to sales-invoice lines, computed in @saldo/domain on integer øre (mulRate/roundØre, never float) with exhaustive + property tests. Deferred from feat-products-catalog: discounts feed invoice composition and have no consumer until the sales-invoice surface (feat-sales-invoicing) exists, so building them earlier would be speculative.",
+      "refs": ["docs/saldo-build-specification.md", ".claude/rules/money.md"]
+    },
+    {
+      "id": "feat-line-templates",
+      "title": "Reusable multi-line document templates",
+      "status": "todo",
+      "value": "low",
+      "effort": "M",
+      "phase": "P3",
+      "depends_on": ["feat-products-catalog", "feat-sales-invoicing"],
+      "notes": "Build-spec §8.3. A saved preset of SEVERAL invoice lines (a single catalogue item already serves as a one-line template — ADR 0041). Deferred from feat-products-catalog: a multi-line template entity has no consumer until invoicing (feat-sales-invoicing) can apply it; revisit when §8.4 needs grouped presets.",
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0041-products-catalogue.md"]
     },
     {
       "id": "feat-opening-balances",

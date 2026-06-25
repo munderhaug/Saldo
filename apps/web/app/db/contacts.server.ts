@@ -10,7 +10,16 @@
 import { asc, eq, sql } from 'drizzle-orm';
 import type { OrgTx } from '../auth/middleware.js';
 import { rolesFromValue, type ContactInput } from '../contracts/contact.js';
-import { account, contact, vatCode } from './schema.js';
+import { contact } from './schema.js';
+
+// The default-picker option lists are shared with the products catalogue; re-exported here so the
+// contacts routes/form keep importing them from `~/db/contacts.server` unchanged.
+export {
+  listAccountOptions,
+  listVatCodeOptions,
+  type AccountOption,
+  type VatCodeOption,
+} from './org-defaults.server.js';
 
 /** Row shape for the register list — the everyday columns, no defaults clutter. */
 export interface ContactListRow {
@@ -36,18 +45,6 @@ export interface ContactDetail extends ContactListRow {
   readonly currency: string;
   readonly language: string;
   readonly notes: string | null;
-}
-
-/** A `{ id, label }` option for the default-account / default-VAT-code pickers. */
-export interface AccountOption {
-  readonly id: string;
-  readonly number: string;
-  readonly name: string;
-}
-export interface VatCodeOption {
-  readonly id: string;
-  readonly code: string;
-  readonly rate: string;
 }
 
 /** List this tenant's contacts, alphabetical by name (RLS scopes to the current org). */
@@ -90,22 +87,6 @@ export async function readContact(tx: OrgTx, contactId: string): Promise<Contact
     language: row.language,
     notes: row.notes,
   };
-}
-
-/** Accounts available as a per-contact default (the org's provisioned kontoplan, RLS-scoped). */
-export async function listAccountOptions(tx: OrgTx): Promise<AccountOption[]> {
-  return tx
-    .select({ id: account.id, number: account.number, name: account.name })
-    .from(account)
-    .orderBy(asc(account.number));
-}
-
-/** VAT codes available as a per-contact default (RLS-scoped). */
-export async function listVatCodeOptions(tx: OrgTx): Promise<VatCodeOption[]> {
-  return tx
-    .select({ id: vatCode.id, code: vatCode.code, rate: vatCode.rate })
-    .from(vatCode)
-    .orderBy(asc(vatCode.code));
 }
 
 /** '' (the form's "not given") becomes NULL; everything else is the trimmed string. */

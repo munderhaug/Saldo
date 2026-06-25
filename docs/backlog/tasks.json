@@ -837,15 +837,16 @@
     {
       "id": "feat-invoice-ledger-posting",
       "title": "Post the AR voucher to the general ledger when a sales invoice is issued",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P3",
       "depends_on": ["feat-sales-invoicing"],
-      "notes": "Build-spec §8.4. feat-sales-invoicing (ADR 0042) ships the sales document of record but deliberately does NOT yet post to the general ledger. Wire issuing to derive + post the AR voucher (debit receivable / credit revenue per line account + output VAT per code) via the existing posting/derive domain + the voucher/posting tables, resolving the fiscal_period for the issue date and reusing the balance/immutability/period-lock triggers. The invoice already stores per-line account + VAT code + the customer link + totals, so this is a mechanical follow-on. A credit note posts the reversing motbilag. Needs a Testcontainers test that the issued voucher balances and lands in the right period.",
+      "implements_adr": ["0043"],
+      "notes": "DONE (ADR 0043). Issuing a sales invoice / credit note now posts a balanced AR voucher (debit receivable gross / credit revenue per line / credit output VAT per rate) atomically in the issuing tx, via the pure deriveSalesInvoice (reuses deriveSales) + reverseVoucher for the credit-note motbilag. fiscal_period resolved from the issue date; voucher.invoice_id links the document to its ledger entry (partial UNIQUE prevents double-post). VAT is treatment-gated like computeLine so it ties out to the frozen vat_ore (a reverse-charge line posts revenue-at-net, no phantom VAT leg). Testcontainers integrity test proves balance, correct unlocked period, reverse-charge tie-out, credit-note reversal, and atomic rollback on a locked period. Follow-ons: vat-reverse-charge (dual-leg + tighten the sales-line gate), feat-invoice-pdf-email.",
       "refs": [
         "docs/saldo-build-specification.md",
-        "docs/decisions/0042-sales-invoicing.md",
+        "docs/decisions/0043-invoice-ledger-posting.md",
         ".claude/rules/ledger-integrity.md"
       ]
     },

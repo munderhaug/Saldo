@@ -19,6 +19,7 @@
  */
 import { z } from 'zod';
 import { parseKroner, type Øre } from '@saldo/domain';
+import { manualVoucherInput } from './voucher';
 
 /**
  * Art. 50(2) provenance — REQUIRED on every AI-proposed value. `aiAssisted: true` is a literal: a
@@ -76,6 +77,22 @@ export const llmExtractionFields = z.object({
   confidence: z.number().min(0).max(1),
 });
 export type LlmExtractionFields = z.infer<typeof llmExtractionFields>;
+
+/**
+ * Confirm-step input for the receipt path: the human's confirmed kind+amount (the SAME `manualVoucherInput`
+ * the manual surface uses — the truth) PLUS the AI provenance carried through the review round-trip as
+ * hidden fields, re-validated here so the durable Art. 50(2) record (ADR 0037) is written from a checked
+ * shape, never trusted raw. Persisted provenance is model · modelVersion · confidence ONLY — never the
+ * supplier (// personal), amounts-as-PII, or the image (`data-handling.md`). Mirrors `aiProvenance` minus
+ * the `aiAssisted` literal (this path is AI-only, so presence is implied) and coercing `confidence` from
+ * the form string.
+ */
+export const receiptConfirmInput = manualVoucherInput.extend({
+  model: z.string().min(1),
+  modelVersion: z.string().min(1),
+  confidence: z.coerce.number().min(0).max(1),
+});
+export type ReceiptConfirmInput = z.infer<typeof receiptConfirmInput>;
 
 /** The validated extraction the client returns and the UI discloses — fields plus their provenance. */
 export const receiptExtraction = z.object({

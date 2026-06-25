@@ -520,13 +520,24 @@
     {
       "id": "aia-provenance-logging",
       "title": "EU AI Act: AI-output provenance + 'AI-assisted' label + logging (Art 50(2))",
-      "status": "todo",
+      "implements_adr": ["0037"],
+      "touches": [
+        "db/migrations",
+        "apps/web/app/db/ai-provenance.server.ts",
+        "apps/web/app/contracts/receipt-extraction.ts",
+        "apps/web/app/routes/orgs.$orgId.receipts.new.tsx"
+      ],
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "compliance",
       "depends_on": ["feat-receipt-extraction", "pr6-observability"],
-      "notes": "The code-level provenance gate (aiAssisted literal true + model/version/confidence as a REQUIRED Zod field, with a test) landed in the contract with feat-receipt-extraction (ADR 0035). This task adds the DURABLE half: persist+log that provenance (pino + a queryable record) when a confirmed AI proposal posts, paired with the observability baseline.",
-      "refs": ["docs/regulatory/eu-ai-act.md", ".claude/rules/ai-act.md"]
+      "notes": "DONE (ADR 0037). The code-level provenance gate (aiAssisted literal true + model/version/confidence as a REQUIRED Zod field) landed in the contract with feat-receipt-extraction (ADR 0035). This task added the DURABLE half: a dedicated ai_provenance table FK'd 1:1 to the voucher (model/model_version/confidence + linkage ONLY — no supplier/amount/image; data-handling.md), FORCE RLS + org_isolation policy, append-only saldo_app grant (SELECT/INSERT, no UPDATE/DELETE), composite (voucher_id, organization_id) FK. The confirm action (AI-only) re-validates the provenance carried through the review round-trip as hidden fields (receiptConfirmInput) and posts + records provenance in ONE tenant tx (AI never writes the ledger, ADR 0002). Plus a structured pino log line (aiProvenanceLogFields = the single, tested loggable shape; no personal data; ADR 0021). Tests: Testcontainers integrity (FK 1:1, RLS isolation, append-only grant, manual-post-writes-none, minimal columns) + contract + redaction/no-leak unit test. Chose a table over logging-only (durable + queryable, joinable to the system of record).",
+      "refs": [
+        "docs/decisions/0037-persisted-ai-provenance.md",
+        "docs/regulatory/eu-ai-act.md",
+        ".claude/rules/ai-act.md"
+      ]
     },
     {
       "id": "aia-gpai-docs",

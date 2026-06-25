@@ -37,6 +37,7 @@ describe.skipIf(!ledgerDbAvailable)('RLS coverage — every public table is lock
     // protected differently (grant + secret-key lookup, ADR 0020) — they sit on an explicit allowlist.
     const TENANT_TABLES = [
       'account',
+      'ai_provenance',
       'fiscal_period',
       'invoice_counter',
       'organization',

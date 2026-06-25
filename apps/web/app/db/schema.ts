@@ -99,6 +99,7 @@ export const voucher = pgTable("voucher", {
 			foreignColumns: [fiscalPeriod.id, fiscalPeriod.organizationId],
 			name: "voucher_period_same_org"
 		}),
+	unique("voucher_id_org_uniq").on(table.id, table.organizationId),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("voucher_type_check", sql`type = ANY (ARRAY['sales'::text, 'purchase'::text, 'manual'::text, 'bank'::text, 'reversal'::text])`),
 ]);
@@ -178,6 +179,35 @@ export const userSession = pgTable("user_session", {
 			name: "user_session_user_id_fkey"
 		}).onDelete("cascade"),
 	check("user_session_id_check", sql`id ~ '^[0-9a-f]{64}$'::text`),
+]);
+
+export const aiProvenance = pgTable("ai_provenance", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	voucherId: uuid("voucher_id").notNull(),
+	model: text().notNull(),
+	modelVersion: text("model_version").notNull(),
+	confidence: numeric({ precision: 4, scale:  3 }).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "ai_provenance_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.voucherId],
+			foreignColumns: [voucher.id],
+			name: "ai_provenance_voucher_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.voucherId],
+			foreignColumns: [voucher.id, voucher.organizationId],
+			name: "ai_provenance_voucher_id_organization_id_fkey"
+		}),
+	unique("ai_provenance_voucher_id_key").on(table.voucherId),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("ai_provenance_confidence_check", sql`(confidence >= (0)::numeric) AND (confidence <= (1)::numeric)`),
 ]);
 
 export const membership = pgTable("membership", {

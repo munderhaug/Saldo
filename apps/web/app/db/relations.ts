@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, account, vatCode, fiscalPeriod, voucher, posting, invoiceCounter, appUser, userSession, membership } from "./schema";
+import { organization, account, vatCode, fiscalPeriod, voucher, posting, invoiceCounter, appUser, userSession, aiProvenance, membership } from "./schema";
 
 export const accountRelations = relations(account, ({one, many}) => ({
 	organization: one(organization, {
@@ -16,6 +16,7 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	vouchers: many(voucher),
 	postings: many(posting),
 	invoiceCounters: many(invoiceCounter),
+	aiProvenances: many(aiProvenance),
 	memberships: many(membership),
 }));
 
@@ -64,6 +65,12 @@ export const voucherRelations = relations(voucher, ({one, many}) => ({
 		relationName: "voucher_organizationId_fiscalPeriod_id"
 	}),
 	postings: many(posting),
+	aiProvenances_voucherId: many(aiProvenance, {
+		relationName: "aiProvenance_voucherId_voucher_id"
+	}),
+	aiProvenances_organizationId: many(aiProvenance, {
+		relationName: "aiProvenance_organizationId_voucher_id"
+	}),
 }));
 
 export const postingRelations = relations(posting, ({one}) => ({
@@ -102,6 +109,23 @@ export const userSessionRelations = relations(userSession, ({one}) => ({
 export const appUserRelations = relations(appUser, ({many}) => ({
 	userSessions: many(userSession),
 	memberships: many(membership),
+}));
+
+export const aiProvenanceRelations = relations(aiProvenance, ({one}) => ({
+	organization: one(organization, {
+		fields: [aiProvenance.organizationId],
+		references: [organization.id]
+	}),
+	voucher_voucherId: one(voucher, {
+		fields: [aiProvenance.voucherId],
+		references: [voucher.id],
+		relationName: "aiProvenance_voucherId_voucher_id"
+	}),
+	voucher_organizationId: one(voucher, {
+		fields: [aiProvenance.organizationId],
+		references: [voucher.id],
+		relationName: "aiProvenance_organizationId_voucher_id"
+	}),
 }));
 
 export const membershipRelations = relations(membership, ({one}) => ({

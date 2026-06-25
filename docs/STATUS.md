@@ -3,17 +3,40 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-24 — session: `aia-transparency-ui` (the bespoke receipt AI-disclosure generalised into one shared, accessible `<AiAssisted>` primitive — EU AI Act Art. 50 treatment for every AI surface, ADR 0036)
+**Last updated:** 2026-06-25 — session: `aia-provenance-logging` (the durable half of EU AI Act Art. 50(2): a confirmed AI proposal now persists its provenance — model · version · confidence — to an `ai_provenance` table FK'd to the voucher, plus a structured log; ADR 0037)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
-> not configured here. This session was **UI/compliance only** (no egress needed — no statute or
-> register fetches). Local Postgres / Testcontainers stand in for DB work; don't assume egress next
-> session — verify it.
+> not configured here. This session was **DB + compliance** (a new SQL migration), run against local
+> Postgres / Testcontainers — no external egress needed; don't assume egress next session — verify it.
 
-## This session — `aia-transparency-ui`: the shared AI-disclosure primitive (ADR 0036)
+## This session — `aia-provenance-logging`: the durable Art. 50(2) audit trail (ADR 0037)
+Built the **persisted half** of EU AI Act **Art. 50(2)** provenance: when a human confirms an AI-proposed
+value and it posts to the ledger, a queryable record that the voucher **came from an AI proposal** is now
+persisted + logged. The code-level provenance contract (ADR 0035) and the UI disclosure (ADR 0036) were
+already in place; what was missing was the durable record — the confirm action previously **discarded**
+the provenance. Full gate green. Landing as a reviewed PR.
+- **Decision: a table, not logging-only.** A dedicated **`ai_provenance`** table FK'd **1:1** to the
+  voucher (`model` · `model_version` · `confidence` + linkage **only**) — durable, queryable, joinable to
+  the system of record; logs rotate and can't be joined. The structured **pino** log line stays as the
+  observability signal (ADR 0021). Recorded in **ADR 0037**.
+- **Privacy by construction (`data-handling.md`).** The table has **no** column for the supplier
+  (// personal — an ENK supplier may be a natural person), the amounts (PII), or the image. The log shape
+  is `aiProvenanceLogFields` — the single, **tested** definition of what reaches the log.
+- **Tenancy + immutability.** FORCE RLS + a USING/WITH CHECK `org_isolation` policy; a composite
+  `(voucher_id, organization_id)` FK makes a cross-tenant link impossible at the storage layer; the
+  `saldo_app` grant is **SELECT + INSERT only** (no UPDATE/DELETE) so the audit trail is append-only,
+  matching the immutable voucher it annotates.
+- **AI never writes the ledger (ADR 0002).** The confirm action re-validates the provenance carried
+  through the review round-trip as **hidden fields** (`receiptConfirmInput`) and posts **and** records
+  provenance in **one** tenant transaction — the provenance sits *alongside* the human-confirmed post.
+- **Tests.** Testcontainers integrity (FK 1:1, RLS isolation, append-only grant, *manual-post-writes-none*,
+  minimal columns) + the `receiptConfirmInput` contract + a redaction/no-leak unit test. `ai_provenance`
+  added to the RLS-coverage allowlist. Web suite **117 passing**.
+
+## Previous session — `aia-transparency-ui`: the shared AI-disclosure primitive (ADR 0036)
 Generalised the **first-interaction AI disclosure** (EU AI Act **Art. 50**) from the bespoke receipt
 block (ADR 0035) into **one reusable, accessible primitive** so every current and future AI surface
 discloses consistently — by the **2 Aug 2026** transparency deadline. **App-layer only; no schema, no
@@ -38,20 +61,19 @@ not a new *that*). Landing as a reviewed PR.
   `renderToStaticMarkup` (no jsdom/testing-library added; vitest `include` widened to `*.test.tsx`):
   asserts the label + `data-ai-assisted` marker, the disclosure + provenance, the real labelled `<h2>`
   region, focusability on reveal, and that wrapped surface content renders.
-- **Sequenced:** durable provenance **logging** (Art. 50(2)'s persisted half) is now the highest-value
-  ready task — `aia-provenance-logging` [high/M] (persist model/version/confidence when a confirmed AI
-  proposal posts, via the pino baseline; never log personal data or the image).
+- **Sequenced:** durable provenance **logging** (Art. 50(2)'s persisted half) — **done this session**
+  (`aia-provenance-logging`, ADR 0037; see above).
 
-## Previous session — `feat-receipt-extraction`: the first AI-system surface (ADR 0035)
+## Earlier — `feat-receipt-extraction`: the first AI-system surface (ADR 0035)
 
 ## Repo status (generated — do not edit; `pnpm status:refresh`)
 The volatile facts below are rendered from committed sources (ADR files + the task DAG) by
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 36 ADRs (0001–0036) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 51 tasks (25 done, 26 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `aia-provenance-logging` [high/M] — EU AI Act: AI-output provenance + 'AI-assisted' label + logging (Art 50(2))
+- **Decisions:** 37 ADRs (0001–0037) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 51 tasks (26 done, 25 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `ops-dr-runbook` [high/M] — DR runbook: Neon PITR + restore drills, R2 retention
 <!-- /AUTOGEN:repo-status -->
 
 ## This session — `feat-receipt-extraction`: the first AI-system surface (ADR 0035)

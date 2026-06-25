@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { øre } from '@saldo/domain';
-import { aiProvenance, llmExtractionFields, receiptExtraction } from './receipt-extraction';
+import {
+  aiProvenance,
+  llmExtractionFields,
+  receiptConfirmInput,
+  receiptExtraction,
+} from './receipt-extraction';
 
 const validProvenance = {
   aiAssisted: true as const,
@@ -82,5 +87,33 @@ describe('receiptExtraction — every extraction carries its provenance', () => 
 
   it('REFUSES an extraction with no provenance — the code-level AI-Act gate', () => {
     expect(receiptExtraction.safeParse(fields).success).toBe(false);
+  });
+});
+
+describe('receiptConfirmInput — kind+amount plus the provenance carried to the durable record', () => {
+  const base = {
+    kind: 'expense',
+    amount: '1250.50',
+    model: 'qwen2.5-vl',
+    modelVersion: 'qwen2.5-vl:7b',
+  };
+
+  it('parses the confirmed event and coerces the confidence from its form string', () => {
+    const parsed = receiptConfirmInput.parse({ ...base, confidence: '0.9' });
+    expect(parsed).toEqual({ ...base, confidence: 0.9 });
+  });
+
+  it('requires the provenance fields — a confirm without model/version/confidence is rejected', () => {
+    expect(receiptConfirmInput.safeParse({ kind: 'expense', amount: '100' }).success).toBe(false);
+    expect(receiptConfirmInput.safeParse({ ...base, model: '', confidence: '0.5' }).success).toBe(
+      false,
+    );
+    expect(receiptConfirmInput.safeParse({ ...base, confidence: '1.5' }).success).toBe(false);
+  });
+
+  it('still enforces the manual amount rule (a non-positive amount is rejected)', () => {
+    expect(receiptConfirmInput.safeParse({ ...base, amount: '0', confidence: '0.5' }).success).toBe(
+      false,
+    );
   });
 });

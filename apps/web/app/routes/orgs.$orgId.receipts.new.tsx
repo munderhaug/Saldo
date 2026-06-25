@@ -35,9 +35,16 @@ import { extractReceipt } from '~/integrations/llm/client.server';
 import { llmConfig } from '~/integrations/llm/config.server';
 import { AiAssisted } from '~/components/ui/ai-assisted';
 import { recordManualVoucher } from '~/db/posting.server';
+import { aiProvenanceLogFields, recordAiProvenance } from '~/db/ai-provenance.server';
 import { organization } from '~/db/schema';
+import { requestLogger } from '~/observability/logger.server';
 import { asMvaStatus } from '~/lib/org-format';
-import { manualVoucherInput, VOUCHER_KINDS, type ManualVoucherInput } from '~/contracts';
+import {
+  manualVoucherInput,
+  receiptConfirmInput,
+  VOUCHER_KINDS,
+  type ManualVoucherInput,
+} from '~/contracts';
 import { t } from '~/copy';
 
 export function meta() {
@@ -63,6 +70,8 @@ interface ReviewProposal {
   readonly documentDate: string | null;
   readonly vatLooksStandard: boolean;
   readonly model: string;
+  /** The pinned served model tag — carried to the durable provenance record (Art. 50(2), ADR 0037). */
+  readonly modelVersion: string;
   readonly confidence: number;
 }
 
@@ -104,16 +113,38 @@ export async function action({
   const intent = form.get('intent');
 
   if (intent === 'confirm') {
-    const parsed = manualVoucherInput.safeParse({
+    // This confirm path is AI-only, so the provenance carried through the review round-trip is REQUIRED
+    // (re-validated, never trusted raw) — every confirmed AI post gets its durable Art. 50(2) record.
+    const parsed = receiptConfirmInput.safeParse({
       kind: form.get('kind'),
       amount: form.get('amount'),
+      model: form.get('model'),
+      modelVersion: form.get('modelVersion'),
+      confidence: form.get('confidence'),
     });
     if (!parsed.success) return { ok: false, error: t('vouchers.new.errorInvalidInput') };
     const net = parseKroner(parsed.data.amount)!; // passed the boundary's parseKroner refine
     const year = systemClock.now().getFullYear();
-    const result = await withUserOrg(request, params.orgId, (tx) =>
-      recordManualVoucher(tx, { organizationId: params.orgId, kind: parsed.data.kind, net, year }),
-    );
+    // Post AND record provenance in ONE tenant transaction: the voucher and its provenance commit
+    // atomically (AI never writes the ledger — the provenance sits ALONGSIDE the human-confirmed post,
+    // ADR 0002/0037).
+    const result = await withUserOrg(request, params.orgId, async (tx) => {
+      const posted = await recordManualVoucher(tx, {
+        organizationId: params.orgId,
+        kind: parsed.data.kind,
+        net,
+        year,
+      });
+      if (!posted.ok) return posted;
+      await recordAiProvenance(tx, {
+        organizationId: params.orgId,
+        voucherId: posted.voucherId,
+        model: parsed.data.model,
+        modelVersion: parsed.data.modelVersion,
+        confidence: parsed.data.confidence,
+      });
+      return posted;
+    });
     if (!result.ok) {
       return {
         ok: false,
@@ -123,6 +154,18 @@ export async function action({
             : t('vouchers.new.errorGeneric'),
       };
     }
+    // Structured provenance log (Art. 50(2) observability) — model/version/confidence + linkage ONLY,
+    // never personal data (`aiProvenanceLogFields` is the single, tested definition of the log shape).
+    requestLogger(request).log.info(
+      aiProvenanceLogFields({
+        organizationId: params.orgId,
+        voucherId: result.voucherId,
+        model: parsed.data.model,
+        modelVersion: parsed.data.modelVersion,
+        confidence: parsed.data.confidence,
+      }),
+      'AI-assisted voucher posted',
+    );
     return redirect('/');
   }
 
@@ -181,6 +224,7 @@ export async function action({
       documentDate: extraction.documentDate,
       vatLooksStandard: proposal.vatLooksStandard,
       model: extraction.provenance.model,
+      modelVersion: extraction.provenance.modelVersion,
       confidence: extraction.provenance.confidence,
     },
   };
@@ -338,6 +382,12 @@ function ReviewStep({
       >
         {/* Programmatic submit drops the button's value, so the intent travels as a hidden field. */}
         <input type="hidden" name="intent" value="confirm" />
+        {/* The AI provenance rides the review round-trip as hidden fields, re-validated at confirm and
+            persisted as the durable Art. 50(2) record (ADR 0037). No personal data here — model/version/
+            confidence only. */}
+        <input type="hidden" name="model" value={review.model} />
+        <input type="hidden" name="modelVersion" value={review.modelVersion} />
+        <input type="hidden" name="confidence" value={review.confidence} />
         <p className="text-muted-foreground text-sm">{t('receipts.new.confirmIntro')}</p>
         <fieldset className="grid gap-3">
           <legend className="font-text text-sm">{t('vouchers.new.kindLegend')}</legend>

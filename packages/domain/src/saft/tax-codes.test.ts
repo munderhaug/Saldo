@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   indexTaxCodes,
   parseStandardTaxCodes,
+  reverseChargeInputDeductible,
+  reverseChargeKind,
   type SaftTaxCode,
   type VatDirection,
 } from './tax-codes.js';
@@ -91,6 +93,35 @@ describe('parseStandardTaxCodes — official list', () => {
         expect(c.direction).not.toBe('input');
       }
     }
+  });
+
+  it.each<[string, ReturnType<typeof reverseChargeKind>]>([
+    ['86', 'foreign-services'], // tjenester kjøpt fra utlandet
+    ['87', 'foreign-services'],
+    ['88', 'foreign-services'],
+    ['81', 'import-goods'], // innførsel av varer
+    ['82', 'import-goods'],
+    ['85', 'import-goods'],
+    ['91', 'domestic'], // klimakvoter eller gull
+    ['92', 'domestic'],
+    ['51', 'domestic'], // innenlands omvendt avgiftsplikt (the sale side)
+  ])('reverseChargeKind(%s) = %s, source-grounded in the description', (c, kind) => {
+    expect(reverseChargeKind(byCode.get(c as SaftTaxCode['code'])!)).toBe(kind);
+  });
+
+  it.each<[string, boolean]>([
+    ['86', true], // med fradragsrett → deductible
+    ['88', true],
+    ['81', true],
+    ['91', true],
+    ['87', false], // uten fradragsrett → non-deductible (VAT becomes cost)
+    ['89', false],
+    ['82', false],
+    ['92', false],
+    ['85', false], // ikke beregnes mva (zero) — not a deductible input
+    ['1', false], // not a reverse-charge code at all
+  ])('reverseChargeInputDeductible(%s) = %s', (c, expected) => {
+    expect(reverseChargeInputDeductible(byCode.get(c as SaftTaxCode['code'])!)).toBe(expected);
   });
 });
 

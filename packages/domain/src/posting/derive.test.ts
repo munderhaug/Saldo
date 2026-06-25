@@ -4,13 +4,22 @@ import { isZeroØre, mulRate, øre, rate, type Rate } from '../money/ore.js';
 import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
 import { isBalanced, totalCredit, totalDebit } from './balance.js';
 import type { AccountNo } from './types.js';
-import { derivePurchase, deriveSales } from './derive.js';
+import { derivePurchase, deriveReverseChargePurchase, deriveSales } from './derive.js';
+import type { VatCode } from './types.js';
 
 const acc = (s: string): AccountNo => s as AccountNo;
+const vc = (s: string): VatCode => s as VatCode;
 const purchaseAccounts = {
   cost: acc('6000'),
   inputVat: acc('2710'),
   payable: acc('2400'),
+};
+// Foreign-service reverse charge, regular rate: self-account output 2704, deduct input 2714.
+const rcAccounts = {
+  cost: acc('6700'),
+  payable: acc('2400'),
+  outputVat: acc('2704'),
+  inputVat: acc('2714'),
 };
 const salesAccounts = {
   receivable: acc('1500'),
@@ -112,6 +121,131 @@ describe('derivePurchase — the input-VAT fork', () => {
           expect(isBalanced(v)).toBe(true);
           // Total either way equals the gross the supplier is paid.
           expect(totalDebit(v)).toBe(totalCredit(v));
+        },
+      ),
+    );
+  });
+});
+
+describe('deriveReverseChargePurchase — dual-leg snudd avregning', () => {
+  it('registered + deductible: posts BOTH legs, net to cost, net cash = net', () => {
+    const v = deriveReverseChargePurchase({
+      net: øre(100_000),
+      vatRate: STANDARD,
+      status: 'registered_standard',
+      accounts: rcAccounts,
+      deductible: true,
+      outputVatCode: vc('3'),
+      inputVatCode: vc('86'),
+    });
+    expect(v.type).toBe('purchase');
+    expect(isBalanced(v)).toBe(true);
+    // 4 legs: cost 100 000 dr / input VAT 2714 25 000 dr / payable 100 000 cr / output VAT 2704 25 000 cr.
+    expect(v.lines).toHaveLength(4);
+    expect(v.lines.find((l) => l.account === rcAccounts.cost)?.debit).toBe(100_000);
+    expect(v.lines.find((l) => l.account === rcAccounts.inputVat)?.debit).toBe(25_000);
+    expect(v.lines.find((l) => l.account === rcAccounts.payable)?.credit).toBe(100_000); // only the net
+    expect(v.lines.find((l) => l.account === rcAccounts.outputVat)?.credit).toBe(25_000);
+    // BOTH VAT legs are present on the melding even though their net cash effect cancels.
+    expect(totalDebit(v)).toBe(125_000);
+    expect(totalCredit(v)).toBe(125_000);
+  });
+
+  it('tags each VAT leg with a direction-correct code so both land on the MVA basis', () => {
+    const v = deriveReverseChargePurchase({
+      net: øre(100_000),
+      vatRate: STANDARD,
+      status: 'registered_standard',
+      accounts: rcAccounts,
+      deductible: true,
+      outputVatCode: vc('3'),
+      inputVatCode: vc('86'),
+    });
+    expect(v.lines.find((l) => l.account === rcAccounts.outputVat)?.vatCode).toBe('3'); // output side
+    expect(v.lines.find((l) => l.account === rcAccounts.inputVat)?.vatCode).toBe('86'); // input side
+  });
+
+  it('registered + NON-deductible (uten fradragsrett): VAT joins cost, output leg still posts', () => {
+    const v = deriveReverseChargePurchase({
+      net: øre(100_000),
+      vatRate: STANDARD,
+      status: 'registered_standard',
+      accounts: rcAccounts,
+      deductible: false,
+      outputVatCode: vc('3'),
+      inputVatCode: vc('87'),
+    });
+    expect(isBalanced(v)).toBe(true);
+    // 3 legs: cost incl. VAT 125 000 dr / payable 100 000 cr / output VAT 25 000 cr. No input deduction.
+    expect(v.lines).toHaveLength(3);
+    expect(v.lines.find((l) => l.account === rcAccounts.cost)?.debit).toBe(125_000); // gross to cost
+    expect(v.lines.some((l) => l.account === rcAccounts.inputVat)).toBe(false); // no deduction
+    expect(v.lines.find((l) => l.account === rcAccounts.outputVat)?.credit).toBe(25_000); // still owed
+  });
+
+  it.each(['under_threshold', 'unntatt'] as const)(
+    '%s: outside the VAT system — a plain net purchase, no melding legs',
+    (status) => {
+      const v = deriveReverseChargePurchase({
+        net: øre(100_000),
+        vatRate: STANDARD,
+        status,
+        accounts: rcAccounts,
+        deductible: true,
+        outputVatCode: vc('3'),
+        inputVatCode: vc('86'),
+      });
+      expect(isBalanced(v)).toBe(true);
+      expect(v.lines).toHaveLength(2);
+      expect(v.lines.find((l) => l.account === rcAccounts.cost)?.debit).toBe(100_000); // net only
+      expect(v.lines.some((l) => l.account.startsWith('27'))).toBe(false); // no VAT legs
+    },
+  );
+
+  it('a zero-rate reverse-charge code (e.g. 85) posts a plain net purchase', () => {
+    const v = deriveReverseChargePurchase({
+      net: øre(100_000),
+      vatRate: ZERO_RATE,
+      status: 'registered_standard',
+      accounts: rcAccounts,
+      deductible: true,
+      inputVatCode: vc('85'),
+    });
+    expect(isBalanced(v)).toBe(true);
+    expect(v.lines).toHaveLength(2);
+    expect(v.lines.some((l) => l.account.startsWith('27'))).toBe(false);
+  });
+
+  it('property: every reverse-charge purchase balances; net VAT cancels iff deductible', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 100_000_000 }),
+        fc.constantFrom<MvaStatus>(...MVA_STATUSES),
+        fc.constantFrom<Rate>(ZERO_RATE, rate(0.12), rate(0.15), STANDARD),
+        fc.boolean(),
+        (netValue, status, vatRate, deductible) => {
+          const v = deriveReverseChargePurchase({
+            net: øre(netValue),
+            vatRate,
+            status,
+            accounts: rcAccounts,
+            deductible,
+            outputVatCode: vc('3'),
+            inputVatCode: vc('86'),
+          });
+          expect(isBalanced(v)).toBe(true);
+          expect(totalDebit(v)).toBe(totalCredit(v));
+          const out = v.lines.find((l) => l.account === rcAccounts.outputVat)?.credit ?? øre(0);
+          const inp = v.lines.find((l) => l.account === rcAccounts.inputVat)?.debit ?? øre(0);
+          // A registered, deductible purchase self-accounts AND deducts the same VAT → both legs equal.
+          if (
+            status === 'registered_standard' &&
+            deductible &&
+            !isZeroØre(mulRate(øre(netValue), vatRate))
+          ) {
+            expect(out).toBe(inp);
+            expect(out).toBeGreaterThan(0);
+          }
         },
       ),
     );

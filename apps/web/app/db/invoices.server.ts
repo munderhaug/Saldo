@@ -196,7 +196,7 @@ type PrepareError =
   | 'zero-rated-requires-registration'
   | 'input-deduction-requires-registration'
   | 'input-code-not-a-sale'
-  | 'reverse-charge-deferred'
+  | 'reverse-charge-not-a-sale'
   | 'unknown-vat-code';
 
 interface PreparedLine {

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { POSTING_ACCOUNTS, POSTING_VAT_CODES, SALES_INVOICE_ACCOUNTS } from './posting.server.js';
+import {
+  POSTING_ACCOUNTS,
+  POSTING_VAT_CODES,
+  REVERSE_CHARGE_ACCOUNTS,
+  REVERSE_CHARGE_OUTPUT_CODES,
+  SALES_INVOICE_ACCOUNTS,
+} from './posting.server.js';
 import { STANDARD_ACCOUNTS, STANDARD_VAT_CODES } from './provisioning.server.js';
 
 /**
@@ -61,6 +67,43 @@ describe('designated posting accounts/codes are source-grounded', () => {
     expect(typeOf(SALES_INVOICE_ACCOUNTS.receivable)).toBe('asset');
     for (const number of Object.values(SALES_INVOICE_ACCOUNTS.outputVatByRate)) {
       expect(typeOf(number)).toBe('equity_liability');
+    }
+  });
+
+  // ── Reverse-charge dual-leg posting (vat-reverse-charge) ──
+  const reverseChargeAccounts = Object.values(REVERSE_CHARGE_ACCOUNTS).flatMap((kind) => [
+    ...Object.values(kind.output),
+    ...Object.values(kind.input),
+  ]);
+
+  it.each(reverseChargeAccounts)(
+    'reverse-charge VAT account %s exists in the committed kontoplan',
+    (number) => {
+      expect(accountNumbers.has(number)).toBe(true);
+    },
+  );
+
+  it('designates the reverse-charge VAT accounts as liabilities (klasse 2)', () => {
+    const typeOf = (number: string) => STANDARD_ACCOUNTS.find((a) => a.number === number)?.type;
+    for (const number of reverseChargeAccounts) {
+      expect(typeOf(number)).toBe('equity_liability');
+    }
+  });
+
+  it('the self-account output codes exist and are output-direction (counted on the MVA basis)', () => {
+    const dirOf = (code: string) => STANDARD_VAT_CODES.find((c) => c.code === code)?.direction;
+    for (const code of Object.values(REVERSE_CHARGE_OUTPUT_CODES)) {
+      expect(vatCodes.has(code)).toBe(true);
+      expect(dirOf(code)).toBe('output');
+    }
+  });
+
+  it('sources output accounts from the 270x range and input accounts from the 271x range', () => {
+    // Source-grounded sanity: every self-account (output) leg books to 2704–2709, every deduction
+    // (input) leg to 2714–2718 — the committed reverse-charge VAT accounts (db/reference/saf-t).
+    for (const kind of Object.values(REVERSE_CHARGE_ACCOUNTS)) {
+      for (const number of Object.values(kind.output)) expect(number).toMatch(/^270[4-9]$/);
+      for (const number of Object.values(kind.input)) expect(number).toMatch(/^271[4-8]$/);
     }
   });
 });

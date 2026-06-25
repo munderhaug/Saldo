@@ -4,7 +4,11 @@ import { type LedgerDb, ledgerDbAvailable, startLedgerDb } from './db-harness.js
 import * as schema from '../../app/db/schema.js';
 import { withOrgTx } from '../../app/auth/middleware.js';
 import { honestNumberFromLedger, subØre } from '@saldo/domain';
-import { recordManualVoucher, POSTING_ACCOUNTS } from '../../app/db/posting.server.js';
+import {
+  recordManualVoucher,
+  recordReverseChargePurchase,
+  POSTING_ACCOUNTS,
+} from '../../app/db/posting.server.js';
 import { aggregateLedger } from '../../app/db/ledger.server.js';
 import { STANDARD_ACCOUNTS, STANDARD_VAT_CODES } from '../../app/db/provisioning.server.js';
 
@@ -127,6 +131,94 @@ describe.skipIf(!ledgerDbAvailable)('manual-voucher posting path (app role + RLS
     const totals = await withOrgTx(appDb, orgId, (tx) => aggregateLedger(tx, 2026));
     expect(totals.revenueNet).toBe(50_000);
     expect(totals.outputVatCollected).toBe(0);
+  });
+
+  it('posts a deductible reverse-charge purchase as a BALANCED dual-leg voucher; both legs on the MVA basis', async () => {
+    // SAF-T '86' (services bought from abroad, deductible): the buyer self-accounts VAT — output 2704
+    // + input 2714 (snudd avregning). Net cash is just the net, but BOTH VAT legs must appear so the
+    // MVA-melding is complete (`.claude/rules/vat.md`).
+    const orgId = await provisionOrg('registered_standard');
+    const result = await withOrgTx(appDb, orgId, (tx) =>
+      recordReverseChargePurchase(tx, {
+        organizationId: orgId,
+        vatCode: '86',
+        net: 100_000,
+        year: 2026,
+      }),
+    );
+    expect(result.ok).toBe(true);
+    const voucherId = result.ok ? result.voucherId : '';
+
+    const [v] = await db.sql<{ type: string; posted: string | null }[]>`
+      SELECT type, posted_at AS posted FROM voucher WHERE id = ${voucherId}`;
+    expect(v?.type).toBe('purchase');
+    expect(v?.posted).not.toBeNull();
+
+    // Ordered by account number: 2400 payable (net 100000 cr) / 2704 output VAT (25000 cr, coded) /
+    // 2714 input VAT (25000 dr, coded) / 7798 cost (net 100000 dr, coded). Balanced, net cash = net.
+    const legs = await legsOf(voucherId);
+    expect(legs).toEqual([
+      { number: POSTING_ACCOUNTS.expense.payable, debit: 0, credit: 100_000, coded: false },
+      { number: '2704', debit: 0, credit: 25_000, coded: true },
+      { number: '2714', debit: 25_000, credit: 0, coded: true },
+      { number: POSTING_ACCOUNTS.expense.cost, debit: 100_000, credit: 0, coded: true },
+    ]);
+    expect(legs.reduce((s, l) => s + l.debit, 0)).toBe(legs.reduce((s, l) => s + l.credit, 0));
+
+    // Both legs land on the MVA basis: output VAT collected AND deductible input VAT, netting to 0.
+    const totals = await withOrgTx(appDb, orgId, (tx) => aggregateLedger(tx, 2026));
+    expect(totals).toEqual({
+      revenueNet: 0,
+      expenseNet: 100_000,
+      outputVatCollected: 25_000, // self-accounted output leg (2704, code 3)
+      deductibleInputVat: 25_000, // deduction leg (2714, code 86) — net VAT effect is 0
+    });
+  });
+
+  it('posts a NON-deductible reverse-charge purchase: VAT joins cost, output leg still on the basis', async () => {
+    // SAF-T '87' (services bought from abroad, uten fradragsrett): the self-accounted VAT is
+    // irrecoverable, so it joins the cost (gross to 7798) — but the output leg is still owed and posted.
+    const orgId = await provisionOrg('registered_standard');
+    const result = await withOrgTx(appDb, orgId, (tx) =>
+      recordReverseChargePurchase(tx, {
+        organizationId: orgId,
+        vatCode: '87',
+        net: 100_000,
+        year: 2026,
+      }),
+    );
+    expect(result.ok).toBe(true);
+    const voucherId = result.ok ? result.voucherId : '';
+
+    // 2400 payable (100000 cr) / 2704 output VAT (25000 cr) / 7798 cost incl. VAT (125000 dr). No 2714.
+    const legs = await legsOf(voucherId);
+    expect(legs).toEqual([
+      { number: POSTING_ACCOUNTS.expense.payable, debit: 0, credit: 100_000, coded: false },
+      { number: '2704', debit: 0, credit: 25_000, coded: true },
+      { number: POSTING_ACCOUNTS.expense.cost, debit: 125_000, credit: 0, coded: true },
+    ]);
+    expect(legs.some((l) => l.number === '2714')).toBe(false); // no deduction
+
+    const totals = await withOrgTx(appDb, orgId, (tx) => aggregateLedger(tx, 2026));
+    expect(totals.outputVatCollected).toBe(25_000); // owed to the state
+    expect(totals.deductibleInputVat).toBe(0); // no deduction — the VAT is a real cost
+    expect(totals.expenseNet).toBe(125_000); // the irrecoverable VAT is part of the cost
+  });
+
+  it('refuses a domestic reverse-charge SALE code (51) on the purchase path', async () => {
+    // 51 is the seller side (direction 'output') — it posts as an ordinary net sale via the invoice
+    // path, never through the buyer self-account dual leg.
+    const orgId = await provisionOrg('registered_standard');
+    const result = await withOrgTx(appDb, orgId, (tx) =>
+      recordReverseChargePurchase(tx, {
+        organizationId: orgId,
+        vatCode: '51',
+        net: 100_000,
+        year: 2026,
+      }),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reason).toBe('not-reverse-charge');
   });
 
   it('refuses to post into a locked period (period-lock trigger)', async () => {

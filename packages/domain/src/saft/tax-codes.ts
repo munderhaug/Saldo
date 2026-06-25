@@ -135,3 +135,33 @@ export function parseStandardTaxCodes(csv: string): readonly SaftTaxCode[] {
 export function indexTaxCodes(codes: readonly SaftTaxCode[]): ReadonlyMap<VatCode, SaftTaxCode> {
   return new Map(codes.map((c) => [c.code, c]));
 }
+
+/**
+ * The kind of reverse charge a self-accounting (snudd avregning) code denotes — which decides WHICH
+ * pair of VAT accounts the dual leg books to (the seller-side `none` is folded into `domestic`; only
+ * purchase codes ever reach the dual-leg derivation). Classified from the committed Norwegian
+ * description, never a remembered code number (hard invariant §4.3):
+ *  - foreign services (`Tjenester kjøpt fra utlandet`, 86–89) → 2704/2709 out, 2714/2718 in;
+ *  - import of goods (`innførsel av varer`, 81–85) → 2705/2706 out, 2715/2716 in;
+ *  - domestic (gold / emission allowances, 91/92; innenlands omvendt avgiftsplikt, 51) → 2707, 2717.
+ */
+export type ReverseChargeKind = 'foreign-services' | 'import-goods' | 'domestic';
+
+export function reverseChargeKind(code: SaftTaxCode): ReverseChargeKind {
+  const s = code.descriptionNo.toLowerCase();
+  if (s.includes('kjøpt fra utlandet')) return 'foreign-services';
+  if (s.includes('innførsel av varer')) return 'import-goods';
+  return 'domestic';
+}
+
+/**
+ * Whether the self-accounted input VAT of a reverse-charge code may be deducted. Decided from the
+ * committed SAF-T classification (`med fradragsrett` → `direction === 'input'`; `uten fradragsrett`
+ * → `direction === 'none'`), NEVER from memory — so an `uten fradragsrett` code (82/84/87/89/92)
+ * books its self-accounted VAT to cost while still posting the output leg. The non-deductible
+ * BUSINESS cases (representasjon, restricted vehicle costs, private-use portion) are not SAF-T-coded;
+ * the caller passes `deductible: false` for those, exactly as the ordinary `derivePurchase` fork does.
+ */
+export function reverseChargeInputDeductible(code: SaftTaxCode): boolean {
+  return code.reverseCharge && code.direction === 'input';
+}

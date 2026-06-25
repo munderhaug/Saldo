@@ -74,6 +74,85 @@ export function derivePurchase(input: PurchaseInput): Voucher {
   };
 }
 
+export interface ReverseChargePurchaseAccounts {
+  /** Expense/asset account — booked net (deductible) or gross incl. self-accounted VAT (non-deductible). */
+  readonly cost: AccountNo;
+  /** Credit side: supplier payable or bank (always the NET — the supplier never invoices the VAT). */
+  readonly payable: AccountNo;
+  /** Self-accounted OUTPUT-VAT account for the kind+rate (2704–2709). Always credited when VAT applies. */
+  readonly outputVat: AccountNo;
+  /** Deductible INPUT-VAT account for the kind+rate (2714–2718). Debited only when deductible. */
+  readonly inputVat: AccountNo;
+}
+
+export interface ReverseChargePurchaseInput {
+  /** Net amount (the supplier's invoice, excl. VAT — there is none on a reverse-charge purchase). */
+  readonly net: Øre;
+  /** VAT rate from the reverse-charge SAF-T code's category (0 ⇒ no VAT legs, e.g. code 85). */
+  readonly vatRate: Rate;
+  readonly status: MvaStatus;
+  readonly accounts: ReverseChargePurchaseAccounts;
+  /**
+   * Whether the self-accounted input VAT is deductible. Decide it from the committed SAF-T
+   * classification (`reverseChargeInputDeductible`) AND the non-deductible business rules
+   * (representasjon / vehicle / private-use) — never infer it from MVA status alone.
+   */
+  readonly deductible: boolean;
+  /** Output-direction SAF-T code for the self-account (output) leg — so the MVA basis counts it as output. */
+  readonly outputVatCode?: VatCode;
+  /**
+   * The reverse-charge basis code (e.g. 86 deductible / 87 non-deductible). Tags the cost line always,
+   * and — when deductible — the input (deduction) leg too, so the MVA basis counts that leg as input.
+   */
+  readonly inputVatCode?: VatCode;
+}
+
+/**
+ * Reverse-charge (snudd avregning) purchase — import of goods, services bought from abroad, or
+ * gold/emission-allowance trading: the BUYER self-accounts VAT. Unlike `derivePurchase`, this posts
+ * BOTH a self-accounted **output** leg (the VAT the buyer owes) and, when deductible, an **input**
+ * leg (the VAT it reclaims) — so both land on the MVA-melding even though net cash is only the
+ * supplier's net (ADR — `.claude/rules/vat.md`). Branch here on the SAF-T code's `reverseCharge`
+ * flag; NEVER treat such a code as an ordinary single-leg input/output.
+ *
+ * The MVA-status fork (the hard invariant):
+ *  - registered (`chargesOutputVat`) → self-account. Deductible: net→cost, output VAT credited,
+ *    input VAT debited (net cash = net). Non-deductible: the self-accounted VAT becomes cost
+ *    (gross→cost), output VAT still credited, no input leg (net cash = net + the VAT owed).
+ *  - not registered (`under_threshold`/`unntatt`) → outside the VAT system in this slice; book the
+ *    net to cost with no melding legs. (Below-threshold § 3-30 self-accounting is sequenced to
+ *    `vat-threshold-watcher`.)
+ * Always balanced (Σ debit = Σ credit), which the SQL trigger also guarantees.
+ */
+export function deriveReverseChargePurchase(input: ReverseChargePurchaseInput): Voucher {
+  const { net, vatRate, status, accounts, deductible, outputVatCode, inputVatCode } = input;
+  const vat = mulRate(net, vatRate);
+
+  // Outside the VAT system, or a zero-rate code (no VAT to self-account): a plain net purchase.
+  if (!chargesOutputVat(status) || isZeroØre(vat)) {
+    return {
+      type: 'purchase',
+      lines: [line(accounts.cost, net, ZERO, inputVatCode), line(accounts.payable, ZERO, net)],
+    };
+  }
+
+  // Self-account the output leg ALWAYS (it lands on the melding). Deductible: net to cost + input
+  // deduction. Non-deductible: the VAT is irrecoverable, so it joins the cost (gross), no input leg.
+  const lines: PostingLine[] = deductible
+    ? [
+        line(accounts.cost, net, ZERO, inputVatCode),
+        line(accounts.inputVat, vat, ZERO, inputVatCode),
+        line(accounts.payable, ZERO, net),
+        line(accounts.outputVat, ZERO, vat, outputVatCode),
+      ]
+    : [
+        line(accounts.cost, addØre(net, vat), ZERO, inputVatCode),
+        line(accounts.payable, ZERO, net),
+        line(accounts.outputVat, ZERO, vat, outputVatCode),
+      ];
+  return { type: 'purchase', lines };
+}
+
 export interface SalesAccounts {
   /** Customer receivable — debited gross. */
   readonly receivable: AccountNo;

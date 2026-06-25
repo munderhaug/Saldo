@@ -21,13 +21,18 @@
  */
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
+  deriveReverseChargePurchase,
   deriveStandardExpense,
   deriveStandardIncome,
+  rateForCategory,
+  reverseChargeInputDeductible,
+  reverseChargeKind,
   runRules,
   vatLineRule,
   øre,
   type AccountNo,
   type VatCode,
+  type Voucher,
 } from '@saldo/domain';
 import type { OrgTx } from '../auth/middleware.js';
 import type { VoucherKind } from '../contracts/voucher.js';
@@ -66,6 +71,42 @@ export const SALES_INVOICE_ACCOUNTS = {
     'reduced-raw-fish': '2702',
     'reduced-low': '2703',
   },
+} as const;
+
+/**
+ * Designated accounts for posting a reverse-charge (snudd avregning) PURCHASE's dual leg
+ * (vat-reverse-charge, build-spec §4.3). The buyer self-accounts VAT, so each kind of reverse charge
+ * books to its own pair of VAT accounts, by rate — source-grounded in the committed kontoplan
+ * (`db/reference/saf-t` accounts 2704–2709 output / 2714–2718 input) and verified by
+ * `posting-accounts.test.ts`. The kind is derived from the SAF-T code (`reverseChargeKind`); the rate
+ * category from the code's `rateCategory`. The cost (here a generic deductible-cost account) and the
+ * supplier payable reuse the manual-expense designations. A zero-rate code (e.g. 85) has no VAT legs.
+ */
+export const REVERSE_CHARGE_ACCOUNTS = {
+  'foreign-services': {
+    output: { regular: '2704', 'reduced-low': '2709' },
+    input: { regular: '2714', 'reduced-low': '2718' },
+  },
+  'import-goods': {
+    output: { regular: '2705', 'reduced-middle': '2706' },
+    input: { regular: '2715', 'reduced-middle': '2716' },
+  },
+  domestic: {
+    output: { regular: '2707' },
+    input: { regular: '2717' },
+  },
+} as const;
+
+/**
+ * Designated rate-matched ordinary OUTPUT codes for the self-account leg (so the MVA basis counts it
+ * as output). `reduced-middle`/`reduced-raw-fish` are defensive completeness — no committed
+ * reverse-charge code carries those rates today, so they are not exercised by the current list.
+ */
+export const REVERSE_CHARGE_OUTPUT_CODES = {
+  regular: '3',
+  'reduced-middle': '31',
+  'reduced-low': '33',
+  'reduced-raw-fish': '32',
 } as const;
 
 /** The designated accounts as the branded `AccountNo` shapes the domain derivation expects. */
@@ -155,8 +196,29 @@ export async function recordManualVoucher(
   if (!verdict.ok) return { ok: false, reason: 'rule-violation' };
 
   const periodId = await ensureFiscalPeriod(tx, input.organizationId, input.year);
+  return insertPostedVoucher(
+    tx,
+    input.organizationId,
+    input.kind === 'income' ? 'sales' : 'purchase',
+    periodId,
+    proposed,
+  );
+}
 
-  // Resolve the proposed lines' account NUMBERS and VAT CODES to this org's row ids.
+/**
+ * Resolve a derived voucher's account NUMBERS and VAT CODES to this org's provisioned row ids and
+ * insert it POSTED (voucher + postings) in the caller's transaction — so the deferred balance and
+ * posted-completeness triggers (≥2 postings, Σ debit = Σ credit) verify the entry at COMMIT. Returns
+ * `chart-incomplete` when a designated account/code is missing from the org's kontoplan; the leg
+ * layout itself is never assembled here — it comes from the pure `@saldo/domain` derivation.
+ */
+async function insertPostedVoucher(
+  tx: OrgTx,
+  organizationId: string,
+  type: 'sales' | 'purchase',
+  periodId: string,
+  proposed: Voucher,
+): Promise<{ ok: true; voucherId: string } | { ok: false; reason: 'chart-incomplete' }> {
   const accountNumbers = [...new Set(proposed.lines.map((l) => l.account as string))];
   const accountRows = await tx
     .select({ id: account.id, number: account.number })
@@ -179,22 +241,15 @@ export async function recordManualVoucher(
   const vatCodeIdByCode = new Map(vatRows.map((c) => [c.code, c.id]));
   if (vatCodeIdByCode.size !== codes.length) return { ok: false, reason: 'chart-incomplete' };
 
-  // Insert the voucher POSTED + its postings in the caller's transaction; the deferred balance and
-  // posted-completeness triggers (≥2 postings, Σ debit = Σ credit) verify the entry at COMMIT.
   const [created] = await tx
     .insert(voucher)
-    .values({
-      organizationId: input.organizationId,
-      type: input.kind === 'income' ? 'sales' : 'purchase',
-      periodId,
-      postedAt: sql`now()`,
-    })
+    .values({ organizationId, type, periodId, postedAt: sql`now()` })
     .returning({ id: voucher.id });
   const voucherId = created!.id;
 
   await tx.insert(posting).values(
     proposed.lines.map((leg) => ({
-      organizationId: input.organizationId,
+      organizationId,
       voucherId,
       accountId: accountIdByNumber.get(leg.account as string)!,
       vatCodeId: leg.vatCode ? vatCodeIdByCode.get(leg.vatCode as string)! : null,
@@ -204,4 +259,93 @@ export async function recordManualVoucher(
   );
 
   return { ok: true, voucherId };
+}
+
+export type RecordReverseChargeResult =
+  | { ok: true; voucherId: string }
+  | {
+      ok: false;
+      reason: 'not-reverse-charge' | 'unsupported-rate' | 'rule-violation' | 'chart-incomplete';
+    };
+
+interface RecordReverseChargeInput {
+  readonly organizationId: string;
+  /** A reverse-charge SAF-T purchase code (e.g. 86 foreign service / 81 import goods / 91 gold). */
+  readonly vatCode: string;
+  /** Net amount in øre (the supplier's invoice — there is no VAT on a reverse-charge purchase). */
+  readonly net: number;
+  readonly year: number;
+  /**
+   * Business override for the non-deductible-even-when-registered cases (representasjon, restricted
+   * vehicle costs, the private-use portion). Defaults to the SAF-T classification
+   * (`reverseChargeInputDeductible`); pass `false` to force the self-accounted VAT into cost.
+   */
+  readonly deductible?: boolean;
+}
+
+/**
+ * Record a reverse-charge (snudd avregning) PURCHASE as a posted dual-leg voucher — the buyer
+ * self-accounts VAT (output + input legs), so both land on the MVA-melding even though net cash is
+ * just the supplier's net (vat-reverse-charge, build-spec §4.3). The leg layout is the pure
+ * `deriveReverseChargePurchase`; deductibility and the VAT accounts are decided from the committed
+ * SAF-T classification (`reverseChargeKind` / `reverseChargeInputDeductible`), never from memory. The
+ * same derive → rules → posted chain as the manual path; a blocked combination is a typed result.
+ */
+export async function recordReverseChargePurchase(
+  tx: OrgTx,
+  input: RecordReverseChargeInput,
+): Promise<RecordReverseChargeResult> {
+  const [org] = await tx
+    .select({ mvaStatus: organization.mvaStatus })
+    .from(organization)
+    .where(eq(organization.id, input.organizationId))
+    .limit(1);
+  if (!org) return { ok: false, reason: 'chart-incomplete' };
+  const status = asMvaStatus(org.mvaStatus);
+
+  const saft = STANDARD_TAX_CODE_INDEX.get(input.vatCode as VatCode);
+  // Only a buyer-self-account purchase code belongs here — the domestic RC SALE (51, direction
+  // 'output') posts as an ordinary net sale through the invoice path, not this dual leg.
+  if (!saft || !saft.reverseCharge || saft.direction === 'output') {
+    return { ok: false, reason: 'not-reverse-charge' };
+  }
+
+  const kind = reverseChargeKind(saft);
+  const rateCat = saft.rateCategory;
+  const hasVat = rateCat !== 'zero' && rateCat !== 'none';
+  const deductible = reverseChargeInputDeductible(saft) && input.deductible !== false;
+
+  const kindAccounts = REVERSE_CHARGE_ACCOUNTS[kind];
+  const outputByRate = kindAccounts.output as Record<string, string | undefined>;
+  const inputByRate = kindAccounts.input as Record<string, string | undefined>;
+  const outputNo = outputByRate[rateCat];
+  const inputNo = inputByRate[rateCat];
+  const outputCode = (REVERSE_CHARGE_OUTPUT_CODES as Record<string, string | undefined>)[rateCat];
+  // A VAT-bearing reverse charge must have designated accounts + an output code for its kind/rate.
+  if (hasVat && (!outputNo || !inputNo || !outputCode)) {
+    return { ok: false, reason: 'unsupported-rate' };
+  }
+
+  const proposed = deriveReverseChargePurchase({
+    net: øre(input.net),
+    vatRate: rateForCategory(rateCat),
+    status,
+    deductible,
+    accounts: {
+      cost: POSTING_ACCOUNTS.expense.cost as AccountNo,
+      payable: POSTING_ACCOUNTS.expense.payable as AccountNo,
+      // Placeholders for a zero-rate code (no VAT legs are emitted, so they never post).
+      outputVat: (outputNo ?? POSTING_ACCOUNTS.expense.cost) as AccountNo,
+      inputVat: (inputNo ?? POSTING_ACCOUNTS.expense.cost) as AccountNo,
+    },
+    ...(outputCode ? { outputVatCode: outputCode as VatCode } : {}),
+    inputVatCode: input.vatCode as VatCode,
+  });
+
+  // The rules gate (ADR 0002): validate the proposed voucher's coded lines before it touches the ledger.
+  const verdict = runRules([vatLineRule({ status, codes: STANDARD_TAX_CODE_INDEX })], proposed);
+  if (!verdict.ok) return { ok: false, reason: 'rule-violation' };
+
+  const periodId = await ensureFiscalPeriod(tx, input.organizationId, input.year);
+  return insertPostedVoucher(tx, input.organizationId, 'purchase', periodId, proposed);
 }

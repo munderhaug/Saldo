@@ -32,6 +32,10 @@ const FRITATT = code('5'); // zero-rated output (fritatt/export) — registered 
 const EXEMPT = code('6'); // unntatt — outside the VAT Act, any status
 const INPUT = code('1'); // input-deductible — a purchase code, never a sale
 const NO_TREATMENT = code('0'); // technical no-VAT code, any status
+const RC_DOMESTIC_SALE = code('51'); // domestic reverse-charge SALE (omvendt avgiftsplikt) — revenue at net
+const RC_FOREIGN_DEDUCT = code('86'); // services bought from abroad, deductible — a PURCHASE code
+const RC_FOREIGN_NONDEDUCT = code('87'); // services bought from abroad, non-deductible — a PURCHASE code
+const RC_IMPORT_GOODS = code('81'); // import of goods (basis) — a PURCHASE code
 
 const REGISTERED = ['registered_standard', 'registered_zero_rated'] as const;
 const UNREGISTERED = ['under_threshold', 'unntatt'] as const;
@@ -101,6 +105,46 @@ describe('computeLine — per-line net/VAT/gross with the registration HARD BLOC
     const verdict = checkSalesLine('registered_standard', INPUT);
     expect(verdict.ok).toBe(false);
     expect(verdict.reason).toBe('input-code-not-a-sale');
+  });
+
+  describe('checkSalesLine — the reverse-charge gate (vat-reverse-charge)', () => {
+    it('allows the domestic reverse-charge SALE code (51): a sale, posted at net', () => {
+      for (const status of [...REGISTERED, ...UNREGISTERED] as MvaStatus[]) {
+        const verdict = checkSalesLine(status, RC_DOMESTIC_SALE);
+        expect(verdict.ok).toBe(true);
+        expect(verdict.treatment).toBe('reverse-charge');
+        expect(verdict.reason).toBeUndefined();
+        // Revenue at net: a reverse-charge sale charges NO output VAT (the buyer self-accounts).
+        expect(computeLine(status, RC_DOMESTIC_SALE, øre(100_000), quantity(1)).vat).toBe(ZERO);
+      }
+    });
+
+    it.each([
+      ['86 foreign service, deductible', RC_FOREIGN_DEDUCT],
+      ['87 foreign service, non-deductible', RC_FOREIGN_NONDEDUCT],
+      ['81 import of goods', RC_IMPORT_GOODS],
+    ])('blocks the buyer-self-account purchase code %s on a sale', (_label, c) => {
+      for (const status of [...REGISTERED, ...UNREGISTERED] as MvaStatus[]) {
+        const verdict = checkSalesLine(status, c);
+        expect(verdict.ok).toBe(false);
+        expect(verdict.reason).toBe('reverse-charge-not-a-sale');
+        // A blocked line never charges VAT (the caller refuses to issue it).
+        expect(computeLine(status, c, øre(100_000), quantity(1)).vat).toBe(ZERO);
+      }
+    });
+
+    it('never returns the reverse-charge advisory reason (the sales gate decides every RC code)', () => {
+      for (const c of [
+        RC_DOMESTIC_SALE,
+        RC_FOREIGN_DEDUCT,
+        RC_FOREIGN_NONDEDUCT,
+        RC_IMPORT_GOODS,
+      ]) {
+        for (const status of MVA_STATUSES) {
+          expect(checkSalesLine(status, c).reason).not.toBe('reverse-charge-deferred');
+        }
+      }
+    });
   });
 
   it('gross is always net + vat, for any status / code / price / quantity', () => {

@@ -440,13 +440,24 @@
     {
       "id": "ops-dr-runbook",
       "title": "DR runbook: Neon PITR + restore drills, R2 retention",
-      "status": "todo",
+      "implements_adr": ["0038"],
+      "touches": [
+        "docs/runbooks/disaster-recovery.md",
+        "db/dr/verify-restore.sql",
+        "tools/restore-drill.sh",
+        "apps/web/test/integrity/restore-verify.integration.test.ts"
+      ],
+      "sources": ["db/reference/neon", "db/reference/r2"],
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P1",
       "depends_on": [],
-      "notes": "A restore you have never tested is not a backup. R2 lifecycle + 5-year retention vs immutability procedure.",
-      "refs": ["docs/decisions/0013-hosted-postgres-neon.md"]
+      "notes": "DR runbook (ADR 0038): Neon PITR + a TESTED restore drill (restore-drill.sh + verify-restore.sql, CI-guarded), and R2 bucket-lock WORM for the 5-year statutory hold vs ledger immutability. Live Neon/R2 steps flagged for verification (control plane not wired here).",
+      "refs": [
+        "docs/decisions/0038-disaster-recovery-and-retention.md",
+        "docs/decisions/0013-hosted-postgres-neon.md"
+      ]
     },
     {
       "id": "harness-design-lint",

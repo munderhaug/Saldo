@@ -3,16 +3,46 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-25 — session: `aia-provenance-logging` (the durable half of EU AI Act Art. 50(2): a confirmed AI proposal now persists its provenance — model · version · confidence — to an `ai_provenance` table FK'd to the voucher, plus a structured log; ADR 0037)
+**Last updated:** 2026-06-25 — session: `ops-dr-runbook` (disaster-recovery runbook + a TESTED restore drill: Neon PITR procedure, `db/dr/verify-restore.sql` + `tools/restore-drill.sh`, R2 bucket-lock WORM for the 5-year statutory hold vs ledger immutability; ADR 0038)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
 
-> ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
-> not configured here. This session was **DB + compliance** (a new SQL migration), run against local
-> Postgres / Testcontainers — no external egress needed; don't assume egress next session — verify it.
+> ⚠️ **Live external integrations vary by environment.** This session **confirmed** the warning: the
+> Neon control plane is NOT wired here (`DATABASE_URL` points at a LOCAL Postgres, not Neon) and there
+> is no live R2 bucket — so the DR work is docs + ops tooling, with the restore *mechanics* tested
+> against local Postgres and every live-only step flagged for verification. Don't assume egress.
 
-## This session — `aia-provenance-logging`: the durable Art. 50(2) audit trail (ADR 0037)
+## This session — `ops-dr-runbook`: the tested-restore DR runbook (ADR 0038)
+Wrote the disaster-recovery + document-retention runbook and, crucially, made the restore **testable**:
+"a restore you have never tested is not a backup." PR #27 (durable AI provenance, ADR 0037) was confirmed
+green and **merged to main** first; this branch rebased onto it. App/domain untouched — **docs + ops
+tooling only, no schema change**. Full gate green; landing as a reviewed PR.
+- **`db/dr/verify-restore.sql`** — a read-only, post-restore integrity assertion (safe on a restored
+  production branch): asserts the tables, the 6 integrity triggers, FORCE RLS + a policy on every tenant
+  table, the `allocate_invoice_number` counter fn **and the absence of any invoice SEQUENCE**, the
+  `saldo_app` role, and a data sweep that every posted voucher balances. Raises one exception listing all
+  failures → exits non-zero iff unhealthy. **Negative-tested** (lists 20 failures on a schema-less DB).
+- **`tools/restore-drill.sh`** (`pnpm dr:drill`) — the full local rehearsal: build from `db/migrations` →
+  seed a synthetic canary (posted balanced voucher + allocated gapless invoice nr) → `pg_dump` → restore
+  into a scratch DB → run the verifier → prove the **append-only trigger still BITES** on the restored
+  data. Self-cleaning, exits non-zero on any failure. Ran green end-to-end.
+- **Key finding:** append-only is enforced by the **immutability triggers**, NOT by withholding grants
+  (`saldo_app` *has* UPDATE/DELETE on voucher/posting) — so the verifier asserts the triggers (and that
+  they bite), not grant-level append-only.
+- **R2 retention (ADR 0038):** the 5-year statutory hold is an **R2 bucket lock** (WORM); locks outrank
+  lifecycle rules (strictest wins; a locked object can't be deleted/overwritten), so lifecycle can clean
+  up only *non-held* data — the storage twin of the ledger's append-only triggers. GDPR erasure stays
+  reconciled (held data can't be erased; lawful basis: legal obligation). The held/non-held prefix split
+  is *intended config* — the document-write paths don't exist yet (flagged).
+- **Source-grounded (ADR 0028):** Neon PITR + R2 lifecycle/lock facts captured to `db/reference/neon/`
+  and `db/reference/r2/` (dated, verify-by 2026-12-31), cited by the runbook.
+- **CI guard:** `apps/web/test/integrity/restore-verify.integration.test.ts` runs the verifier against a
+  freshly-migrated schema so it can't drift from `db/migrations` (3 tests). Web suite **123 passing**.
+- **privacy-reviewer:** no blockers; applied its should-fixes (logical-dump EU-residency note; flagged the
+  R2 prefix scheme as not-yet-built; bokføringsloven citation; canary org_nr noted as mod-11-invalid).
+
+## Previous session — `aia-provenance-logging`: the durable Art. 50(2) audit trail (ADR 0037)
 Built the **persisted half** of EU AI Act **Art. 50(2)** provenance: when a human confirms an AI-proposed
 value and it posts to the ledger, a queryable record that the voucher **came from an AI proposal** is now
 persisted + logged. The code-level provenance contract (ADR 0035) and the UI disclosure (ADR 0036) were
@@ -71,9 +101,9 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 37 ADRs (0001–0037) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 51 tasks (26 done, 25 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `ops-dr-runbook` [high/M] — DR runbook: Neon PITR + restore drills, R2 retention
+- **Decisions:** 38 ADRs (0001–0038) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 51 tasks (27 done, 24 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `test-stateful-ledger` [high/M] — Stateful property testing of the ledger (fast-check model-based)
 <!-- /AUTOGEN:repo-status -->
 
 ## This session — `feat-receipt-extraction`: the first AI-system surface (ADR 0035)
@@ -445,13 +475,13 @@ typography foundations of the UI followed in ADRs **0024–0026** (PRs #13–#15
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**
 Don't re-derive "what's next" in prose here; this is just the orientation.
-- **Fill the ledger: `feat-manual-voucher-entry`** [high/M] — the first posting surface (added this
-  session). The org gateway (ADR 0032) and the honest-number reveal (ADR 0033) are both live, but the
-  ledger is empty: nothing posts vouchers yet, so the reveal shows zero. A minimal manual-voucher slice
-  (derive via `@saldo/domain` → rules-engine gate → `withUserOrg` insert → `posted_at`) makes the reveal
-  show real numbers and is the base for invoice issuance + receipt-extraction landing.
-- **Other high-value ready:** `feat-receipt-extraction` (vision-LLM proposals — now has both an org and a
-  forming posting surface to land into), `test-stateful-ledger` (model-based ledger testing), `ops-dr-runbook`.
+- **Highest-value ready: `test-stateful-ledger`** [high/M] — model-based (fast-check) stateful property
+  testing of the ledger: drive sequences of posts/reversals and assert the invariants (balance,
+  append-only, gapless counter, period locks) hold across arbitrary histories. The posting surface
+  (ADR 0034), receipt extraction (ADR 0035), and provenance (ADR 0037) have all landed, so there is now
+  a real ledger to model.
+- **AI-Act follow-ons (transparency thread):** `aia-conformity-checklist` (Art. 5/6/50 self-assessment),
+  `aia-gpai-docs` (capture the upstream GPAI model's Annex XII docs, Art. 53), `aia-literacy-note` (Art. 4).
 - **VAT/tax engine continuation:** `vat-reduced-rate-activity` (capture mval kap. 5 → rate-matching + the
   rules/DB activity wiring), `vat-threshold-watcher` (the 50k registration threshold), `vat-reverse-charge`,
   `vat-mixed-activity` (§ 8-2 apportionment).
@@ -483,11 +513,15 @@ Don't re-derive "what's next" in prose here; this is just the orientation.
   runs migrations as a separate OWNER `DATABASE_URL`; the app process uses the `saldo_app` one.
 - **Live integrations deferred** — verify Neon EU + custom-role RLS, and that **Hyperdrive preserves
   `SET LOCAL`**, when wiring auth/DB live (needs egress + tenants).
+- **DR live-verification pending (ADR 0038)** — the restore *mechanics* are tested locally
+  (`pnpm dr:drill`), but the live-only steps await a wired control plane: set the Neon history-retention
+  window, run the first real restore drill against Neon, create the R2 `statutory-5yr` bucket lock + the
+  `tmp/` lifecycle rule, and confirm the EU DPA. The full checklist is in `docs/runbooks/disaster-recovery.md`.
 - **`saft:validate` is a scaffold** — prints `NOT YET IMPLEMENTED` loudly (CI label: SCAFFOLD). Implement
   SAF-T generation + XSD validation (Phase 8).
-- **The honest-number reveal shows zero until there's posting data** — `home.tsx` is the real reveal now
-  (ADR 0033), but the ledger is empty until `feat-manual-voucher-entry` lands a posting surface. The
-  empty state ("you're caught up") is intentional, not a bug.
+- **The honest-number reveal** — `home.tsx` is the real reveal (ADR 0033); the posting surface landed
+  (`feat-manual-voucher-entry`, ADR 0034, PR #24) and receipt extraction (ADR 0035) feeds it too, so the
+  ledger is no longer empty by construction. The "you're caught up" empty state is intentional, not a bug.
 - **Build-spec consolidation pending** — `docs/saldo-build-specification.md` has a stale dir tree + inlined
   harness copies (tracked: `docs-consolidate-build-spec`).
 - **Local commits are unsigned** (no signing key here); they verify on push through the proxy.

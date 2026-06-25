@@ -40,6 +40,12 @@ env) — see [`docs/runbooks/neon-provisioning.md`](runbooks/neon-provisioning.m
 Hetzner/Kamal is retained only as the sovereignty fallback (ADR 0008/0015). Secrets live in the
 server/CI environment only, never in the repo.
 
+## Disaster recovery + document retention
+Per **ADR 0038**: Neon point-in-time restore (PITR) with a **tested** restore drill, and R2 bucket-lock
+WORM for the 5-year statutory document hold vs. ledger immutability — see
+[`docs/runbooks/disaster-recovery.md`](runbooks/disaster-recovery.md). Rehearse the restore chain
+locally with `pnpm dr:drill` (`tools/restore-drill.sh` + `db/dr/verify-restore.sql`).
+
 ## CI (GitHub Actions)
 `ci.yml` gates on `audit → typecheck → lint → lint:repo → backlog validate → format:check →
 type-coverage → test → db:lint → db:migrate → db:introspect → build → saft:validate` against an

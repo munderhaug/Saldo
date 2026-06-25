@@ -67,13 +67,14 @@
     {
       "id": "test-stateful-ledger",
       "title": "Stateful property testing of the ledger (fast-check model-based)",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P1",
       "depends_on": ["pr4-ledger-integrity"],
-      "notes": "Random sequences of post/reverse/lock against the invariants — the highest-value test for a system of record.",
-      "refs": ["docs/roadmap.md"]
+      "implements_adr": ["0039"],
+      "notes": "Random sequences of post/reverse/lock against the invariants — the highest-value test for a system of record. Real-DB command model (fast-check asyncModelRun) over the actual triggers; apps/web/test/integrity/ledger-stateful.integration.test.ts.",
+      "refs": ["docs/roadmap.md", "docs/decisions/0039-stateful-ledger-property-testing.md"]
     },
     {
       "id": "feat-honest-number",

@@ -404,6 +404,7 @@ export const nb = {
   'invoices.detail.issue': 'Utsted',
   'invoices.detail.issueNote':
     'Når du utsteder, får dokumentet et fakturanummer og blir stående. Trenger du å rette det, lager du en kreditnota.',
+  'invoices.detail.posted': 'Bokført i regnskapet.',
   'invoices.detail.markSent': 'Marker som sendt',
   'invoices.detail.markPaid': 'Marker som betalt',
   'invoices.detail.createCreditNote': 'Lag kreditnota',
@@ -793,6 +794,7 @@ export const en = {
   'invoices.detail.issue': 'Issue',
   'invoices.detail.issueNote':
     'When you issue, the document gets a number and stands. If you need to correct it, you create a credit note.',
+  'invoices.detail.posted': 'Posted to your accounts.',
   'invoices.detail.markSent': 'Mark as sent',
   'invoices.detail.markPaid': 'Mark as paid',
   'invoices.detail.createCreditNote': 'Create credit note',

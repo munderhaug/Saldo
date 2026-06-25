@@ -6,7 +6,7 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-25 — session `feat-sales-invoicing` (ADR 0042). Branch + HEAD live in `git`
+**Last updated:** 2026-06-25 — session `feat-invoice-ledger-posting` (ADR 0043). Branch + HEAD live in `git`
 (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Confirmed locally: the Neon control plane is
@@ -39,9 +39,14 @@ auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act
   `kind` model; a draft editor with dynamic ad-hoc or catalogue-prefilled lines + live net/VAT/gross
   preview; per-line MVA HARD BLOCK reusing the domain `checkVatLine`; GAPLESS numbering + per-invoice
   KID on issue; an issued document append-only via SQL triggers; lifecycle draft→issued→sent→viewed→
-  paid + overdue; credit-note creation; ADR 0042). The org page carries a registers nav linking all
-  three. EU AI Act Art. 50 disclosure + Art. 50(2) audit trail are in place. NOTE: issuing a sales
-  invoice does NOT yet post the AR voucher to the ledger — split to `feat-invoice-ledger-posting`.
+  paid + overdue; credit-note creation; ADR 0042), and **invoice → ledger posting** (issuing a sales
+  invoice / credit note now posts a BALANCED AR voucher — debit receivable gross, credit revenue per
+  line, credit output VAT per rate — atomically in the issuing tx, via the pure `deriveSalesInvoice`
+  reusing `deriveSales`; a credit note posts the reversing motbilag; `voucher.invoice_id` links the
+  document to its ledger entry; VAT is treatment-gated so the voucher ties out to the frozen `vat_ore`;
+  ADR 0043). The org page carries a registers nav linking all three. EU AI Act Art. 50 disclosure +
+  Art. 50(2) audit trail are in place. The invoicing→ledger loop is now closed; PDF/email + recurring
+  remain split out.
 
 **Gates (run them or see CI for live counts — not restated here):** `pnpm typecheck` · `lint` ·
 `format:check` · `lint:repo` (harness + cited-docs + link integrity + no-contradiction + the generated
@@ -53,17 +58,18 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 42 ADRs (0001–0042) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 78 tasks (31 done, 47 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 43 ADRs (0001–0043) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 78 tasks (32 done, 46 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-invoice-pdf-email` [high/M] — Invoice PDF generation + email delivery (EU provider) + EHF/PEPPOL validate
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — **sales invoicing** (ADR 0042) — landed via a reviewed PR;
-see `git log` for the detail. Deliberately split out of §8.4: ledger posting of the AR voucher on issue
-(`feat-invoice-ledger-posting`), PDF + email (`feat-invoice-pdf-email`), recurring/reminders
-(`feat-recurring-invoices-reminders`). The project-wide privacy gap is now tracked: data export lives in
-`feat-audit-trail-export`, and GDPR erasure/anonymisation in the new `feat-gdpr-erasure`.
+Nothing mid-flight. The most recent work — **invoice → ledger posting** (ADR 0043) — landed via a
+reviewed PR; see `git log` for the detail. Still split out of §8.4: PDF + email (`feat-invoice-pdf-email`,
+blocked on the transactional-email-provider decision), recurring/reminders
+(`feat-recurring-invoices-reminders`). Reverse-charge sales post seller-side revenue-only; the dual-leg
+derivation + tightening the sales-line gate are sequenced to `vat-reverse-charge`. The project-wide
+privacy gap is still tracked: data export in `feat-audit-trail-export`, GDPR erasure in `feat-gdpr-erasure`.
 
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**

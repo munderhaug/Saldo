@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { POSTING_ACCOUNTS, POSTING_VAT_CODES } from './posting.server.js';
+import { POSTING_ACCOUNTS, POSTING_VAT_CODES, SALES_INVOICE_ACCOUNTS } from './posting.server.js';
 import { STANDARD_ACCOUNTS, STANDARD_VAT_CODES } from './provisioning.server.js';
 
 /**
@@ -41,5 +41,26 @@ describe('designated posting accounts/codes are source-grounded', () => {
     const dirOf = (code: string) => STANDARD_VAT_CODES.find((c) => c.code === code)?.direction;
     expect(dirOf(POSTING_VAT_CODES.output)).toBe('output');
     expect(dirOf(POSTING_VAT_CODES.input)).toBe('input');
+  });
+
+  // ── Sales-invoice AR posting (feat-invoice-ledger-posting) ──
+  const salesInvoiceAccounts = [
+    SALES_INVOICE_ACCOUNTS.receivable,
+    ...Object.values(SALES_INVOICE_ACCOUNTS.outputVatByRate),
+  ];
+
+  it.each(salesInvoiceAccounts)(
+    'sales-invoice account %s exists in the committed kontoplan',
+    (number) => {
+      expect(accountNumbers.has(number)).toBe(true);
+    },
+  );
+
+  it('designates an asset receivable and liability output-VAT accounts by rate', () => {
+    const typeOf = (number: string) => STANDARD_ACCOUNTS.find((a) => a.number === number)?.type;
+    expect(typeOf(SALES_INVOICE_ACCOUNTS.receivable)).toBe('asset');
+    for (const number of Object.values(SALES_INVOICE_ACCOUNTS.outputVatByRate)) {
+      expect(typeOf(number)).toBe('equity_liability');
+    }
   });
 });

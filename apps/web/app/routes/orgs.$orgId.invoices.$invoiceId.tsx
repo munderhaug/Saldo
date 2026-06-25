@@ -13,6 +13,7 @@ import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { listAccountOptions } from '~/db/org-defaults.server';
 import {
   createCreditNoteDraft,
+  isInvoicePosted,
   issueInvoice,
   listCustomerOptions,
   listInvoiceVatCodeOptions,
@@ -69,6 +70,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     return {
       invoice,
       creditsNumber,
+      posted: invoice.status === 'draft' ? false : await isInvoicePosted(tx, params.invoiceId),
       status: await readOrgMvaStatus(tx),
       customers: await listCustomerOptions(tx),
       accounts: await listAccountOptions(tx),
@@ -146,8 +148,17 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function InvoiceDetailRoute({ loaderData, actionData }: Route.ComponentProps) {
-  const { orgId, invoice, creditsNumber, customers, accounts, vatCodes, products, orgRegistered } =
-    loaderData;
+  const {
+    orgId,
+    invoice,
+    creditsNumber,
+    posted,
+    customers,
+    accounts,
+    vatCodes,
+    products,
+    orgRegistered,
+  } = loaderData;
   const accountLabel = new Map(accounts.map((a) => [a.id, `${a.number} — ${a.name}`]));
   const vatLabel = new Map(vatCodes.map((c) => [c.id, c.code]));
   const isDraft = invoice.status === 'draft';
@@ -227,7 +238,12 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
           </section>
         </>
       ) : (
-        <ReadOnlyInvoice invoice={invoice} accountLabel={accountLabel} vatLabel={vatLabel} />
+        <ReadOnlyInvoice
+          invoice={invoice}
+          posted={posted}
+          accountLabel={accountLabel}
+          vatLabel={vatLabel}
+        />
       )}
 
       {!isDraft && (
@@ -279,10 +295,12 @@ function LifecycleButton({ to, label }: { to: InvoiceStatus; label: string }) {
 
 function ReadOnlyInvoice({
   invoice,
+  posted,
   accountLabel,
   vatLabel,
 }: {
   invoice: Awaited<ReturnType<typeof readInvoice>> & object;
+  posted: boolean;
   accountLabel: ReadonlyMap<string, string>;
   vatLabel: ReadonlyMap<string, string>;
 }) {
@@ -358,6 +376,12 @@ function ReadOnlyInvoice({
           </dd>
         </div>
       </dl>
+
+      {posted && (
+        <p className="text-muted-foreground border-input border-t pt-4 text-sm">
+          {t('invoices.detail.posted')}
+        </p>
+      )}
     </div>
   );
 }

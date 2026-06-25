@@ -1,4 +1,4 @@
-import { pgTable, varchar, unique, pgPolicy, check, uuid, char, text, timestamp, foreignKey, numeric, integer, date, index, bigint, boolean, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, varchar, unique, pgPolicy, check, uuid, char, text, timestamp, foreignKey, numeric, integer, date, index, bigint, uniqueIndex, boolean, primaryKey } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -72,40 +72,6 @@ export const fiscalPeriod = pgTable("fiscal_period", {
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 ]);
 
-export const voucher = pgTable("voucher", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	organizationId: uuid("organization_id").notNull(),
-	type: text().notNull(),
-	periodId: uuid("period_id").notNull(),
-	reversesVoucherId: uuid("reverses_voucher_id"),
-	postedAt: timestamp("posted_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.organizationId],
-			foreignColumns: [organization.id],
-			name: "voucher_organization_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.periodId],
-			foreignColumns: [fiscalPeriod.id],
-			name: "voucher_period_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.reversesVoucherId],
-			foreignColumns: [table.id],
-			name: "voucher_reverses_voucher_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.organizationId, table.periodId],
-			foreignColumns: [fiscalPeriod.id, fiscalPeriod.organizationId],
-			name: "voucher_period_same_org"
-		}),
-	unique("voucher_id_org_uniq").on(table.id, table.organizationId),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
-	check("voucher_type_check", sql`type = ANY (ARRAY['sales'::text, 'purchase'::text, 'manual'::text, 'bank'::text, 'reversal'::text])`),
-]);
-
 export const posting = pgTable("posting", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	organizationId: uuid("organization_id").notNull(),
@@ -155,6 +121,47 @@ export const invoiceCounter = pgTable("invoice_counter", {
 			name: "invoice_counter_organization_id_fkey"
 		}),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+]);
+
+export const voucher = pgTable("voucher", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	type: text().notNull(),
+	periodId: uuid("period_id").notNull(),
+	reversesVoucherId: uuid("reverses_voucher_id"),
+	postedAt: timestamp("posted_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	invoiceId: uuid("invoice_id"),
+}, (table) => [
+	uniqueIndex("voucher_invoice_uniq").using("btree", table.invoiceId.asc().nullsLast().op("uuid_ops")).where(sql`(invoice_id IS NOT NULL)`),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "voucher_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.periodId],
+			foreignColumns: [fiscalPeriod.id],
+			name: "voucher_period_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.reversesVoucherId],
+			foreignColumns: [table.id],
+			name: "voucher_reverses_voucher_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.periodId],
+			foreignColumns: [fiscalPeriod.id, fiscalPeriod.organizationId],
+			name: "voucher_period_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.invoiceId],
+			foreignColumns: [invoice.id, invoice.organizationId],
+			name: "voucher_invoice_same_org"
+		}),
+	unique("voucher_id_org_uniq").on(table.id, table.organizationId),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("voucher_type_check", sql`type = ANY (ARRAY['sales'::text, 'purchase'::text, 'manual'::text, 'bank'::text, 'reversal'::text])`),
 ]);
 
 export const appUser = pgTable("app_user", {
@@ -348,6 +355,8 @@ export const invoice = pgTable("invoice", {
 	unique("invoice_id_org_uniq").on(table.id, table.organizationId),
 	unique("invoice_org_number_uniq").on(table.organizationId, table.invoiceNumber),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("invoice_kid_with_number", sql`(kid IS NOT NULL) = (invoice_number IS NOT NULL)`),
+	check("invoice_credits_only_credit_note", sql`(credits_invoice_id IS NULL) OR (kind = 'credit_note'::text)`),
 	check("invoice_kind_check", sql`kind = ANY (ARRAY['quote'::text, 'invoice'::text, 'credit_note'::text])`),
 	check("invoice_status_check", sql`status = ANY (ARRAY['draft'::text, 'issued'::text, 'sent'::text, 'viewed'::text, 'paid'::text, 'overdue'::text])`),
 	check("invoice_language_check", sql`language = ANY (ARRAY['nb'::text, 'en'::text])`),
@@ -356,8 +365,6 @@ export const invoice = pgTable("invoice", {
 	check("invoice_gross_ore_check", sql`gross_ore >= 0`),
 	check("invoice_number_when_issued", sql`(invoice_number IS NOT NULL) = ((kind <> 'quote'::text) AND (status <> 'draft'::text))`),
 	check("invoice_issued_at_consistent", sql`(issued_at IS NOT NULL) = (status <> 'draft'::text)`),
-	check("invoice_kid_with_number", sql`(kid IS NOT NULL) = (invoice_number IS NOT NULL)`),
-	check("invoice_credits_only_credit_note", sql`(credits_invoice_id IS NULL) OR (kind = 'credit_note'::text)`),
 	check("invoice_due_after_issue", sql`(issue_date IS NULL) OR (due_date IS NULL) OR (due_date >= issue_date)`),
 ]);
 
@@ -381,16 +388,6 @@ export const invoiceLine = pgTable("invoice_line", {
 }, (table) => [
 	index("invoice_line_invoice_idx").using("btree", table.invoiceId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
-			columns: [table.organizationId, table.vatCodeId],
-			foreignColumns: [vatCode.id, vatCode.organizationId],
-			name: "invoice_line_vat_code_same_org"
-		}),
-	foreignKey({
-			columns: [table.organizationId, table.productId],
-			foreignColumns: [product.id, product.organizationId],
-			name: "invoice_line_product_same_org"
-		}),
-	foreignKey({
 			columns: [table.organizationId],
 			foreignColumns: [organization.id],
 			name: "invoice_line_organization_id_fkey"
@@ -404,6 +401,16 @@ export const invoiceLine = pgTable("invoice_line", {
 			columns: [table.organizationId, table.accountId],
 			foreignColumns: [account.id, account.organizationId],
 			name: "invoice_line_account_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.vatCodeId],
+			foreignColumns: [vatCode.id, vatCode.organizationId],
+			name: "invoice_line_vat_code_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.productId],
+			foreignColumns: [product.id, product.organizationId],
+			name: "invoice_line_product_same_org"
 		}),
 	unique("invoice_line_no_uniq").on(table.invoiceId, table.lineNo),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),

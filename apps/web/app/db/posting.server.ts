@@ -50,6 +50,24 @@ export const POSTING_ACCOUNTS = {
 /** Designated domestic regular-rate SAF-T VAT codes (output for a sale, input for a purchase). */
 export const POSTING_VAT_CODES = { output: '3', input: '1' } as const;
 
+/**
+ * Designated accounts for posting an ISSUED sales document's AR voucher (feat-invoice-ledger-posting,
+ * §8.4). The receivable (Kundefordringer) is debited the document gross; the output VAT is credited to
+ * the account for the line's rate — `regular` 25 % → 2700, `reduced-middle` 15 % → 2701, `reduced-raw-
+ * fish` → 2702, `reduced-low` 12 % → 2703. Zero-rated / out-of-scope lines charge no VAT, so they need
+ * no VAT account. Each line's REVENUE account is the line's own `account_id`, not designated here.
+ * Verified against the committed kontoplan by `posting-accounts.test.ts` (source-grounded, not memory).
+ */
+export const SALES_INVOICE_ACCOUNTS = {
+  receivable: '1500',
+  outputVatByRate: {
+    regular: '2700',
+    'reduced-middle': '2701',
+    'reduced-raw-fish': '2702',
+    'reduced-low': '2703',
+  },
+} as const;
+
 /** The designated accounts as the branded `AccountNo` shapes the domain derivation expects. */
 const INCOME_ACCOUNTS = {
   receivable: POSTING_ACCOUNTS.income.receivable as AccountNo,
@@ -75,7 +93,7 @@ interface RecordVoucherInput {
 }
 
 /** Find the org's open fiscal period for `year`, creating a Jan–Dec one if it doesn't exist yet. */
-async function ensureFiscalPeriod(
+export async function ensureFiscalPeriod(
   tx: OrgTx,
   organizationId: string,
   year: number,

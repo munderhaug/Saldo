@@ -14,26 +14,45 @@
  */
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import {
+  type AccountNo,
   type InvoiceKind,
   type InvoiceStatus,
   type MvaStatus,
   type Øre,
   type SaftTaxCode,
+  type SalesInvoiceLine,
+  type VatCode,
   addØre,
   canTransition,
+  checkSalesLine,
   computeLine,
+  deriveSalesInvoice,
   drawsInvoiceNumber,
   invoiceKid,
   parseKroner,
   quantity as toQuantity,
+  rate,
+  rateForCategory,
+  reverseVoucher,
   sumØre,
   øre,
 } from '@saldo/domain';
 import type { OrgTx } from '../auth/middleware.js';
 import type { InvoiceInput } from '../contracts/invoice.js';
 import { parseQuantity } from '../contracts/invoice.js';
-import { contact, invoice, invoiceLine, organization, product, vatCode } from './schema.js';
+import {
+  account,
+  contact,
+  invoice,
+  invoiceLine,
+  organization,
+  posting,
+  product,
+  vatCode,
+  voucher,
+} from './schema.js';
 import { STANDARD_TAX_CODE_INDEX } from './provisioning.server.js';
+import { SALES_INVOICE_ACCOUNTS, ensureFiscalPeriod } from './posting.server.js';
 
 /** '' (the form's "not given") becomes NULL; everything else is the trimmed string. */
 const nullable = (value: string): string | null => (value === '' ? null : value);
@@ -153,6 +172,20 @@ export async function readInvoice(tx: OrgTx, invoiceId: string): Promise<Invoice
       vatOre: l.vatOre,
     })),
   };
+}
+
+/**
+ * Whether an issued document has been booked to the general ledger (its AR voucher exists). RLS scopes
+ * the lookup to the current tenant. Used only to surface a sober "posted" confirmation on the detail
+ * view — the ledger legs themselves stay depth-on-demand (the everyday surface shows no debit/credit).
+ */
+export async function isInvoicePosted(tx: OrgTx, invoiceId: string): Promise<boolean> {
+  const [row] = await tx
+    .select({ id: voucher.id })
+    .from(voucher)
+    .where(eq(voucher.invoiceId, invoiceId))
+    .limit(1);
+  return row !== undefined;
 }
 
 // ── Derivation (the domain VAT engine, server-authoritative) ────────────────────────────────────────
@@ -427,7 +460,117 @@ export async function issueInvoice(
       updatedAt: sql`now()`,
     })
     .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')));
+
+  // Post the AR voucher to the general ledger in THIS SAME transaction (atomic with the number
+  // allocation). A quote has no ledger effect (it drew no number); an invoice / credit note books one.
+  if (drawsInvoiceNumber(current.kind)) {
+    await postIssuedVoucher(tx, organizationId, { ...current, issueDate: dates.issueDate });
+  }
   return { ok: true, invoiceNumber };
+}
+
+/**
+ * Post an issued sales document's AR voucher to the general ledger, in the caller's issuing transaction
+ * (so number allocation + the posted voucher commit atomically, or not at all). The leg arrangement is
+ * the PURE `deriveSalesInvoice` (debit receivable gross, credit revenue per line, credit output VAT per
+ * rate); the leg layout is never hand-rolled here. A credit note posts the reversing motbilag
+ * (`reverseVoucher`) of ITS OWN derived voucher — which, for the full copy `createCreditNoteDraft`
+ * makes, mirrors the original — linked to the original invoice's voucher via `reverses_voucher_id` for
+ * provenance. The receivable + per-rate output-VAT accounts are the source-grounded
+ * `SALES_INVOICE_ACCOUNTS`; each line's revenue account is the line's own `account_id`. The SQL balance
+ * / posted-completeness / period-lock triggers verify the entry at COMMIT — app code does not re-check.
+ *
+ * Throws (rolling back the whole issue) on the should-never-happen cases — a line that the sales gate
+ * would block (already re-validated by the caller) or a designated account missing from the org's
+ * provisioned kontoplan — so an issued document is NEVER left without its ledger entry.
+ */
+async function postIssuedVoucher(
+  tx: OrgTx,
+  organizationId: string,
+  inv: InvoiceDetail,
+): Promise<void> {
+  // The voucher lands in the fiscal period of the ISSUE date (created or looked up).
+  const periodId = await ensureFiscalPeriod(tx, organizationId, Number(inv.issueDate!.slice(0, 4)));
+
+  const accountRows = await tx.select({ id: account.id, number: account.number }).from(account);
+  const numberByAccountId = new Map(accountRows.map((a) => [a.id, a.number]));
+  const idByNumber = new Map(accountRows.map((a) => [a.number, a.id]));
+  const vatRows = await tx.select({ id: vatCode.id, code: vatCode.code }).from(vatCode);
+  const codeByVatId = new Map(vatRows.map((r) => [r.id, r.code]));
+  const idByCode = new Map(vatRows.map((r) => [r.code, r.id]));
+  const outputVatByRate: Record<string, string> = SALES_INVOICE_ACCOUNTS.outputVatByRate;
+
+  const status = await currentOrgStatus(tx);
+  const lines: SalesInvoiceLine[] = inv.lines.map((l): SalesInvoiceLine => {
+    const revenue = numberByAccountId.get(l.accountId);
+    const code = codeByVatId.get(l.vatCodeId);
+    const saft = code ? STANDARD_TAX_CODE_INDEX.get(code as SaftTaxCode['code']) : undefined;
+    if (!revenue || !saft)
+      throw new Error(`invoice ${inv.id}: line account/VAT code not provisioned`);
+    // Charge output VAT on EXACTLY the lines `computeLine` did (the same gate that produced the frozen
+    // `vat_ore`): only a permitted `output-vat` treatment. A zero-rated / exempt / REVERSE-CHARGE line
+    // (a non-blocking advisory that may carry a non-zero rate category) charged no VAT on the document,
+    // so it posts at rate 0 — no phantom VAT leg, and the voucher ties out to the stored amounts.
+    const verdict = checkSalesLine(status, saft);
+    const charges = verdict.ok && verdict.treatment === 'output-vat';
+    return {
+      net: øre(l.netOre),
+      vatRate: charges ? rateForCategory(saft.rateCategory) : rate(0),
+      revenue: revenue as AccountNo,
+      // A real output-VAT account for a charging rate; the regular account is an unused placeholder for
+      // a non-charging line (deriveSales emits NO VAT leg there, so it never actually posts).
+      outputVat: (outputVatByRate[saft.rateCategory] ??
+        SALES_INVOICE_ACCOUNTS.outputVatByRate.regular) as AccountNo,
+      vatCode: code as VatCode,
+    };
+  });
+
+  const derived = deriveSalesInvoice({
+    receivable: SALES_INVOICE_ACCOUNTS.receivable as AccountNo,
+    status,
+    lines,
+  });
+  if (!derived.ok)
+    throw new Error(`invoice ${inv.id} derived an unpostable voucher: ${derived.error}`);
+
+  // A credit note reverses the original invoice's voucher (the motbilag); a plain invoice posts as-is.
+  let toPost = derived.voucher;
+  let reversesVoucherId: string | null = null;
+  if (inv.kind === 'credit_note' && inv.creditsInvoiceId) {
+    const [orig] = await tx
+      .select({ id: voucher.id })
+      .from(voucher)
+      .where(eq(voucher.invoiceId, inv.creditsInvoiceId))
+      .limit(1);
+    reversesVoucherId = orig?.id ?? null;
+  }
+  if (inv.kind === 'credit_note') {
+    toPost = reverseVoucher(derived.voucher, reversesVoucherId ?? undefined);
+  }
+
+  const [createdVoucher] = await tx
+    .insert(voucher)
+    .values({
+      organizationId,
+      type: toPost.type,
+      periodId,
+      invoiceId: inv.id,
+      reversesVoucherId,
+      postedAt: sql`now()`,
+    })
+    .returning({ id: voucher.id });
+  const voucherId = createdVoucher!.id;
+
+  await tx.insert(posting).values(
+    toPost.lines.map((leg) => ({
+      organizationId,
+      voucherId,
+      accountId: idByNumber.get(leg.account as string)!,
+      vatCodeId: leg.vatCode ? (idByCode.get(leg.vatCode as string) ?? null) : null,
+      debitOre: leg.debit,
+      creditOre: leg.credit,
+    })),
+  );
 }
 
 /** Advance the lifecycle of an issued document (sent / viewed / paid / overdue), stamping its time. */

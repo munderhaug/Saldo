@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, account, vatCode, fiscalPeriod, voucher, posting, invoiceCounter, appUser, userSession, contact, aiProvenance, product, invoice, invoiceLine, membership } from "./schema";
+import { organization, account, vatCode, fiscalPeriod, posting, voucher, invoiceCounter, invoice, appUser, userSession, contact, aiProvenance, product, invoiceLine, membership } from "./schema";
 
 export const accountRelations = relations(account, ({one, many}) => ({
 	organization: one(organization, {
@@ -16,9 +16,9 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	accounts: many(account),
 	vatCodes: many(vatCode),
 	fiscalPeriods: many(fiscalPeriod),
-	vouchers: many(voucher),
 	postings: many(posting),
 	invoiceCounters: many(invoiceCounter),
+	vouchers: many(voucher),
 	contacts: many(contact),
 	aiProvenances: many(aiProvenance),
 	products: many(product),
@@ -51,7 +51,27 @@ export const fiscalPeriodRelations = relations(fiscalPeriod, ({one, many}) => ({
 	}),
 }));
 
+export const postingRelations = relations(posting, ({one}) => ({
+	organization: one(organization, {
+		fields: [posting.organizationId],
+		references: [organization.id]
+	}),
+	voucher: one(voucher, {
+		fields: [posting.voucherId],
+		references: [voucher.id]
+	}),
+	account: one(account, {
+		fields: [posting.accountId],
+		references: [account.id]
+	}),
+	vatCode: one(vatCode, {
+		fields: [posting.vatCodeId],
+		references: [vatCode.id]
+	}),
+}));
+
 export const voucherRelations = relations(voucher, ({one, many}) => ({
+	postings: many(posting),
 	organization: one(organization, {
 		fields: [voucher.organizationId],
 		references: [organization.id]
@@ -74,7 +94,10 @@ export const voucherRelations = relations(voucher, ({one, many}) => ({
 		references: [fiscalPeriod.id],
 		relationName: "voucher_organizationId_fiscalPeriod_id"
 	}),
-	postings: many(posting),
+	invoice: one(invoice, {
+		fields: [voucher.organizationId],
+		references: [invoice.id]
+	}),
 	aiProvenances_voucherId: many(aiProvenance, {
 		relationName: "aiProvenance_voucherId_voucher_id"
 	}),
@@ -83,30 +106,32 @@ export const voucherRelations = relations(voucher, ({one, many}) => ({
 	}),
 }));
 
-export const postingRelations = relations(posting, ({one}) => ({
-	organization: one(organization, {
-		fields: [posting.organizationId],
-		references: [organization.id]
-	}),
-	voucher: one(voucher, {
-		fields: [posting.voucherId],
-		references: [voucher.id]
-	}),
-	account: one(account, {
-		fields: [posting.accountId],
-		references: [account.id]
-	}),
-	vatCode: one(vatCode, {
-		fields: [posting.vatCodeId],
-		references: [vatCode.id]
-	}),
-}));
-
 export const invoiceCounterRelations = relations(invoiceCounter, ({one}) => ({
 	organization: one(organization, {
 		fields: [invoiceCounter.organizationId],
 		references: [organization.id]
 	}),
+}));
+
+export const invoiceRelations = relations(invoice, ({one, many}) => ({
+	vouchers: many(voucher),
+	organization: one(organization, {
+		fields: [invoice.organizationId],
+		references: [organization.id]
+	}),
+	contact: one(contact, {
+		fields: [invoice.organizationId],
+		references: [contact.id]
+	}),
+	invoice: one(invoice, {
+		fields: [invoice.organizationId],
+		references: [invoice.id],
+		relationName: "invoice_organizationId_invoice_id"
+	}),
+	invoices: many(invoice, {
+		relationName: "invoice_organizationId_invoice_id"
+	}),
+	invoiceLines: many(invoiceLine),
 }));
 
 export const userSessionRelations = relations(userSession, ({one}) => ({
@@ -170,35 +195,7 @@ export const productRelations = relations(product, ({one, many}) => ({
 	invoiceLines: many(invoiceLine),
 }));
 
-export const invoiceRelations = relations(invoice, ({one, many}) => ({
-	organization: one(organization, {
-		fields: [invoice.organizationId],
-		references: [organization.id]
-	}),
-	contact: one(contact, {
-		fields: [invoice.organizationId],
-		references: [contact.id]
-	}),
-	invoice: one(invoice, {
-		fields: [invoice.organizationId],
-		references: [invoice.id],
-		relationName: "invoice_organizationId_invoice_id"
-	}),
-	invoices: many(invoice, {
-		relationName: "invoice_organizationId_invoice_id"
-	}),
-	invoiceLines: many(invoiceLine),
-}));
-
 export const invoiceLineRelations = relations(invoiceLine, ({one}) => ({
-	vatCode: one(vatCode, {
-		fields: [invoiceLine.organizationId],
-		references: [vatCode.id]
-	}),
-	product: one(product, {
-		fields: [invoiceLine.organizationId],
-		references: [product.id]
-	}),
 	organization: one(organization, {
 		fields: [invoiceLine.organizationId],
 		references: [organization.id]
@@ -210,6 +207,14 @@ export const invoiceLineRelations = relations(invoiceLine, ({one}) => ({
 	account: one(account, {
 		fields: [invoiceLine.organizationId],
 		references: [account.id]
+	}),
+	vatCode: one(vatCode, {
+		fields: [invoiceLine.organizationId],
+		references: [vatCode.id]
+	}),
+	product: one(product, {
+		fields: [invoiceLine.organizationId],
+		references: [product.id]
 	}),
 }));
 

@@ -938,6 +938,28 @@
       "depends_on": ["feat-sales-invoicing"],
       "notes": "Build-spec §9 + §16 Phase 9. Get paid by Vipps (ePayment/Recurring) and optionally Vipps Login; merchant agreement + API keys, onboarding-gated. Lower priority than the filing/banking spine.",
       "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
+    },
+    {
+      "id": "sec-csp-nonce",
+      "title": "Content-Security-Policy with a per-request nonce for the RR7 hydration script",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P8",
+      "depends_on": [],
+      "notes": "The safe security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, prod HSTS) ship in app/entry.server.tsx. CSP was deferred: RR7's inline hydration script (window.__reactRouterContext) needs a per-request nonce threaded through entry.server + <Scripts nonce>; a blind script-src would break hydration. Add a nonce generator, set script-src 'self' 'nonce-…' + a restrictive default-src/style-src/img-src/font-src (self + data: for fonts), and verify hydration in a running app — start report-only before enforce.",
+      "refs": ["apps/web/app/entry.server.tsx", "SECURITY.md"]
+    },
+    {
+      "id": "auth-oidc-server-state",
+      "title": "Move OIDC transaction state (state/nonce/verifier) to server-side storage",
+      "status": "todo",
+      "value": "low",
+      "effort": "M",
+      "phase": "P8",
+      "depends_on": [],
+      "notes": "Best-practice hardening surfaced by the security review (acceptable as-is): the OIDC round-trip stores state/nonce/codeVerifier in a short-TTL HttpOnly cookie (auth/oidc.server.ts). Move to a server-side row (Postgres, ~10-min TTL) keyed by an opaque cookie token so the values never leave the server. Low priority; OIDC is not live-verified yet.",
+      "refs": ["apps/web/app/auth/oidc.server.ts", "docs/decisions/0020-session-identity-model.md"]
     }
   ]
 }

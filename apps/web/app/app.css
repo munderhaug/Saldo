@@ -511,3 +511,18 @@
     outline-offset: 2px;
   }
 }
+
+/* Honour a user's reduced-motion preference (WCAG 2.3.3 / accessibility.md): near-zero any
+   transition/animation and disable smooth scrolling. A defensive global backstop so motion added
+   later (Motion / View Transitions / Vaul, all still backlogged) is calm by default for these users.
+   Outside @layer + `!important` so it wins regardless of where a future animation is declared. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

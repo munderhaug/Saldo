@@ -44,7 +44,7 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
 - **Decisions:** 39 ADRs (0001–0039) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 69 tasks (28 done, 41 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Backlog:** 71 tasks (28 done, 43 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-contacts-register` [high/M] — Contacts register — customers & suppliers (brreg autofill + per-contact defaults)
 <!-- /AUTOGEN:repo-status -->
 
@@ -55,8 +55,7 @@ reviewed PR; see `git log` for the detail.
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**
 Don't re-derive "what's next" in prose here; this is orientation, not the record.
-- **Highest-value ready task** comes from `pnpm backlog next` (currently the design-visual spike per the
-  generated block above).
+- **Highest-value ready task** comes from `pnpm backlog next` — see the generated block above.
 - **AI-Act follow-ons (transparency thread):** `aia-conformity-checklist` (Art. 5/6/50 self-assessment),
   `aia-gpai-docs` (capture the upstream GPAI model's Annex XII docs, Art. 53), `aia-literacy-note` (Art. 4).
 - **VAT/tax engine continuation:** `vat-reduced-rate-activity` (capture mval kap. 5 → rate-matching +

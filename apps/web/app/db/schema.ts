@@ -1,4 +1,4 @@
-import { pgTable, varchar, index, foreignKey, pgPolicy, check, uuid, text, bigint, timestamp, unique, char, numeric, integer, date, boolean, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, varchar, unique, pgPolicy, check, uuid, char, text, timestamp, foreignKey, numeric, integer, date, index, bigint, boolean, primaryKey } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -6,41 +6,6 @@ import { sql } from "drizzle-orm"
 export const schemaMigrations = pgTable("schema_migrations", {
 	version: varchar().primaryKey().notNull(),
 });
-
-export const product = pgTable("product", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	organizationId: uuid("organization_id").notNull(),
-	kind: text().notNull(),
-	name: text().notNull(),
-	description: text(),
-	unit: text().default('stk').notNull(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	unitPriceOre: bigint("unit_price_ore", { mode: "number" }).default(0).notNull(),
-	defaultAccountId: uuid("default_account_id"),
-	defaultVatCodeId: uuid("default_vat_code_id"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("product_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.organizationId],
-			foreignColumns: [organization.id],
-			name: "product_organization_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.organizationId, table.defaultAccountId],
-			foreignColumns: [account.id, account.organizationId],
-			name: "product_default_account_same_org"
-		}),
-	foreignKey({
-			columns: [table.organizationId, table.defaultVatCodeId],
-			foreignColumns: [vatCode.id, vatCode.organizationId],
-			name: "product_default_vat_code_same_org"
-		}),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
-	check("product_kind_check", sql`kind = ANY (ARRAY['goods'::text, 'service'::text])`),
-	check("product_unit_price_ore_check", sql`unit_price_ore >= 0`),
-]);
 
 export const organization = pgTable("organization", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
@@ -257,6 +222,7 @@ export const contact = pgTable("contact", {
 			foreignColumns: [vatCode.id, vatCode.organizationId],
 			name: "contact_default_vat_code_same_org"
 		}),
+	unique("contact_id_org_uniq").on(table.id, table.organizationId),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("contact_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
 	check("contact_payment_terms_days_check", sql`(payment_terms_days >= 0) AND (payment_terms_days <= 365)`),
@@ -291,6 +257,161 @@ export const aiProvenance = pgTable("ai_provenance", {
 	unique("ai_provenance_voucher_id_key").on(table.voucherId),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("ai_provenance_confidence_check", sql`(confidence >= (0)::numeric) AND (confidence <= (1)::numeric)`),
+]);
+
+export const product = pgTable("product", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	kind: text().notNull(),
+	name: text().notNull(),
+	description: text(),
+	unit: text().default('stk').notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	unitPriceOre: bigint("unit_price_ore", { mode: "number" }).default(0).notNull(),
+	defaultAccountId: uuid("default_account_id"),
+	defaultVatCodeId: uuid("default_vat_code_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("product_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "product_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.defaultAccountId],
+			foreignColumns: [account.id, account.organizationId],
+			name: "product_default_account_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.defaultVatCodeId],
+			foreignColumns: [vatCode.id, vatCode.organizationId],
+			name: "product_default_vat_code_same_org"
+		}),
+	unique("product_id_org_uniq").on(table.id, table.organizationId),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("product_kind_check", sql`kind = ANY (ARRAY['goods'::text, 'service'::text])`),
+	check("product_unit_price_ore_check", sql`unit_price_ore >= 0`),
+]);
+
+export const invoice = pgTable("invoice", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	kind: text().notNull(),
+	status: text().default('draft').notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	invoiceNumber: bigint("invoice_number", { mode: "number" }),
+	customerId: uuid("customer_id"),
+	customerName: text("customer_name").notNull(),
+	customerEmail: text("customer_email"),
+	customerOrgNr: char("customer_org_nr", { length: 9 }),
+	customerAddress: text("customer_address"),
+	currency: char({ length: 3 }).default('NOK').notNull(),
+	language: text().default('nb').notNull(),
+	issueDate: date("issue_date"),
+	dueDate: date("due_date"),
+	kid: text(),
+	creditsInvoiceId: uuid("credits_invoice_id"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	netOre: bigint("net_ore", { mode: "number" }).default(0).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	vatOre: bigint("vat_ore", { mode: "number" }).default(0).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	grossOre: bigint("gross_ore", { mode: "number" }).default(0).notNull(),
+	notes: text(),
+	sentAt: timestamp("sent_at", { withTimezone: true, mode: 'string' }),
+	viewedAt: timestamp("viewed_at", { withTimezone: true, mode: 'string' }),
+	paidAt: timestamp("paid_at", { withTimezone: true, mode: 'string' }),
+	issuedAt: timestamp("issued_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("invoice_credits_idx").using("btree", table.creditsInvoiceId.asc().nullsLast().op("uuid_ops")).where(sql`(credits_invoice_id IS NOT NULL)`),
+	index("invoice_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
+	index("invoice_org_status_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops"), table.status.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "invoice_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.customerId],
+			foreignColumns: [contact.id, contact.organizationId],
+			name: "invoice_customer_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.creditsInvoiceId],
+			foreignColumns: [table.id, table.organizationId],
+			name: "invoice_credits_same_org"
+		}),
+	unique("invoice_id_org_uniq").on(table.id, table.organizationId),
+	unique("invoice_org_number_uniq").on(table.organizationId, table.invoiceNumber),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("invoice_kind_check", sql`kind = ANY (ARRAY['quote'::text, 'invoice'::text, 'credit_note'::text])`),
+	check("invoice_status_check", sql`status = ANY (ARRAY['draft'::text, 'issued'::text, 'sent'::text, 'viewed'::text, 'paid'::text, 'overdue'::text])`),
+	check("invoice_language_check", sql`language = ANY (ARRAY['nb'::text, 'en'::text])`),
+	check("invoice_net_ore_check", sql`net_ore >= 0`),
+	check("invoice_vat_ore_check", sql`vat_ore >= 0`),
+	check("invoice_gross_ore_check", sql`gross_ore >= 0`),
+	check("invoice_number_when_issued", sql`(invoice_number IS NOT NULL) = ((kind <> 'quote'::text) AND (status <> 'draft'::text))`),
+	check("invoice_issued_at_consistent", sql`(issued_at IS NOT NULL) = (status <> 'draft'::text)`),
+	check("invoice_kid_with_number", sql`(kid IS NOT NULL) = (invoice_number IS NOT NULL)`),
+	check("invoice_credits_only_credit_note", sql`(credits_invoice_id IS NULL) OR (kind = 'credit_note'::text)`),
+	check("invoice_due_after_issue", sql`(issue_date IS NULL) OR (due_date IS NULL) OR (due_date >= issue_date)`),
+]);
+
+export const invoiceLine = pgTable("invoice_line", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	invoiceId: uuid("invoice_id").notNull(),
+	lineNo: integer("line_no").notNull(),
+	productId: uuid("product_id"),
+	description: text().notNull(),
+	quantity: numeric({ precision: 14, scale:  3 }).notNull(),
+	unit: text().default('stk').notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	unitPriceOre: bigint("unit_price_ore", { mode: "number" }).default(0).notNull(),
+	accountId: uuid("account_id").notNull(),
+	vatCodeId: uuid("vat_code_id").notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	netOre: bigint("net_ore", { mode: "number" }).default(0).notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	vatOre: bigint("vat_ore", { mode: "number" }).default(0).notNull(),
+}, (table) => [
+	index("invoice_line_invoice_idx").using("btree", table.invoiceId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.organizationId, table.vatCodeId],
+			foreignColumns: [vatCode.id, vatCode.organizationId],
+			name: "invoice_line_vat_code_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.productId],
+			foreignColumns: [product.id, product.organizationId],
+			name: "invoice_line_product_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "invoice_line_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.invoiceId],
+			foreignColumns: [invoice.id, invoice.organizationId],
+			name: "invoice_line_invoice_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.accountId],
+			foreignColumns: [account.id, account.organizationId],
+			name: "invoice_line_account_same_org"
+		}),
+	unique("invoice_line_no_uniq").on(table.invoiceId, table.lineNo),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("invoice_line_line_no_check", sql`line_no >= 1`),
+	check("invoice_line_quantity_check", sql`quantity > (0)::numeric`),
+	check("invoice_line_unit_price_ore_check", sql`unit_price_ore >= 0`),
+	check("invoice_line_net_ore_check", sql`net_ore >= 0`),
+	check("invoice_line_vat_ore_check", sql`vat_ore >= 0`),
 ]);
 
 export const membership = pgTable("membership", {

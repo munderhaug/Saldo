@@ -820,17 +820,45 @@
     {
       "id": "feat-sales-invoicing",
       "title": "Sales & invoicing — quotes -> immutable gapless invoices -> credit notes (the product core)",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P3",
+      "implements_adr": ["0042"],
       "depends_on": ["feat-contacts-register", "vat-line-level-model"],
-      "notes": "Build-spec §8.4 + §16 Phase 3 — THE core product feature (Saldo's #1 value-added: invoicing customers), currently unmodelled (feat-manual-voucher-entry is journal entries, not issued sales invoices). Quotes -> invoices -> credit notes; per-line MVA across all rates with a HARD-BLOCK when not registered (checkVatLine); lifecycle (draft->issued->sent->viewed->paid->overdue). Invoice numbers are GAPLESS — allocated from the per-org invoice_counter row in the issuing tx (ADR 0007), never a SEQUENCE. An issued invoice is APPEND-ONLY; correction is via kreditnota only (hard invariant). Per-invoice KID for reconciliation. PRIORITY: deliberately does NOT hard-depend on feat-products-catalog — an invoice ships with ad-hoc/free-text lines, and the catalogue is a defaults/templates enhancement layered on later, so the highest-value feature isn't gated behind a convenience one. PDF + email and recurring/reminders are split out (feat-invoice-pdf-email, feat-recurring-invoices-reminders). Needs a sales-document schema (sales_invoice / lines) via the add-migration skill + Testcontainers integrity tests (immutability, gapless under concurrency + rollback).",
+      "notes": "Build-spec §8.4. DONE (ADR 0042): `invoice` + `invoice_line` tables in one `kind` model (quote/invoice/credit_note); pure @saldo/domain invoice module (per-line net/VAT via checkSalesLine reusing checkVatLine, document totals, vat breakdown, lifecycle state machine draft->issued->sent->viewed->paid + overdue, invoiceKid mod10) with exhaustive + fast-check tests. Per-line MVA HARD BLOCK is server-authoritative (the action derives every line against the committed SAF-T list and refuses a blocked line; client preview is UX only). GAPLESS numbering via allocate_invoice_number in the issuing tx + per-invoice KID; an issued document is APPEND-ONLY via SQL triggers (financial/identity columns frozen, only status+timestamps advance; lines frozen). RLS tenancy + same-org composite FKs (customer/account/VAT/product/credit-link). Testcontainers integrity test: gaplessness under concurrency AND rollback, immutability of doc + lines, same-org FK rejection, RLS isolation. NO/EN microcopy; WCAG 2.2 AA; §5.5 sober voice on issue. Ledger posting (the AR voucher) is split to feat-invoice-ledger-posting; PDF/email + recurring/reminders remain feat-invoice-pdf-email / feat-recurring-invoices-reminders.",
       "refs": [
         "docs/saldo-build-specification.md",
+        "docs/decisions/0042-sales-invoicing.md",
         "docs/decisions/0007-gapless-invoice-counter.md",
         ".claude/rules/ledger-integrity.md"
       ]
+    },
+    {
+      "id": "feat-invoice-ledger-posting",
+      "title": "Post the AR voucher to the general ledger when a sales invoice is issued",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P3",
+      "depends_on": ["feat-sales-invoicing"],
+      "notes": "Build-spec §8.4. feat-sales-invoicing (ADR 0042) ships the sales document of record but deliberately does NOT yet post to the general ledger. Wire issuing to derive + post the AR voucher (debit receivable / credit revenue per line account + output VAT per code) via the existing posting/derive domain + the voucher/posting tables, resolving the fiscal_period for the issue date and reusing the balance/immutability/period-lock triggers. The invoice already stores per-line account + VAT code + the customer link + totals, so this is a mechanical follow-on. A credit note posts the reversing motbilag. Needs a Testcontainers test that the issued voucher balances and lands in the right period.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/decisions/0042-sales-invoicing.md",
+        ".claude/rules/ledger-integrity.md"
+      ]
+    },
+    {
+      "id": "feat-gdpr-erasure",
+      "title": "GDPR erasure / anonymisation path for data NOT under statutory hold",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P3",
+      "depends_on": ["feat-contacts-register"],
+      "notes": "Build-spec §11 + .claude/rules/data-handling.md. Project-wide gap the privacy reviewer keeps flagging (data-export is partly tracked under feat-audit-trail-export; erasure is not). Implement deletion/anonymisation ONLY for personal data not under statutory hold: contact register fields, unposted invoice drafts, marketing/notes fields — NEVER posted ledger rows or issued invoice/credit-note snapshots (5-year bokføringslov retention; the immutability triggers must keep blocking them). Document the lawful basis (legal obligation) + the retention exception, and explicitly name the held columns (e.g. invoice.customer_*). Companion to the data-export half of feat-audit-trail-export (GDPR Art. 20 vs Art. 17).",
+      "refs": ["docs/saldo-build-specification.md", ".claude/rules/data-handling.md"]
     },
     {
       "id": "feat-invoice-pdf-email",

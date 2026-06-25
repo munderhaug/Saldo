@@ -6,7 +6,7 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-25 — session `feat-products-catalog` (ADR 0041). Branch + HEAD live in `git`
+**Last updated:** 2026-06-25 — session `feat-sales-invoicing` (ADR 0042). Branch + HEAD live in `git`
 (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Confirmed locally: the Neon control plane is
@@ -34,9 +34,14 @@ auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act
   (ADR 0037), the **contacts register** (`/orgs/:orgId/contacts` list/new/edit — customers &
   suppliers in one table, brreg autofill, per-contact MVA status + defaults, ADR 0040), and the
   **products & services catalogue** (`/orgs/:orgId/products` list/new/edit — goods/service items with
-  a net øre price, a derived incl-VAT preview, unit, and same-org default account/VAT code, ADR 0041);
-  the org page now carries a registers nav linking both. EU AI Act Art. 50 disclosure + Art. 50(2)
-  audit trail are in place.
+  a net øre price, a derived incl-VAT preview, unit, and same-org default account/VAT code, ADR 0041),
+  and **sales invoicing** (`/orgs/:orgId/invoices` list/new/detail — quote/invoice/credit-note in one
+  `kind` model; a draft editor with dynamic ad-hoc or catalogue-prefilled lines + live net/VAT/gross
+  preview; per-line MVA HARD BLOCK reusing the domain `checkVatLine`; GAPLESS numbering + per-invoice
+  KID on issue; an issued document append-only via SQL triggers; lifecycle draft→issued→sent→viewed→
+  paid + overdue; credit-note creation; ADR 0042). The org page carries a registers nav linking all
+  three. EU AI Act Art. 50 disclosure + Art. 50(2) audit trail are in place. NOTE: issuing a sales
+  invoice does NOT yet post the AR voucher to the ledger — split to `feat-invoice-ledger-posting`.
 
 **Gates (run them or see CI for live counts — not restated here):** `pnpm typecheck` · `lint` ·
 `format:check` · `lint:repo` (harness + cited-docs + link integrity + no-contradiction + the generated
@@ -48,16 +53,17 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 41 ADRs (0001–0041) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 76 tasks (30 done, 46 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `feat-sales-invoicing` [high/L] — Sales & invoicing — quotes -> immutable gapless invoices -> credit notes (the product core)
+- **Decisions:** 42 ADRs (0001–0042) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 78 tasks (31 done, 47 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-invoice-pdf-email` [high/M] — Invoice PDF generation + email delivery (EU provider) + EHF/PEPPOL validate
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — the contacts register (ADR 0040) — landed via a reviewed
-PR; see `git log` for the detail. PEPPOL capability lookup, contact persons, and multiple addresses
-were deferred from §8.2 to their own tasks (`feat-contacts-peppol-capability`, `feat-contacts-persons`,
-`feat-contacts-addresses`).
+Nothing mid-flight. The most recent work — **sales invoicing** (ADR 0042) — landed via a reviewed PR;
+see `git log` for the detail. Deliberately split out of §8.4: ledger posting of the AR voucher on issue
+(`feat-invoice-ledger-posting`), PDF + email (`feat-invoice-pdf-email`), recurring/reminders
+(`feat-recurring-invoices-reminders`). The project-wide privacy gap is now tracked: data export lives in
+`feat-audit-trail-export`, and GDPR erasure/anonymisation in the new `feat-gdpr-erasure`.
 
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**

@@ -1,0 +1,165 @@
+/**
+ * Sales-invoice line + document math (build-spec §8.4). Pure: given a line's quantity, net unit price
+ * and SAF-T VAT code — plus the org's MVA status — it derives the per-line net / VAT / gross and the
+ * document totals, and decides whether the line may be sold at all. It REUSES the per-line VAT engine
+ * (`checkVatLine` / `line-treatment`), so the registration HARD BLOCK is the same one the ledger uses:
+ * an org that doesn't charge output VAT cannot put an output-VAT (or fritatt) line on an invoice. The
+ * client mirrors this for instant feedback, but the action + SQL are authoritative (client is UX only).
+ *
+ * Money stays integer øre: a line net is `mulRate(unitPrice, quantity)` and the VAT is
+ * `mulRate(net, rate)` — the single sanctioned multiply-and-round-once helper (money.md), never raw
+ * `* /` on money. A quantity is a non-negative *multiplier* applied to the unit price, so it is the
+ * domain's `Rate` (e.g. 2,5 timer → `rate(2.5)`); the DB stores it as an exact `numeric`, so a
+ * fractional quantity introduces no binary-float drift and the money is only ever the rounded result.
+ */
+import { addØre, mulRate, sumØre, ZERO, type Øre, type Rate, rate } from '../money/ore.js';
+import { withMod10ControlDigit, type Kid } from '../ids/kid.js';
+import { rateForCategory } from '../saft/rates.js';
+import type { RateCategory, SaftTaxCode } from '../saft/tax-codes.js';
+import { checkVatLine, type VatLineReason, type VatTreatment } from '../vat/line-treatment.js';
+import type { MvaStatus } from '../vat/status.js';
+
+/**
+ * A line quantity: a non-negative multiplier applied to the unit price (1 stk → `rate(1)`, 2,5 timer
+ * → `rate(2.5)`). It is the domain's {@link Rate}, so the line net flows through `mulRate` — the one
+ * sanctioned multiply-and-round helper — rather than raw money arithmetic. Construct via {@link quantity}.
+ */
+export type Quantity = Rate;
+
+/** Construct a {@link Quantity} from a unit count (e.g. `2.5`). Throws on a negative / non-finite count. */
+export function quantity(units: number): Quantity {
+  return rate(units);
+}
+
+/**
+ * Net amount of a line = `unit price × quantity`, rounded once (half away from zero) via `mulRate` —
+ * the sole sanctioned money-rounding boundary (money.md), never raw `* /` on øre.
+ */
+export function lineNet(unitPriceNet: Øre, q: Quantity): Øre {
+  return mulRate(unitPriceNet, q);
+}
+
+/** Why a sales line is rejected: a VAT-engine block (registration), or an input code on a sale. */
+export type SalesLineReason = VatLineReason | 'input-code-not-a-sale';
+
+/** A sales line's VAT verdict — `ok: false` is a HARD BLOCK the action must honour. */
+export interface SalesLineVerdict {
+  readonly ok: boolean;
+  readonly treatment: VatTreatment;
+  readonly reason?: SalesLineReason;
+}
+
+/**
+ * The sales-side gate: may a line carrying `code` be sold by an org in `status`? Builds on the shared
+ * `checkVatLine` registration gate (output-VAT / fritatt require registration) and adds the one
+ * sales-specific rule: an **input-deductible** code is a purchase code, never a sale, so it is blocked
+ * here even for a registered org. Exempt (unntatt) and technical no-VAT codes pass for any status; a
+ * reverse-charge sale keeps `checkVatLine`'s non-blocking advisory (its dual-leg posting is deferred).
+ */
+export function checkSalesLine(status: MvaStatus, code: SaftTaxCode): SalesLineVerdict {
+  const base = checkVatLine(status, code);
+  if (base.treatment === 'input-deductible') {
+    return { ok: false, treatment: base.treatment, reason: 'input-code-not-a-sale' };
+  }
+  return base.reason === undefined
+    ? { ok: base.ok, treatment: base.treatment }
+    : { ok: base.ok, treatment: base.treatment, reason: base.reason };
+}
+
+/** A computed invoice line: its money split, the rate that produced the VAT, and the sales verdict. */
+export interface ComputedLine {
+  readonly net: Øre;
+  readonly vat: Øre;
+  readonly gross: Øre;
+  readonly vatRate: Rate;
+  readonly rateCategory: RateCategory;
+  readonly treatment: VatTreatment;
+  readonly verdict: SalesLineVerdict;
+}
+
+/**
+ * Compute one line. VAT is charged only for an actual **output-VAT** treatment — a zero-rated, exempt
+ * or no-VAT line adds nothing, and an org that may not charge output VAT yields a blocking `verdict`
+ * (its caller must refuse to issue). The net is always computed (it is revenue regardless of VAT).
+ */
+export function computeLine(
+  status: MvaStatus,
+  code: SaftTaxCode,
+  unitPriceNet: Øre,
+  q: Quantity,
+): ComputedLine {
+  const verdict = checkSalesLine(status, code);
+  const net = lineNet(unitPriceNet, q);
+  const vatRate = rateForCategory(code.rateCategory);
+  // VAT is charged only on a PERMITTED output-VAT line — a blocked line (e.g. an unregistered org on a
+  // 25 % code) yields no chargeable VAT, so the figure can never mislead before the action refuses it.
+  const vat = verdict.ok && verdict.treatment === 'output-vat' ? mulRate(net, vatRate) : ZERO;
+  return {
+    net,
+    vat,
+    gross: addØre(net, vat),
+    vatRate,
+    rateCategory: code.rateCategory,
+    treatment: verdict.treatment,
+    verdict,
+  };
+}
+
+/** Document totals — the sum of the line nets, VATs and grosses. */
+export interface InvoiceTotals {
+  readonly net: Øre;
+  readonly vat: Øre;
+  readonly gross: Øre;
+}
+
+/** Sum computed lines into document totals. `gross` is `net + vat` (the lines already agree). */
+export function invoiceTotals(lines: readonly ComputedLine[]): InvoiceTotals {
+  const net = sumØre(lines.map((l) => l.net));
+  const vat = sumØre(lines.map((l) => l.vat));
+  return { net, vat, gross: addØre(net, vat) };
+}
+
+/** One row of the per-rate VAT summary (the «MVA-grunnlag» block on the document). */
+export interface VatBucket {
+  readonly rateCategory: RateCategory;
+  readonly base: Øre;
+  readonly vat: Øre;
+}
+
+/**
+ * The VAT summary grouped by rate category, in the SAF-T category order, omitting empty categories.
+ * The base is the net subject to that rate; the VAT is what was charged on it. Used for the document's
+ * VAT breakdown and (later) the MVA-melding.
+ */
+export function vatBreakdown(lines: readonly ComputedLine[]): readonly VatBucket[] {
+  const order: readonly RateCategory[] = [
+    'regular',
+    'reduced-middle',
+    'reduced-low',
+    'reduced-raw-fish',
+    'zero',
+    'none',
+  ];
+  return order
+    .map((rateCategory): VatBucket => {
+      const inBucket = lines.filter((l) => l.rateCategory === rateCategory);
+      return {
+        rateCategory,
+        base: sumØre(inBucket.map((l) => l.net)),
+        vat: sumØre(inBucket.map((l) => l.vat)),
+      };
+    })
+    .filter((b) => b.base !== ZERO || b.vat !== ZERO);
+}
+
+/**
+ * Deterministic per-invoice KID: the gapless invoice number, zero-padded to at least `minBodyDigits`,
+ * plus a mod10 control digit (the common Norwegian default). Deterministic and pure — the same number
+ * always yields the same KID — so reconciliation can recover the invoice from a payment's KID.
+ */
+export function invoiceKid(invoiceNumber: number, minBodyDigits = 6): Kid {
+  if (!Number.isInteger(invoiceNumber) || invoiceNumber <= 0) {
+    throw new RangeError(`Invoice number must be a positive integer, got ${invoiceNumber}`);
+  }
+  return withMod10ControlDigit(String(invoiceNumber).padStart(minBodyDigits, '0'));
+}

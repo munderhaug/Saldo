@@ -143,6 +143,14 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
               {t('products.title')}
             </Link>
           </li>
+          <li>
+            <Link
+              to={`/orgs/${org.id}/invoices`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('invoices.title')}
+            </Link>
+          </li>
         </ul>
       </nav>
 

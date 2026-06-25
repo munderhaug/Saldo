@@ -1,49 +1,52 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, contact, account, vatCode, fiscalPeriod, voucher, posting, invoiceCounter, appUser, userSession, aiProvenance, membership } from "./schema";
+import { organization, product, account, vatCode, fiscalPeriod, voucher, posting, invoiceCounter, appUser, userSession, contact, aiProvenance, membership } from "./schema";
 
-export const contactRelations = relations(contact, ({one}) => ({
+export const productRelations = relations(product, ({one}) => ({
 	organization: one(organization, {
-		fields: [contact.organizationId],
+		fields: [product.organizationId],
 		references: [organization.id]
 	}),
 	account: one(account, {
-		fields: [contact.organizationId],
+		fields: [product.organizationId],
 		references: [account.id]
 	}),
 	vatCode: one(vatCode, {
-		fields: [contact.organizationId],
+		fields: [product.organizationId],
 		references: [vatCode.id]
 	}),
 }));
 
 export const organizationRelations = relations(organization, ({many}) => ({
-	contacts: many(contact),
+	products: many(product),
 	accounts: many(account),
 	vatCodes: many(vatCode),
 	fiscalPeriods: many(fiscalPeriod),
 	vouchers: many(voucher),
 	postings: many(posting),
 	invoiceCounters: many(invoiceCounter),
+	contacts: many(contact),
 	aiProvenances: many(aiProvenance),
 	memberships: many(membership),
 }));
 
 export const accountRelations = relations(account, ({one, many}) => ({
-	contacts: many(contact),
+	products: many(product),
 	organization: one(organization, {
 		fields: [account.organizationId],
 		references: [organization.id]
 	}),
 	postings: many(posting),
+	contacts: many(contact),
 }));
 
 export const vatCodeRelations = relations(vatCode, ({one, many}) => ({
-	contacts: many(contact),
+	products: many(product),
 	organization: one(organization, {
 		fields: [vatCode.organizationId],
 		references: [organization.id]
 	}),
 	postings: many(posting),
+	contacts: many(contact),
 }));
 
 export const fiscalPeriodRelations = relations(fiscalPeriod, ({one, many}) => ({
@@ -127,6 +130,21 @@ export const userSessionRelations = relations(userSession, ({one}) => ({
 export const appUserRelations = relations(appUser, ({many}) => ({
 	userSessions: many(userSession),
 	memberships: many(membership),
+}));
+
+export const contactRelations = relations(contact, ({one}) => ({
+	organization: one(organization, {
+		fields: [contact.organizationId],
+		references: [organization.id]
+	}),
+	account: one(account, {
+		fields: [contact.organizationId],
+		references: [account.id]
+	}),
+	vatCode: one(vatCode, {
+		fields: [contact.organizationId],
+		references: [vatCode.id]
+	}),
 }));
 
 export const aiProvenanceRelations = relations(aiProvenance, ({one}) => ({

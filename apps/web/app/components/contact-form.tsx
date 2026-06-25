@@ -11,14 +11,14 @@
  */
 import { useEffect, useRef } from 'react';
 import { Form, useSubmit } from 'react-router';
-import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MVA_STATUSES } from '@saldo/domain';
 import { contactInput, CONTACT_LANGUAGES, CONTACT_ROLES, type ContactInput } from '~/contracts';
 import type { AccountOption, VatCodeOption } from '~/db/contacts.server';
 import { mvaStatusLabel } from '~/lib/org-format';
 import { contactLanguageLabel, contactRoleLabel } from '~/lib/contact-format';
-import { cn } from '~/lib/utils';
+import { SelectField, TextField } from '~/components/form-field';
 import { t } from '~/copy';
 
 export interface ContactFormProps {
@@ -269,115 +269,5 @@ export function ContactForm({
         {submitLabel}
       </button>
     </Form>
-  );
-}
-
-/** Programmatic description: hint + error ids, in reading order, or `undefined` when neither exists. */
-function describedBy(id: string, hasHint: boolean, hasError: boolean): string | undefined {
-  const ids = [hasHint ? `${id}-hint` : '', hasError ? `${id}-error` : ''].filter(Boolean);
-  return ids.length ? ids.join(' ') : undefined;
-}
-
-interface FieldShared {
-  readonly id: string;
-  readonly label: string;
-  readonly hint?: string | undefined;
-  readonly error?: string | undefined;
-  readonly registration: UseFormRegisterReturn;
-}
-
-/** A labelled text input that wires label, hint, error, and the aria error association together. */
-function TextField({
-  id,
-  label,
-  hint,
-  error,
-  registration,
-  type = 'text',
-  inputMode,
-  maxLength,
-  min,
-  max,
-  uppercase,
-  tabular,
-}: FieldShared & {
-  type?: string;
-  inputMode?: 'numeric';
-  maxLength?: number;
-  min?: number;
-  max?: number;
-  uppercase?: boolean;
-  tabular?: boolean;
-}) {
-  return (
-    <div className="grid gap-1.5">
-      <label htmlFor={id} className="font-text text-sm">
-        {label}
-      </label>
-      <input
-        id={id}
-        type={type}
-        inputMode={inputMode}
-        maxLength={maxLength}
-        min={min}
-        max={max}
-        autoComplete="off"
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(id, !!hint, !!error)}
-        className={cn(
-          'border-input bg-background rounded-md border px-3 py-2 text-sm',
-          tabular && 'tabular',
-          uppercase && 'uppercase',
-        )}
-        {...registration}
-      />
-      {hint && (
-        <p id={`${id}-hint`} className="text-muted-foreground text-sm">
-          {hint}
-        </p>
-      )}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/** A labelled select with the same label/hint/error + aria wiring as `TextField`. */
-function SelectField({
-  id,
-  label,
-  hint,
-  error,
-  registration,
-  children,
-}: FieldShared & { children: React.ReactNode }) {
-  return (
-    <div className="grid gap-1.5">
-      <label htmlFor={id} className="font-text text-sm">
-        {label}
-      </label>
-      <select
-        id={id}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(id, !!hint, !!error)}
-        className="border-input bg-background rounded-md border px-3 py-2 text-sm"
-        {...registration}
-      >
-        {children}
-      </select>
-      {hint && (
-        <p id={`${id}-hint`} className="text-muted-foreground text-sm">
-          {hint}
-        </p>
-      )}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
-    </div>
   );
 }

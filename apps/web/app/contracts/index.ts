@@ -11,6 +11,7 @@ import { z } from 'zod';
 export * from './enhetsregisteret';
 export * from './organization';
 export * from './contact';
+export * from './product';
 export * from './voucher';
 export * from './receipt-extraction';
 

@@ -1,4 +1,4 @@
-import { pgTable, varchar, index, foreignKey, pgPolicy, check, uuid, boolean, char, text, integer, timestamp, unique, numeric, date, bigint, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, varchar, index, foreignKey, pgPolicy, check, uuid, text, bigint, timestamp, unique, char, numeric, integer, date, boolean, primaryKey } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -7,50 +7,39 @@ export const schemaMigrations = pgTable("schema_migrations", {
 	version: varchar().primaryKey().notNull(),
 });
 
-export const contact = pgTable("contact", {
+export const product = pgTable("product", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	organizationId: uuid("organization_id").notNull(),
-	isCustomer: boolean("is_customer").default(false).notNull(),
-	isSupplier: boolean("is_supplier").default(false).notNull(),
-	orgNr: char("org_nr", { length: 9 }),
+	kind: text().notNull(),
 	name: text().notNull(),
-	email: text(),
-	phone: text(),
-	addressLine: text("address_line"),
-	postalCode: text("postal_code"),
-	city: text(),
-	countryCode: char("country_code", { length: 2 }).default('NO').notNull(),
-	mvaStatus: text("mva_status").notNull(),
-	paymentTermsDays: integer("payment_terms_days").default(14).notNull(),
+	description: text(),
+	unit: text().default('stk').notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	unitPriceOre: bigint("unit_price_ore", { mode: "number" }).default(0).notNull(),
 	defaultAccountId: uuid("default_account_id"),
 	defaultVatCodeId: uuid("default_vat_code_id"),
-	currency: char({ length: 3 }).default('NOK').notNull(),
-	language: text().default('nb').notNull(),
-	notes: text(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	index("contact_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
+	index("product_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
 			columns: [table.organizationId],
 			foreignColumns: [organization.id],
-			name: "contact_organization_id_fkey"
+			name: "product_organization_id_fkey"
 		}),
 	foreignKey({
 			columns: [table.organizationId, table.defaultAccountId],
 			foreignColumns: [account.id, account.organizationId],
-			name: "contact_default_account_same_org"
+			name: "product_default_account_same_org"
 		}),
 	foreignKey({
 			columns: [table.organizationId, table.defaultVatCodeId],
 			foreignColumns: [vatCode.id, vatCode.organizationId],
-			name: "contact_default_vat_code_same_org"
+			name: "product_default_vat_code_same_org"
 		}),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
-	check("contact_language_check", sql`language = ANY (ARRAY['nb'::text, 'en'::text])`),
-	check("contact_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
-	check("contact_payment_terms_days_check", sql`(payment_terms_days >= 0) AND (payment_terms_days <= 365)`),
-	check("contact_check", sql`is_customer OR is_supplier`),
+	check("product_kind_check", sql`kind = ANY (ARRAY['goods'::text, 'service'::text])`),
+	check("product_unit_price_ore_check", sql`unit_price_ore >= 0`),
 ]);
 
 export const organization = pgTable("organization", {
@@ -227,6 +216,52 @@ export const userSession = pgTable("user_session", {
 			name: "user_session_user_id_fkey"
 		}).onDelete("cascade"),
 	check("user_session_id_check", sql`id ~ '^[0-9a-f]{64}$'::text`),
+]);
+
+export const contact = pgTable("contact", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	isCustomer: boolean("is_customer").default(false).notNull(),
+	isSupplier: boolean("is_supplier").default(false).notNull(),
+	orgNr: char("org_nr", { length: 9 }),
+	name: text().notNull(),
+	email: text(),
+	phone: text(),
+	addressLine: text("address_line"),
+	postalCode: text("postal_code"),
+	city: text(),
+	countryCode: char("country_code", { length: 2 }).default('NO').notNull(),
+	mvaStatus: text("mva_status").notNull(),
+	paymentTermsDays: integer("payment_terms_days").default(14).notNull(),
+	defaultAccountId: uuid("default_account_id"),
+	defaultVatCodeId: uuid("default_vat_code_id"),
+	currency: char({ length: 3 }).default('NOK').notNull(),
+	language: text().default('nb').notNull(),
+	notes: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("contact_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "contact_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.defaultAccountId],
+			foreignColumns: [account.id, account.organizationId],
+			name: "contact_default_account_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.defaultVatCodeId],
+			foreignColumns: [vatCode.id, vatCode.organizationId],
+			name: "contact_default_vat_code_same_org"
+		}),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("contact_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
+	check("contact_payment_terms_days_check", sql`(payment_terms_days >= 0) AND (payment_terms_days <= 365)`),
+	check("contact_language_check", sql`language = ANY (ARRAY['nb'::text, 'en'::text])`),
+	check("contact_check", sql`is_customer OR is_supplier`),
 ]);
 
 export const aiProvenance = pgTable("ai_provenance", {

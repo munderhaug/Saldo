@@ -216,6 +216,7 @@ export const nb = {
   'orgs.direction.output': 'Utgående',
   'orgs.direction.input': 'Inngående',
   'orgs.direction.none': 'Ingen',
+  'orgs.overview.registersTitle': 'Registre',
   'orgs.overview.back': 'Tilbake til foretakene',
 
   // ── Contacts register (customers & suppliers, §8.2) ──────────────────────────
@@ -274,6 +275,44 @@ export const nb = {
   'contacts.form.errorInvalidInput': 'Sjekk feltene og prøv igjen.',
   'contacts.form.errorInvalidOrgNr':
     'Kontrollsifferet i organisasjonsnummeret stemmer ikke. Sjekk tallene en gang til?',
+
+  // ── Products & services catalogue (§8.3) ─────────────────────────────────────
+  'products.title': 'Varer og tjenester',
+  'products.intro': 'Det du selger, klart til å legges på en faktura.',
+  'products.new': 'Ny vare eller tjeneste',
+  'products.empty.body':
+    'Du har ingen varer eller tjenester enda. Legg til den første, så går faktureringen kjappere.',
+  'products.listCaption': '{count} varer og tjenester.',
+  'products.back': 'Tilbake til foretaket',
+  'products.col.name': 'Navn',
+  'products.col.kind': 'Type',
+  'products.col.unit': 'Enhet',
+  'products.col.price': 'Pris',
+  'products.kind.goods': 'Vare',
+  'products.kind.service': 'Tjeneste',
+
+  // Product form (create + edit share these).
+  'products.form.newTitle': 'Ny vare eller tjeneste',
+  'products.form.editTitle': 'Rediger vare eller tjeneste',
+  'products.form.intro': 'Sett en standardkonto og MVA-kode, så fylles fakturalinjen ut for deg.',
+  'products.form.nameLabel': 'Navn',
+  'products.form.descriptionLabel': 'Beskrivelse',
+  'products.form.descriptionHint': 'Valgfritt. Teksten som havner på fakturalinjen.',
+  'products.form.kindLegend': 'Type',
+  'products.form.kindHint': 'Er dette en vare du leverer, eller en tjeneste du utfører?',
+  'products.form.unitLabel': 'Enhet',
+  'products.form.unitHint': 'For eksempel «stk», «time» eller «kg».',
+  'products.form.priceLabel': 'Pris uten mva',
+  'products.form.priceHint': 'Per enhet, i kroner. La stå tom for 0.',
+  'products.form.priceInclVat': '{amount} kr inkl. mva',
+  'products.form.defaultsLegend': 'Standardverdier',
+  'products.form.defaultsHint': 'Forhåndsutfylles på fakturalinjen senere. Alt er valgfritt.',
+  'products.form.defaultAccountLabel': 'Standardkonto',
+  'products.form.defaultVatCodeLabel': 'Standard MVA-kode',
+  'products.form.noneOption': 'Ingen',
+  'products.form.submitCreate': 'Opprett',
+  'products.form.submitSave': 'Lagre endringer',
+  'products.form.errorInvalidInput': 'Sjekk feltene og prøv igjen.',
 
   // ── Errors (root error boundary) ─────────────────────────────────────────────
   'error.title': 'Noe gikk galt',
@@ -468,6 +507,7 @@ export const en = {
   'orgs.direction.output': 'Output',
   'orgs.direction.input': 'Input',
   'orgs.direction.none': 'None',
+  'orgs.overview.registersTitle': 'Registers',
   'orgs.overview.back': 'Back to your businesses',
 
   // ── Contacts register (customers & suppliers, §8.2) ──────────────────────────
@@ -526,6 +566,45 @@ export const en = {
   'contacts.form.errorInvalidInput': 'Check the fields and try again.',
   'contacts.form.errorInvalidOrgNr':
     "The check digit in the organisation number doesn't add up. Mind checking again?",
+
+  // ── Products & services catalogue (§8.3) ─────────────────────────────────────
+  'products.title': 'Products & services',
+  'products.intro': 'What you sell, ready to drop onto an invoice.',
+  'products.new': 'New product or service',
+  'products.empty.body':
+    'You have no products or services yet. Add the first one and invoicing gets quicker.',
+  'products.listCaption': '{count} products and services.',
+  'products.back': 'Back to the business',
+  'products.col.name': 'Name',
+  'products.col.kind': 'Type',
+  'products.col.unit': 'Unit',
+  'products.col.price': 'Price',
+  'products.kind.goods': 'Goods',
+  'products.kind.service': 'Service',
+
+  // Product form (create + edit share these).
+  'products.form.newTitle': 'New product or service',
+  'products.form.editTitle': 'Edit product or service',
+  'products.form.intro':
+    'Set a default account and VAT code, and the invoice line fills itself in.',
+  'products.form.nameLabel': 'Name',
+  'products.form.descriptionLabel': 'Description',
+  'products.form.descriptionHint': 'Optional. The text that lands on the invoice line.',
+  'products.form.kindLegend': 'Type',
+  'products.form.kindHint': 'Is this goods you deliver, or a service you perform?',
+  'products.form.unitLabel': 'Unit',
+  'products.form.unitHint': 'For example “pcs”, “hour” or “kg”.',
+  'products.form.priceLabel': 'Price excl. VAT',
+  'products.form.priceHint': 'Per unit, in kroner. Leave blank for 0.',
+  'products.form.priceInclVat': '{amount} kr incl. VAT',
+  'products.form.defaultsLegend': 'Defaults',
+  'products.form.defaultsHint': 'Prefilled on the invoice line later. All optional.',
+  'products.form.defaultAccountLabel': 'Default account',
+  'products.form.defaultVatCodeLabel': 'Default VAT code',
+  'products.form.noneOption': 'None',
+  'products.form.submitCreate': 'Create',
+  'products.form.submitSave': 'Save changes',
+  'products.form.errorInvalidInput': 'Check the fields and try again.',
 
   'error.title': 'Something went wrong',
   'error.statusHeading': '{status} {statusText}',

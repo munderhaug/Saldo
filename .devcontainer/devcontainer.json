@@ -1,0 +1,23 @@
+{
+  "$comment": "Reproducible dev environment (Codespaces / VS Code / JetBrains / Cursor). Node 22 + pnpm to match .nvmrc + packageManager; docker-in-docker so the Testcontainers integrity suite can run a real Postgres. A pinned, slim base image (not the 10GB universal one).",
+  "name": "Saldo",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "corepack enable && pnpm install --frozen-lockfile",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "vitest.explorer",
+        "editorconfig.editorconfig"
+      ]
+    }
+  },
+  "remoteEnv": {
+    "NODE_ENV": "development"
+  }
+}

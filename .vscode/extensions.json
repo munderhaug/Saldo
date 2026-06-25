@@ -1,0 +1,10 @@
+{
+  "// recommendations": "Editor parity with the stack (ESLint, Prettier, Tailwind v4, Vitest, EditorConfig). Mirrors the devcontainer customizations.",
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "vitest.explorer",
+    "editorconfig.editorconfig"
+  ]
+}

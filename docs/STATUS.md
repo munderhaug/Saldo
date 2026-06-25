@@ -3,24 +3,55 @@
 > Living handover doc. Update at the END of every session (see `.claude/skills/handover`).
 > The next session reads this first, then reconciles against `git log` / actual code — **trust the code**.
 
-**Last updated:** 2026-06-24 — session: `feat-receipt-extraction` (the first AI-system surface — image → vision-LLM proposal → Zod → rules → human-confirmed voucher; propose-only, provenance in the contract, ADR 0035)
+**Last updated:** 2026-06-24 — session: `aia-transparency-ui` (the bespoke receipt AI-disclosure generalised into one shared, accessible `<AiAssisted>` primitive — EU AI Act Art. 50 treatment for every AI surface, ADR 0036)
 **Branch:** a per-session `claude/<topic>` branch off `main`, landing via a reviewed PR — never a
 direct push to `main`. The exact branch and HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`) and
 are not restated here, where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Criipto OIDC and the Neon control plane are
-> not configured here. **This session HAD outbound egress and USED it** (verified + fetched: Lovdata
-> statute text fetches verbatim; Skatteetaten reachable for cross-confirm; data.brreg reachable). Don't
-> assume egress next session — verify it. Local Postgres / Testcontainers stand in for DB work.
+> not configured here. This session was **UI/compliance only** (no egress needed — no statute or
+> register fetches). Local Postgres / Testcontainers stand in for DB work; don't assume egress next
+> session — verify it.
+
+## This session — `aia-transparency-ui`: the shared AI-disclosure primitive (ADR 0036)
+Generalised the **first-interaction AI disclosure** (EU AI Act **Art. 50**) from the bespoke receipt
+block (ADR 0035) into **one reusable, accessible primitive** so every current and future AI surface
+discloses consistently — by the **2 Aug 2026** transparency deadline. **App-layer only; no schema, no
+domain, no posting/VAT change** — disclosure-only (never scores/profiles a natural person, Annex III
+§5(b)). Full gate green (typecheck · lint · format · `test` 195 domain / 106 web incl. the new render
+test · lint:repo · status:check · backlog validate). Folds into the ADR 0022 posture (records *how*,
+not a new *that*). Landing as a reviewed PR.
+- **`components/ui/ai-assisted.tsx` (`<AiAssisted>`)** — a real labelled region (`<section
+  aria-labelledby>` named by a real `<h2>`); the **"AI-assistert" badge as text** + a
+  `data-ai-assisted` marker (the machine-readable label, Art. 50(2)); the first-interaction disclosure
+  (Art. 50(1)) and the provenance line, all keyed microcopy via `t()`; `focusOnMount` to move focus to
+  the heading on the server round-trip (WCAG 2.4.3 / 4.1.3). The surface passes heading/disclosure/
+  provenance + its reviewed fields as `children`: **the primitive owns the disclosure, the surface owns
+  the content.**
+- **Shared label, stated once.** The machine-readable label lives in one new microcopy key
+  `ai.assistedLabel` (nb+en) — the bespoke `receipts.new.aiAssisted` key is **removed**. nb/en parity
+  is covered by the existing keyed-microcopy parity test.
+- **Receipt review migrated** to `<AiAssisted>` with **no behaviour regression** — the focus-to-
+  disclosure on the server round-trip is preserved via `focusOnMount`; the `<dl>` of fields + the
+  non-standard-VAT heads-up are passed as children.
+- **Render test (no new dependency).** `ai-assisted.test.tsx` renders via `react-dom/server`
+  `renderToStaticMarkup` (no jsdom/testing-library added; vitest `include` widened to `*.test.tsx`):
+  asserts the label + `data-ai-assisted` marker, the disclosure + provenance, the real labelled `<h2>`
+  region, focusability on reveal, and that wrapped surface content renders.
+- **Sequenced:** durable provenance **logging** (Art. 50(2)'s persisted half) is now the highest-value
+  ready task — `aia-provenance-logging` [high/M] (persist model/version/confidence when a confirmed AI
+  proposal posts, via the pino baseline; never log personal data or the image).
+
+## Previous session — `feat-receipt-extraction`: the first AI-system surface (ADR 0035)
 
 ## Repo status (generated — do not edit; `pnpm status:refresh`)
 The volatile facts below are rendered from committed sources (ADR files + the task DAG) by
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 35 ADRs (0001–0035) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 51 tasks (24 done, 27 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `aia-transparency-ui` [high/S] — EU AI Act: disclose AI interaction in the UI (Art 50(1))
+- **Decisions:** 36 ADRs (0001–0036) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 51 tasks (25 done, 26 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `aia-provenance-logging` [high/M] — EU AI Act: AI-output provenance + 'AI-assisted' label + logging (Art 50(2))
 <!-- /AUTOGEN:repo-status -->
 
 ## This session — `feat-receipt-extraction`: the first AI-system surface (ADR 0035)

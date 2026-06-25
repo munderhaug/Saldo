@@ -500,4 +500,14 @@
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
+  /* The shared AI-disclosure heading (ADR 0036) is focused PROGRAMMATICALLY when the proposal is
+     revealed on a server round-trip — and only programmatically (it is `tabIndex={-1}`, never a tab
+     stop). A pointer-initiated round-trip won't reliably trigger `:focus-visible`, so the legally
+     required disclosure's focus target could land with no ring. Give it an always-visible outline on
+     plain `:focus` so the reveal is perceivable (WCAG 2.4.7); harmless to pointer users, who never
+     focus it any other way. */
+  [data-ai-assisted] h2:focus {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
 }

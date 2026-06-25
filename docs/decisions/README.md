@@ -40,6 +40,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0033 | Honest-number ledger aggregation (kontoklasse + VAT direction) + reveal against an empty ledger | Accepted |
 | 0034 | Manual voucher entry: event-framed first posting surface, status-driven VAT, designated accounts | Accepted |
 | 0035 | Receipt extraction: the first AI-system surface, propose-only, provenance in the contract | Accepted |
+| 0036 | Shared AI-transparency disclosure primitive (`<AiAssisted>`) — the EU AI Act Art. 50 treatment for every AI surface | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

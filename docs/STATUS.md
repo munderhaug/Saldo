@@ -44,8 +44,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
 - **Decisions:** 39 ADRs (0001–0039) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 51 tasks (28 done, 23 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `design-visual-spike` [medium/M] — Visual-identity spike — illustration style + the companion's look (on carnival tokens + type)
+- **Backlog:** 69 tasks (28 done, 41 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-contacts-register` [high/M] — Contacts register — customers & suppliers (brreg autofill + per-contact defaults)
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
@@ -67,10 +67,13 @@ Don't re-derive "what's next" in prose here; this is orientation, not the record
 - **Sustaining discipline (roadmap Part 3, P1/P2):** make the quality bar mechanical (`ci-pr-template`),
   `test-e2e-axe`, OTel, mutation testing.
 
-> **Forward-plan gap (flagged for re-evaluation):** the build-spec §16 phases 3–9 (sales invoicing,
-> banking + reconciliation, MVA-melding generation + Altinn submission, reporting, year-end, real SAF-T
-> export, PEPPOL/Vipps) are defined in prose but **not yet modelled as backlog tasks** — so `pnpm backlog`
-> ranks near-term polish above the product core. Decompose phases 3–5 into tasks before starting Phase 3.
+> **Forward plan (re-evaluated 2026-06-25):** the build-spec §16 phases 1(rest)–9 are now **modelled as
+> backlog tasks** (contacts/products/opening-balances; sales invoicing + PDF/email + recurring; supplier
+> invoices; banking import + reconciliation; MVA-melding + Altinn submission; reporting + year-end; SAF-T
+> export + audit log + accountant access; PEPPOL/Vipps) — so `pnpm backlog next` now surfaces the product
+> core (`feat-contacts-register`) rather than UI polish. Dependencies follow §16; **the phase ordering is
+> proposed and awaits owner confirmation** (the roadmap is a historical P0 record — the task graph is now
+> the live forward plan, per ADR 0019).
 
 ## Open decisions
 - **Decided & in effect:** architecture = **Option 2** (persistent Node on an EU PaaS + Cloudflare

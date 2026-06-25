@@ -715,13 +715,229 @@
       "status": "todo",
       "value": "medium",
       "effort": "M",
-      "phase": "P1-feature",
-      "depends_on": [],
+      "phase": "P3",
+      "depends_on": ["feat-sales-invoicing"],
       "notes": "ADR 0025 + spec 8.4: a characterful agent aimed OUTWARD at late payers, wielded by the user via propose->confirm (ADR 0002). Maps onto purring -> forsinkelsesrenter -> structured inkasso hand-off (full collection out of scope, spec 2). Dunning stays within god inkassoskikk; the user never feels chased. Needs sales/invoicing first.",
       "refs": [
         "docs/decisions/0025-playful-guided-experience.md",
         "docs/saldo-build-specification.md"
       ]
+    },
+    {
+      "id": "feat-contacts-register",
+      "title": "Contacts register — customers & suppliers (brreg autofill + per-contact defaults)",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-org-onboarding"],
+      "notes": "Build-spec §8.2 (Phase 1). One register for customers & suppliers; Enhetsregisteret autofill (reuse the /oppslag client) + per-contact MVA status; per-contact defaults (terms, account, VAT code, currency, language); ELMA/PEPPOL capability lookup; contact persons & multiple addresses. PREREQUISITE for sales invoicing (§8.4) and supplier invoices (§8.5). Contact names/addresses of an ENK are personal data (data-handling.md). Not yet modelled before this — it is the first half of the §16 Phase-1 'organization & contacts' scope that feat-org-onboarding (org only) left open.",
+      "refs": ["docs/saldo-build-specification.md", "docs/integrations/enhetsregisteret.md"]
+    },
+    {
+      "id": "feat-products-catalog",
+      "title": "Products & services catalogue (default account + VAT code + price)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-org-onboarding"],
+      "notes": "Build-spec §8.3 (Phase 1). Catalogue of goods/services with a default account + VAT code + unit + price; goods/service classification; line/document discounts; reusable line templates. Feeds sales-invoice lines (§8.4). Defaults must reference the org's provisioned SAF-T accounts/VAT codes (feat-org-onboarding), source-grounded, never memory.",
+      "refs": ["docs/saldo-build-specification.md"]
+    },
+    {
+      "id": "feat-opening-balances",
+      "title": "Opening balances (inngående balanse) for mid-year migration",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P1-feature",
+      "depends_on": ["feat-org-onboarding", "feat-manual-voucher-entry"],
+      "notes": "Build-spec §8.1 (Phase 1). Let a user migrating mid-year enter opening balances so the ledger and the honest-number reveal are correct from day one (today the only way in is manual vouchers from zero). Must post a balanced opening voucher through the existing posting path + integrity triggers; an opening balance is still an append-only voucher (no ledger bypass).",
+      "refs": ["docs/saldo-build-specification.md", ".claude/rules/ledger-integrity.md"]
+    },
+    {
+      "id": "feat-sales-invoicing",
+      "title": "Sales & invoicing — quotes -> immutable gapless invoices -> credit notes (the product core)",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P3",
+      "depends_on": ["feat-contacts-register", "feat-products-catalog", "vat-line-level-model"],
+      "notes": "Build-spec §8.4 + §16 Phase 3 — THE core product feature, currently unmodelled (feat-manual-voucher-entry is journal entries, not issued sales invoices). Quotes -> invoices -> credit notes; per-line MVA across all rates with a HARD-BLOCK when not registered (checkVatLine); lifecycle (draft->issued->sent->viewed->paid->overdue). Invoice numbers are GAPLESS — allocated from the per-org invoice_counter row in the issuing tx (ADR 0007), never a SEQUENCE. An issued invoice is APPEND-ONLY; correction is via kreditnota only (hard invariant). Per-invoice KID for reconciliation. PDF + email and recurring/reminders are split out (feat-invoice-pdf-email, feat-recurring-invoices-reminders). Needs a sales-document schema (sales_invoice / lines) via the add-migration skill + Testcontainers integrity tests (immutability, gapless under concurrency + rollback).",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/decisions/0007-gapless-invoice-counter.md",
+        ".claude/rules/ledger-integrity.md"
+      ]
+    },
+    {
+      "id": "feat-invoice-pdf-email",
+      "title": "Invoice PDF generation + email delivery (EU provider) + EHF/PEPPOL validate",
+      "status": "todo",
+      "value": "high",
+      "effort": "M",
+      "phase": "P3",
+      "depends_on": ["feat-sales-invoicing"],
+      "notes": "Build-spec §8.4 + §9. Render an issued invoice to PDF (server-shaped work — fits the Option-2 persistent Node host, ADR 0015) and deliver by email via an EU provider. Locally validate generated EHF/PEPPOL BIS 3.0 XML (VEFA, 'start now' per §9) ahead of the commercial access point (feat-peppol-send, Phase 9). BLOCKED on the open 'transactional email provider' decision (roadmap Part 6 / STATUS open decisions) — Postmark EU / SES eu-* / Scaleway; pick before Phase 3.",
+      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
+    },
+    {
+      "id": "feat-recurring-invoices-reminders",
+      "title": "Recurring/subscription invoices + reminders (purring) via in-Postgres jobs",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P3",
+      "depends_on": ["feat-sales-invoicing", "feat-invoice-pdf-email"],
+      "notes": "Build-spec §8.4. Subscription/recurring invoices + reminders (purring) driven by graphile-worker (in-Postgres jobs, ADR 0010 — payloads never transit a non-EU SaaS, §11). First real consumer of the jobs layer (none exists yet under apps/web/app/jobs). Late interest (forsinkelsesrenter) + inkasso hand-off is the separate feat-torpedo.",
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0010-graphile-worker-jobs.md"]
+    },
+    {
+      "id": "feat-supplier-invoices",
+      "title": "Supplier invoices, expense rules, owner draws & mileage (purchases completion)",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P4-feature",
+      "depends_on": ["feat-contacts-register", "feat-manual-voucher-entry", "vat-reverse-charge"],
+      "notes": "Build-spec §8.5 + §16 Phase 4. Completes purchases beyond receipt extraction (feat-receipt-extraction, done): manual supplier-invoice entry with per-supplier defaults; the input-VAT fork by MVA status (deriveStandard*); encoded non-deductible rules (representasjon, vehicles, private use); reverse charge on foreign services (vat-reverse-charge); recurring expenses; owner outlays (utlegg) & drawings (privatuttak); mileage/travel deductions (kjøregodtgjørelse/diett) as deductions, not payroll. All posts through the existing append-only ledger path.",
+      "refs": ["docs/saldo-build-specification.md", "packages/domain/src/posting/derive.ts"]
+    },
+    {
+      "id": "feat-banking-import",
+      "title": "Banking import — GoCardless PSD2/AIS + camt.054 + CSV",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P5",
+      "depends_on": ["feat-org-onboarding"],
+      "notes": "Build-spec §8.7 + §9 + §16 Phase 5. Import bank transactions via GoCardless Bank Account Data (PSD2/AIS, free tier), camt.054 files (self-build parser), or CSV; multiple accounts. CAUTION (§9): GoCardless rate limits as low as ~4 calls/day/account — requires caching/batching. Bank transactions are personal/financial data, EU-resident (data-handling.md). Capture the GoCardless + camt.054 contracts under db/reference/ before coding (source-grounded). Prereq for reconciliation.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/integrations/README.md",
+        ".claude/rules/integrations.md"
+      ]
+    },
+    {
+      "id": "feat-reconciliation",
+      "title": "Bank reconciliation — KID/amount/date auto-match + manual workflow",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P5",
+      "depends_on": ["feat-banking-import", "feat-sales-invoicing"],
+      "notes": "Build-spec §8.7 + §10(2). Match imported bank lines to issued invoices: KID first, then amount + date proximity, then manual; a reconciliation workflow that marks invoices paid and posts settlement vouchers. Deterministic matching (not AI). KID matching needs issued invoices with a per-invoice KID (feat-sales-invoicing).",
+      "refs": ["docs/saldo-build-specification.md"]
+    },
+    {
+      "id": "feat-mva-melding",
+      "title": "MVA-melding generation on SAF-T codes + Skatteetaten validation API",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P6",
+      "depends_on": ["feat-manual-voucher-entry", "vat-line-level-model"],
+      "notes": "Build-spec §8.8 + §16 Phase 6. Generate the MVA report per term (or annual) from the posted ledger on the SAF-T VAT codes, and validate against Skatteetaten's validation API (free but onboarding-gated; supports inquiries from the system supplier, §9). Submission via Altinn 3 is the separate feat-altinn-mva-submission (Phase 9). The rolling-12-month 50k threshold tracker is the existing vat-threshold-watcher. Validate the generated melding against the committed schema (saft-validate skill).",
+      "refs": ["docs/saldo-build-specification.md", ".claude/skills/saft-validate/SKILL.md"]
+    },
+    {
+      "id": "feat-reporting",
+      "title": "Reporting — resultat/balanse, hovedbok drill-down, reskontro aging, liquidity",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P7",
+      "depends_on": ["feat-manual-voucher-entry"],
+      "notes": "Build-spec §8.9 + §16 Phase 7. Resultatregnskap; balanse; hovedbok/kontospesifikasjon drill-down; reskontro with AR/AP aging; MVA-spesifikasjon; liquidity & outstanding-invoice dashboard; period-over-period comparison. Read-only aggregation over the posted ledger (extends the honest-number aggregation pattern, ADR 0033), RLS-scoped. Reskontro aging needs issued invoices/supplier invoices for full value.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/decisions/0033-honest-number-ledger-aggregation.md"
+      ]
+    },
+    {
+      "id": "feat-year-end-close",
+      "title": "Year-end close — carry-forward, næringsspesifikasjon figures, saldoavskrivning",
+      "status": "todo",
+      "value": "medium",
+      "effort": "L",
+      "phase": "P7",
+      "depends_on": ["feat-reporting", "feat-tax-estimate"],
+      "notes": "Build-spec §8.6 + §8.10 + §16 Phase 7. Year-end close with balance carry-forward + period locking of the closed year (existing period-lock triggers); næringsspesifikasjon figure generation; beregnet personinntekt basis (builds on feat-tax-estimate, ADR 0029); saldoavskrivning (declining-balance depreciation) schedules; year-end checklist; export/handoff to Skatteetaten's pre-filled return (full submission API deferred — §16 'Later'). Skattemelding deadline 31 May.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/decisions/0029-enk-income-tax-estimate.md"
+      ]
+    },
+    {
+      "id": "feat-saft-export",
+      "title": "Full SAF-T Financial export (XSD-valid in CI) — replace the saft:validate scaffold",
+      "status": "todo",
+      "value": "high",
+      "effort": "L",
+      "phase": "P8",
+      "depends_on": ["feat-manual-voucher-entry"],
+      "notes": "Build-spec §8.11 + §16 Phase 8. Generate a full SAF-T Financial export from the ledger and XSD-validate it in CI on every export-logic change (§12). Replaces today's scaffold: pnpm saft:validate prints NOT YET IMPLEMENTED (CI label SCAFFOLD). The Norwegian SAF-T Financial schema + standard code lists are already committed under db/reference/saf-t/ (the standard-accounts list is copyright Regnskap Norge AS, licensed only for SAF-T mapping, §9). Use the saft-validate skill.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        ".claude/skills/saft-validate/SKILL.md",
+        "apps/web/scripts/saft-validate.ts"
+      ]
+    },
+    {
+      "id": "feat-audit-log",
+      "title": "Immutable audit trail (sporbarhet) + full data export (anti-lock-in)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P8",
+      "depends_on": ["feat-manual-voucher-entry"],
+      "notes": "Build-spec §8.11 + §11. Append-only audit_log capturing the actor (authenticated app_user) on every consequential write — the bokføringsforskrift sporbarhet requirement and the non-repudiation gap flagged in the security audit (audit-trail actor capture is currently 'intended'). Plus a full data export (SAF-T + raw) to prevent lock-in (GDPR Art. 20). audit_log is FORCE-RLS + append-only grant, like ai_provenance (ADR 0037).",
+      "refs": ["docs/saldo-build-specification.md", "SECURITY.md", ".claude/rules/data-handling.md"]
+    },
+    {
+      "id": "feat-accountant-access",
+      "title": "Accountant access — limited-role membership",
+      "status": "todo",
+      "value": "low",
+      "effort": "M",
+      "phase": "P8",
+      "depends_on": ["feat-org-onboarding"],
+      "notes": "Build-spec §8.12/§8.13. A limited-role accountant membership (the membership table + role already exist, ADR 0032/0020) so a regnskapsfører can be granted scoped access to an org. RLS-correct via withUserOrg; the role gates which actions/routes are permitted.",
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0032-org-provisioning.md"]
+    },
+    {
+      "id": "feat-altinn-mva-submission",
+      "title": "MVA-melding submission via Altinn 3 / ID-porten (onboarding-gated)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "L",
+      "phase": "P9",
+      "depends_on": ["feat-mva-melding"],
+      "notes": "Build-spec §8.8 + §9 + §16 Phase 9. Submit the validated MVA-melding via the Altinn 3 instance API, authenticated through ID-porten OIDC (Altinn token exchanged from ID-porten). Onboarding-gated; CAUTION (§9): the Altinn 2->3 transition and the systembruker/tilgangspakke model are in flux — confirm the current onboarding flow at build time. Open decision: PEPPOL/Altinn onboarding model (roadmap Part 6).",
+      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
+    },
+    {
+      "id": "feat-peppol-send",
+      "title": "PEPPOL access point — EHF send/receive (commercial)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "L",
+      "phase": "P9",
+      "depends_on": ["feat-sales-invoicing", "feat-invoice-pdf-email"],
+      "notes": "Build-spec §9 + §16 Phase 9. Send/receive EHF via a commercial PEPPOL access point (Storecove/Tickstar/etc.; API key + merchant agreement; self-hosting deferred). Local EHF/PEPPOL BIS 3.0 validation lands earlier with feat-invoice-pdf-email (VEFA, 'start now'). Open decision: PEPPOL access-point provider (roadmap Part 6).",
+      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
+    },
+    {
+      "id": "feat-vipps",
+      "title": "Vipps MobilePay — ePayment / Recurring / Login (onboarding-gated)",
+      "status": "todo",
+      "value": "low",
+      "effort": "M",
+      "phase": "P9",
+      "depends_on": ["feat-sales-invoicing"],
+      "notes": "Build-spec §9 + §16 Phase 9. Get paid by Vipps (ePayment/Recurring) and optionally Vipps Login; merchant agreement + API keys, onboarding-gated. Lower priority than the filing/banking spine.",
+      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
     }
   ]
 }

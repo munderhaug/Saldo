@@ -58,8 +58,6 @@ export const enhetSearchResponse = z.object({
   }),
 });
 
-export type EnhetSearchResponse = z.infer<typeof enhetSearchResponse>;
-
 /**
  * Free-text company-name query. Trimmed; ≥2 chars (avoid hammering the API) and ≤200 (cap the
  * outbound query so an unauthenticated GET can't forward a multi-kilobyte string to brreg).
@@ -69,5 +67,3 @@ export const nameSearchInput = z
   .trim()
   .min(2, 'Skriv minst to tegn for å søke på navn')
   .max(200);
-
-export type NameSearchInput = z.infer<typeof nameSearchInput>;

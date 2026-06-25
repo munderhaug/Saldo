@@ -14,7 +14,7 @@ import { appUser, userSession } from '../db/schema.js';
  * are pre-org (ADR 0020). Server-only (`.server.ts`).
  */
 const DAY_MS = 86_400_000;
-export const SESSION_TTL_MS = 30 * DAY_MS;
+const SESSION_TTL_MS = 30 * DAY_MS;
 const RENEW_WITHIN_MS = 15 * DAY_MS;
 
 export interface Session {
@@ -35,7 +35,7 @@ export function generateSessionToken(): string {
 }
 
 /** SHA-256 (hex) of the token — the stored session id; never store the token itself. */
-export function hashSessionToken(token: string): string {
+function hashSessionToken(token: string): string {
   return encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 }
 

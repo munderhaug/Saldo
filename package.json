@@ -17,6 +17,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:repo": "node tools/repo-lint.mjs",
+    "commitlint": "node tools/commit-lint.mjs",
     "type-coverage": "type-coverage",
     "knip": "knip",
     "backlog": "node tools/backlog.mjs",

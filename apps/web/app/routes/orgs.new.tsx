@@ -2,7 +2,12 @@ import { useRef } from 'react';
 import { Form, Link, redirect, useSubmit } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { isValidOrgNr, MVA_STATUSES, orgNr as toOrgNr, type MvaStatus } from '@saldo/domain';
+import {
+  isValidOrgNr,
+  MVA_STATUSES,
+  orgNr as toOrgNr,
+  proposeMvaStatusFromVatRegister,
+} from '@saldo/domain';
 import type { Route } from './+types/orgs.new';
 import { db } from '~/db/client';
 import { assertSameOrigin, requireUser } from '~/auth/auth.server';
@@ -28,8 +33,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const res = await lookupByOrgNr(toOrgNr(digits));
   if (!res.ok) return { prefill: null };
-  const proposed: MvaStatus =
-    res.enhet.registrertIMvaregisteret === true ? 'registered_standard' : 'under_threshold';
+  const proposed = proposeMvaStatusFromVatRegister(res.enhet.registrertIMvaregisteret);
   return { prefill: { orgNr: digits, name: res.enhet.navn, mvaStatus: proposed } };
 }
 

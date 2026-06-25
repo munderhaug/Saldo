@@ -38,6 +38,7 @@ describe.skipIf(!ledgerDbAvailable)('RLS coverage — every public table is lock
     const TENANT_TABLES = [
       'account',
       'ai_provenance',
+      'contact',
       'fiscal_period',
       'invoice_counter',
       'organization',

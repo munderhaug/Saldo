@@ -52,3 +52,27 @@ export function kid(value: string, scheme: KidScheme = 'mod10'): Kid {
   }
   return value as Kid;
 }
+
+/**
+ * Append a mod10 (Luhn) control digit to a numeric body, returning a valid {@link Kid}. The inverse
+ * of {@link isValidKidMod10}: `isValidKidMod10(withMod10ControlDigit(body))` always holds. Used to
+ * mint a deterministic per-invoice KID from the gapless invoice number (see `invoice/invoice.ts`).
+ */
+export function withMod10ControlDigit(body: string): Kid {
+  if (!/^\d{1,24}$/.test(body)) {
+    throw new RangeError(`KID body must be 1–24 digits, got "${body}"`);
+  }
+  let sum = 0;
+  let double = true; // the rightmost body digit is doubled (the control digit will sit to its right)
+  for (let i = body.length - 1; i >= 0; i--) {
+    let d = Number(body[i]!);
+    if (double) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+    double = !double;
+  }
+  const control = (10 - (sum % 10)) % 10;
+  return `${body}${control}` as Kid;
+}

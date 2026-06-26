@@ -1,4 +1,4 @@
-import { pgTable, varchar, unique, pgPolicy, check, uuid, char, text, timestamp, foreignKey, numeric, integer, date, index, bigint, uniqueIndex, boolean, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, varchar, index, foreignKey, pgPolicy, check, uuid, text, timestamp, unique, char, numeric, integer, date, bigint, uniqueIndex, boolean, primaryKey } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -6,6 +6,32 @@ import { sql } from "drizzle-orm"
 export const schemaMigrations = pgTable("schema_migrations", {
 	version: varchar().primaryKey().notNull(),
 });
+
+export const invoiceEmail = pgTable("invoice_email", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	invoiceId: uuid("invoice_id").notNull(),
+	recipient: text().notNull(),
+	provider: text().default('postmark').notNull(),
+	providerMessageId: text("provider_message_id"),
+	status: text().notNull(),
+	error: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("invoice_email_invoice_idx").using("btree", table.invoiceId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "invoice_email_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.invoiceId],
+			foreignColumns: [invoice.id, invoice.organizationId],
+			name: "invoice_email_invoice_same_org"
+		}),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("invoice_email_status_check", sql`status = ANY (ARRAY['sent'::text, 'failed'::text])`),
+]);
 
 export const organization = pgTable("organization", {
 	id: uuid().defaultRandom().primaryKey().notNull(),

@@ -24,6 +24,7 @@ import {
   updateDraft,
 } from '~/db/invoices.server';
 import { invoiceInput, type InvoiceInput } from '~/contracts';
+import { sendInvoiceEmail } from '~/documents/send-invoice.server';
 import { invoiceFormToObject } from '~/lib/invoice-form-data';
 import {
   invoiceKindLabel,
@@ -144,6 +145,19 @@ export async function action({ request, params }: Route.ActionArgs) {
     return redirect(`/orgs/${params.orgId}/invoices/${id}`);
   }
 
+  if (intent === 'send') {
+    // §5.5 consequential act — the form's explicit "Send nå" click IS the active confirm (ADR 0002).
+    const outcome = await sendInvoiceEmail(request, params.orgId, params.invoiceId);
+    if (outcome.ok) return { success: t('invoices.detail.sendOk', { email: outcome.recipient }) };
+    const reasonMessage: Record<Exclude<typeof outcome, { ok: true }>['reason'], string> = {
+      'not-found': t('invoices.form.errorInvalidInput'),
+      'no-recipient': t('invoices.detail.sendNoEmail'),
+      'not-configured': t('invoices.detail.sendNotConfigured'),
+      'send-failed': t('invoices.detail.sendError'),
+    };
+    return { error: reasonMessage[outcome.reason] };
+  }
+
   return { error: t('invoices.form.errorInvalidInput') };
 }
 
@@ -162,6 +176,8 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
   const accountLabel = new Map(accounts.map((a) => [a.id, `${a.number} — ${a.name}`]));
   const vatLabel = new Map(vatCodes.map((c) => [c.id, c.code]));
   const isDraft = invoice.status === 'draft';
+  const errorMessage = actionData && 'error' in actionData ? actionData.error : undefined;
+  const successMessage = actionData && 'success' in actionData ? actionData.success : undefined;
 
   const defaultValues: InvoiceInput = {
     kind: invoice.kind === 'credit_note' ? 'invoice' : invoice.kind,
@@ -205,9 +221,14 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
         </span>
       </header>
 
-      {actionData?.error && (
+      {errorMessage && (
         <p role="alert" className="text-destructive text-sm">
-          {actionData.error}
+          {errorMessage}
+        </p>
+      )}
+      {successMessage && (
+        <p role="status" className="text-sm">
+          {successMessage}
         </p>
       )}
 
@@ -246,6 +267,14 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
         />
       )}
 
+      {!isDraft && invoice.kind !== 'quote' && (
+        <DeliverySection
+          orgId={orgId}
+          invoiceId={invoice.id}
+          customerEmail={invoice.customerEmail}
+        />
+      )}
+
       {!isDraft && (
         <section className="flex flex-wrap gap-3" aria-label={t('invoices.detail.actionsLabel')}>
           {canTransition(invoice.status, 'sent') && (
@@ -275,6 +304,61 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
         {t('invoices.back')}
       </Link>
     </main>
+  );
+}
+
+function DeliverySection({
+  orgId,
+  invoiceId,
+  customerEmail,
+}: {
+  orgId: string;
+  invoiceId: string;
+  customerEmail: string | null;
+}) {
+  const base = `/orgs/${orgId}/invoices/${invoiceId}`;
+  return (
+    <section className="border-input grid gap-3 border-t pt-4" aria-labelledby="delivery-heading">
+      <h2 id="delivery-heading" className="font-text text-sm">
+        {t('invoices.detail.deliveryHeading')}
+      </h2>
+      <div className="flex flex-wrap gap-3">
+        <a
+          href={`${base}/pdf`}
+          target="_blank"
+          rel="noreferrer"
+          className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
+        >
+          {t('invoices.detail.downloadPdf')}
+        </a>
+        <a
+          href={`${base}/ehf.xml`}
+          download
+          className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
+        >
+          {t('invoices.detail.downloadEhf')}
+        </a>
+      </div>
+      {/* Sending is a §5.5 act — plain, sober copy; the "Send" click is the explicit confirm. The
+          explanation is linked to the button (aria-describedby) so it is announced in context. */}
+      {customerEmail ? (
+        <Form method="post" className="grid gap-2">
+          <input type="hidden" name="intent" value="send" />
+          <p id="send-desc" className="text-muted-foreground text-sm">
+            {t('invoices.detail.sendBody', { email: customerEmail })}
+          </p>
+          <button
+            type="submit"
+            aria-describedby="send-desc"
+            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
+          >
+            {t('invoices.detail.send')}
+          </button>
+        </Form>
+      ) : (
+        <p className="text-muted-foreground text-sm">{t('invoices.detail.sendNoEmail')}</p>
+      )}
+    </section>
   );
 }
 

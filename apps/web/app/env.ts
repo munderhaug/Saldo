@@ -23,6 +23,18 @@ const schema = z.object({
   OIDC_ISSUER: z.string().url().optional(),
   OIDC_CLIENT_ID: z.string().min(1).optional(),
   OIDC_CLIENT_SECRET: z.string().min(1).optional(),
+  // Transactional email (invoice delivery, ADR 0045). Postmark in its EU region, wired through a
+  // provider-agnostic SMTP interface (nodemailer) — the app code knows only SMTP + a from-address, so
+  // the provider stays swappable. All optional: unset → the email feature is OFF (no external default,
+  // same posture as the LLM surface). The **residency pin is mechanical**: a send is refused unless
+  // EMAIL_REGION=eu (the operator's explicit EU-residency assertion; ADR 0045 / data-handling.md). The
+  // SMTP credential is the Postmark server token; it lives ONLY here in the server env, never logged.
+  EMAIL_REGION: z.enum(['eu']).optional(),
+  EMAIL_SMTP_HOST: z.string().min(1).optional(),
+  EMAIL_SMTP_PORT: z.coerce.number().int().positive().max(65535).optional(),
+  EMAIL_SMTP_USER: z.string().min(1).optional(),
+  EMAIL_SMTP_PASSWORD: z.string().min(1).optional(),
+  EMAIL_FROM: z.string().email().optional(),
   // LOG_LEVEL is read directly by the logger (foundational infra; see observability/logger.server.ts).
   // LLM_BASE_URL / LLM_API_KEY / LLM_MODEL / LLM_EU_RESIDENT are read directly by the receipt-extraction
   // client (optional integration; see integrations/llm/config.server.ts). Unset → the AI surface is

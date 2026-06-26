@@ -873,8 +873,13 @@
       "effort": "M",
       "phase": "P3",
       "depends_on": ["feat-sales-invoicing"],
-      "notes": "Build-spec §8.4 + §9. Render an issued invoice to PDF (server-shaped work — fits the Option-2 persistent Node host, ADR 0015) and deliver by email via an EU provider. Locally validate generated EHF/PEPPOL BIS 3.0 XML (VEFA, 'start now' per §9) ahead of the commercial access point (feat-peppol-send, Phase 9). BLOCKED on the open 'transactional email provider' decision (roadmap Part 6 / STATUS open decisions) — Postmark EU / SES eu-* / Scaleway; pick before Phase 3.",
-      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
+      "implements_adr": ["0045"],
+      "notes": "Build-spec §8.4 + §9. Render an issued invoice to PDF (server-shaped work — fits the Option-2 persistent Node host, ADR 0015) and deliver by email via Postmark EU (ADR 0045) behind the nodemailer SMTP interface — UNBLOCKED (the provider decision is settled). Locally validate generated EHF/PEPPOL BIS 3.0 XML (VEFA, 'start now' per §9) ahead of the commercial access point (feat-peppol-send, Phase 9). Pin the Postmark EU region; API key from server env only; SPF/DKIM/DMARC on the sending domain; never log recipients/bodies.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/integrations/README.md",
+        "docs/decisions/0045-transactional-email-provider.md"
+      ]
     },
     {
       "id": "feat-recurring-invoices-reminders",

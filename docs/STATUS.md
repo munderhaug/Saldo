@@ -6,7 +6,8 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-25 — session `vat-reverse-charge` (ADR 0044). Branch + HEAD live in `git`
+**Last updated:** 2026-06-26 — decision `transactional-email-provider` (ADR 0045); prior session
+`vat-reverse-charge` (ADR 0044). Branch + HEAD live in `git`
 (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Confirmed locally: the Neon control plane is
@@ -66,7 +67,7 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 44 ADRs (0001–0044) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Decisions:** 45 ADRs (0001–0045) — index in [`docs/decisions/README.md`](decisions/README.md).
 - **Backlog:** 78 tasks (33 done, 45 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-invoice-pdf-email` [high/M] — Invoice PDF generation + email delivery (EU provider) + EHF/PEPPOL validate
 <!-- /AUTOGEN:repo-status -->
@@ -76,8 +77,8 @@ Nothing mid-flight. The most recent work — **reverse-charge / non-deductible V
 via a reviewed PR; see `git log` for the detail. The reverse-charge dual leg + sales-gate tightening are
 now DONE in `@saldo/domain` and proven by integrity tests; `recordReverseChargePurchase` is the posting
 primitive that **`feat-supplier-invoices`** (the supplier-invoice entry route/UI) will build on. Still
-split out of §8.4: PDF + email (`feat-invoice-pdf-email`, blocked on the transactional-email-provider
-decision), recurring/reminders (`feat-recurring-invoices-reminders`). Below-threshold § 3-30
+split out of §8.4: PDF + email (`feat-invoice-pdf-email`, now **UNBLOCKED** — transactional email =
+Postmark EU, ADR 0045), recurring/reminders (`feat-recurring-invoices-reminders`). Below-threshold § 3-30
 self-accounting on foreign-service purchases is sequenced to `vat-threshold-watcher`. The project-wide
 privacy gap is still tracked: data export in `feat-audit-trail-export`, GDPR erasure in `feat-gdpr-erasure`.
 
@@ -108,11 +109,12 @@ Don't re-derive "what's next" in prose here; this is orientation, not the record
   edge/CDN + R2; Neon EU via Hyperdrive) — ADR 0015 (Workers-native is the documented runner-up);
   **Neon EU** (0013) + **Testcontainers** CI DB (0014); **shadcn + Tailwind v4 + React 19** (0006);
   **adaptive two-surface** design (0016); **grace-window** passive confirm (0002 refined); **Criipto**
-  eID broker; **capture-and-encode** regulatory model, not runtime RAG (0028).
+  eID broker; **capture-and-encode** regulatory model, not runtime RAG (0028); **transactional email =
+  Postmark (EU region)** behind the swappable nodemailer interface (0045) — needs a live account + DPA +
+  SPF/DKIM/DMARC at go-live.
 - **Still open:** Cloudflare **EU DPA + edge residency** confirm before go-live; **LLM hosting**
-  (Phase 4; default local — the OpenAI-compatible abstraction keeps it a base-URL swap); **transactional
-  email** provider (before Phase 3); **PEPPOL access point + Altinn onboarding** (Phase 9); **product name**
-  ("Saldo" is a working name).
+  (Phase 4; default local — the OpenAI-compatible abstraction keeps it a base-URL swap); **PEPPOL access
+  point + Altinn onboarding** (Phase 9); **product name** ("Saldo" is a working name).
 
 ## Known issues / to verify
 - **OIDC is not live-verified** — needs a Criipto tenant + egress. A persisted *active* org (so feature

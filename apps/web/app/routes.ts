@@ -40,6 +40,8 @@ export default [
   ),
   route('orgs/:orgId/reports/reskontro', 'routes/orgs.$orgId.reports.reskontro.tsx'),
   route('orgs/:orgId/reports/likviditet', 'routes/orgs.$orgId.reports.likviditet.tsx'),
+  route('orgs/:orgId/saft', 'routes/orgs.$orgId.saft.tsx'),
+  route('orgs/:orgId/saft.xml', 'routes/orgs.$orgId.saft[.xml].tsx'),
   route('orgs/:orgId/vouchers/new', 'routes/orgs.$orgId.vouchers.new.tsx'),
   route('orgs/:orgId/receipts/new', 'routes/orgs.$orgId.receipts.new.tsx'),
   route('auth/login', 'routes/auth.login.tsx'),

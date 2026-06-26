@@ -577,6 +577,23 @@ export const nb = {
     'Dette er et utkast bygget fra regnskapet. Innlevering til Skatteetaten via Altinn kommer senere — last ned filen eller bruk den i «Min mva» for nå.',
   'mva.downloadXml': 'Last ned XML',
 
+  // ── SAF-T-eksport (feat-saft-export) — read-only finansfil bygget fra det posterte regnskapet ──
+  'saft.title': 'SAF-T-eksport',
+  'saft.period': 'Regnskapsår {year}',
+  'saft.intro':
+    'En standardisert fil med hele regnskapet for året — kontoplan, kunder og leverandører, mva-koder og alle bilag. Dette er filen en revisor eller Skatteetaten kan be om ved et bokettersyn.',
+  'saft.tieOut.ok':
+    'Filen er kontrollert lokalt og stemmer med regnskapet (sum debet = sum kredit).',
+  'saft.tieOut.fail': 'Filen har avvik som må rettes før den brukes.',
+  'saft.summary': '{accounts} kontoer og {transactions} bilag for året.',
+  'saft.totalDebit': 'Sum debet',
+  'saft.totalCredit': 'Sum kredit',
+  'saft.empty': 'Ingen posterte bilag i denne perioden enda.',
+  'saft.note':
+    'Filen valideres mot den offisielle SAF-T-standarden. Last den ned og gi den videre til regnskapsfører eller revisor.',
+  'saft.downloadXml': 'Last ned SAF-T (XML)',
+  'saft.back': 'Tilbake til oversikten',
+
   // ── Rapporter (feat-reporting) — read-only utledning fra det posterte regnskapet ──────────────
   'reports.title': 'Rapporter',
   'reports.period': 'Regnskapsår {year}',
@@ -1209,6 +1226,23 @@ export const en = {
   'mva.submitNote':
     'This is a draft built from the ledger. Filing to the Tax Administration via Altinn comes later — download the file or use it in “Min mva” for now.',
   'mva.downloadXml': 'Download XML',
+
+  // ── SAF-T export (feat-saft-export) — read-only financial file built from the posted ledger ────
+  'saft.title': 'SAF-T export',
+  'saft.period': 'Financial year {year}',
+  'saft.intro':
+    'A standardised file with the whole year of accounts — chart of accounts, customers and suppliers, VAT codes and every voucher. This is the file an auditor or the Tax Administration can ask for during an audit.',
+  'saft.tieOut.ok':
+    'The file is checked locally and ties out to the ledger (total debit = total credit).',
+  'saft.tieOut.fail': 'The file has discrepancies that must be fixed before it is used.',
+  'saft.summary': '{accounts} accounts and {transactions} vouchers for the year.',
+  'saft.totalDebit': 'Total debit',
+  'saft.totalCredit': 'Total credit',
+  'saft.empty': 'No posted vouchers in this period yet.',
+  'saft.note':
+    'The file is validated against the official SAF-T standard. Download it and pass it to your accountant or auditor.',
+  'saft.downloadXml': 'Download SAF-T (XML)',
+  'saft.back': 'Back to overview',
 
   // ── Reports (feat-reporting) — read-only derivation from the posted ledger ────────────────────
   'reports.title': 'Reports',

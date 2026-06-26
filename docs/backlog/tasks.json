@@ -991,13 +991,21 @@
     {
       "id": "feat-saft-export",
       "title": "Full SAF-T Financial export (XSD-valid in CI) — replace the saft:validate scaffold",
-      "status": "todo",
+      "status": "done",
+      "implements_adr": ["0052"],
       "value": "high",
       "effort": "L",
       "phase": "P8",
       "depends_on": ["feat-manual-voucher-entry"],
-      "notes": "Build-spec §8.11 + §16 Phase 8. Generate a full SAF-T Financial export from the ledger and XSD-validate it in CI on every export-logic change (§12). Replaces today's scaffold: pnpm saft:validate prints NOT YET IMPLEMENTED (CI label SCAFFOLD). The Norwegian SAF-T Financial schema + standard code lists are already committed under db/reference/saf-t/ (the standard-accounts list is copyright Regnskap Norge AS, licensed only for SAF-T mapping, §9). Use the saft-validate skill.",
+      "touches": [
+        "packages/domain/src/saft/financial.ts",
+        "packages/domain/src/saft/financial-xml.ts",
+        "apps/web/app/db/saft.server.ts",
+        "apps/web/scripts/saft-validate.ts"
+      ],
+      "notes": "DONE (ADR 0052). SAF-T Financial generated purely in @saldo/domain (generateSaftFinancial + buildSaftXml) from the posted ledger via readSaftFinancial (RLS-scoped, reuses the aggregation pattern, no new posting path). pnpm saft:validate now does REAL XSD validation (xmllint-wasm) against the committed v1.10 schema + tie-out + well-formedness (SCAFFOLD label removed). View route /orgs/:orgId/saft + XML resource route. Domain exhaustive + property tests; Testcontainers tie-out + RLS integration test. Deferred: line-level CustomerID/SupplierID, SourceDocuments, multi-year result-account opening balances (feat-year-end-close), Altinn delivery.",
       "refs": [
+        "docs/decisions/0052-saft-financial-export.md",
         "docs/saldo-build-specification.md",
         ".claude/skills/saft-validate/SKILL.md",
         "apps/web/scripts/saft-validate.ts"

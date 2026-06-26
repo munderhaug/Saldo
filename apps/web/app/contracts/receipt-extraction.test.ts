@@ -94,13 +94,14 @@ describe('receiptConfirmInput — kind+amount plus the provenance carried to the
   const base = {
     kind: 'expense',
     amount: '1250.50',
+    aiAssisted: 'true',
     model: 'qwen2.5-vl',
     modelVersion: 'qwen2.5-vl:7b',
   };
 
-  it('parses the confirmed event and coerces the confidence from its form string', () => {
+  it('parses the confirmed event, coerces confidence, and resolves the disclosure literal to true', () => {
     const parsed = receiptConfirmInput.parse({ ...base, confidence: '0.9' });
-    expect(parsed).toEqual({ ...base, confidence: 0.9 });
+    expect(parsed).toEqual({ ...base, confidence: 0.9, aiAssisted: true });
   });
 
   it('requires the provenance fields — a confirm without model/version/confidence is rejected', () => {
@@ -109,6 +110,17 @@ describe('receiptConfirmInput — kind+amount plus the provenance carried to the
       false,
     );
     expect(receiptConfirmInput.safeParse({ ...base, confidence: '1.5' }).success).toBe(false);
+  });
+
+  it('REFUSES a confirm that does not disclose AI — the Art. 50(1) literal is required end-to-end', () => {
+    const { kind, amount, model, modelVersion } = base;
+    expect(
+      receiptConfirmInput.safeParse({ kind, amount, model, modelVersion, confidence: '0.9' })
+        .success,
+    ).toBe(false);
+    expect(
+      receiptConfirmInput.safeParse({ ...base, aiAssisted: 'false', confidence: '0.9' }).success,
+    ).toBe(false);
   });
 
   it('still enforces the manual amount rule (a non-positive amount is rejected)', () => {

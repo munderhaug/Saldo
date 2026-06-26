@@ -868,13 +868,13 @@
     {
       "id": "feat-invoice-pdf-email",
       "title": "Invoice PDF generation + email delivery (EU provider) + EHF/PEPPOL validate",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P3",
       "depends_on": ["feat-sales-invoicing"],
-      "implements_adr": ["0045"],
-      "notes": "Build-spec §8.4 + §9. Render an issued invoice to PDF (server-shaped work — fits the Option-2 persistent Node host, ADR 0015) and deliver by email via Postmark EU (ADR 0045) behind the nodemailer SMTP interface — UNBLOCKED (the provider decision is settled). Locally validate generated EHF/PEPPOL BIS 3.0 XML (VEFA, 'start now' per §9) ahead of the commercial access point (feat-peppol-send, Phase 9). Pin the Postmark EU region; API key from server env only; SPF/DKIM/DMARC on the sending domain; never log recipients/bodies.",
+      "implements_adr": ["0045", "0046"],
+      "notes": "DONE (ADR 0046). Issued invoice/credit note renders to PDF via @react-pdf/renderer on the Node host (.pdf resource route); the per-rate MVA-grunnlag is summed from FROZEN line amounts via the pure frozenVatBreakdown — money never recomputed. Email delivery through the provider-agnostic nodemailer SMTP interface (Postmark EU, ADR 0045): fail-closed EMAIL_REGION=eu gate + requireTLS, credentials from env.ts only, recipients/bodies never logged (pino redaction); the send is a §5.5 explicit-confirm act that advances draft/issued->sent and records to the append-only invoice_email log (RLS + same-org FK; Testcontainers RLS test). EHF/PEPPOL BIS 3.0 generated locally (pure UBL builder in @saldo/domain/peppol) + a grounded business-rule validator + pnpm ehf:validate gate, grounded in db/reference/peppol/bis-billing-3.0.md — the subset + well-formedness ('start now' §9), full VEFA Schematron + transmission + structured buyer address deferred to feat-peppol-send.",
       "refs": [
         "docs/saldo-build-specification.md",
         "docs/integrations/README.md",

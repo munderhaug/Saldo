@@ -50,6 +50,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0043 | Invoice → ledger posting: the balanced AR voucher on issue, reusing deriveSales | Accepted |
 | 0044 | Reverse-charge dual-leg posting + non-deductible VAT, and the tightened sales-line gate | Accepted |
 | 0045 | Transactional email provider: Postmark (EU region), behind the swappable nodemailer interface | Accepted |
+| 0046 | Invoice PDF, email delivery (Postmark EU), and EHF/PEPPOL BIS 3.0 local generation | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

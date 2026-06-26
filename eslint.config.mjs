@@ -118,4 +118,15 @@ export default tseslint.config(
       'saldo/no-unkeyed-jsx-text': 'error',
     },
   },
+  // ── PDF documents (@react-pdf/renderer) — a NON-DOM renderer ──
+  // These render to PDF primitives (<Document>/<Page>/<View>/<Text>), not HTML: there is no Tailwind/
+  // className surface here, so the design-system token utilities don't apply and the `style` prop is the
+  // ONLY styling mechanism the library offers. The no-inline-style ban is therefore lifted for this
+  // directory; keyed-copy (saldo/no-unkeyed-jsx-text) stays ON so document labels still come from t().
+  {
+    files: ['apps/web/app/documents/**/*.{tsx,jsx}'],
+    rules: {
+      'no-restricted-syntax': 'off',
+    },
+  },
 );

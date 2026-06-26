@@ -42,6 +42,7 @@ describe.skipIf(!ledgerDbAvailable)('RLS coverage — every public table is lock
       'fiscal_period',
       'invoice',
       'invoice_counter',
+      'invoice_email',
       'invoice_line',
       'organization',
       'posting',

@@ -40,13 +40,20 @@ export const REDACT_PATHS = [
   'req.headers.cookie',
   'req.headers.authorization',
   'set-cookie',
+  // Email recipients/bodies are personal data — never logged in the first place; these are a backstop.
+  'to',
+  'recipient',
+  'recipients',
   '*.password',
   '*.passwordHash',
   '*.token',
   '*.email',
+  '*.recipient',
 ];
 
-const logger: Logger = pino({
+/** The base application logger. Prefer {@link requestLogger} in loaders/actions for request correlation;
+ * use this directly only outside a request (e.g. a background send) — and never log personal data. */
+export const logger: Logger = pino({
   level,
   base: null, // drop pid/hostname noise
   redact: { paths: REDACT_PATHS, censor: '[redacted]' },

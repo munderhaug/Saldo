@@ -6,8 +6,8 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-26 — decision `transactional-email-provider` (ADR 0045); prior session
-`vat-reverse-charge` (ADR 0044). Branch + HEAD live in `git`
+**Last updated:** 2026-06-26 — session `invoice-pdf-email` (ADR 0046: invoice PDF + Postmark-EU email +
+EHF/PEPPOL local gen); prior decision `transactional-email-provider` (ADR 0045). Branch + HEAD live in `git`
 (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Confirmed locally: the Neon control plane is
@@ -54,8 +54,16 @@ auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act
   the buyer-self-account purchase codes on a sales document; `recordReverseChargePurchase` + a
   Testcontainers integrity test prove both legs balance and aggregate (ADR 0044). The org page carries a
   registers nav linking all three. EU AI Act Art. 50 disclosure +
-  Art. 50(2) audit trail are in place. The invoicing→ledger loop is now closed; PDF/email + recurring
-  remain split out.
+  Art. 50(2) audit trail are in place. The invoicing→ledger loop is now closed, and **invoice delivery**
+  (`feat-invoice-pdf-email`, ADR 0046) landed: an issued document renders to **PDF** (`@react-pdf/renderer`,
+  a `.pdf` resource route) with the per-rate MVA-grunnlag summed from FROZEN amounts (`frozenVatBreakdown`,
+  never recomputed); **email delivery** via the provider-agnostic nodemailer SMTP interface (Postmark EU —
+  fail-closed `EMAIL_REGION=eu` gate + `requireTLS`, credentials from `env.ts` only, recipients/bodies never
+  logged) as a §5.5 explicit-confirm act that advances draft/issued→sent and records to the append-only
+  `invoice_email` log (RLS + same-org FK); and **EHF/PEPPOL BIS 3.0** generated locally (pure UBL builder +
+  grounded rule validator in `@saldo/domain/peppol`, `pnpm ehf:validate` gate) — the subset + well-formedness
+  "start now", with the full VEFA Schematron + transmission + structured buyer address split to
+  `feat-peppol-send`. Recurring/reminders (`feat-recurring-invoices-reminders`) remain split out.
 
 **Gates (run them or see CI for live counts — not restated here):** `pnpm typecheck` · `lint` ·
 `format:check` · `lint:repo` (harness + cited-docs + link integrity + no-contradiction + the generated
@@ -67,20 +75,24 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 45 ADRs (0001–0045) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 78 tasks (33 done, 45 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `feat-invoice-pdf-email` [high/M] — Invoice PDF generation + email delivery (EU provider) + EHF/PEPPOL validate
+- **Decisions:** 46 ADRs (0001–0046) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 78 tasks (34 done, 44 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-banking-import` [high/L] — Banking import — GoCardless PSD2/AIS + camt.054 + CSV
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — **reverse-charge / non-deductible VAT** (ADR 0044) — landed
-via a reviewed PR; see `git log` for the detail. The reverse-charge dual leg + sales-gate tightening are
-now DONE in `@saldo/domain` and proven by integrity tests; `recordReverseChargePurchase` is the posting
-primitive that **`feat-supplier-invoices`** (the supplier-invoice entry route/UI) will build on. Still
-split out of §8.4: PDF + email (`feat-invoice-pdf-email`, now **UNBLOCKED** — transactional email =
-Postmark EU, ADR 0045), recurring/reminders (`feat-recurring-invoices-reminders`). Below-threshold § 3-30
-self-accounting on foreign-service purchases is sequenced to `vat-threshold-watcher`. The project-wide
-privacy gap is still tracked: data export in `feat-audit-trail-export`, GDPR erasure in `feat-gdpr-erasure`.
+Nothing mid-flight. The most recent work — **invoice PDF + email + EHF** (`feat-invoice-pdf-email`, ADR
+0046) — landed via a reviewed PR; see `git log`. Its **go-live** prerequisites are NOT exercised locally:
+a Postmark EU account + DPA + a verified sending domain (SPF/DKIM/DMARC) + the API key in the deploy env,
+and **verifying the configured SMTP host IS the EU region** (the `EMAIL_REGION` flag is an operator
+assertion, not host geolocation). Known follow-ons it deferred: the send orchestration runs inline (an
+at-most-once gap on a crash between send and record) — move it to a graphile-worker job with idempotency
+when the jobs surface lands; the EHF is the **subset + well-formedness**, with the full VEFA Schematron +
+transmission + structured buyer address in **`feat-peppol-send`** (Phase 9). Supplier invoices build on
+`recordReverseChargePurchase` (ADR 0044) via **`feat-supplier-invoices`**. Recurring/reminders remain
+`feat-recurring-invoices-reminders`. Below-threshold § 3-30 self-accounting on foreign-service purchases
+is sequenced to `vat-threshold-watcher`. The project-wide privacy gap is still tracked: data export in
+`feat-audit-trail-export`, GDPR erasure in `feat-gdpr-erasure`.
 
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**

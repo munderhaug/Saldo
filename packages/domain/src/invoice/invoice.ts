@@ -146,30 +146,72 @@ export interface VatBucket {
   readonly vat: Øre;
 }
 
+/** SAF-T category order for the per-rate VAT summary — regular first, then descending, ending no-VAT. */
+const RATE_CATEGORY_ORDER: readonly RateCategory[] = [
+  'regular',
+  'reduced-middle',
+  'reduced-low',
+  'reduced-raw-fish',
+  'zero',
+  'none',
+];
+
 /**
  * The VAT summary grouped by rate category, in the SAF-T category order, omitting empty categories.
  * The base is the net subject to that rate; the VAT is what was charged on it. Used for the document's
  * VAT breakdown and (later) the MVA-melding.
  */
 export function vatBreakdown(lines: readonly ComputedLine[]): readonly VatBucket[] {
-  const order: readonly RateCategory[] = [
-    'regular',
-    'reduced-middle',
-    'reduced-low',
-    'reduced-raw-fish',
-    'zero',
-    'none',
-  ];
-  return order
-    .map((rateCategory): VatBucket => {
-      const inBucket = lines.filter((l) => l.rateCategory === rateCategory);
-      return {
-        rateCategory,
-        base: sumØre(inBucket.map((l) => l.net)),
-        vat: sumØre(inBucket.map((l) => l.vat)),
-      };
-    })
-    .filter((b) => b.base !== ZERO || b.vat !== ZERO);
+  return RATE_CATEGORY_ORDER.map((rateCategory): VatBucket => {
+    const inBucket = lines.filter((l) => l.rateCategory === rateCategory);
+    return {
+      rateCategory,
+      base: sumØre(inBucket.map((l) => l.net)),
+      vat: sumØre(inBucket.map((l) => l.vat)),
+    };
+  }).filter((b) => b.base !== ZERO || b.vat !== ZERO);
+}
+
+/**
+ * A FROZEN line of an already-issued document, as it is rendered (PDF / EHF). The net + VAT are the
+ * amounts stored at issue (the domain derived them once via {@link computeLine}); the rate category is
+ * resolved from the line's SAF-T VAT code. Presentation NEVER recomputes money from unit prices —
+ * re-deriving could diverge from the immutable figures the customer was invoiced (ledger is the record).
+ */
+export interface FrozenLine {
+  readonly net: Øre;
+  readonly vat: Øre;
+  readonly rateCategory: RateCategory;
+}
+
+/**
+ * The per-rate «MVA-grunnlag» block for an ISSUED document, summed from the FROZEN line amounts via
+ * `sumØre` — never re-derived from unit prices. Same categories/order as {@link vatBreakdown}, but it
+ * consumes stored øre, so the rendered breakdown is guaranteed to tie out to the document's frozen
+ * totals. Each bucket carries the category's `Rate` so the renderer can show the percentage.
+ */
+export function frozenVatBreakdown(
+  lines: readonly FrozenLine[],
+): readonly (VatBucket & { readonly vatRate: Rate })[] {
+  return RATE_CATEGORY_ORDER.map((rateCategory) => {
+    const inBucket = lines.filter((l) => l.rateCategory === rateCategory);
+    return {
+      rateCategory,
+      vatRate: rateForCategory(rateCategory),
+      base: sumØre(inBucket.map((l) => l.net)),
+      vat: sumØre(inBucket.map((l) => l.vat)),
+    };
+  }).filter((b) => b.base !== ZERO || b.vat !== ZERO);
+}
+
+/**
+ * Presentation boundary: format a VAT {@link Rate} as a Norwegian percentage (0.25 -> "25 %",
+ * 0.1111 -> "11,11 %"). Float math is acceptable HERE (display only); trailing zeros are trimmed so a
+ * whole percentage shows no decimals. The non-breaking space before "%" follows Norwegian typography.
+ */
+export function formatVatRate(r: Rate): string {
+  const percent = (r as number) * 100;
+  return `${percent.toLocaleString('nb-NO', { maximumFractionDigits: 2 })}\u00A0%`;
 }
 
 /**

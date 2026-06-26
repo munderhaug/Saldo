@@ -8,12 +8,16 @@ import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
 import {
   checkSalesLine,
   computeLine,
+  formatVatRate,
+  frozenVatBreakdown,
   invoiceKid,
   invoiceTotals,
   lineNet,
   quantity,
   vatBreakdown,
+  type FrozenLine,
 } from './invoice.js';
+import { rate } from '../money/ore.js';
 
 // Parse the REAL committed SAF-T list (never hardcode codes from memory — hard invariant §4.3).
 const csv = readFileSync(
@@ -229,6 +233,69 @@ describe('invoiceTotals / vatBreakdown — document aggregation', () => {
         expect(base).toBe(invoiceTotals(ls).net);
       }),
     );
+  });
+});
+
+describe('frozenVatBreakdown — per-rate MVA-grunnlag from FROZEN amounts (no recompute)', () => {
+  const frozen: FrozenLine[] = [
+    { net: øre(180_000), vat: øre(45_000), rateCategory: 'regular' },
+    { net: øre(30_000), vat: ZERO, rateCategory: 'none' },
+  ];
+
+  it('groups the stored net/VAT by rate category, carrying the rate, omitting empty buckets', () => {
+    expect(frozenVatBreakdown(frozen)).toEqual([
+      { rateCategory: 'regular', vatRate: rate(0.25), base: øre(180_000), vat: øre(45_000) },
+      { rateCategory: 'none', vatRate: rate(0), base: øre(30_000), vat: ZERO },
+    ]);
+  });
+
+  it('sums the frozen amounts verbatim — it never re-derives money from a rate', () => {
+    // Two regular-rate lines whose stored VAT is deliberately NOT 25 % of net (a frozen figure the
+    // renderer must reproduce exactly, e.g. after a manual correction): the breakdown echoes the
+    // stored øre rather than recomputing 0.25 × base.
+    const tampered: FrozenLine[] = [
+      { net: øre(100_00), vat: øre(7), rateCategory: 'regular' },
+      { net: øre(100_00), vat: øre(3), rateCategory: 'regular' },
+    ];
+    expect(frozenVatBreakdown(tampered)).toEqual([
+      { rateCategory: 'regular', vatRate: rate(0.25), base: øre(200_00), vat: øre(10) },
+    ]);
+  });
+
+  it('every bucket base + VAT equals the element-wise sum of its category, for any frozen lines', () => {
+    const cat = fc.constantFrom<FrozenLine['rateCategory']>(
+      'regular',
+      'reduced-low',
+      'zero',
+      'none',
+    );
+    const aLine: fc.Arbitrary<FrozenLine> = fc.record({
+      net: fc.nat({ max: 1_000_000 }).map((n) => øre(n)),
+      vat: fc.nat({ max: 250_000 }).map((n) => øre(n)),
+      rateCategory: cat,
+    });
+    fc.assert(
+      fc.property(fc.array(aLine, { maxLength: 20 }), (ls) => {
+        for (const bucket of frozenVatBreakdown(ls)) {
+          const inCat = ls.filter((l) => l.rateCategory === bucket.rateCategory);
+          expect(bucket.base).toBe(sumØre(inCat.map((l) => l.net)));
+          expect(bucket.vat).toBe(sumØre(inCat.map((l) => l.vat)));
+        }
+        // The bucket bases sum back to the whole — nothing dropped, nothing double-counted.
+        expect(sumØre(frozenVatBreakdown(ls).map((b) => b.base))).toBe(
+          sumØre(ls.map((l) => l.net)),
+        );
+      }),
+    );
+  });
+});
+
+describe('formatVatRate — Norwegian percentage for the document VAT column', () => {
+  it('renders whole and fractional percentages without trailing zeros', () => {
+    expect(formatVatRate(rate(0.25))).toBe('25\u00A0%');
+    expect(formatVatRate(rate(0.15))).toBe('15\u00A0%');
+    expect(formatVatRate(rate(0))).toBe('0\u00A0%');
+    expect(formatVatRate(rate(0.1111))).toBe('11,11\u00A0%');
   });
 });
 

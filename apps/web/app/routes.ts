@@ -16,6 +16,11 @@ export default [
   route('orgs/:orgId/invoices', 'routes/orgs.$orgId.invoices.tsx'),
   route('orgs/:orgId/invoices/new', 'routes/orgs.$orgId.invoices.new.tsx'),
   route('orgs/:orgId/invoices/:invoiceId', 'routes/orgs.$orgId.invoices.$invoiceId.tsx'),
+  route('orgs/:orgId/invoices/:invoiceId/pdf', 'routes/orgs.$orgId.invoices.$invoiceId.pdf.tsx'),
+  route(
+    'orgs/:orgId/invoices/:invoiceId/ehf.xml',
+    'routes/orgs.$orgId.invoices.$invoiceId.ehf.tsx',
+  ),
   route('orgs/:orgId/vouchers/new', 'routes/orgs.$orgId.vouchers.new.tsx'),
   route('orgs/:orgId/receipts/new', 'routes/orgs.$orgId.receipts.new.tsx'),
   route('auth/login', 'routes/auth.login.tsx'),

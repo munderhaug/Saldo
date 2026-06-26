@@ -1,0 +1,29 @@
+{
+  "transactions": {
+    "booked": [
+      {
+        "transactionId": "TX-001",
+        "internalTransactionId": "gc-internal-001",
+        "bookingDate": "2026-06-01",
+        "valueDate": "2026-06-01",
+        "transactionAmount": { "amount": "1234.50", "currency": "NOK" },
+        "debtorName": "Kunde AS",
+        "remittanceInformationUnstructured": "Faktura 42 KID 1234567890128"
+      },
+      {
+        "transactionId": "TX-002",
+        "bookingDate": "2026-06-02",
+        "transactionAmount": { "amount": "-99.90", "currency": "NOK" },
+        "creditorName": "Leverandør Butikk",
+        "remittanceInformationUnstructuredArray": ["Kortkjøp", "dagligvare"]
+      }
+    ],
+    "pending": [
+      {
+        "transactionAmount": { "amount": "500.00", "currency": "NOK" },
+        "valueDate": "2026-06-03",
+        "remittanceInformationUnstructured": "Pending — ignored"
+      }
+    ]
+  }
+}

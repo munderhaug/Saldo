@@ -44,11 +44,22 @@ export const REDACT_PATHS = [
   'to',
   'recipient',
   'recipients',
+  // Bank-import personal/financial fields (ADR 0047) — a backstop for objects (e.g. a NormalisedBankTx)
+  // that should never be logged in the first place.
+  'accountNumber',
+  'account_number',
+  'iban',
+  'counterparty',
+  'remittanceInfo',
+  'remittance_info',
   '*.password',
   '*.passwordHash',
   '*.token',
   '*.email',
   '*.recipient',
+  '*.accountNumber',
+  '*.counterparty',
+  '*.remittanceInfo',
 ];
 
 /** The base application logger. Prefer {@link requestLogger} in loaders/actions for request correlation;

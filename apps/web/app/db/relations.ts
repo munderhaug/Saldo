@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, invoiceEmail, invoice, account, vatCode, fiscalPeriod, posting, voucher, invoiceCounter, appUser, userSession, contact, aiProvenance, product, invoiceLine, membership } from "./schema";
+import { organization, invoiceEmail, invoice, account, vatCode, fiscalPeriod, posting, voucher, invoiceCounter, appUser, userSession, contact, aiProvenance, product, invoiceLine, bankAccount, bankTransaction, membership } from "./schema";
 
 export const invoiceEmailRelations = relations(invoiceEmail, ({one}) => ({
 	organization: one(organization, {
@@ -25,6 +25,8 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	products: many(product),
 	invoices: many(invoice),
 	invoiceLines: many(invoiceLine),
+	bankAccounts: many(bankAccount),
+	bankTransactions: many(bankTransaction),
 	memberships: many(membership),
 }));
 
@@ -138,6 +140,7 @@ export const voucherRelations = relations(voucher, ({one, many}) => ({
 	aiProvenances_organizationId: many(aiProvenance, {
 		relationName: "aiProvenance_organizationId_voucher_id"
 	}),
+	bankTransactions: many(bankTransaction),
 }));
 
 export const invoiceCounterRelations = relations(invoiceCounter, ({one}) => ({
@@ -228,6 +231,29 @@ export const invoiceLineRelations = relations(invoiceLine, ({one}) => ({
 	product: one(product, {
 		fields: [invoiceLine.organizationId],
 		references: [product.id]
+	}),
+}));
+
+export const bankAccountRelations = relations(bankAccount, ({one, many}) => ({
+	organization: one(organization, {
+		fields: [bankAccount.organizationId],
+		references: [organization.id]
+	}),
+	bankTransactions: many(bankTransaction),
+}));
+
+export const bankTransactionRelations = relations(bankTransaction, ({one}) => ({
+	organization: one(organization, {
+		fields: [bankTransaction.organizationId],
+		references: [organization.id]
+	}),
+	voucher: one(voucher, {
+		fields: [bankTransaction.matchedVoucherId],
+		references: [voucher.id]
+	}),
+	bankAccount: one(bankAccount, {
+		fields: [bankTransaction.organizationId],
+		references: [bankAccount.id]
 	}),
 }));
 

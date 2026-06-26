@@ -31,7 +31,8 @@
     "db:rollback": "dbmate down",
     "db:introspect": "pnpm --filter @saldo/web db:introspect",
     "dr:drill": "bash tools/restore-drill.sh",
-    "saft:validate": "pnpm --filter @saldo/web saft:validate"
+    "saft:validate": "pnpm --filter @saldo/web saft:validate",
+    "mva:validate": "pnpm --filter @saldo/web mva:validate"
   },
   "typeCoverage": {
     "atLeast": 97,

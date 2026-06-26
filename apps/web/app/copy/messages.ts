@@ -557,6 +557,25 @@ export const nb = {
   'recon.error.undated': 'Betalingen mangler dato, så jeg vet ikke hvilken periode den hører til.',
   'recon.error.chart-incomplete': 'Kontoplanen mangler en konto. Sjekk oppsettet.',
   'recon.error.invalid': 'Sjekk valget og prøv igjen.',
+  'mva.title': 'MVA-melding',
+  'mva.period': 'Årstermin {year}',
+  'mva.notRegistered':
+    'Virksomheten er ikke registrert i Merverdiavgiftsregisteret, så det er ingen MVA-melding å levere.',
+  'mva.back': 'Tilbake til oversikten',
+  'mva.settlement.pay': 'Å betale',
+  'mva.settlement.refund': 'Til gode',
+  'mva.settlement.zero': 'Ingenting å gjøre opp',
+  'mva.valid': 'Meldingen er kontrollert lokalt og stemmer med regnskapet.',
+  'mva.invalid': 'Meldingen har avvik som må rettes: {rules}.',
+  'mva.empty': 'Ingen avgiftspliktige posteringer i denne perioden enda.',
+  'mva.listCaption': '{count} spesifikasjonslinjer.',
+  'mva.col.code': 'Kode',
+  'mva.col.basis': 'Grunnlag',
+  'mva.col.rate': 'Sats',
+  'mva.col.vat': 'Merverdiavgift',
+  'mva.submitNote':
+    'Dette er et utkast bygget fra regnskapet. Innlevering til Skatteetaten via Altinn kommer senere — last ned filen eller bruk den i «Min mva» for nå.',
+  'mva.downloadXml': 'Last ned XML',
 } as const;
 
 export type Messages = typeof nb;
@@ -1082,4 +1101,23 @@ export const en = {
   'recon.error.undated': "The payment has no date, so I can't tell which period it belongs to.",
   'recon.error.chart-incomplete': 'The chart of accounts is missing an account. Check the setup.',
   'recon.error.invalid': 'Check the selection and try again.',
+  'mva.title': 'VAT return',
+  'mva.period': 'Annual term {year}',
+  'mva.notRegistered':
+    'The business is not in the VAT register, so there is no VAT return to file.',
+  'mva.back': 'Back to the overview',
+  'mva.settlement.pay': 'To pay',
+  'mva.settlement.refund': 'Refund due',
+  'mva.settlement.zero': 'Nothing to settle',
+  'mva.valid': 'The return was checked locally and ties out to the ledger.',
+  'mva.invalid': 'The return has issues to fix: {rules}.',
+  'mva.empty': 'No VAT-bearing postings in this period yet.',
+  'mva.listCaption': '{count} specification lines.',
+  'mva.col.code': 'Code',
+  'mva.col.basis': 'Basis',
+  'mva.col.rate': 'Rate',
+  'mva.col.vat': 'VAT',
+  'mva.submitNote':
+    'This is a draft built from the ledger. Filing to the Tax Administration via Altinn comes later — download the file or use it in “Min mva” for now.',
+  'mva.downloadXml': 'Download XML',
 } satisfies Record<MessageKey, string>;

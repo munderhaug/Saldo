@@ -6,8 +6,8 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-26 — session `reconciliation` (ADR 0048: deterministic KID/amount/date matcher
-+ settlement posting on the banking-import substrate); prior `banking-import` (ADR 0047).
+**Last updated:** 2026-06-26 — session `mva-melding` (ADR 0050: MVA-melding generation on the SAF-T VAT
+codes + fail-closed Skatteetaten validation client); prior `reconciliation` (ADR 0048).
 Branch + HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only
 go stale.
 
@@ -76,27 +76,32 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 49 ADRs (0001–0049) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 79 tasks (37 done, 42 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `feat-mva-melding` [high/L] — MVA-melding generation on SAF-T codes + Skatteetaten validation API
+- **Decisions:** 50 ADRs (0001–0050) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 79 tasks (38 done, 41 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-reporting` [high/L] — Reporting — resultat/balanse, hovedbok drill-down, reskontro aging, liquidity
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — **bank reconciliation** (`feat-reconciliation`, ADR 0048) —
-landed via a reviewed PR; see `git log`. It is the downstream consumer of the banking-import substrate
-(ADR 0047): a pure `@saldo/domain/reconciliation` matcher (`matchBankLine`: KID-exact → amount+date →
-amount, exhaustive + fast-check; reuses the `Kid` mod-10 check) and a pure `deriveSettlement` (debit
-bank 1920 / credit receivable 1500, balanced **øre**, `type: 'bank'`); `reconcileMatch` posts the
-settlement voucher via the reused (now exported) `insertPostedVoucher`, sets
-`bank_transaction.matched_voucher_id` (+ the matched `kid`) — the ONLY mutation the append-only trigger
-permits — and marks the invoice **paid**; a `/orgs/:orgId/bank/:accountId/reconcile` route + UI does the
-**manual confirm** (ADR 0002 §5.5 explicit confirm; NO/EN). Deterministic, **NOT an AI system**
-(Recital 12 — no Art. 50). A Testcontainers integrity test proves balanced legs, the linked tx, the
-invoice paid, atomic rejection of a non-equal amount, no double-post, and the undated-period fallback;
-vat-reviewer + privacy-reviewer ran clean. **Deferred (ADR 0048):** partial / over-payments (need a
-residual/outstanding model — settlement is exact-amount only); outgoing **supplier-payment**
-reconciliation (no AP documents until `feat-supplier-invoices`; `deriveSettlement` already supports the
-inverse leg); an LLM-assisted suggestion for the long tail (would be propose-only with Art. 50).
+Nothing mid-flight. The most recent work — **MVA-melding generation** (`feat-mva-melding`, ADR 0050) —
+landed via a reviewed PR; see `git log`. The VAT return is generated **read-only** from the posted
+ledger: a new RLS-scoped query (`aggregateVatByCode`) sums one fiscal year PER SAF-T VAT code into
+`grunnlag` (net basis on revenue/cost lines) + `merverdiavgift` (signed VAT on the code's klasse-2
+legs); the pure `@saldo/domain/mva-melding` then composes the `mvaMeldingDto` model (`generateMvaMelding`
++ `buildMvaMeldingXml` + the grounded `validateMvaMelding`), with the **tie-out by construction**
+(`fastsattMerverdiavgift` = Σ line VAT = `outputVatCollected − deductibleInputVat`, the honest-number
+quantity). The **MVA-status fork** decides whether a melding exists; reverse charge lands both legs
+(output via the rate's output code, deduction + basis under the RC code). A `/orgs/:orgId/mva` view route
++ `mva.xml` resource route (NO/EN, §5.5 sober) preview + download it. Deterministic — **NOT an AI
+system** (Recital 12 — no Art. 50). Grounded in the committed Skatteetaten schema/examples/code lists
+(`db/reference/skatt/mva-melding/`, `docs/regulatory/mva-melding.md`). Validation is local — `pnpm
+mva:validate` (generate → well-formedness → subset + exact tie-out, the EHF precedent) — with
+Skatteetaten's **validation API behind a fail-closed, EU-resident, Zod-at-boundary client**
+(`app/integrations/skatteetaten/`, off with no external call until onboarding + egress). Domain
+exhaustive + fast-check tests + a Testcontainers integration test (per-code partition, the RC dual leg,
+drafts excluded, RLS isolation) prove it; vat-reviewer + privacy-reviewer + integration-auditor ran.
+**Deferred (ADR 0050):** full XSD / live-API validation (onboarding + egress); **bimonthly terms** (the
+domain is ready — needs a per-voucher *bilagsdato*); **submission** via Altinn 3 (`feat-altinn-mva-
+submission`, Phase 9); the 50k registration threshold (`vat-threshold-watcher`).
 
 Banking import (`feat-banking-import`, ADR 0047) remains the import + persistence layer beneath it (the
 append-only `bank_account` + `bank_transaction` substrate, the GoCardless/camt.054/CSV normaliser).
@@ -157,7 +162,8 @@ Don't re-derive "what's next" in prose here; this is orientation, not the record
   restore drill, the R2 `statutory-5yr` bucket lock + `tmp/` lifecycle rule, EU DPA). Checklist:
   `docs/runbooks/disaster-recovery.md`.
 - **`saft:validate` is a scaffold** — prints `NOT YET IMPLEMENTED` loudly (CI label: SCAFFOLD). Implement
-  SAF-T generation + XSD validation (Phase 8).
+  SAF-T generation + XSD validation (Phase 8). (`mva:validate` IS real now — generate + well-formedness +
+  grounded subset + exact tie-out, ADR 0050; full XSD/live-API validation still awaits onboarding+egress.)
 - **Account-chart curation** — a fresh org carries all 745 SAF-T accounts; `feat-account-chart-curation`
   filters pickers to a used/favourites subset.
 - **Build-spec consolidation** — `docs/saldo-build-specification.md` still has a stale dir tree + inlined

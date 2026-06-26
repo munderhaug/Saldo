@@ -159,6 +159,14 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
               {t('bank.title')}
             </Link>
           </li>
+          <li>
+            <Link
+              to={`/orgs/${org.id}/mva`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('mva.title')}
+            </Link>
+          </li>
         </ul>
       </nav>
 

@@ -190,13 +190,26 @@ describe.skipIf(!ledgerDbAvailable)('manual-voucher posting path (app role + RLS
     expect(result.ok).toBe(true);
     const voucherId = result.ok ? result.voucherId : '';
 
-    // 2400 payable (100000 cr) / 2704 output VAT (25000 cr) / 7798 cost incl. VAT (125000 dr). No 2714.
+    // 2400 payable (100000 cr) / 2704 output VAT (25000 cr) / 7798 cost: NET 100000 (coded '87') +
+    // irrecoverable VAT 25000 (UNCODED) — so the melding basis stays the net. No 2714.
     const legs = await legsOf(voucherId);
-    expect(legs).toEqual([
+    expect(legs.filter((l) => l.number !== POSTING_ACCOUNTS.expense.cost)).toEqual([
       { number: POSTING_ACCOUNTS.expense.payable, debit: 0, credit: 100_000, coded: false },
       { number: '2704', debit: 0, credit: 25_000, coded: true },
-      { number: POSTING_ACCOUNTS.expense.cost, debit: 125_000, credit: 0, coded: true },
     ]);
+    const costLegs = legs.filter((l) => l.number === POSTING_ACCOUNTS.expense.cost);
+    expect(costLegs).toContainEqual({
+      number: POSTING_ACCOUNTS.expense.cost,
+      debit: 100_000,
+      credit: 0,
+      coded: true,
+    }); // the code-bearing basis is the NET
+    expect(costLegs).toContainEqual({
+      number: POSTING_ACCOUNTS.expense.cost,
+      debit: 25_000,
+      credit: 0,
+      coded: false,
+    }); // the irrecoverable VAT joins cost, UNCODED
     expect(legs.some((l) => l.number === '2714')).toBe(false); // no deduction
 
     const totals = await withOrgTx(appDb, orgId, (tx) => aggregateLedger(tx, 2026));

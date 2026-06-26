@@ -949,13 +949,14 @@
     {
       "id": "feat-mva-melding",
       "title": "MVA-melding generation on SAF-T codes + Skatteetaten validation API",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P6",
       "depends_on": ["feat-manual-voucher-entry", "vat-line-level-model"],
       "notes": "Build-spec §8.8 + §16 Phase 6. Generate the MVA report per term (or annual) from the posted ledger on the SAF-T VAT codes, and validate against Skatteetaten's validation API (free but onboarding-gated; supports inquiries from the system supplier, §9). Submission via Altinn 3 is the separate feat-altinn-mva-submission (Phase 9). The rolling-12-month 50k threshold tracker is the existing vat-threshold-watcher. Validate the generated melding against the committed schema (saft-validate skill).",
-      "refs": ["docs/saldo-build-specification.md", ".claude/skills/saft-validate/SKILL.md"]
+      "refs": ["docs/saldo-build-specification.md", ".claude/skills/saft-validate/SKILL.md"],
+      "implements_adr": ["0050"]
     },
     {
       "id": "feat-reporting",

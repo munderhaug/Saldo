@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { isZeroØre, mulRate, øre, rate, type Rate } from '../money/ore.js';
+import { isZeroØre, mulRate, øre, rate, sumØre, type Rate } from '../money/ore.js';
 import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
 import { isBalanced, totalCredit, totalDebit } from './balance.js';
 import type { AccountNo } from './types.js';
@@ -176,9 +176,14 @@ describe('deriveReverseChargePurchase — dual-leg snudd avregning', () => {
       inputVatCode: vc('87'),
     });
     expect(isBalanced(v)).toBe(true);
-    // 3 legs: cost incl. VAT 125 000 dr / payable 100 000 cr / output VAT 25 000 cr. No input deduction.
-    expect(v.lines).toHaveLength(3);
-    expect(v.lines.find((l) => l.account === rcAccounts.cost)?.debit).toBe(125_000); // gross to cost
+    // 4 legs: cost NET 100 000 (coded 87) + cost VAT 25 000 (uncoded) dr / payable 100 000 cr /
+    // output VAT 25 000 cr. The irrecoverable VAT joins cost but never the coded basis.
+    expect(v.lines).toHaveLength(4);
+    const costLines = v.lines.filter((l) => l.account === rcAccounts.cost);
+    expect(sumØre(costLines.map((l) => l.debit))).toBe(125_000); // total cost still gross
+    // The code-bearing cost line carries the NET (the melding grunnlag), VAT joins an UNCODED line.
+    expect(costLines.find((l) => l.vatCode === '87')?.debit).toBe(100_000);
+    expect(costLines.find((l) => l.vatCode === undefined)?.debit).toBe(25_000);
     expect(v.lines.some((l) => l.account === rcAccounts.inputVat)).toBe(false); // no deduction
     expect(v.lines.find((l) => l.account === rcAccounts.outputVat)?.credit).toBe(25_000); // still owed
   });

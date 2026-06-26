@@ -57,6 +57,17 @@ export function roundØre(value: number): Øre {
 }
 
 /**
+ * Presentation/reporting boundary: round øre to **whole kroner** (half away from zero) — e.g.
+ * 1_250_49 → 12_50 kr, -1_250_51 → -12_51 → -12_51 kr. Used where an authority reports in whole
+ * kroner (the MVA-melding `Beloep` fields). Returns a plain integer count of kroner, NOT øre. Float
+ * division is acceptable HERE (a rounding boundary), like {@link formatKr}, and nowhere else.
+ */
+export function øreToKroner(amount: Øre): number {
+  const kr = amount / 100;
+  return Math.sign(kr) * Math.round(Math.abs(kr));
+}
+
+/**
  * Multiply money by a rate and round once to integer øre (half away from zero).
  * This is the ONLY sanctioned way to apply a VAT rate to an amount.
  */

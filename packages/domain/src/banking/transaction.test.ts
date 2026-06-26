@@ -49,6 +49,12 @@ describe('decimalToØre', () => {
     expect(Object.is(decimalToØre('-0.00'), -0)).toBe(false);
   });
 
+  it('drops many trailing zeros linearly and rejects an over-long input (ReDoS hardening)', () => {
+    expect(decimalToØre(`45.${'0'.repeat(20)}`)).toBe(4500); // trailing zeros → exact øre
+    expect(decimalToØre(`0.${'0'.repeat(50)}`)).toBeNull(); // over the length bound → rejected
+    expect(decimalToØre('1'.repeat(40))).toBeNull(); // over the length bound → rejected
+  });
+
   it('round-trips: |øre|/100 formatted back parses to the same magnitude', () => {
     fc.assert(
       fc.property(fc.integer({ min: 0, max: 9_999_999_999 }), (n) => {

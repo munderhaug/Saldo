@@ -51,15 +51,22 @@ const ISO_CURRENCY = /^[A-Z]{3}$/;
  */
 export function decimalToØre(value: string): Øre | null {
   const cleaned = value.trim();
+  // A real monetary amount is short; bound the length so untrusted bank input can't drive pathological
+  // scanning (a safe-integer øre is ≤ ~19 chars incl. sign + decimal). Defence-in-depth alongside the
+  // linear trailing-zero scan below (no backtracking regex — CodeQL polynomial-ReDoS hardening).
+  if (cleaned.length > 24) return null;
   const match = /^(-)?(\d+)(?:\.(\d+))?$/.exec(cleaned);
   if (!match) return null;
   const negative = match[1] === '-';
   const whole = match[2]!;
   let fraction = match[3] ?? '';
   if (fraction.length > 2) {
-    const trimmed = fraction.replace(/0+$/, '');
-    if (trimmed.length > 2) return null; // sub-øre precision we won't silently round away
-    fraction = trimmed;
+    // Drop trailing zeros beyond two places with a LINEAR scan (not a `/0+$/` regex, which is
+    // polynomial on a long run of zeros from uncontrolled input). 48 = '0'.
+    let end = fraction.length;
+    while (end > 2 && fraction.charCodeAt(end - 1) === 48) end--;
+    if (end > 2) return null; // genuine sub-øre precision — never silently rounded away
+    fraction = fraction.slice(0, end);
   }
   fraction = fraction.padEnd(2, '0'); // "5" → "50", "" → "00"
   const magnitude = Number(`${whole}${fraction}`);

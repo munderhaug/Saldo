@@ -209,6 +209,13 @@ export default function BankAccountRoute({ loaderData, actionData }: Route.Compo
         )}
       </section>
 
+      <Link
+        to={`/orgs/${orgId}/bank/${account.id}/reconcile`}
+        className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+      >
+        {t('bank.detail.reconcile')}
+      </Link>
+
       <section className="grid gap-3">
         <h2 className="font-text text-lg">{t('bank.detail.transactionsTitle')}</h2>
         {transactions.length === 0 ? (

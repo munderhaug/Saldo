@@ -6,8 +6,8 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-26 — session `banking-import` (ADR 0047: GoCardless PSD2/AIS + self-built
-camt.054 + CSV import, append-only `bank_transaction` substrate); prior `invoice-pdf-email` (ADR 0046).
+**Last updated:** 2026-06-26 — session `reconciliation` (ADR 0048: deterministic KID/amount/date matcher
++ settlement posting on the banking-import substrate); prior `banking-import` (ADR 0047).
 Branch + HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only
 go stale.
 
@@ -76,25 +76,33 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 47 ADRs (0001–0047) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 78 tasks (35 done, 43 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 48 ADRs (0001–0048) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 78 tasks (36 done, 42 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-mva-melding` [high/L] — MVA-melding generation on SAF-T codes + Skatteetaten validation API
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — **banking import** (`feat-banking-import`, ADR 0047) — landed
-via a reviewed PR; see `git log`. It is the import + persistence layer for the reconciliation substrate:
-a pure domain normaliser (`@saldo/domain/banking` — camt.054 + GoCardless + CSV → **signed øre**,
-exhaustive + property tests), a self-built **camt.054** parser (`fast-xml-parser` at the boundary), a
-fail-closed **GoCardless** AIS client (EU-resident gate, Zod-at-boundary, no PII in logs, one-batch/no-poll
-rate-limit safety), the append-only `bank_account` + `bank_transaction` tables (force RLS + same-org FK +
-immutability trigger + idempotent `UNIQUE(external_ref)`, Testcontainers-proven), and routes/UI for
-accounts + file/GoCardless import. Sources are captured under `db/reference/banking/`. **Deferred (ADR
-0047):** the AIS fetch runs **inline-with-idempotency** (move to a graphile-worker job when the jobs
-surface lands — same interim as ADR 0046's send); the PSD2 **consent/link flow** (institutions →
-requisition → account ids) is out of scope; **KID parsing + matching is the next task** (`feat-reconciliation`
-— a nullable `kid`/`matched_voucher_id` is stored, nothing more). Go-live needs a GoCardless account +
-secrets + `BANKING_EU_RESIDENT=true` in the deploy env (no egress exercised locally).
+Nothing mid-flight. The most recent work — **bank reconciliation** (`feat-reconciliation`, ADR 0048) —
+landed via a reviewed PR; see `git log`. It is the downstream consumer of the banking-import substrate
+(ADR 0047): a pure `@saldo/domain/reconciliation` matcher (`matchBankLine`: KID-exact → amount+date →
+amount, exhaustive + fast-check; reuses the `Kid` mod-10 check) and a pure `deriveSettlement` (debit
+bank 1920 / credit receivable 1500, balanced **øre**, `type: 'bank'`); `reconcileMatch` posts the
+settlement voucher via the reused (now exported) `insertPostedVoucher`, sets
+`bank_transaction.matched_voucher_id` (+ the matched `kid`) — the ONLY mutation the append-only trigger
+permits — and marks the invoice **paid**; a `/orgs/:orgId/bank/:accountId/reconcile` route + UI does the
+**manual confirm** (ADR 0002 §5.5 explicit confirm; NO/EN). Deterministic, **NOT an AI system**
+(Recital 12 — no Art. 50). A Testcontainers integrity test proves balanced legs, the linked tx, the
+invoice paid, atomic rejection of a non-equal amount, no double-post, and the undated-period fallback;
+vat-reviewer + privacy-reviewer ran clean. **Deferred (ADR 0048):** partial / over-payments (need a
+residual/outstanding model — settlement is exact-amount only); outgoing **supplier-payment**
+reconciliation (no AP documents until `feat-supplier-invoices`; `deriveSettlement` already supports the
+inverse leg); an LLM-assisted suggestion for the long tail (would be propose-only with Art. 50).
+
+Banking import (`feat-banking-import`, ADR 0047) remains the import + persistence layer beneath it (the
+append-only `bank_account` + `bank_transaction` substrate, the GoCardless/camt.054/CSV normaliser).
+**Still deferred there:** the AIS fetch runs **inline-with-idempotency** (move to a graphile-worker job
+when the jobs surface lands); the PSD2 **consent/link flow** is out of scope; go-live needs a GoCardless
+account + secrets + `BANKING_EU_RESIDENT=true` in the deploy env (no egress exercised locally).
 
 Earlier deferrals still open: invoice **email/EHF go-live** (`feat-invoice-pdf-email`, ADR 0046 — Postmark
 EU account/DPA/SPF-DKIM-DMARC, EHF subset → full VEFA in `feat-peppol-send`); supplier invoices

@@ -65,6 +65,17 @@ describe('rounding (half away from zero)', () => {
   ])('roundØre(%f) = %i', (input, expected) => {
     expect(roundØre(input)).toBe(expected);
   });
+
+  it('normalizes a rounded -0 to +0', () => {
+    // Math.sign(-0.4) * Math.round(0.4) = -0; roundØre must not leak a negative zero.
+    expect(Object.is(roundØre(-0.4), 0)).toBe(true);
+  });
+
+  it('throws on a non-finite value rather than producing garbage øre', () => {
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      expect(() => roundØre(bad)).toThrow(RangeError);
+    }
+  });
 });
 
 describe('mulRate', () => {
@@ -112,6 +123,12 @@ describe('parseKroner', () => {
     for (const bad of ['', 'abc', '-5', '1,234', '1.2.3', '12,345', '1e3', '1 234.5,0']) {
       expect(parseKroner(bad)).toBeNull();
     }
+  });
+
+  it('rejects a well-formed amount beyond the safe-integer range', () => {
+    // Syntactically valid, but × 100 øre overflows Number.MAX_SAFE_INTEGER — the guard returns null
+    // rather than a silently-lossy Øre.
+    expect(parseKroner('9'.repeat(19))).toBeNull();
   });
 
   it('round-trips any non-negative øre through formatKr', () => {

@@ -447,6 +447,65 @@ export const invoiceLine = pgTable("invoice_line", {
 	check("invoice_line_vat_ore_check", sql`vat_ore >= 0`),
 ]);
 
+export const bankAccount = pgTable("bank_account", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	label: text().notNull(),
+	accountNumber: text("account_number"),
+	currency: char({ length: 3 }).default('NOK').notNull(),
+	gocardlessAccountId: text("gocardless_account_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("bank_account_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "bank_account_organization_id_fkey"
+		}),
+	unique("bank_account_id_org_uniq").on(table.id, table.organizationId),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+]);
+
+export const bankTransaction = pgTable("bank_transaction", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	bankAccountId: uuid("bank_account_id").notNull(),
+	source: text().notNull(),
+	externalRef: text("external_ref").notNull(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	amountOre: bigint("amount_ore", { mode: "number" }).notNull(),
+	currency: char({ length: 3 }).notNull(),
+	bookingDate: date("booking_date"),
+	valueDate: date("value_date"),
+	remittanceInfo: text("remittance_info"),
+	counterparty: text(),
+	kid: text(),
+	matchedVoucherId: uuid("matched_voucher_id"),
+	importedAt: timestamp("imported_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("bank_transaction_account_idx").using("btree", table.bankAccountId.asc().nullsLast().op("date_ops"), table.bookingDate.asc().nullsLast().op("date_ops")),
+	index("bank_transaction_org_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "bank_transaction_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.matchedVoucherId],
+			foreignColumns: [voucher.id],
+			name: "bank_transaction_matched_voucher_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.bankAccountId],
+			foreignColumns: [bankAccount.id, bankAccount.organizationId],
+			name: "bank_transaction_account_same_org"
+		}),
+	unique("bank_transaction_external_ref_uniq").on(table.bankAccountId, table.externalRef),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("bank_transaction_source_check", sql`source = ANY (ARRAY['camt054'::text, 'csv'::text, 'gocardless'::text])`),
+]);
+
 export const membership = pgTable("membership", {
 	userId: uuid("user_id").notNull(),
 	organizationId: uuid("organization_id").notNull(),

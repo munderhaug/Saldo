@@ -906,13 +906,23 @@
     {
       "id": "feat-banking-import",
       "title": "Banking import — GoCardless PSD2/AIS + camt.054 + CSV",
-      "status": "todo",
+      "implements_adr": ["0047"],
+      "touches": [
+        "packages/domain/src/banking",
+        "apps/web/app/integrations/banking",
+        "db/migrations",
+        "apps/web/app/routes"
+      ],
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P5",
       "depends_on": ["feat-org-onboarding"],
-      "notes": "Build-spec §8.7 + §9 + §16 Phase 5. Import bank transactions via GoCardless Bank Account Data (PSD2/AIS, free tier), camt.054 files (self-build parser), or CSV; multiple accounts. CAUTION (§9): GoCardless rate limits as low as ~4 calls/day/account — requires caching/batching. Bank transactions are personal/financial data, EU-resident (data-handling.md). Capture the GoCardless + camt.054 contracts under db/reference/ before coding (source-grounded). Prereq for reconciliation.",
+      "notes": "Build-spec §8.7 + §9 + §16 Phase 5. DONE (ADR 0047): pure domain normaliser (camt.054 + GoCardless + CSV → signed øre, exhaustive + property tests), self-built camt.054 parser (fast-xml-parser at the boundary), fail-closed GoCardless AIS client (EU-resident gate, Zod at boundary, no PII logs, 1-batch/no-poll rate-limit safety), bank_account + bank_transaction tables (force RLS + same-org FK + append-only trigger + idempotent UNIQUE(external_ref)), routes/UI for accounts + file/GoCardless import, Testcontainers integrity test. Sources captured under db/reference/banking/. AIS fetch runs inline-with-idempotency (jobs surface not built — see ADR 0047). Matching/reconciliation is the downstream task (feat-reconciliation): only a nullable kid/matched_voucher_id is stored.",
       "refs": [
+        "docs/decisions/0047-banking-import.md",
+        "db/reference/banking/gocardless-bank-account-data.md",
+        "db/reference/banking/camt-054.md",
         "docs/saldo-build-specification.md",
         "docs/integrations/README.md",
         ".claude/rules/integrations.md"

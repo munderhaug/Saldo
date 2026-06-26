@@ -460,6 +460,72 @@ export const nb = {
   'error.statusHeading': '{status} {statusText}',
   'error.requestFailed': 'Forespørselen kunne ikke fullføres.',
   'error.unknown': 'En ukjent feil oppstod.',
+
+  // ── Banking import (build-spec §8.7, feat-banking-import) ─────────────────────
+  'bank.title': 'Bankkontoer',
+  'bank.intro': 'Importer banktransaksjoner, klare for avstemming.',
+  'bank.new': 'Ny bankkonto',
+  'bank.empty.body':
+    'Du har ingen bankkontoer enda. Legg til den første, så kan du importere transaksjoner.',
+  'bank.open': 'Åpne',
+  'bank.linked': 'Koblet til bank',
+  'bank.listCaption': '{count} bankkontoer.',
+  'bank.back': 'Tilbake til foretaket',
+  'bank.col.label': 'Navn',
+  'bank.col.account': 'Kontonummer',
+  'bank.col.transactions': 'Transaksjoner',
+
+  // Bank-account form (add).
+  'bank.form.title': 'Ny bankkonto',
+  'bank.form.intro': 'Gi kontoen et navn. Du kan importere fra fil eller koble til banken etterpå.',
+  'bank.form.labelLabel': 'Navn på kontoen',
+  'bank.form.labelHint': 'For eksempel «Driftskonto».',
+  'bank.form.accountNumberLabel': 'Kontonummer eller IBAN',
+  'bank.form.accountNumberHint': 'Valgfritt.',
+  'bank.form.currencyLabel': 'Valuta',
+  'bank.form.gocardlessLabel': 'GoCardless konto-ID',
+  'bank.form.gocardlessHint': 'Valgfritt — for automatisk henting fra banken (PSD2).',
+  'bank.form.submit': 'Lagre konto',
+  'bank.form.cancel': 'Avbryt',
+  'bank.form.errorInvalid': 'Sjekk feltene under.',
+
+  // Account detail + transactions.
+  'bank.detail.transactionsTitle': 'Transaksjoner',
+  'bank.detail.empty': 'Ingen transaksjoner importert enda.',
+  'bank.detail.listCaption': '{count} transaksjoner.',
+  'bank.detail.back': 'Tilbake til bankkontoer',
+  'bank.detail.col.date': 'Dato',
+  'bank.detail.col.description': 'Beskrivelse',
+  'bank.detail.col.counterparty': 'Motpart',
+  'bank.detail.col.amount': 'Beløp',
+  'bank.detail.matched': 'Avstemt',
+  'bank.detail.unmatched': 'Ikke avstemt',
+  'bank.detail.descriptionNone': '—',
+
+  // Import (file + GoCardless).
+  'bank.import.fileTitle': 'Importer fra fil',
+  'bank.import.fileIntro': 'Last opp en camt.054-fil (XML) eller en CSV fra nettbanken.',
+  'bank.import.fileLabel': 'Fil (camt.054 XML eller CSV)',
+  'bank.import.fileSubmit': 'Importer fil',
+  'bank.import.gocardlessTitle': 'Hent fra banken (PSD2)',
+  'bank.import.gocardlessIntro': 'Hent nye transaksjoner direkte fra banken via GoCardless.',
+  'bank.import.gocardlessSubmit': 'Hent transaksjoner',
+  'bank.import.gocardlessNotLinked':
+    'Legg til en GoCardless konto-ID på kontoen for å hente automatisk.',
+  'bank.import.gocardlessUnavailable':
+    'Automatisk henting er ikke satt opp på denne serveren enda.',
+  'bank.import.rateLimitNote':
+    'Banken tillater bare noen få hentinger per dag, så jeg henter alt på én gang.',
+  'bank.import.success': 'Importerte {imported} nye transaksjoner. {skipped} fantes fra før.',
+  'bank.import.errorNoFile': 'Velg en fil først.',
+  'bank.import.errorFileType': 'Filen må være en camt.054 XML- eller CSV-fil.',
+  'bank.import.errorTooLarge': 'Filen er for stor.',
+  'bank.import.errorParse':
+    'Jeg klarte ikke å lese filen. Sjekk at det er en gyldig camt.054- eller CSV-fil.',
+  'bank.import.errorNoColumns': 'Fant ikke en beløpskolonne i CSV-filen.',
+  'bank.import.errorRateLimited': 'Banken har nådd grensen for henting i dag. Prøv igjen senere.',
+  'bank.import.errorAuth': 'Jeg fikk ikke kontakt med banken. Sjekk oppsettet.',
+  'bank.import.errorGeneric': 'Noe gikk galt under importen. Prøv igjen.',
 } as const;
 
 export type Messages = typeof nb;
@@ -888,4 +954,70 @@ export const en = {
   'error.statusHeading': '{status} {statusText}',
   'error.requestFailed': 'The request could not be completed.',
   'error.unknown': 'An unknown error occurred.',
+
+  // ── Banking import (build-spec §8.7, feat-banking-import) ─────────────────────
+  'bank.title': 'Bank accounts',
+  'bank.intro': 'Import bank transactions, ready for reconciliation.',
+  'bank.new': 'New bank account',
+  'bank.empty.body':
+    'You have no bank accounts yet. Add your first to start importing transactions.',
+  'bank.open': 'Open',
+  'bank.linked': 'Linked to bank',
+  'bank.listCaption': '{count} bank accounts.',
+  'bank.back': 'Back to the business',
+  'bank.col.label': 'Name',
+  'bank.col.account': 'Account number',
+  'bank.col.transactions': 'Transactions',
+
+  // Bank-account form (add).
+  'bank.form.title': 'New bank account',
+  'bank.form.intro':
+    'Give the account a name. You can import from a file or link the bank afterwards.',
+  'bank.form.labelLabel': 'Account name',
+  'bank.form.labelHint': 'For example "Operating account".',
+  'bank.form.accountNumberLabel': 'Account number or IBAN',
+  'bank.form.accountNumberHint': 'Optional.',
+  'bank.form.currencyLabel': 'Currency',
+  'bank.form.gocardlessLabel': 'GoCardless account ID',
+  'bank.form.gocardlessHint': 'Optional — for automatic fetching from the bank (PSD2).',
+  'bank.form.submit': 'Save account',
+  'bank.form.cancel': 'Cancel',
+  'bank.form.errorInvalid': 'Check the fields below.',
+
+  // Account detail + transactions.
+  'bank.detail.transactionsTitle': 'Transactions',
+  'bank.detail.empty': 'No transactions imported yet.',
+  'bank.detail.listCaption': '{count} transactions.',
+  'bank.detail.back': 'Back to bank accounts',
+  'bank.detail.col.date': 'Date',
+  'bank.detail.col.description': 'Description',
+  'bank.detail.col.counterparty': 'Counterparty',
+  'bank.detail.col.amount': 'Amount',
+  'bank.detail.matched': 'Reconciled',
+  'bank.detail.unmatched': 'Not reconciled',
+  'bank.detail.descriptionNone': '—',
+
+  // Import (file + GoCardless).
+  'bank.import.fileTitle': 'Import from file',
+  'bank.import.fileIntro': 'Upload a camt.054 file (XML) or a CSV from your bank.',
+  'bank.import.fileLabel': 'File (camt.054 XML or CSV)',
+  'bank.import.fileSubmit': 'Import file',
+  'bank.import.gocardlessTitle': 'Fetch from the bank (PSD2)',
+  'bank.import.gocardlessIntro': 'Fetch new transactions straight from the bank via GoCardless.',
+  'bank.import.gocardlessSubmit': 'Fetch transactions',
+  'bank.import.gocardlessNotLinked':
+    'Add a GoCardless account ID to this account to fetch automatically.',
+  'bank.import.gocardlessUnavailable': 'Automatic fetching is not set up on this server yet.',
+  'bank.import.rateLimitNote':
+    'The bank allows only a few fetches per day, so I fetch everything at once.',
+  'bank.import.success': 'Imported {imported} new transactions. {skipped} were already there.',
+  'bank.import.errorNoFile': 'Choose a file first.',
+  'bank.import.errorFileType': 'The file must be a camt.054 XML or CSV file.',
+  'bank.import.errorTooLarge': 'The file is too large.',
+  'bank.import.errorParse':
+    "I couldn't read the file. Check that it's a valid camt.054 or CSV file.",
+  'bank.import.errorNoColumns': "I couldn't find an amount column in the CSV file.",
+  'bank.import.errorRateLimited': 'The bank has hit its fetch limit for today. Try again later.',
+  'bank.import.errorAuth': "I couldn't reach the bank. Check the setup.",
+  'bank.import.errorGeneric': 'Something went wrong during the import. Try again.',
 } satisfies Record<MessageKey, string>;

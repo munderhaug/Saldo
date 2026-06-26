@@ -6,9 +6,10 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-26 — session `invoice-pdf-email` (ADR 0046: invoice PDF + Postmark-EU email +
-EHF/PEPPOL local gen); prior decision `transactional-email-provider` (ADR 0045). Branch + HEAD live in `git`
-(`git rev-parse --abbrev-ref HEAD`), not restated here where they would only go stale.
+**Last updated:** 2026-06-26 — session `banking-import` (ADR 0047: GoCardless PSD2/AIS + self-built
+camt.054 + CSV import, append-only `bank_transaction` substrate); prior `invoice-pdf-email` (ADR 0046).
+Branch + HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only
+go stale.
 
 > ⚠️ **Live external integrations vary by environment.** Confirmed locally: the Neon control plane is
 > NOT wired here (`DATABASE_URL`/`SALDO_TEST_PG_URI` point at a LOCAL Postgres, not Neon) and there is
@@ -75,24 +76,31 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 46 ADRs (0001–0046) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 78 tasks (34 done, 44 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `feat-banking-import` [high/L] — Banking import — GoCardless PSD2/AIS + camt.054 + CSV
+- **Decisions:** 47 ADRs (0001–0047) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 78 tasks (35 done, 43 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-mva-melding` [high/L] — MVA-melding generation on SAF-T codes + Skatteetaten validation API
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — **invoice PDF + email + EHF** (`feat-invoice-pdf-email`, ADR
-0046) — landed via a reviewed PR; see `git log`. Its **go-live** prerequisites are NOT exercised locally:
-a Postmark EU account + DPA + a verified sending domain (SPF/DKIM/DMARC) + the API key in the deploy env,
-and **verifying the configured SMTP host IS the EU region** (the `EMAIL_REGION` flag is an operator
-assertion, not host geolocation). Known follow-ons it deferred: the send orchestration runs inline (an
-at-most-once gap on a crash between send and record) — move it to a graphile-worker job with idempotency
-when the jobs surface lands; the EHF is the **subset + well-formedness**, with the full VEFA Schematron +
-transmission + structured buyer address in **`feat-peppol-send`** (Phase 9). Supplier invoices build on
-`recordReverseChargePurchase` (ADR 0044) via **`feat-supplier-invoices`**. Recurring/reminders remain
-`feat-recurring-invoices-reminders`. Below-threshold § 3-30 self-accounting on foreign-service purchases
-is sequenced to `vat-threshold-watcher`. The project-wide privacy gap is still tracked: data export in
-`feat-audit-trail-export`, GDPR erasure in `feat-gdpr-erasure`.
+Nothing mid-flight. The most recent work — **banking import** (`feat-banking-import`, ADR 0047) — landed
+via a reviewed PR; see `git log`. It is the import + persistence layer for the reconciliation substrate:
+a pure domain normaliser (`@saldo/domain/banking` — camt.054 + GoCardless + CSV → **signed øre**,
+exhaustive + property tests), a self-built **camt.054** parser (`fast-xml-parser` at the boundary), a
+fail-closed **GoCardless** AIS client (EU-resident gate, Zod-at-boundary, no PII in logs, one-batch/no-poll
+rate-limit safety), the append-only `bank_account` + `bank_transaction` tables (force RLS + same-org FK +
+immutability trigger + idempotent `UNIQUE(external_ref)`, Testcontainers-proven), and routes/UI for
+accounts + file/GoCardless import. Sources are captured under `db/reference/banking/`. **Deferred (ADR
+0047):** the AIS fetch runs **inline-with-idempotency** (move to a graphile-worker job when the jobs
+surface lands — same interim as ADR 0046's send); the PSD2 **consent/link flow** (institutions →
+requisition → account ids) is out of scope; **KID parsing + matching is the next task** (`feat-reconciliation`
+— a nullable `kid`/`matched_voucher_id` is stored, nothing more). Go-live needs a GoCardless account +
+secrets + `BANKING_EU_RESIDENT=true` in the deploy env (no egress exercised locally).
+
+Earlier deferrals still open: invoice **email/EHF go-live** (`feat-invoice-pdf-email`, ADR 0046 — Postmark
+EU account/DPA/SPF-DKIM-DMARC, EHF subset → full VEFA in `feat-peppol-send`); supplier invoices
+(`feat-supplier-invoices`); recurring/reminders (`feat-recurring-invoices-reminders`); below-threshold
+§ 3-30 self-accounting (`vat-threshold-watcher`); the project-wide privacy gap — data export
+(`feat-audit-trail-export`) + GDPR erasure (`feat-gdpr-erasure`).
 
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**

@@ -35,6 +35,18 @@ const schema = z.object({
   EMAIL_SMTP_USER: z.string().min(1).optional(),
   EMAIL_SMTP_PASSWORD: z.string().min(1).optional(),
   EMAIL_FROM: z.string().email().optional(),
+  // Banking import — GoCardless Bank Account Data (PSD2/AIS), build-spec §8.7/§9 (ADR 0047). All
+  // optional: unset → the live AIS client is OFF (camt.054/CSV import still works). Read DIRECTLY from
+  // process.env by integrations/banking/config.server.ts (test-safe, same posture as the LLM/email
+  // surfaces). The **residency pin is mechanical**: the live client is refused unless
+  // BANKING_EU_RESIDENT=true (the operator's explicit EU-residency assertion; data-handling.md). The
+  // GoCardless secret_id/secret_key are credentials — server env only, NEVER logged.
+  BANKING_EU_RESIDENT: z.enum(['true']).optional(),
+  BANKING_GOCARDLESS_SECRET_ID: z.string().min(1).optional(),
+  BANKING_GOCARDLESS_SECRET_KEY: z.string().min(1).optional(),
+  // Optional override of the GoCardless host. The default is the residency-verified EU host; an override
+  // MUST stay an EU/EEA endpoint (BANKING_EU_RESIDENT is an operator assertion, not a host geolocation).
+  BANKING_GOCARDLESS_BASE_URL: z.string().url().optional(),
   // LOG_LEVEL is read directly by the logger (foundational infra; see observability/logger.server.ts).
   // LLM_BASE_URL / LLM_API_KEY / LLM_MODEL / LLM_EU_RESIDENT are read directly by the receipt-extraction
   // client (optional integration; see integrations/llm/config.server.ts). Unset → the AI surface is

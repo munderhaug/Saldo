@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic camt.054.001.08 sample for the parser test (no real personal data). Structure grounded
+     in db/reference/banking/camt-054.md: one CRDT (incoming) + one DBIT (outgoing) booked entry, plus
+     one PDNG (pending) entry the parser must skip. -->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08">
+  <BkToCstmrDbtCdtNtfctn>
+    <GrpHdr>
+      <MsgId>NOTIF-2026-0001</MsgId>
+      <CreDtTm>2026-06-02T08:00:00</CreDtTm>
+    </GrpHdr>
+    <Ntfctn>
+      <Id>NTFCTN-1</Id>
+      <CreDtTm>2026-06-02T08:00:00</CreDtTm>
+      <Acct>
+        <Id><IBAN>NO9386011117947</IBAN></Id>
+        <Ccy>NOK</Ccy>
+      </Acct>
+      <Ntry>
+        <Amt Ccy="NOK">1234.50</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt><Dt>2026-06-01</Dt></BookgDt>
+        <ValDt><Dt>2026-06-01</Dt></ValDt>
+        <AcctSvcrRef>ENTRY-REF-001</AcctSvcrRef>
+        <NtryDtls>
+          <TxDtls>
+            <Refs>
+              <EndToEndId>E2E-001</EndToEndId>
+              <TxId>TX-001</TxId>
+            </Refs>
+            <RmtInf><Ustrd>Faktura 42 KID 1234567890128</Ustrd></RmtInf>
+            <RltdPties>
+              <Dbtr><Nm>Kunde AS</Nm></Dbtr>
+            </RltdPties>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="NOK">99.90</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt><Dt>2026-06-02</Dt></BookgDt>
+        <ValDt><Dt>2026-06-02</Dt></ValDt>
+        <NtryDtls>
+          <TxDtls>
+            <Refs><AcctSvcrRef>ENTRY-REF-002</AcctSvcrRef></Refs>
+            <RmtInf><Ustrd>Kortkjøp dagligvare</Ustrd></RmtInf>
+            <RltdPties>
+              <Cdtr><Nm>Leverandør Butikk</Nm></Cdtr>
+            </RltdPties>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="NOK">500.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>PDNG</Sts>
+        <ValDt><Dt>2026-06-03</Dt></ValDt>
+      </Ntry>
+    </Ntfctn>
+  </BkToCstmrDbtCdtNtfctn>
+</Document>

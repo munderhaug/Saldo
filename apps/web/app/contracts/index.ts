@@ -17,6 +17,7 @@ export * from './voucher';
 export * from './receipt-extraction';
 export * from './banking';
 export * from './reconciliation';
+export * from './skatteetaten';
 
 /** Email + password for the dev auth provider (production login is BankID via OIDC, no password). */
 export const credentialsInput = z.object({

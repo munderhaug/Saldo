@@ -117,8 +117,10 @@ export interface ReverseChargePurchaseInput {
  *
  * The MVA-status fork (the hard invariant):
  *  - registered (`chargesOutputVat`) → self-account. Deductible: net→cost, output VAT credited,
- *    input VAT debited (net cash = net). Non-deductible: the self-accounted VAT becomes cost
- *    (gross→cost), output VAT still credited, no input leg (net cash = net + the VAT owed).
+ *    input VAT debited (net cash = net). Non-deductible: the self-accounted VAT becomes cost, output
+ *    VAT still credited, no input leg (net cash = net + the VAT owed). The cost is split into the NET
+ *    on the code-bearing line (so the MVA-melding basis stays the net supply value) plus the
+ *    irrecoverable VAT on a separate UNCODED cost line — never folded into the coded basis.
  *  - not registered (`under_threshold`/`unntatt`) → outside the VAT system in this slice; book the
  *    net to cost with no melding legs. (Below-threshold § 3-30 self-accounting is sequenced to
  *    `vat-threshold-watcher`.)
@@ -137,7 +139,9 @@ export function deriveReverseChargePurchase(input: ReverseChargePurchaseInput): 
   }
 
   // Self-account the output leg ALWAYS (it lands on the melding). Deductible: net to cost + input
-  // deduction. Non-deductible: the VAT is irrecoverable, so it joins the cost (gross), no input leg.
+  // deduction. Non-deductible: the VAT is irrecoverable, so it joins the cost — but as a SEPARATE
+  // uncoded line, leaving the code-bearing cost line at the NET so the melding basis (grunnlag) is the
+  // net supply value, not net+VAT. Both branches debit the cost account net+VAT in total.
   const lines: PostingLine[] = deductible
     ? [
         line(accounts.cost, net, ZERO, inputVatCode),
@@ -146,7 +150,8 @@ export function deriveReverseChargePurchase(input: ReverseChargePurchaseInput): 
         line(accounts.outputVat, ZERO, vat, outputVatCode),
       ]
     : [
-        line(accounts.cost, addØre(net, vat), ZERO, inputVatCode),
+        line(accounts.cost, net, ZERO, inputVatCode),
+        line(accounts.cost, vat, ZERO),
         line(accounts.payable, ZERO, net),
         line(accounts.outputVat, ZERO, vat, outputVatCode),
       ];

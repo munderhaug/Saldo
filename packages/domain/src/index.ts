@@ -33,3 +33,7 @@ export * from './banking/transaction.js';
 export * from './banking/csv.js';
 export * from './reconciliation/match.js';
 export * from './reconciliation/settlement.js';
+export * from './mva-melding/term.js';
+export * from './mva-melding/melding.js';
+export * from './mva-melding/xml.js';
+export * from './mva-melding/validate.js';

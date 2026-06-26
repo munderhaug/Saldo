@@ -28,6 +28,8 @@ export default [
     'orgs/:orgId/bank/:accountId/reconcile',
     'routes/orgs.$orgId.bank.$accountId.reconcile.tsx',
   ),
+  route('orgs/:orgId/mva', 'routes/orgs.$orgId.mva.tsx'),
+  route('orgs/:orgId/mva.xml', 'routes/orgs.$orgId.mva[.xml].tsx'),
   route('orgs/:orgId/vouchers/new', 'routes/orgs.$orgId.vouchers.new.tsx'),
   route('orgs/:orgId/receipts/new', 'routes/orgs.$orgId.receipts.new.tsx'),
   route('auth/login', 'routes/auth.login.tsx'),

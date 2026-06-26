@@ -46,3 +46,21 @@ LLM layer: OpenAI-compatible client → Ollama/vLLM (Qwen2.5-VL) local by defaul
 ## Module boundaries
 - The ONE hard boundary is pure (`packages/domain`) vs impure (`apps/web`). `db`, `contracts`,
   `integrations`, `jobs`, `auth` are modules inside `apps/web`, not separate packages.
+
+## Code-true structure (generated)
+The diagram above is the *narrative*; the facts below are *derived from the code* by
+`tools/arch-graph.mjs` and gated by `pnpm lint:repo` — they cannot drift from the repo (ADR 0049).
+Adding a package, route, domain submodule, or migration changes these counts, so a stale block fails
+CI until `pnpm arch:refresh` is run. The domain-purity line is mechanically enforced: a `@saldo/domain`
+source file that imports anything non-relative, or reaches for `Date.now`/`Math.random`/`new Date`,
+fails the build.
+
+<!-- AUTOGEN:arch-graph -->
+<!-- Generated from committed sources by tools/arch-graph.mjs — DO NOT EDIT BY HAND; run `pnpm arch:refresh`. -->
+- **Workspace packages:** `@saldo/domain` (packages/domain), `@saldo/web` (apps/web), `eslint-plugin-saldo` (tools/eslint-plugin-saldo)
+- **The one hard boundary — `@saldo/domain` (pure):** 33 source modules, relative-imports-only, no wall-clock/random (enforced by `pnpm arch:check`). Submodules: banking, catalog, extraction, honest-number, ids, invoice, money, peppol, posting, reconciliation, rules, saft, tax, time, vat.
+- **`apps/web` modules (impure side):** auth, components, contracts, copy, db, documents, integrations, jobs, lib, observability, routes.
+- **Client↔server boundary:** 25 route/index declarations in [`apps/web/app/routes.ts`](../apps/web/app/routes.ts) — loaders/actions, no separate API.
+- **SQL integrity surface** (11 migrations in `db/migrations/*.sql`): 18 tables, 21 RLS policies, 7 triggers, 14 functions. Integrity triggers: bank_transaction_append_only, invoice_immutable, invoice_line_immutable, posting_immutable, posting_period_lock, voucher_immutable, voucher_period_lock.
+<!-- /AUTOGEN:arch-graph -->
+

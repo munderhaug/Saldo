@@ -76,8 +76,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 48 ADRs (0001–0048) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 78 tasks (36 done, 42 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 49 ADRs (0001–0049) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 79 tasks (37 done, 42 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-mva-melding` [high/L] — MVA-melding generation on SAF-T codes + Skatteetaten validation API
 <!-- /AUTOGEN:repo-status -->
 

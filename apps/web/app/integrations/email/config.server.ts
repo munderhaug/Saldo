@@ -14,8 +14,12 @@
  * so the code cannot itself geolocate it) paired with the ADR 0045 go-live step of verifying the
  * configured server IS the provider's EU region. The SMTP credential comes from the server env only and
  * is never logged.
+ *
+ * The `EMAIL_*` variables are declared in the Zod `env.ts` contract (validated at app boot). This module
+ * reads them DIRECTLY from `process.env` rather than importing `~/env`, so the email surface stays usable
+ * in unit tests / early boot without the full app-config parse (the same precedent as
+ * `integrations/llm/config.server.ts` and `observability/logger.server.ts`).
  */
-import { env } from '~/env';
 
 export interface EmailConfig {
   readonly host: string;
@@ -63,5 +67,14 @@ export function resolveEmailConfig(e: EmailEnv): EmailConfig | null {
 
 /** The configured email backend from the process env, or `null` when off / blocked by the gate. */
 export function emailConfig(): EmailConfig | null {
-  return resolveEmailConfig(env);
+  const portRaw = process.env.EMAIL_SMTP_PORT?.trim();
+  const port = portRaw ? Number(portRaw) : undefined;
+  return resolveEmailConfig({
+    EMAIL_REGION: process.env.EMAIL_REGION?.trim() === 'eu' ? 'eu' : undefined,
+    EMAIL_SMTP_HOST: process.env.EMAIL_SMTP_HOST?.trim() || undefined,
+    EMAIL_SMTP_PORT: port !== undefined && Number.isFinite(port) ? port : undefined,
+    EMAIL_SMTP_USER: process.env.EMAIL_SMTP_USER?.trim() || undefined,
+    EMAIL_SMTP_PASSWORD: process.env.EMAIL_SMTP_PASSWORD?.trim() || undefined,
+    EMAIL_FROM: process.env.EMAIL_FROM?.trim() || undefined,
+  });
 }

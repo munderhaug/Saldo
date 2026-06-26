@@ -961,14 +961,16 @@
     {
       "id": "feat-reporting",
       "title": "Reporting — resultat/balanse, hovedbok drill-down, reskontro aging, liquidity",
-      "status": "todo",
+      "implements_adr": ["0051"],
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P7",
       "depends_on": ["feat-manual-voucher-entry"],
-      "notes": "Build-spec §8.9 + §16 Phase 7. Resultatregnskap; balanse; hovedbok/kontospesifikasjon drill-down; reskontro with AR/AP aging; MVA-spesifikasjon; liquidity & outstanding-invoice dashboard; period-over-period comparison. Read-only aggregation over the posted ledger (extends the honest-number aggregation pattern, ADR 0033), RLS-scoped. Reskontro aging needs issued invoices/supplier invoices for full value.",
+      "notes": "Build-spec §8.9 + §16 Phase 7. Resultat/balanse/hovedbok/reskontro/likviditet derived read-only from the posted ledger in @saldo/domain (ADR 0051), RLS-scoped, tie-outs proven by a Testcontainers test. Deferred: open AP + supplier reskontro (feat-supplier-invoices), multi-year opening balances (feat-year-end-close), period-over-period, reskontro-control reconciliation.",
       "refs": [
         "docs/saldo-build-specification.md",
+        "docs/decisions/0051-reporting-ledger-derived.md",
         "docs/decisions/0033-honest-number-ledger-aggregation.md"
       ]
     },

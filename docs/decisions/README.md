@@ -55,6 +55,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0048 | Bank reconciliation: deterministic KID/amount/date matcher + settlement posting | Accepted |
 | 0049 | Architecture-truth generator: derive the structural map + mechanically enforce the one hard boundary | Accepted |
 | 0050 | MVA-melding generation on SAF-T VAT codes + Skatteetaten validation (fail-closed) | Accepted |
+| 0051 | Reporting: resultat/balanse/hovedbok/reskontro/likviditet derived read-only from the ledger | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

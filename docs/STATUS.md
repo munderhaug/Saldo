@@ -6,8 +6,8 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-26 — session `mva-melding` (ADR 0050: MVA-melding generation on the SAF-T VAT
-codes + fail-closed Skatteetaten validation client); prior `reconciliation` (ADR 0048).
+**Last updated:** 2026-06-26 — session `reporting` (ADR 0051: resultat/balanse/hovedbok/reskontro/
+likviditet derived read-only from the posted ledger); prior `mva-melding` (ADR 0050).
 Branch + HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only
 go stale.
 
@@ -76,14 +76,25 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 50 ADRs (0001–0050) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 79 tasks (38 done, 41 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `feat-reporting` [high/L] — Reporting — resultat/balanse, hovedbok drill-down, reskontro aging, liquidity
+- **Decisions:** 51 ADRs (0001–0051) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 79 tasks (39 done, 40 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-saft-export` [high/L] — Full SAF-T Financial export (XSD-valid in CI) — replace the saft:validate scaffold
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — **MVA-melding generation** (`feat-mva-melding`, ADR 0050) —
-landed via a reviewed PR; see `git log`. The VAT return is generated **read-only** from the posted
+Nothing mid-flight. The most recent work — **Reporting** (`feat-reporting`, ADR 0051) — landed via a
+reviewed PR; see `git log`. Resultat/balanse/hovedbok/reskontro/likviditet are derived **read-only**
+from the posted ledger: a new RLS-scoped `aggregateAccountBalances(year)` sums Σdebit/Σcredit per
+account, and the pure `@saldo/domain/reporting` functions compose the reports by kontoklasse. The hard
+tie-outs (resultat + balanse balance — incl. klasse-8 privatuttak landing on equity, not in årsresultat;
+reskontro reconciles to the 1500 control account) are proven by a Testcontainers test; figures carry an
+accessible currency label (WCAG 2.2 AA). Deterministic — **NOT an AI system** (Recital 12). The hovedbok
+is the explicit depth-on-demand surface (§4.2). **Deferred (ADR 0051):** open AP + leverandørreskontro
+(`feat-supplier-invoices`); multi-year opening balances + year-end close (`feat-year-end-close`);
+period-over-period comparison; the reskontro→control reconciliation line for manual/partial 1500 moves.
+
+The prior **MVA-melding generation** (`feat-mva-melding`, ADR 0050) — also landed. The VAT return is
+generated **read-only** from the posted
 ledger: a new RLS-scoped query (`aggregateVatByCode`) sums one fiscal year PER SAF-T VAT code into
 `grunnlag` (net basis on revenue/cost lines) + `merverdiavgift` (signed VAT on the code's klasse-2
 legs); the pure `@saldo/domain/mva-melding` then composes the `mvaMeldingDto` model (`generateMvaMelding`

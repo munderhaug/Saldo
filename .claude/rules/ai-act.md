@@ -32,6 +32,8 @@ posture: ADR 0022; oversight model: ADR 0002. Honour these — prefer the gate o
   way.
 
 ## Note
-The **code-level** enforcement of provenance (a required `aiAssisted` + model field on every AI
-proposal, plus a lint/test check) lands **with** the first AI feature. Until then this rule + the
-AGENTS.md invariant hold the line.
+The **code-level** enforcement of provenance landed with the first AI feature (receipt extraction —
+ADR 0035): the proposal's Zod contract carries the provenance field, it is logged, and it is persisted
+in the append-only `ai_provenance` trail (ADR 0037). Keep every new AI surface to that bar. After
+touching this surface, run the **`ai-act-reviewer`** subagent — it audits Art. 50 disclosure/provenance,
+the propose-only boundary, and the Annex III high-risk line against the changed code.

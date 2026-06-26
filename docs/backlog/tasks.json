@@ -1076,6 +1076,19 @@
       "depends_on": [],
       "notes": "Best-practice hardening surfaced by the security review (acceptable as-is): the OIDC round-trip stores state/nonce/codeVerifier in a short-TTL HttpOnly cookie (auth/oidc.server.ts). Move to a server-side row (Postgres, ~10-min TTL) keyed by an opaque cookie token so the values never leave the server. Low priority; OIDC is not live-verified yet.",
       "refs": ["apps/web/app/auth/oidc.server.ts", "docs/decisions/0020-session-identity-model.md"]
+    },
+    {
+      "id": "arch-truth-generator",
+      "title": "Architecture-truth generator + domain-purity gate",
+      "implements_adr": ["0049"],
+      "touches": ["tools/arch-graph.mjs", "tools/repo-lint.mjs", "docs/architecture.md"],
+      "status": "done",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Derive the structural map (packages, domain submodules, web modules, route count, SQL integrity surface) into an AUTOGEN block in docs/architecture.md (pnpm arch:refresh), gate the drift in repo-lint, and mechanically enforce the one hard boundary: @saldo/domain source must be relative-imports-only with no Date.now/Math.random/new Date.",
+      "refs": ["docs/decisions/0049-architecture-truth-generator.md"]
     }
   ]
 }

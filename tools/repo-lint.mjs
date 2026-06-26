@@ -9,6 +9,11 @@ import { join, dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { load as loadTasks } from './backlog.mjs';
 import { renderBlock, extractBlock, normalizeBlock } from './status-block.mjs';
+import {
+  renderBlock as renderArchBlock,
+  extractBlock as extractArchBlock,
+  domainPurityViolations,
+} from './arch-graph.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = [];
@@ -214,6 +219,22 @@ for (const f of docFiles) {
         `add it to FOUNDATIONAL_ADRS in tools/repo-lint.mjs`,
     );
 }
+
+// L) the generated arch-graph block in architecture.md must match a fresh render (ADR 0049). Adding a
+// package/route/domain-submodule/migration without `pnpm arch:refresh` fails here, like the status block.
+{
+  const archFile = join(root, 'docs/architecture.md');
+  const current = existsSync(archFile) ? extractArchBlock(read(archFile)) : null;
+  if (current === null)
+    errors.push('docs/architecture.md: AUTOGEN:arch-graph block missing — run `pnpm arch:refresh`');
+  else if (normalizeBlock(current) !== normalizeBlock(renderArchBlock()))
+    errors.push('docs/architecture.md: arch-graph block is stale — run `pnpm arch:refresh`');
+}
+
+// M) the one hard boundary (ADR 0049): @saldo/domain source must be relative-imports-only and
+// deterministic. A non-relative import or a Date.now/Math.random/new Date is a build-failing breach.
+for (const v of domainPurityViolations())
+  errors.push(`${v.file}:${v.line}: domain-purity breach — ${v.reason}`);
 
 for (const w of warnings) console.warn('warn: ' + w);
 if (errors.length) {

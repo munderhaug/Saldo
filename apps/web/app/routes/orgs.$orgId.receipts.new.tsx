@@ -118,6 +118,7 @@ export async function action({
     const parsed = receiptConfirmInput.safeParse({
       kind: form.get('kind'),
       amount: form.get('amount'),
+      aiAssisted: form.get('aiAssisted'),
       model: form.get('model'),
       modelVersion: form.get('modelVersion'),
       confidence: form.get('confidence'),
@@ -384,7 +385,9 @@ function ReviewStep({
         <input type="hidden" name="intent" value="confirm" />
         {/* The AI provenance rides the review round-trip as hidden fields, re-validated at confirm and
             persisted as the durable Art. 50(2) record (ADR 0037). No personal data here — model/version/
-            confidence only. */}
+            confidence only. `aiAssisted` carries the Art. 50(1) disclosure literal so the confirm cannot
+            validate without it. */}
+        <input type="hidden" name="aiAssisted" value="true" />
         <input type="hidden" name="model" value={review.model} />
         <input type="hidden" name="modelVersion" value={review.modelVersion} />
         <input type="hidden" name="confidence" value={review.confidence} />

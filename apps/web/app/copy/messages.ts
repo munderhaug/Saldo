@@ -526,6 +526,37 @@ export const nb = {
   'bank.import.errorRateLimited': 'Banken har nådd grensen for henting i dag. Prøv igjen senere.',
   'bank.import.errorAuth': 'Jeg fikk ikke kontakt med banken. Sjekk oppsettet.',
   'bank.import.errorGeneric': 'Noe gikk galt under importen. Prøv igjen.',
+
+  // Reconciliation (avstemming) — match incoming payments to open invoices.
+  'bank.detail.reconcile': 'Avstem betalinger',
+  'recon.title': 'Avstem betalinger',
+  'recon.intro':
+    'Koble innkommende betalinger til åpne fakturaer. Jeg foreslår treff på KID, beløp og dato — du bekrefter.',
+  'recon.back': 'Tilbake til kontoen',
+  'recon.empty': 'Ingen innkommende betalinger å avstemme akkurat nå.',
+  'recon.listCaption': '{count} betalinger å avstemme.',
+  'recon.col.date': 'Dato',
+  'recon.col.description': 'Beskrivelse',
+  'recon.col.amount': 'Beløp',
+  'recon.col.suggestion': 'Foreslått faktura',
+  'recon.suggestionNone': 'Fant ingen åpen faktura med samme beløp.',
+  'recon.match.kid-exact': 'KID stemmer',
+  'recon.match.amount-date': 'Beløp og dato stemmer',
+  'recon.match.amount': 'Beløpet stemmer',
+  'recon.invoiceLabel': 'Faktura {number} — {customer}',
+  'recon.invoiceLabelNoNumber': '{customer}',
+  'recon.choose': 'Velg faktura',
+  'recon.confirm': 'Bekreft betaling',
+  'recon.success': 'Avstemt. Fakturaen er merket betalt.',
+  'recon.error.tx-not-found': 'Fant ikke banktransaksjonen.',
+  'recon.error.tx-already-matched': 'Denne betalingen er allerede avstemt.',
+  'recon.error.tx-not-incoming': 'Bare innkommende betalinger kan avstemmes her.',
+  'recon.error.invoice-not-open': 'Fakturaen er ikke åpen for betaling.',
+  'recon.error.amount-mismatch':
+    'Beløpet stemmer ikke med fakturaen. Delbetaling støttes ikke enda.',
+  'recon.error.undated': 'Betalingen mangler dato, så jeg vet ikke hvilken periode den hører til.',
+  'recon.error.chart-incomplete': 'Kontoplanen mangler en konto. Sjekk oppsettet.',
+  'recon.error.invalid': 'Sjekk valget og prøv igjen.',
 } as const;
 
 export type Messages = typeof nb;
@@ -1020,4 +1051,35 @@ export const en = {
   'bank.import.errorRateLimited': 'The bank has hit its fetch limit for today. Try again later.',
   'bank.import.errorAuth': "I couldn't reach the bank. Check the setup.",
   'bank.import.errorGeneric': 'Something went wrong during the import. Try again.',
+
+  // Reconciliation — match incoming payments to open invoices.
+  'bank.detail.reconcile': 'Reconcile payments',
+  'recon.title': 'Reconcile payments',
+  'recon.intro':
+    'Link incoming payments to open invoices. I suggest matches on KID, amount and date — you confirm.',
+  'recon.back': 'Back to the account',
+  'recon.empty': 'No incoming payments to reconcile right now.',
+  'recon.listCaption': '{count} payments to reconcile.',
+  'recon.col.date': 'Date',
+  'recon.col.description': 'Description',
+  'recon.col.amount': 'Amount',
+  'recon.col.suggestion': 'Suggested invoice',
+  'recon.suggestionNone': 'No open invoice with the same amount.',
+  'recon.match.kid-exact': 'KID matches',
+  'recon.match.amount-date': 'Amount and date match',
+  'recon.match.amount': 'Amount matches',
+  'recon.invoiceLabel': 'Invoice {number} — {customer}',
+  'recon.invoiceLabelNoNumber': '{customer}',
+  'recon.choose': 'Choose invoice',
+  'recon.confirm': 'Confirm payment',
+  'recon.success': 'Reconciled. The invoice is marked paid.',
+  'recon.error.tx-not-found': "I couldn't find the bank transaction.",
+  'recon.error.tx-already-matched': 'This payment is already reconciled.',
+  'recon.error.tx-not-incoming': 'Only incoming payments can be reconciled here.',
+  'recon.error.invoice-not-open': 'The invoice is not open for payment.',
+  'recon.error.amount-mismatch':
+    "The amount doesn't match the invoice. Partial payments aren't supported yet.",
+  'recon.error.undated': "The payment has no date, so I can't tell which period it belongs to.",
+  'recon.error.chart-incomplete': 'The chart of accounts is missing an account. Check the setup.',
+  'recon.error.invalid': 'Check the selection and try again.',
 } satisfies Record<MessageKey, string>;

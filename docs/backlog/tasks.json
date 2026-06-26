@@ -931,13 +931,20 @@
     {
       "id": "feat-reconciliation",
       "title": "Bank reconciliation — KID/amount/date auto-match + manual workflow",
-      "status": "todo",
+      "implements_adr": ["0048"],
+      "touches": [
+        "packages/domain/src/reconciliation",
+        "apps/web/app/db/reconciliation.server.ts",
+        "apps/web/app/routes",
+        "apps/web/app/contracts"
+      ],
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P5",
       "depends_on": ["feat-banking-import", "feat-sales-invoicing"],
-      "notes": "Build-spec §8.7 + §10(2). Match imported bank lines to issued invoices: KID first, then amount + date proximity, then manual; a reconciliation workflow that marks invoices paid and posts settlement vouchers. Deterministic matching (not AI). KID matching needs issued invoices with a per-invoice KID (feat-sales-invoicing).",
-      "refs": ["docs/saldo-build-specification.md"]
+      "notes": "Build-spec §8.7 + §10(2). DONE (ADR 0048): pure @saldo/domain matcher (KID-exact → amount+date → amount, exhaustive + fast-check) reusing the Kid mod-10 check, and a pure deriveSettlement (debit bank 1920 / credit receivable 1500, balanced øre); reconcileMatch posts the bank settlement voucher via the reused insertPostedVoucher, links bank_transaction.matched_voucher_id (+kid) — the only mutation the append-only trigger permits — and marks the invoice paid; a /bank/:id/reconcile route + UI (manual confirm per ADR 0002, NO/EN). Deterministic, NOT an AI system (Recital 12). Exact-amount settlement only; partial/over-payments + outgoing AP reconciliation deferred. Testcontainers integrity test (balanced legs, linked tx, invoice paid, atomic amount-mismatch reject, no double-post, undated-period fallback). vat-reviewer + privacy-reviewer run.",
+      "refs": ["docs/decisions/0048-bank-reconciliation.md", "docs/saldo-build-specification.md"]
     },
     {
       "id": "feat-mva-melding",

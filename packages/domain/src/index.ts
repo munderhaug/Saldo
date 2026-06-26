@@ -31,3 +31,5 @@ export * from './peppol/ubl.js';
 export * from './peppol/validate.js';
 export * from './banking/transaction.js';
 export * from './banking/csv.js';
+export * from './reconciliation/match.js';
+export * from './reconciliation/settlement.js';

@@ -33,6 +33,7 @@ import {
   type AccountNo,
   type VatCode,
   type Voucher,
+  type VoucherType,
 } from '@saldo/domain';
 import type { OrgTx } from '../auth/middleware.js';
 import type { VoucherKind } from '../contracts/voucher.js';
@@ -54,6 +55,15 @@ export const POSTING_ACCOUNTS = {
 
 /** Designated domestic regular-rate SAF-T VAT codes (output for a sale, input for a purchase). */
 export const POSTING_VAT_CODES = { output: '3', input: '1' } as const;
+
+/**
+ * Designated accounts for posting a bank-payment SETTLEMENT at reconciliation (feat-reconciliation,
+ * §8.7). An incoming customer payment debits the bank asset and credits the receivable (1500, reused
+ * from the sales-invoice AR posting so the payment clears the same account the invoice raised); the
+ * outgoing case is the inverse against the payable. `bank` is 1920 (Bankinnskudd) — source-grounded in
+ * the committed kontoplan and verified by `posting-accounts.test.ts`.
+ */
+export const SETTLEMENT_ACCOUNTS = { bank: '1920', receivable: '1500', payable: '2400' } as const;
 
 /**
  * Designated accounts for posting an ISSUED sales document's AR voucher (feat-invoice-ledger-posting,
@@ -212,10 +222,10 @@ export async function recordManualVoucher(
  * `chart-incomplete` when a designated account/code is missing from the org's kontoplan; the leg
  * layout itself is never assembled here — it comes from the pure `@saldo/domain` derivation.
  */
-async function insertPostedVoucher(
+export async function insertPostedVoucher(
   tx: OrgTx,
   organizationId: string,
-  type: 'sales' | 'purchase',
+  type: VoucherType,
   periodId: string,
   proposed: Voucher,
 ): Promise<{ ok: true; voucherId: string } | { ok: false; reason: 'chart-incomplete' }> {

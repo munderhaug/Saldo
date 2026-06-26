@@ -24,6 +24,10 @@ export default [
   route('orgs/:orgId/bank', 'routes/orgs.$orgId.bank.tsx'),
   route('orgs/:orgId/bank/new', 'routes/orgs.$orgId.bank.new.tsx'),
   route('orgs/:orgId/bank/:accountId', 'routes/orgs.$orgId.bank.$accountId.tsx'),
+  route(
+    'orgs/:orgId/bank/:accountId/reconcile',
+    'routes/orgs.$orgId.bank.$accountId.reconcile.tsx',
+  ),
   route('orgs/:orgId/vouchers/new', 'routes/orgs.$orgId.vouchers.new.tsx'),
   route('orgs/:orgId/receipts/new', 'routes/orgs.$orgId.receipts.new.tsx'),
   route('auth/login', 'routes/auth.login.tsx'),

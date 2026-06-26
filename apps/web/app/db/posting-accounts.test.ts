@@ -5,6 +5,7 @@ import {
   REVERSE_CHARGE_ACCOUNTS,
   REVERSE_CHARGE_OUTPUT_CODES,
   SALES_INVOICE_ACCOUNTS,
+  SETTLEMENT_ACCOUNTS,
 } from './posting.server.js';
 import { STANDARD_ACCOUNTS, STANDARD_VAT_CODES } from './provisioning.server.js';
 
@@ -68,6 +69,21 @@ describe('designated posting accounts/codes are source-grounded', () => {
     for (const number of Object.values(SALES_INVOICE_ACCOUNTS.outputVatByRate)) {
       expect(typeOf(number)).toBe('equity_liability');
     }
+  });
+
+  // ── Bank-payment settlement posting (feat-reconciliation) ──
+  it.each(Object.values(SETTLEMENT_ACCOUNTS))(
+    'settlement account %s exists in the committed kontoplan',
+    (number) => {
+      expect(accountNumbers.has(number)).toBe(true);
+    },
+  );
+
+  it('settles bank against an asset bank account and the AR/AP liability/asset', () => {
+    const typeOf = (number: string) => STANDARD_ACCOUNTS.find((a) => a.number === number)?.type;
+    expect(typeOf(SETTLEMENT_ACCOUNTS.bank)).toBe('asset'); // 1920 Bankinnskudd
+    expect(typeOf(SETTLEMENT_ACCOUNTS.receivable)).toBe('asset'); // 1500 Kundefordringer
+    expect(typeOf(SETTLEMENT_ACCOUNTS.payable)).toBe('equity_liability'); // 2400 Leverandørgjeld
   });
 
   // ── Reverse-charge dual-leg posting (vat-reverse-charge) ──

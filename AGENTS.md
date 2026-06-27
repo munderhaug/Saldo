@@ -24,12 +24,12 @@ pnpm backlog                                    # the highest-value READY task (
 Full first-run + deploy: `docs/runbook.md`. PRs land green and reviewed — never a direct push to `main`.
 
 ## Architecture (full map: docs/architecture.md)
-- **packages/domain** (`@saldo/domain`) — PURE accounting core (money, ids, VAT, posting,
-  rules). No I/O, no Date.now/Math.random (inject them). Runs in route actions AND the
+- **packages/domain** (`@saldo/domain`) — pure accounting core (money, ids, VAT, posting,
+  rules). No I/O, no Date.now/Math.random (inject them). Runs in route actions and the
   browser. The one hard boundary.
-- **apps/web/app/db** — Drizzle queries + types. Schema is GENERATED from SQL via
+- **apps/web/app/db** — Drizzle queries + types. Schema is generated from SQL via
   introspection. Integrity (triggers/RLS/constraints/invoice-counter) lives in
-  `db/migrations/*.sql`, NOT the ORM.
+  `db/migrations/*.sql`, not the ORM.
 - **apps/web/app/contracts** — Zod schemas. Single source of truth for shapes.
 - **apps/web/app/routes** — loaders/actions are the typed client↔server boundary (no separate API).
 
@@ -38,8 +38,8 @@ Full first-run + deploy: `docs/runbook.md`. PRs land green and reviewed — neve
 - Ledger is **append-only**. Never UPDATE/DELETE a posted voucher or issued invoice — correct
   via motbilag / kreditnota.
 - Invoice numbers are **gapless** — allocated from a per-org counter row in the issuing tx,
-  NOT a Postgres SEQUENCE (sequences leave gaps on rollback).
-- Posting is server-authoritative AND enforced in SQL. Client validation is UX only.
+  not a Postgres SEQUENCE (sequences leave gaps on rollback).
+- Posting is server-authoritative and enforced in SQL. Client validation is UX only.
 - MVA status {under_threshold | unntatt | registered_standard | registered_zero_rated} drives all posting.
 - AI proposes; the rules engine validates; a human confirms — explicitly for consequential actions
   (money leaving, filing), passively via a grace-window/untap for high-confidence routine items
@@ -51,15 +51,15 @@ Full first-run + deploy: `docs/runbook.md`. PRs land green and reviewed — neve
 - VAT codes & accounts come from the committed SAF-T code lists — never hardcode from memory.
 - UI keeps a semantic-HTML, server-authoritative substrate; native polish is layered on top, never replaces it.
 
-## Quality bar (NON-NEGOTIABLE — full text: docs/quality-bar.md)
-Production-ready, held to a high bar — not a throwaway MVP. A change is DONE only when typecheck, lint,
+## Quality bar (non-negotiable — full text: docs/quality-bar.md)
+Production-ready, held to a high bar — not a throwaway MVP. A change is done only when typecheck, lint,
 format, test, and audit are green; new behavior is tested (domain: exhaustive + property); ledger
 changes have a Testcontainers integrity test; UI meets WCAG 2.2 AA; inputs are Zod-validated and
 tenancy honored; an ADR + STATUS are updated; and it lands via a reviewed PR — never a direct push to
 main. Prefer a mechanical gate over a reminder.
 
 ## Conventions
-Strict TS, no `any`. Zod at all boundaries. New VAT/posting behavior REQUIRES a test in
+Strict TS, no `any`. Zod at all boundaries. New VAT/posting behavior requires a test in
 packages/domain. Branded types for domain primitives (Øre, OrgNr, Kid, AccountNo, VatCode).
 Domain detail lives in path-scoped rules under .claude/rules/ (they load when you touch the code).
 

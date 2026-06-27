@@ -52,3 +52,4 @@ db/schema.sql
 
 # Claude Code local
 .claude/settings.local.json
+CLAUDE.local.md

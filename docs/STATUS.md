@@ -6,8 +6,8 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-26 — session `reporting` (ADR 0051: resultat/balanse/hovedbok/reskontro/
-likviditet derived read-only from the posted ledger); prior `mva-melding` (ADR 0050).
+**Last updated:** 2026-06-26 — session `saft-export` (ADR 0052: full SAF-T Financial export generated
+read-only from the posted ledger, XSD-valid in CI); prior `reporting` (ADR 0051), `mva-melding` (ADR 0050).
 Branch + HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only
 go stale.
 
@@ -76,13 +76,25 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 51 ADRs (0001–0051) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 79 tasks (39 done, 40 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `feat-saft-export` [high/L] — Full SAF-T Financial export (XSD-valid in CI) — replace the saft:validate scaffold
+- **Decisions:** 52 ADRs (0001–0052) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 79 tasks (40 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-supplier-invoices` [high/L] — Supplier invoices, expense rules, owner draws & mileage (purchases completion)
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress
-Nothing mid-flight. The most recent work — **Reporting** (`feat-reporting`, ADR 0051) — landed via a
+Nothing mid-flight. The most recent work — **SAF-T Financial export** (`feat-saft-export`, ADR 0052) —
+is the standardised bokettersyn file, generated **read-only** from the posted ledger: a new RLS-scoped
+`readSaftFinancial(year)` reads account masters (opening/closing balances), every posted voucher as
+Journal→Transaction→Line, and the customers/suppliers register; the pure `@saldo/domain/saft/financial`
+(`generateSaftFinancial` + `buildSaftXml`) composes the XSD-valid `AuditFile` and ties it out
+(TotalDebit = TotalCredit, closing balances net to zero). `pnpm saft:validate` now does **real XSD
+validation** against the committed v1.10 schema (`xmllint-wasm`) + tie-out + well-formedness — the
+SCAFFOLD label is gone. A `/orgs/:orgId/saft` view + `saft.xml` resource route preview/download it.
+Deterministic — **NOT an AI system** (Recital 12). Domain exhaustive + property tests + a Testcontainers
+tie-out/RLS integration test (XSD-validates real seeded data). **Deferred (ADR 0052):** line-level
+`CustomerID`/`SupplierID` subledger refs; the optional `SourceDocuments` section; multi-year
+result-account opening balances (they carry prior-year cumulative until `feat-year-end-close` — a
+first-year export is fully honest); Altinn delivery. The prior **Reporting** (`feat-reporting`, ADR 0051) — landed via a
 reviewed PR; see `git log`. Resultat/balanse/hovedbok/reskontro/likviditet are derived **read-only**
 from the posted ledger: a new RLS-scoped `aggregateAccountBalances(year)` sums Σdebit/Σcredit per
 account, and the pure `@saldo/domain/reporting` functions compose the reports by kontoklasse. The hard
@@ -172,9 +184,10 @@ Don't re-derive "what's next" in prose here; this is orientation, not the record
   but the live-only steps await a wired control plane (Neon history-retention window, first real Neon
   restore drill, the R2 `statutory-5yr` bucket lock + `tmp/` lifecycle rule, EU DPA). Checklist:
   `docs/runbooks/disaster-recovery.md`.
-- **`saft:validate` is a scaffold** — prints `NOT YET IMPLEMENTED` loudly (CI label: SCAFFOLD). Implement
-  SAF-T generation + XSD validation (Phase 8). (`mva:validate` IS real now — generate + well-formedness +
-  grounded subset + exact tie-out, ADR 0050; full XSD/live-API validation still awaits onboarding+egress.)
+- **`saft:validate` is real now** (ADR 0052) — generate + tie-out + well-formedness + **XSD validation**
+  against the committed v1.10 schema via `xmllint-wasm`. (`mva:validate` is generate + well-formedness +
+  grounded subset + exact tie-out, ADR 0050; its full XSD/live-API validation still awaits
+  onboarding+egress — SAF-T's schema is committed + self-contained, so full XSD validation lands now.)
 - **Account-chart curation** — a fresh org carries all 745 SAF-T accounts; `feat-account-chart-curation`
   filters pickers to a used/favourites subset.
 - **Build-spec consolidation** — `docs/saldo-build-specification.md` still has a stale dir tree + inlined

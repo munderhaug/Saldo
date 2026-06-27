@@ -10,6 +10,7 @@
  */
 import {
   classifyAccountType,
+  indexAccounts,
   indexTaxCodes,
   parseStandardAccounts,
   parseStandardTaxCodes,
@@ -41,6 +42,12 @@ export const STANDARD_ACCOUNTS: readonly AccountSeed[] = parseStandardAccounts(a
     type: classifyAccountType(a.id),
   }),
 );
+
+/**
+ * The committed standard accounts indexed by number — lets the SAF-T export resolve a posted account's
+ * `StandardAccountID` (mapping kontoplan) without re-parsing the list. Loaded once at module load.
+ */
+export const STANDARD_ACCOUNT_INDEX = indexAccounts(parseStandardAccounts(accountsCsv));
 
 /** The committed standard SAF-T tax codes, parsed once (the typed records, not yet seed rows). */
 const STANDARD_TAX_CODES: readonly SaftTaxCode[] = parseStandardTaxCodes(taxCodesCsv);

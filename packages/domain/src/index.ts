@@ -23,6 +23,8 @@ export * from './rules/vat-line.js';
 export * from './saft/tax-codes.js';
 export * from './saft/accounts.js';
 export * from './saft/rates.js';
+export * from './saft/financial.js';
+export * from './saft/financial-xml.js';
 export * from './time/clock.js';
 export * from './catalog/pricing.js';
 export * from './invoice/lifecycle.js';

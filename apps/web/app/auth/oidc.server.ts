@@ -67,6 +67,16 @@ export async function completeOidcLogin(
   const claims = tokens.claims();
   const email = typeof claims?.email === 'string' ? claims.email.toLowerCase() : undefined;
   if (!claims || !email) throw new Error('OIDC: the ID token has no usable email claim');
+  // The account is keyed on email (find-or-create at the callback), so the email MUST be provider-
+  // verified — otherwise an IdP that asserts an unverified address could sign a caller in as an existing
+  // account (OIDC Security BCP / RFC 9700: the "login with unverified email" account-takeover). The
+  // `email_verified` claim is an OIDC-core boolean; require a strict `true` (reject string/absent). The
+  // stronger hardening — keying the account on the immutable `(iss, sub)` pair and treating email as a
+  // mere attribute — needs a schema column for `sub` and is tracked as a follow-up; `subject` is already
+  // returned here so the callback can adopt it once that column exists.
+  if (claims.email_verified !== true) {
+    throw new Error('OIDC: the ID token email is not verified (email_verified must be true)');
+  }
   return { email, subject: claims.sub };
 }
 

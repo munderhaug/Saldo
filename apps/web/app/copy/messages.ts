@@ -141,6 +141,8 @@ export const nb = {
     'Det ser ut som et organisasjonsnummer, men kontrollsifferet stemmer ikke. Sjekk tallene en gang til?',
   'oppslag.error':
     'Jeg fikk ikke kontakt med Enhetsregisteret akkurat nå. Prøv igjen om et øyeblikk.',
+  'oppslag.rateLimited':
+    'Jeg håndterer mange søk akkurat nå. Vent et lite øyeblikk og prøv igjen.',
   'oppslag.tooShort': 'Skriv minst to tegn for å søke på navn.',
   // Detail card — field labels
   'oppslag.field.orgnr': 'Organisasjonsnummer',
@@ -801,6 +803,7 @@ export const en = {
   'oppslag.invalidOrgNr':
     "That looks like an organisation number, but the check digit doesn't add up. Mind checking the digits again?",
   'oppslag.error': "I couldn't reach the register just now. Try again in a moment.",
+  'oppslag.rateLimited': "I'm handling a lot of searches right now. Wait a moment and try again.",
   'oppslag.tooShort': 'Type at least two characters to search by name.',
   'oppslag.field.orgnr': 'Organisation number',
   'oppslag.field.form': 'Legal form',

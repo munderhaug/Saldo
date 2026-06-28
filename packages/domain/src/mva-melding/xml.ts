@@ -8,6 +8,7 @@
  * Well-formedness is checked separately at the app boundary (fast-xml-parser), exactly as `peppol/ubl`
  * pairs with a boundary check; the model is well-formed by construction here.
  */
+import { escapeXml as esc } from '../xml/escape.js';
 import { øreToKroner } from '../money/ore.js';
 import { type MvaMelding, type MvaMeldingLine } from './melding.js';
 import { periodElementName, periodeValue } from './term.js';
@@ -21,14 +22,6 @@ export interface MvaMeldingSystemInfo {
   readonly regnskapssystemsreferanse: string;
   readonly systemnavn: string;
   readonly systemversjon: string;
-}
-
-function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 /** A whole-kroner amount element (the schema's `Beloep` is decimal; the melding reports whole kroner). */

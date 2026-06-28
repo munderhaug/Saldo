@@ -10,6 +10,7 @@
  * rounding). Well-formedness is checked at the app/script boundary (fast-xml-parser + xmllint), exactly
  * as `peppol/ubl` and `mva-melding/xml` pair with a boundary check.
  */
+import { escapeXml as esc } from '../xml/escape.js';
 import type { Øre } from '../money/ore.js';
 import type {
   SaftFinancial,
@@ -34,14 +35,6 @@ export interface SaftSystemInfo {
   readonly softwareVersion: string;
   /** ISO date `YYYY-MM-DD` the file was created — injected (the domain is clock-free). */
   readonly dateCreated: string;
-}
-
-function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 /** A leaf element `<tag>escaped</tag>`. */

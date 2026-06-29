@@ -56,6 +56,12 @@ export interface LedgerDb {
    * tests — mirroring how the running app connects and runs `SET LOCAL app.current_org` per request.
    */
   readonly appSql: Sql;
+  /**
+   * The `saldo_app` connection STRING for this run's database — what `DATABASE_URL` must be set to so
+   * the app's `db` singleton (the route handlers) connects as the non-owner role, with RLS in force,
+   * exactly like production. Used by the route-test harness's env+dynamic-import seam.
+   */
+  readonly appUri: string;
   readonly stop: () => Promise<void>;
 }
 
@@ -95,6 +101,7 @@ export async function startLedgerDb(): Promise<LedgerDb> {
   return {
     sql,
     appSql,
+    appUri: `postgres://${APP_ROLE}:${APP_ROLE_PASSWORD}@${container.getHost()}:${container.getPort()}/${container.getDatabase()}`,
     stop: async () => {
       await appSql.end({ timeout: 5 });
       await sql.end({ timeout: 5 });
@@ -136,9 +143,14 @@ async function startOnExternalPg(adminUri: string): Promise<LedgerDb> {
       onnotice: () => {},
     });
 
+    const appUrl = new URL(url.toString());
+    appUrl.username = APP_ROLE;
+    appUrl.password = APP_ROLE_PASSWORD;
+
     return {
       sql,
       appSql,
+      appUri: appUrl.toString(),
       stop: async () => {
         await appSql.end({ timeout: 5 });
         await sql.end({ timeout: 5 });

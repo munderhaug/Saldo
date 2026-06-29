@@ -24,13 +24,12 @@ non-blocking `pnpm audit`, deploy `lock_timeout`, per-job timeouts, Dependabot d
 The **deferred follow-ups** then landed: `relations.ts` FK joins corrected (composite same-org FKs no
 longer collapse to `organization_id`) + locked by a per-relation smoke test; the products/vouchers,
 send-invoice+PDF/EHF and receipts-AI provenance-gate route suites; the org-nr Zod / `kr` / `resolveYear`
-/ VAT-keyword dedups single-sourced; and the **org payout-account settings UI** (`isValidBankAccount`
-BBAN/IBAN validation, ADR 0053).
+/ VAT-keyword dedups single-sourced; the **org payout-account settings UI** (`isValidBankAccount`
+BBAN/IBAN validation, ADR 0053); and the Docker base/service images (`node:22-slim`, `postgres:16`,
+`minio/minio`) **pinned by `@sha256:` digest** (Dependabot `docker` bumps tag+digest together).
 
 ### Remaining review follow-ups (open)
-- **Docker digest-pinning**: pin base/service images to `@sha256:` — needs a Docker-enabled env to
-  resolve the digests (none in this sandbox; the daemon is down). Dependabot `docker` is wired to keep
-  them fresh once set.
+None — the full 2026-06-28 review (P0/P1/P2 + every deferred follow-up) is closed.
 Branch + HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only
 go stale.
 

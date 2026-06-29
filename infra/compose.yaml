@@ -5,7 +5,8 @@ name: saldo
 
 services:
   postgres:
-    image: postgres:16
+    # Pinned by digest (review 2026-06-28); Dependabot `docker` bumps tag+digest together.
+    image: postgres:16@sha256:fe03a7605299a34ddf5e4f285dff78c3d7190a576b3c6b46f2fcff69f4bffd54
     environment:
       POSTGRES_USER: saldo
       POSTGRES_PASSWORD: saldo
@@ -22,7 +23,8 @@ services:
 
   # S3-compatible object storage for documents (receipts/PDF/SAF-T).
   minio:
-    image: minio/minio
+    # Pinned by digest (review 2026-06-28); Dependabot `docker` bumps tag+digest together.
+    image: minio/minio:latest@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: saldo

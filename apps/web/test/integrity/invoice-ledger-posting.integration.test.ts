@@ -289,6 +289,39 @@ describe.skipIf(!ledgerDbAvailable)('invoice → ledger posting (app role + RLS)
     expect(debit).toBe(credit);
   });
 
+  it('refuses to issue a credit note with no posted source voucher — typed, nothing posted (review §5)', async () => {
+    const orgId = await provisionOrg('registered_standard');
+    // A credit-note DRAFT created via the GENERIC path (not createCreditNoteDraft, which always links a
+    // source) with a blank creditsInvoiceId — the path that could otherwise post an unlinked motbilag.
+    const input: InvoiceInput = {
+      ...oneLineInput({
+        accountId: await accountId(orgId, '3000'),
+        vatCodeId: await vatCodeId(orgId, '3'),
+        unitPriceKr: '1000',
+      }),
+      kind: 'credit_note',
+      creditsInvoiceId: '',
+    };
+    const created = await withOrgTx(appDb, orgId, (tx) => createDraft(tx, orgId, input));
+    expect(created.ok).toBe(true);
+    const creditNoteId = created.ok ? created.id : '';
+
+    const issued = await withOrgTx(appDb, orgId, (tx) =>
+      issueInvoice(tx, orgId, creditNoteId, { issueDate: '2026-06-25', dueDate: '2026-07-09' }),
+    );
+    expect(issued.ok).toBe(false);
+    if (!issued.ok) expect(issued.error).toBe('credit-note-source-not-posted');
+
+    // Failed typed, before any mutation: still a draft, no number, and no (unlinked) voucher exists.
+    const [inv] = await db.sql<{ status: string; number: number | null }[]>`
+      SELECT status, invoice_number AS number FROM invoice WHERE id = ${creditNoteId}`;
+    expect(inv?.status).toBe('draft');
+    expect(inv?.number).toBeNull();
+    const vouchers = await db.sql<{ count: number }[]>`
+      SELECT count(*)::int AS count FROM voucher WHERE organization_id = ${orgId}`;
+    expect(vouchers[0]?.count).toBe(0);
+  });
+
   it('refuses to post (and to issue) into a LOCKED period, atomically — nothing left behind', async () => {
     const orgId = await provisionOrg('registered_standard');
     // Pre-create the 2026 period LOCKED; ensureFiscalPeriod finds it and the trigger blocks the voucher.

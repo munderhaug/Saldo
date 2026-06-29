@@ -393,6 +393,8 @@ export const nb = {
   'invoices.error.unknown-vat-code': 'Ukjent MVA-kode på en linje.',
   'invoices.error.notADraft':
     'Bare utkast kan endres. Et utstedt dokument rettes med en kreditnota.',
+  'invoices.error.credit-note-source-not-posted':
+    'Kreditnotaen mangler en utstedt faktura å reversere. Velg fakturaen den retter.',
   'invoices.error.creditNote': 'Kunne ikke lage kreditnota for dette dokumentet.',
 
   // Detaljvisning + livsløpshandlinger. Nøktern tone for de konsekvensrike handlingene (§5.5).
@@ -1049,6 +1051,8 @@ export const en = {
   'invoices.error.unknown-vat-code': 'Unknown VAT code on a line.',
   'invoices.error.notADraft':
     'Only a draft can be changed. Correct an issued document with a credit note.',
+  'invoices.error.credit-note-source-not-posted':
+    'This credit note has no issued invoice to reverse. Pick the invoice it corrects.',
   'invoices.error.creditNote': 'Could not create a credit note for this document.',
 
   // Detail view + lifecycle actions. Sober voice for the consequential acts (§5.5).

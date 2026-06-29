@@ -36,6 +36,11 @@ export function parseQuantity(input: string): number | null {
 /** True for '' (not given) or an ISO calendar date (YYYY-MM-DD) — the date inputs submit either. */
 const blankOrIsoDate = (value: string) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value);
 
+/** True for '' (not given) or a syntactically valid email — customerEmail is optional but, when set,
+ * becomes the SMTP `to`, so it must be a real address. (The strict `email` schema in contracts/index
+ * rejects '' and lowercases, which would break the optional-blank, frozen-snapshot semantics here.) */
+const blankOrEmail = (value: string) => value === '' || z.string().email().safeParse(value).success;
+
 /** One invoice line. Account + VAT code are required (a sales line posts to a revenue account at a
  * SAF-T VAT code); both are same-org composite FKs the db layer pins to the tenant. */
 const invoiceLineInput = z.object({
@@ -67,7 +72,7 @@ export const invoiceInput = z.object({
   // Optional link to a contact; the snapshot below is authoritative and frozen on issue regardless.
   customerId: z.string().refine(blankOrUuid, 'Ugyldig kunde'),
   customerName: z.string().trim().min(1, 'Skriv kundens navn').max(200), // personal
-  customerEmail: z.string().trim().max(320), // personal
+  customerEmail: z.string().trim().max(320).refine(blankOrEmail, 'Ugyldig e-postadresse'), // personal
   customerOrgNr: z
     .string()
     .trim()

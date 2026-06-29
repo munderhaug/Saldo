@@ -404,7 +404,10 @@ export async function updateDraft(
 
 export type IssueResult =
   | { readonly ok: true; readonly invoiceNumber: number | null }
-  | { readonly ok: false; readonly error: PrepareError | 'not-a-draft' };
+  | {
+      readonly ok: false;
+      readonly error: PrepareError | 'not-a-draft' | 'credit-note-source-not-posted';
+    };
 
 /**
  * Issue a draft: re-validate every line against the domain (authoritative), draw the GAPLESS number +
@@ -436,6 +439,21 @@ export async function issueInvoice(
       toQuantity(Number(line.quantity)),
     ).verdict;
     if (!verdict.ok) return { ok: false, error: verdict.reason ?? 'input-code-not-a-sale' };
+  }
+
+  // A credit note MUST reverse a real, posted source voucher — never an unlinked motbilag (review §5).
+  // Resolve it here, before any number allocation, so a malformed credit note (e.g. issued via the
+  // generic draft path with a blank/unresolvable creditsInvoiceId) fails typed and atomic rather than
+  // posting a reversal with no provenance back to the original.
+  if (current.kind === 'credit_note') {
+    const source = current.creditsInvoiceId
+      ? await tx
+          .select({ id: voucher.id })
+          .from(voucher)
+          .where(eq(voucher.invoiceId, current.creditsInvoiceId))
+          .limit(1)
+      : [];
+    if (!source[0]) return { ok: false, error: 'credit-note-source-not-posted' };
   }
 
   let invoiceNumber: number | null = null;
@@ -534,18 +552,22 @@ async function postIssuedVoucher(
     throw new Error(`invoice ${inv.id} derived an unpostable voucher: ${derived.error}`);
 
   // A credit note reverses the original invoice's voucher (the motbilag); a plain invoice posts as-is.
+  // The source voucher MUST resolve — issueInvoice already returned 'credit-note-source-not-posted' if
+  // it didn't, so reaching here without one is a should-never-happen; throw to roll back rather than
+  // post an unlinked reversal (review §5).
   let toPost = derived.voucher;
   let reversesVoucherId: string | null = null;
-  if (inv.kind === 'credit_note' && inv.creditsInvoiceId) {
-    const [orig] = await tx
-      .select({ id: voucher.id })
-      .from(voucher)
-      .where(eq(voucher.invoiceId, inv.creditsInvoiceId))
-      .limit(1);
-    reversesVoucherId = orig?.id ?? null;
-  }
   if (inv.kind === 'credit_note') {
-    toPost = reverseVoucher(derived.voucher, reversesVoucherId ?? undefined);
+    const [orig] = inv.creditsInvoiceId
+      ? await tx
+          .select({ id: voucher.id })
+          .from(voucher)
+          .where(eq(voucher.invoiceId, inv.creditsInvoiceId))
+          .limit(1)
+      : [];
+    if (!orig) throw new Error(`credit note ${inv.id}: no posted source voucher to reverse`);
+    reversesVoucherId = orig.id;
+    toPost = reverseVoucher(derived.voucher, reversesVoucherId);
   }
 
   const [createdVoucher] = await tx

@@ -47,11 +47,17 @@ export function sumØre(values: readonly Øre[]): Øre {
  * Round a real number of øre to an integer using Norwegian rounding:
  * **round half away from zero**. Apply ONLY at presentation/settlement boundaries.
  */
+/** The Norwegian rounding rule — nearest integer, half AWAY FROM ZERO (the single source for both the
+ * øre and the kroner rounding boundaries; callers normalize -0 as needed). */
+function roundHalfAwayFromZero(value: number): number {
+  return Math.sign(value) * Math.round(Math.abs(value));
+}
+
 export function roundØre(value: number): Øre {
   if (!Number.isFinite(value)) {
     throw new RangeError(`Cannot round non-finite value ${value}`);
   }
-  const rounded = Math.sign(value) * Math.round(Math.abs(value));
+  const rounded = roundHalfAwayFromZero(value);
   // Normalize -0 to 0.
   return øre(rounded === 0 ? 0 : rounded);
 }
@@ -63,8 +69,7 @@ export function roundØre(value: number): Øre {
  * division is acceptable HERE (a rounding boundary), like {@link formatKr}, and nowhere else.
  */
 export function øreToKroner(amount: Øre): number {
-  const kr = amount / 100;
-  return Math.sign(kr) * Math.round(Math.abs(kr));
+  return roundHalfAwayFromZero(amount / 100);
 }
 
 /**

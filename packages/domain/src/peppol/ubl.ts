@@ -10,6 +10,7 @@
  * money rules) ahead of the commercial access point — the full VEFA Schematron + transmission are
  * `feat-peppol-send` (Phase 9). Validation of a built model is `./validate.ts`.
  */
+import { escapeXml as esc } from '../xml/escape.js';
 import type { Øre } from '../money/ore.js';
 import type { OrgNr } from '../ids/org-nr.js';
 import type { VatTreatment } from '../vat/line-treatment.js';
@@ -131,15 +132,6 @@ export interface EhfInvoiceModel {
   readonly vatOre: Øre;
   readonly grossOre: Øre;
   readonly notes?: string;
-}
-
-/** Escape text for an XML text node / attribute value. */
-function esc(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 /**

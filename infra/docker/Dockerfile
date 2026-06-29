@@ -19,6 +19,12 @@ RUN pnpm --filter @saldo/web build
 
 FROM base AS runtime
 ENV NODE_ENV=production
-COPY --from=build /app /app
+# Run as the unprivileged `node` user (uid 1000, shipped by the node image), never root, to limit the
+# blast radius of any container escape (review 2026-06-28, H3). `--chown` hands the copied tree to node.
+# FOLLOW-UP (needs a Docker build to verify — no image is built in CI today, so it is deliberately not
+# bundled here): prune to prod-only deps, e.g. `pnpm --filter @saldo/web deploy --prod /app/out`, and
+# copy only that pruned output + the build/, so dev dependencies aren't shipped in the runtime image.
+COPY --from=build --chown=node:node /app /app
+USER node
 EXPOSE 3000
 CMD ["pnpm", "--filter", "@saldo/web", "start"]

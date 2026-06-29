@@ -3,6 +3,12 @@ import { isValidOrgNr, orgNr } from '@saldo/domain';
 import type { Route } from './+types/oppslag';
 import { nameSearchInput, type Enhet } from '~/contracts';
 import { lookupByOrgNr, searchByName } from '~/integrations/enhetsregisteret/client.server';
+import {
+  callerKey,
+  checkLookupRate,
+  getCachedLookup,
+  setCachedLookup,
+} from '~/integrations/enhetsregisteret/throttle.server';
 import { t } from '~/copy';
 import { Card, CardContent, CardDescription, CardHeader } from '~/components/ui/card';
 import {
@@ -30,12 +36,30 @@ export function headers() {
 /**
  * One search box, two intents: a 9-digit query is treated as an org number (mod11-checked here, then
  * looked up); anything else is a free-text name search. The register is authoritative, public data —
- * no auth gate (this runs before onboarding) and no AI is involved.
+ * no auth gate (this runs before onboarding) and no AI is involved. Because it is unauthenticated and
+ * proxies to brreg, it is guarded by a short-TTL cache + a per-caller outbound rate limit so it can't
+ * be abused as an open amplification/enumeration proxy (review 2026-06-28).
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const q = (new URL(request.url).searchParams.get('q') ?? '').trim();
   if (!q) return { state: 'idle' as const };
 
+  // A fresh cached result is served without touching the register or spending the rate budget.
+  const cached = getCachedLookup<OppslagResult>(q);
+  if (cached) return cached;
+
+  if (!checkLookupRate(callerKey(request)).allowed) return { state: 'rate-limited' as const };
+
+  const result = await resolveLookup(q);
+  // Cache stable outcomes only — never cache a transient upstream failure.
+  if (result.state !== 'error') setCachedLookup(q, result);
+  return result;
+}
+
+type OppslagResult = Awaited<ReturnType<typeof resolveLookup>>;
+
+/** Resolve a query against the register: a 9-digit input is an org-number lookup, else a name search. */
+async function resolveLookup(q: string) {
   const digits = q.replace(/\s/g, '');
   if (/^\d{9}$/.test(digits)) {
     if (!isValidOrgNr(digits)) return { state: 'invalid-orgnr' as const };
@@ -117,6 +141,8 @@ function StatusNotice({ data }: { data: Route.ComponentProps['loaderData'] }) {
       return <Notice tone="muted">{t('oppslag.noMatches', { query: data.query })}</Notice>;
     case 'error':
       return <Notice tone="headsup">{t('oppslag.error')}</Notice>;
+    case 'rate-limited':
+      return <Notice tone="headsup">{t('oppslag.rateLimited')}</Notice>;
     default:
       return null;
   }

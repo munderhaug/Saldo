@@ -12,6 +12,7 @@ import {
   type SaftFinancialInput,
 } from './financial.js';
 import { buildSaftXml, SAFT_NAMESPACE, type SaftSystemInfo } from './financial-xml.js';
+import { isXmlIllegalCodePoint } from '../xml/escape.js';
 
 const refRoot = new URL('../../../../db/reference/saf-t/', import.meta.url);
 const accountIndex = indexAccounts(
@@ -174,9 +175,11 @@ describe('buildSaftXml — masters', () => {
 });
 
 describe('buildSaftXml — properties', () => {
-  it('never emits a raw unescaped ampersand and always closes the AuditFile', () => {
+  it('emits no bare ampersand, no XML-illegal char, and always closes the AuditFile', () => {
+    // fullUnicodeString exercises the control/noncharacter range a real free-text field can carry
+    // (a pasted NUL, vertical tab, etc.) — exactly what would otherwise yield a non-well-formed export.
     fc.assert(
-      fc.property(fc.string({ maxLength: 40 }), (name) => {
+      fc.property(fc.fullUnicodeString({ maxLength: 40 }), (name) => {
         const x = buildSaftXml(
           generateSaftFinancial(
             { ...input(), customers: [{ id: 'K1', name, countryCode: 'NO' }] },
@@ -188,8 +191,16 @@ describe('buildSaftXml — properties', () => {
         );
         // No bare `&` that isn't the start of an entity.
         expect(/&(?!amp;|lt;|gt;|quot;|#)/.test(x)).toBe(false);
+        // No character the XML 1.0 Char production forbids survived into the document. Compute once and
+        // assert once — a per-char expect() over the whole document × the property runs is needlessly slow.
+        const hasIllegal = Array.from(x).some((ch) =>
+          isXmlIllegalCodePoint(ch.codePointAt(0) ?? 0),
+        );
+        expect(hasIllegal).toBe(false);
         expect(x.endsWith('</AuditFile>')).toBe(true);
       }),
     );
-  });
+    // Generating a full SAF-T document per fast-check run is inherently a few seconds; give it headroom
+    // beyond vitest's 5s default so a slow CI runner doesn't flake.
+  }, 20000);
 });

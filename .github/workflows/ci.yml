@@ -75,9 +75,14 @@ jobs:
       - run: docker build -f infra/docker/Dockerfile -t saldo-web:ci .
       - name: Smoke-test the image boots and serves
         run: |
-          docker run -d --name saldo-web-ci -p 3000:3000 saldo-web:ci
-          # The "/" loader redirects to /auth/login before touching the DB, so a 2xx/3xx proves the
-          # pruned image starts and serves without a database. Poll until the server binds.
+          # env.ts validates DATABASE_URL (a required z.string().url()) at boot, so pass a DUMMY one —
+          # the "/" loader redirects to /auth/login (no session cookie) before any DB query, and env.ts
+          # only checks the URL shape, never connecting. So a syntactically-valid dummy boots the server
+          # and a 2xx/3xx proves the pruned image starts and serves without a real database.
+          docker run -d --name saldo-web-ci -p 3000:3000 \
+            -e DATABASE_URL='postgres://smoke:smoke@127.0.0.1:5432/smoke' \
+            saldo-web:ci
+          # Poll until the server binds.
           code=000
           for _ in $(seq 1 30); do
             code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ || true)

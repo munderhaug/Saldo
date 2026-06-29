@@ -10,7 +10,7 @@ import { z } from 'zod';
 import type { Route } from './+types/orgs.$orgId.reports';
 import { withUserOrg } from '~/auth/auth.server';
 import { readOrgOverview } from '~/db/organizations.server';
-import { resolveReportYear } from '~/lib/reporting';
+import { resolveYear } from '~/lib/fiscal-year';
 import { ReportShell } from '~/components/report-shell';
 import { Card, CardContent, CardTitle } from '~/components/ui/card';
 import { t } from '~/copy';
@@ -27,7 +27,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
     throw new Response('Not found', { status: 404 });
   }
-  const year = resolveReportYear(request);
+  const year = resolveYear(request);
   const overview = await withUserOrg(request, params.orgId, (tx) =>
     readOrgOverview(tx, params.orgId),
   );

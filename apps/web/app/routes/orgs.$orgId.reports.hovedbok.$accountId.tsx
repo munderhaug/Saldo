@@ -16,7 +16,7 @@ import { buildHovedbok, øre } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.reports.hovedbok.$accountId';
 import { withUserOrg } from '~/auth/auth.server';
 import { readAccountLedger } from '~/db/reporting.server';
-import { resolveReportYear } from '~/lib/reporting';
+import { resolveYear } from '~/lib/fiscal-year';
 import { Money, ZeroCell } from '~/components/money';
 import { ReportShell } from '~/components/report-shell';
 import { t } from '~/copy';
@@ -60,7 +60,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   ) {
     throw new Response('Not found', { status: 404 });
   }
-  const year = resolveReportYear(request);
+  const year = resolveYear(request);
   const ledger = await withUserOrg(request, params.orgId, (tx) =>
     readAccountLedger(tx, params.accountId, year),
   );

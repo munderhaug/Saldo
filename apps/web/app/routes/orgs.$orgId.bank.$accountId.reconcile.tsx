@@ -11,10 +11,11 @@
  */
 import { Form, Link } from 'react-router';
 import { z } from 'zod';
-import { formatKr, øre, type MatchTier } from '@saldo/domain';
+import { type MatchTier } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.bank.$accountId.reconcile';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { readBankAccount } from '~/db/bank.server';
+import { kr } from '~/lib/money-format';
 import {
   buildSuggestions,
   listOpenInvoices,
@@ -80,8 +81,6 @@ export async function action({ request, params }: Route.ActionArgs): Promise<Act
   if (!result.ok) return { ok: false, error: t(`recon.error.${result.reason}`) };
   return { ok: true, invoiceId: result.invoiceId };
 }
-
-const kr = (ore: number): string => formatKr(øre(ore));
 
 const matchLabel = (tier: MatchTier): string =>
   tier === 'kid-exact'

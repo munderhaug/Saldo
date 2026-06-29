@@ -10,7 +10,7 @@ import type { Route } from './+types/orgs.$orgId.reports.likviditet';
 import { withUserOrg } from '~/auth/auth.server';
 import { aggregateAccountBalances, listOpenReceivables } from '~/db/reporting.server';
 import { readOrgOverview } from '~/db/organizations.server';
-import { resolveReportYear } from '~/lib/reporting';
+import { resolveYear } from '~/lib/fiscal-year';
 import { Money } from '~/components/money';
 import { ReportShell } from '~/components/report-shell';
 import { t } from '~/copy';
@@ -36,7 +36,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
     throw new Response('Not found', { status: 404 });
   }
-  const year = resolveReportYear(request);
+  const year = resolveYear(request);
   const asOf = new Date().toISOString().slice(0, 10);
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     overview: await readOrgOverview(tx, params.orgId),

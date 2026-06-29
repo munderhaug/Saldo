@@ -9,13 +9,11 @@
  */
 import { z } from 'zod';
 import { MVA_STATUSES } from '@saldo/domain';
+import { orgNrShape } from './org-nr';
 
 /** A logged-in person creating an org: 9-digit org-nr (spaces stripped), a name, and an MVA status. */
 export const createOrgInput = z.object({
-  orgNr: z
-    .string()
-    .transform((s) => s.replace(/\s/g, ''))
-    .pipe(z.string().regex(/^\d{9}$/, 'Organisasjonsnummer må være 9 siffer')),
+  orgNr: orgNrShape,
   name: z.string().trim().min(1, 'Skriv navnet på foretaket').max(200),
   mvaStatus: z.enum(MVA_STATUSES),
 });

@@ -18,6 +18,7 @@
  */
 import { z } from 'zod';
 import { INVOICE_KINDS, parseKroner } from '@saldo/domain';
+import { optionalOrgNrShape } from './org-nr';
 
 /** Document language — the two Saldo ships (matches the contacts register). */
 export const INVOICE_LANGUAGES = ['nb', 'en'] as const;
@@ -73,13 +74,8 @@ export const invoiceInput = z.object({
   customerId: z.string().refine(blankOrUuid, 'Ugyldig kunde'),
   customerName: z.string().trim().min(1, 'Skriv kundens navn').max(200), // personal
   customerEmail: z.string().trim().max(320).refine(blankOrEmail, 'Ugyldig e-postadresse'), // personal
-  customerOrgNr: z
-    .string()
-    .trim()
-    .refine(
-      (v) => v === '' || /^\d{9}$/.test(v.replace(/\s/g, '')),
-      'Organisasjonsnummer må være 9 siffer',
-    ), // personal: an ENK's / private person's org-nr identifies a natural person
+  // personal: an ENK's / private person's org-nr identifies a natural person.
+  customerOrgNr: optionalOrgNrShape,
   customerAddress: z.string().trim().max(300), // personal: an ENK's may be a home address
   currency: z
     .string()

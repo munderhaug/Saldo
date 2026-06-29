@@ -12,6 +12,7 @@ import { withUserOrg } from '~/auth/auth.server';
 import { readOrgOverview } from '~/db/organizations.server';
 import { readSaftFinancial } from '~/db/saft.server';
 import { STANDARD_ACCOUNT_INDEX, STANDARD_TAX_CODE_INDEX } from '~/db/provisioning.server';
+import { resolveYear } from '~/lib/fiscal-year';
 
 /** Identity of the generating system for the Header software fields. The export date is injected here. */
 function systemInfo(dateCreated: string): SaftSystemInfo {
@@ -21,12 +22,6 @@ function systemInfo(dateCreated: string): SaftSystemInfo {
     softwareVersion: '0.0.0',
     dateCreated,
   };
-}
-
-function resolveYear(request: Request): number {
-  const raw = new URL(request.url).searchParams.get('year');
-  const parsed = z.coerce.number().int().min(2000).max(2100).safeParse(raw);
-  return parsed.success ? parsed.data : new Date().getFullYear();
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {

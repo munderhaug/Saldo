@@ -14,9 +14,10 @@
  */
 import { Form, Link } from 'react-router';
 import { z } from 'zod';
-import { formatKr, parseBankCsv, øre } from '@saldo/domain';
+import { parseBankCsv } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.bank.$accountId';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
+import { kr } from '~/lib/money-format';
 import {
   importTransactions,
   listBankTransactions,
@@ -138,8 +139,6 @@ export async function action({ request, params }: Route.ActionArgs): Promise<Act
   );
   return { ok: true, ...summary };
 }
-
-const kr = (ore: number): string => formatKr(øre(ore));
 
 export default function BankAccountRoute({ loaderData, actionData }: Route.ComponentProps) {
   const { orgId, account, transactions, isLinked, gocardlessAvailable } = loaderData;

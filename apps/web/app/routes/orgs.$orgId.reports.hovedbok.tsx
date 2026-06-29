@@ -10,7 +10,7 @@ import type { Route } from './+types/orgs.$orgId.reports.hovedbok';
 import { withUserOrg } from '~/auth/auth.server';
 import { listActiveAccounts } from '~/db/reporting.server';
 import { readOrgOverview } from '~/db/organizations.server';
-import { resolveReportYear } from '~/lib/reporting';
+import { resolveYear } from '~/lib/fiscal-year';
 import { ReportShell } from '~/components/report-shell';
 import { t } from '~/copy';
 import {
@@ -35,7 +35,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
     throw new Response('Not found', { status: 404 });
   }
-  const year = resolveReportYear(request);
+  const year = resolveYear(request);
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     overview: await readOrgOverview(tx, params.orgId),
     accounts: await listActiveAccounts(tx, year),

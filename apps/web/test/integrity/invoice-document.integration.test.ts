@@ -149,6 +149,27 @@ describe.skipIf(!ledgerDbAvailable)(
       );
     });
 
+    it('emits cac:PayeeFinancialAccount when the org has a payout account configured (review §5)', async () => {
+      const orgId = await provisionOrg();
+      // Set a payout account + a known-valid mod-11 org nr (the seed helper's sequential numbers are
+      // not all valid org-nrs, and toEhfModel runs them through the mod-11 check).
+      await db.sql`UPDATE organization
+                      SET org_nr = ${'974760673'},
+                          invoice_payment_account = ${'NO9386011117947'},
+                          invoice_payment_account_name = ${'Dokument ENK'}
+                    WHERE id = ${orgId}`;
+      const invoiceId = await issuedInvoice(orgId);
+      const doc = await withOrgTx(appDb, orgId, (tx) => readInvoiceDocument(tx, invoiceId));
+      expect(doc!.seller.paymentAccount).toEqual({ id: 'NO9386011117947', name: 'Dokument ENK' });
+
+      const model = toEhfModel(doc!);
+      expect(validateEhf(model!).ok).toBe(true); // still rule-clean with the account present
+      const xml = buildUblXml(model!);
+      expect(xml).toContain(
+        '<cac:PayeeFinancialAccount><cbc:ID>NO9386011117947</cbc:ID><cbc:Name>Dokument ENK</cbc:Name></cac:PayeeFinancialAccount>',
+      );
+    });
+
     it('records a send attempt to the append-only invoice_email log (RLS-scoped)', async () => {
       const orgId = await provisionOrg();
       const invoiceId = await issuedInvoice(orgId);

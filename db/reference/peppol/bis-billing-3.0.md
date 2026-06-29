@@ -66,6 +66,15 @@ the generator maps the common ones and falls back to **`C62`** ("one"/piece) for
 - Money is integer **øre** end-to-end; amounts are serialized as decimal kroner only at the XML
   boundary (the `formatKr`-style 2-decimal presentation), never recomputed from rates.
 
+## Payment means (`cac:PaymentMeans`)
+- **PaymentMeansCode 30** (credit transfer) is the means Saldo emits. A code-30 invoice requires
+  `cac:PayeeFinancialAccount/cbc:ID` — the seller's bank account (BBAN/IBAN) the customer pays into
+  (BG-17 / BT-84; the BR-CO-25 payment-instructions family). Saldo emits it from the org's configured
+  payout account, plus the KID as `cbc:PaymentID`. UBL child order: `PaymentMeansCode` → `PaymentID` →
+  `PayeeFinancialAccount`. When the org has no account configured, `cac:PaymentMeans` is still emitted
+  for the KID but without `PayeeFinancialAccount` (the document is then incomplete for a code-30
+  transfer until a payout account is set).
+
 ## Mandatory presence (subset enforced)
 BR-01 CustomizationID · BR-02 invoice number · BR-03 issue date · BR-04 type code · BR-05 currency ·
 BR-06 seller name · BR-07 buyer name · BR-09 seller country code · BR-11 buyer country code · BR-CO-26

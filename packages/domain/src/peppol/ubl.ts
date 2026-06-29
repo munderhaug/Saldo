@@ -125,6 +125,9 @@ export interface EhfInvoiceModel {
   readonly buyerReference?: string;
   /** Payment reference (Saldo's KID), surfaced as `cbc:PaymentID`. */
   readonly paymentReference?: string;
+  /** Seller's payee bank account for a credit transfer (PaymentMeansCode 30) — `cac:PayeeFinancialAccount`.
+   * `id` is the BBAN/IBAN (cbc:ID); `name` (optional) is the account holder (cbc:Name). */
+  readonly payeeAccount?: { readonly id: string; readonly name?: string };
   readonly lines: readonly EhfLine[];
   readonly taxSubtotals: readonly EhfTaxSubtotal[];
   /** Frozen document totals (Σ line net, Σ VAT, gross). */
@@ -251,14 +254,26 @@ export function buildUblXml(model: EhfInvoiceModel): string {
     .filter((s) => s !== '')
     .join('');
 
-  const payment = model.paymentReference
-    ? [
-        `<cac:PaymentMeans>`,
-        `<cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>`,
-        `<cbc:PaymentID>${esc(model.paymentReference)}</cbc:PaymentID>`,
-        `</cac:PaymentMeans>`,
-      ].join('')
-    : '';
+  // cac:PaymentMeans for a credit transfer (code 30). Emit when there is either a payment reference
+  // (KID) or a payee account; UBL child order is PaymentMeansCode → PaymentID → PayeeFinancialAccount.
+  // PayeeFinancialAccount/cbc:ID (the seller's bank account) is required by BIS for code 30 — emitted
+  // whenever the org has configured a payout account (review §5).
+  const paymentChildren = [
+    `<cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>`,
+    model.paymentReference ? `<cbc:PaymentID>${esc(model.paymentReference)}</cbc:PaymentID>` : '',
+    model.payeeAccount
+      ? [
+          `<cac:PayeeFinancialAccount>`,
+          `<cbc:ID>${esc(model.payeeAccount.id)}</cbc:ID>`,
+          model.payeeAccount.name ? `<cbc:Name>${esc(model.payeeAccount.name)}</cbc:Name>` : '',
+          `</cac:PayeeFinancialAccount>`,
+        ].join('')
+      : '',
+  ].filter((s) => s !== '');
+  const payment =
+    model.paymentReference || model.payeeAccount
+      ? [`<cac:PaymentMeans>`, ...paymentChildren, `</cac:PaymentMeans>`].join('')
+      : '';
 
   const taxTotal = [
     `<cac:TaxTotal>`,

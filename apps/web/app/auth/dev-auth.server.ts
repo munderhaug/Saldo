@@ -1,5 +1,5 @@
 import type { Db } from '../db/client.js';
-import { verifyPassword } from './password.server.js';
+import { dummyVerify, verifyPassword } from './password.server.js';
 import { findUserByEmail } from './users.server.js';
 
 /**
@@ -12,8 +12,13 @@ export async function authenticateWithPassword(
   password: string,
 ): Promise<{ userId: string } | null> {
   const user = await findUserByEmail(db, email);
-  // No such user, or an OIDC-only user (null hash) — fail the same way (don't reveal which).
-  if (!user?.passwordHash) return null;
+  // No such user, or an OIDC-only user (null hash): spend the same argon2 work before failing, so
+  // response time can't reveal whether the account exists (user-enumeration timing oracle). Fail the
+  // same way regardless (don't reveal which).
+  if (!user?.passwordHash) {
+    await dummyVerify(password);
+    return null;
+  }
   const ok = await verifyPassword(user.passwordHash, password);
   return ok ? { userId: user.id } : null;
 }

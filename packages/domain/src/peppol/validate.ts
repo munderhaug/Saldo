@@ -8,7 +8,7 @@
  * Each finding carries the BIS/EN 16931 rule id so a failure points at the actual rule, exactly as the
  * VEFA validator reports. Money ties are exact integer-øre comparisons (never float).
  */
-import { addØre, isZeroØre, sumØre } from '../money/ore.js';
+import { addØre, isZeroØre, mulRate, rate, sumØre } from '../money/ore.js';
 import type { EhfInvoiceModel, UnclVatCategory } from './ubl.js';
 
 /** A single rule violation — the BIS rule id plus a human-legible message. */
@@ -81,6 +81,17 @@ export function validateEhf(model: EhfInvoiceModel): EhfValidation {
       fail('BR-S-09', 'A standard-rated (S) VAT subtotal with a non-zero base must carry VAT.');
     if (s.category !== 'S' && !isZeroØre(s.vatOre))
       fail(`BR-${s.category}-09`, `A ${s.category} VAT subtotal must have a zero VAT amount.`);
+    // BR-CO-17: the category VAT amount must equal the taxable base × rate (rounded to the øre). This
+    // is the magnitude check BR-S-09 (direction only) misses — a declared VAT of 1 øre on a 25 % base
+    // passes BR-S-09 but is wrong. Exact integer-øre comparison via the same round-half-away-from-zero
+    // `mulRate` the engine uses. For a 0 % category (Z/E/AE) the expectation is 0, consistent with the
+    // BR-{cat}-09 zero check above.
+    const expectedVat = mulRate(s.baseOre, rate(s.percent / 100));
+    if (expectedVat !== s.vatOre)
+      fail(
+        'BR-CO-17',
+        `VAT category ${s.category}: VAT amount must equal the taxable base × ${s.percent} %.`,
+      );
   }
 
   return { ok: v.length === 0, violations: v };

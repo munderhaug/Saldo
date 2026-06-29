@@ -10,8 +10,10 @@
 -- non-zero iff the restore is unhealthy. Pass with `-v expect_data=1` to also require the ledger to
 -- be non-empty (a real restore should carry data; the structural checks alone pass on an empty DB).
 --
--- The expected sets below are introspected from db/migrations/*.sql (the source of truth, ADR 0011).
--- When a migration adds an integrity object, add it here too — the structural drift is the point.
+-- The tenant-table set is DERIVED from the catalog at run time (every FORCE-RLS table), so it can never
+-- drift behind a migration that adds one. The trigger list stays explicit (pg_trigger has no "integrity
+-- invariant" flag) but is kept honest by the restore-verify integration test, which proves the verifier
+-- BITES when any listed trigger is missing.
 
 \set ON_ERROR_STOP on
 \if :{?expect_data}
@@ -24,21 +26,22 @@ SET drill.expect_data TO :'expect_data';
 DO $$
 DECLARE
   fail text[] := '{}';
-  -- Tenant tables that MUST carry FORCE ROW LEVEL SECURITY + an org-isolation policy (ADR 0012).
-  tenant_tables text[] := ARRAY[
-    'account','ai_provenance','fiscal_period','invoice_counter',
-    'organization','posting','vat_code','voucher'
-  ];
+  -- Tenant tables (FORCE ROW LEVEL SECURITY + org-isolation policy, ADR 0012) are DERIVED from the
+  -- catalog below — the structural definition of "tenant table" is exactly "FORCE RLS is on", so this
+  -- set cannot drift behind a migration that adds one (the previous hand-typed list silently skipped 7).
+  tenant_tables text[];
+  -- Auth/system tables are deliberately NOT org-RLS'd (ADR 0020 — looked up before any tenant context),
+  -- so they cannot be derived from the RLS predicate; they stay an explicit allowlist.
+  auth_tables text[] := ARRAY['app_user','membership','user_session'];
+  -- Every table the application depends on = the derived tenant set ∪ the auth allowlist.
+  required_tables text[];
   -- The integrity triggers that enforce the hard invariants in SQL (append-only ledger, balance,
-  -- posted-completeness, period locks). Append-only is enforced HERE, not by withholding grants.
+  -- posted-completeness, period locks). pg_trigger carries no "is an integrity invariant" flag, so this
+  -- stays explicit — kept honest by the restore-verify integration test (it BITES on a missing one).
   required_triggers text[] := ARRAY[
     'posting_balance','posting_immutable','posting_period_lock',
-    'voucher_immutable','voucher_period_lock','voucher_posted_complete'
-  ];
-  -- Tables the application depends on existing at all.
-  required_tables text[] := ARRAY[
-    'account','ai_provenance','app_user','fiscal_period','invoice_counter','membership',
-    'organization','posting','user_session','vat_code','voucher'
+    'voucher_immutable','voucher_period_lock','voucher_posted_complete',
+    'invoice_immutable','invoice_line_immutable','bank_transaction_append_only'
   ];
   required_extensions text[] := ARRAY['pgcrypto','btree_gist'];
   t text;
@@ -46,6 +49,21 @@ DECLARE
   bad_counter int;
   voucher_count bigint;
 BEGIN
+  -- 0. Derive the tenant set from the catalog: every base table with FORCE ROW LEVEL SECURITY (the
+  --    same predicate the rls-coverage suite uses). This is what makes checks 1 and 4 cover ALL tenant
+  --    tables automatically, instead of a hand-typed list that drifts.
+  SELECT array_agg(c.relname ORDER BY c.relname) INTO tenant_tables
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind = 'r'
+      AND c.relrowsecurity AND c.relforcerowsecurity;
+  -- A restore that silently lost RLS entirely would yield an empty set — flag it rather than pass a
+  -- vacuous loop in check 4.
+  IF tenant_tables IS NULL OR array_length(tenant_tables, 1) IS NULL THEN
+    fail := fail || 'no FORCE-RLS tenant tables found (RLS lost in the restore?)'::text;
+    tenant_tables := '{}';
+  END IF;
+  required_tables := tenant_tables || auth_tables;
+
   -- 1. Tables present.
   FOREACH t IN ARRAY required_tables LOOP
     IF to_regclass('public.' || t) IS NULL THEN

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { øre, type Øre } from '../money/ore.js';
-import { withMod10ControlDigit } from '../ids/kid.js';
+import { isValidKidMod10, isValidKidMod11, withMod10ControlDigit } from '../ids/kid.js';
 import {
   DEFAULT_MATCH_CONFIG,
   digitRuns,
@@ -47,6 +47,18 @@ describe('matchBankLine — tiers', () => {
       inv({ invoiceId: 'a', kid: KID_A }),
     ]);
     expect(result.candidates).toEqual([{ invoiceId: 'a', tier: 'kid-exact', score: 100 }]);
+    expect(result.auto).toEqual({ invoiceId: 'a', tier: 'kid-exact', score: 100 });
+  });
+
+  it('kid-exact: a mod-11 KID also auto-matches (issuer-configured scheme; review H4)', () => {
+    // '1001000' is a valid mod-11 KID but NOT valid mod-10 — so a mod-10-only check (the old code)
+    // would miss it. The matcher must accept either scheme.
+    const KID_M11 = '1001000';
+    expect(isValidKidMod11(KID_M11)).toBe(true);
+    expect(isValidKidMod10(KID_M11)).toBe(false);
+    const result = matchBankLine(line({ remittanceInfo: `Betaling ${KID_M11}` }), [
+      inv({ invoiceId: 'a', kid: KID_M11 }),
+    ]);
     expect(result.auto).toEqual({ invoiceId: 'a', tier: 'kid-exact', score: 100 });
   });
 
@@ -112,8 +124,11 @@ describe('matchBankLine — direction & ambiguity', () => {
   });
 
   it('an invalid-control-digit KID in the message is not treated as a KID hit', () => {
-    // KID_A with its last digit corrupted → fails mod-10 → falls back to a date/amount tier.
+    // KID_A with its last digit corrupted → must fail BOTH schemes (now that either is accepted) →
+    // falls back to a date/amount tier.
     const broken = KID_A.slice(0, -1) + ((Number(KID_A.slice(-1)) + 1) % 10);
+    expect(isValidKidMod10(broken)).toBe(false);
+    expect(isValidKidMod11(broken)).toBe(false);
     const result = matchBankLine(line({ remittanceInfo: broken }), [
       inv({ invoiceId: 'a', kid: broken }),
     ]);

@@ -58,10 +58,22 @@ the generator maps the common ones and falls back to **`C62`** ("one"/piece) for
 - **BR-CO-10** — `LineExtensionAmount` (Σ line net) ties to the document's frozen net.
 - **BR-CO-13** — `TaxExclusiveAmount` = Σ line net.
 - **BR-CO-15** — `TaxInclusiveAmount` = TaxExclusive + Σ VAT (the frozen gross).
+- **BR-CO-17** — each VAT breakdown's *category tax amount* = the category taxable base × (rate ÷ 100),
+  rounded to the øre (round half away from zero). The magnitude tie BR-S-09/BR-`{cat}`-09 (direction
+  only) misses; enforced as an exact integer-øre comparison via `mulRate`.
 - **BR-CO-16 / PayableAmount** — equals the tax-inclusive amount (no prepaid/rounding handled in the
   "start now" subset).
 - Money is integer **øre** end-to-end; amounts are serialized as decimal kroner only at the XML
   boundary (the `formatKr`-style 2-decimal presentation), never recomputed from rates.
+
+## Payment means (`cac:PaymentMeans`)
+- **PaymentMeansCode 30** (credit transfer) is the means Saldo emits. A code-30 invoice requires
+  `cac:PayeeFinancialAccount/cbc:ID` — the seller's bank account (BBAN/IBAN) the customer pays into
+  (BG-17 / BT-84; the BR-CO-25 payment-instructions family). Saldo emits it from the org's configured
+  payout account, plus the KID as `cbc:PaymentID`. UBL child order: `PaymentMeansCode` → `PaymentID` →
+  `PayeeFinancialAccount`. When the org has no account configured, `cac:PaymentMeans` is still emitted
+  for the KID but without `PayeeFinancialAccount` (the document is then incomplete for a code-30
+  transfer until a payout account is set).
 
 ## Mandatory presence (subset enforced)
 BR-01 CustomizationID · BR-02 invoice number · BR-03 issue date · BR-04 type code · BR-05 currency ·

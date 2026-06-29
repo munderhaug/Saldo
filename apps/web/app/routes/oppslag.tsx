@@ -67,12 +67,15 @@ async function resolveLookup(q: string) {
     if (res.ok) return { state: 'org' as const, enhet: res.enhet };
     if (res.reason === 'not-found')
       return { state: 'not-found' as const, orgnr: formatOrgNr(digits) };
+    // An upstream brreg 429 surfaces the same calm "busy" message as our own outbound throttle.
+    if (res.reason === 'rate-limited') return { state: 'rate-limited' as const };
     return { state: 'error' as const };
   }
 
   const parsed = nameSearchInput.safeParse(q);
   if (!parsed.success) return { state: 'too-short' as const };
   const res = await searchByName(parsed.data);
+  if (!res.ok && res.reason === 'rate-limited') return { state: 'rate-limited' as const };
   if (!res.ok) return { state: 'error' as const };
   if (res.matches.length === 0) return { state: 'no-matches' as const, query: q };
   return {

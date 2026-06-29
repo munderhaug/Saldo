@@ -128,13 +128,13 @@ limits, and the propose-only/confirm model. Tracked as a backlog item (§9).
 
 ## 7. Timeline (Art. 113) — now vs later
 
-Entered into force **1 Aug 2024**. Staggered application (today is **2026-06-23**):
+Entered into force **1 Aug 2024**. Staggered application (dates are absolute; snapshot **2026-06-23**):
 
 | Date | What applies | Status for Saldo |
 |---|---|---|
 | **2 Feb 2025** | Chapter I + II → **Art. 4 AI literacy**, **Art. 5 prohibitions** (Art. 113(a)) | **In force now.** Literacy = proportionate measure; prohibitions = N/A. |
 | **2 Aug 2025** | Chapter V **GPAI**, Chapter VII governance, Chapter XII penalties (exc. Art. 101), Art. 78 (Art. 113(b)) | **In force now.** Binds the **model provider** (Art. 53); Saldo relies on their docs. |
-| **2 Aug 2026** | **General application** incl. **Art. 50 transparency** | **~6 weeks out — the binding near-term deadline** for Saldo's AI features. |
+| **2 Aug 2026** | **General application** incl. **Art. 50 transparency** | **The binding near-term deadline (2 Aug 2026)** for Saldo's AI features. |
 | **2 Aug 2027** | **Art. 6(1)** high-risk via Annex I product safety (Art. 113(c)) | **N/A** (Saldo not an Annex I product). |
 
 **Norway / EEA.** The Act is **EEA-relevant** and **under scrutiny for incorporation** into the EEA

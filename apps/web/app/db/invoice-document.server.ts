@@ -64,7 +64,12 @@ export interface InvoiceDocumentModel {
   readonly currency: string;
   readonly language: string;
   readonly kid: string | null;
-  readonly seller: { readonly orgNr: string; readonly name: string };
+  readonly seller: {
+    readonly orgNr: string;
+    readonly name: string;
+    /** The org's configured payout account (BBAN/IBAN + optional holder name), or null if unset. */
+    readonly paymentAccount: { readonly id: string; readonly name: string | null } | null;
+  };
   readonly customer: DocParty;
   readonly lines: readonly DocLine[];
   readonly vatBuckets: ReturnType<typeof frozenVatBreakdown>;
@@ -86,7 +91,12 @@ export async function readInvoiceDocument(
   if (!head || head.status === 'draft') return null;
 
   const [seller] = await tx
-    .select({ orgNr: organization.orgNr, name: organization.name })
+    .select({
+      orgNr: organization.orgNr,
+      name: organization.name,
+      paymentAccount: organization.invoicePaymentAccount,
+      paymentAccountName: organization.invoicePaymentAccountName,
+    })
     .from(organization)
     .limit(1);
   const status = await readOrgMvaStatus(tx);
@@ -132,7 +142,13 @@ export async function readInvoiceDocument(
     currency: head.currency,
     language: head.language,
     kid: head.kid,
-    seller: { orgNr: seller!.orgNr, name: seller!.name },
+    seller: {
+      orgNr: seller!.orgNr,
+      name: seller!.name,
+      paymentAccount: seller!.paymentAccount
+        ? { id: seller!.paymentAccount, name: seller!.paymentAccountName }
+        : null,
+    },
     customer: {
       orgNr: head.customerOrgNr,
       name: head.customerName,
@@ -164,6 +180,14 @@ export function toEhfModel(doc: InvoiceDocumentModel): EhfInvoiceModel | null {
     name: doc.seller.name,
     countryCode: 'NO',
   };
+  // The seller's payout account → cac:PayeeFinancialAccount (required by BIS for credit transfer,
+  // code 30). Emitted only when the org has configured one; omitted otherwise (no regression).
+  const payeeAccount = doc.seller.paymentAccount
+    ? {
+        id: doc.seller.paymentAccount.id,
+        ...(doc.seller.paymentAccount.name ? { name: doc.seller.paymentAccount.name } : {}),
+      }
+    : undefined;
   const buyer = {
     orgNr: doc.customer.orgNr ? toOrgNr(doc.customer.orgNr) : toOrgNr(doc.seller.orgNr),
     name: doc.customer.name,
@@ -179,6 +203,7 @@ export function toEhfModel(doc: InvoiceDocumentModel): EhfInvoiceModel | null {
     seller,
     buyer,
     ...(doc.kid ? { paymentReference: doc.kid } : {}),
+    ...(payeeAccount ? { payeeAccount } : {}),
     lines: doc.lines.map((l) => ({
       id: String(l.lineNo),
       description: l.description,

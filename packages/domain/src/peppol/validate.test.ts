@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { øre } from '../money/ore.js';
+import fc from 'fast-check';
+import { mulRate, rate, øre } from '../money/ore.js';
 import { orgNr } from '../ids/org-nr.js';
 import type { EhfInvoiceModel } from './ubl.js';
 import { validateEhf } from './validate.js';
@@ -103,6 +104,71 @@ describe('validateEhf — the enforced BIS Billing 3.0 subset', () => {
       grossOre: øre(105_000),
     };
     expect(rules(m)).toContain('BR-Z-09');
+  });
+
+  it('flags a VAT amount that is not base × rate (BR-CO-17), even when non-zero', () => {
+    // A 25 % base of 100 000 declaring only 1 øre VAT passes BR-S-09 (direction: non-zero) but is the
+    // wrong magnitude — BR-CO-17 catches it.
+    const m: EhfInvoiceModel = {
+      ...valid(),
+      taxSubtotals: [{ category: 'S', percent: 25, baseOre: øre(100_000), vatOre: øre(1) }],
+      vatOre: øre(1),
+      grossOre: øre(100_001),
+    };
+    const found = rules(m);
+    expect(found).toContain('BR-CO-17');
+    expect(found).not.toContain('BR-S-09');
+  });
+
+  it('BR-CO-17 ties a half-øre product via round-half-away-from-zero', () => {
+    // 100 002 øre × 25 % = 25 000.5 → 25 001 (away from zero).
+    const line = { ...valid().lines[0]!, unitPriceOre: øre(100_002), netOre: øre(100_002) };
+    const okModel: EhfInvoiceModel = {
+      ...valid(),
+      lines: [line],
+      taxSubtotals: [{ category: 'S', percent: 25, baseOre: øre(100_002), vatOre: øre(25_001) }],
+      netOre: øre(100_002),
+      vatOre: øre(25_001),
+      grossOre: øre(125_003),
+    };
+    expect(validateEhf(okModel).ok).toBe(true);
+    // The down-rounded 25 000 must be rejected.
+    const wrong: EhfInvoiceModel = {
+      ...okModel,
+      taxSubtotals: [{ category: 'S', percent: 25, baseOre: øre(100_002), vatOre: øre(25_000) }],
+      vatOre: øre(25_000),
+      grossOre: øre(125_002),
+    };
+    expect(rules(wrong)).toContain('BR-CO-17');
+  });
+
+  it('a 0 % category (Z) with zero VAT does not trip BR-CO-17', () => {
+    const m: EhfInvoiceModel = {
+      ...valid(),
+      lines: [{ ...valid().lines[0]!, vatCategory: 'Z', vatPercent: 0 }],
+      taxSubtotals: [{ category: 'Z', percent: 0, baseOre: øre(100_000), vatOre: øre(0) }],
+      vatOre: øre(0),
+      grossOre: øre(100_000),
+    };
+    expect(rules(m)).not.toContain('BR-CO-17');
+    expect(validateEhf(m).ok).toBe(true);
+  });
+
+  it('property: only round(base × 25 %) passes BR-CO-17 for a single standard-rated category', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 100_000_000 }), (base) => {
+        const expected = Number(mulRate(øre(base), rate(0.25)));
+        const m: EhfInvoiceModel = {
+          ...valid(),
+          lines: [{ ...valid().lines[0]!, unitPriceOre: øre(base), netOre: øre(base) }],
+          taxSubtotals: [{ category: 'S', percent: 25, baseOre: øre(base), vatOre: øre(expected) }],
+          netOre: øre(base),
+          vatOre: øre(expected),
+          grossOre: øre(base + expected),
+        };
+        return !validateEhf(m).violations.some((x) => x.rule === 'BR-CO-17');
+      }),
+    );
   });
 
   it('flags an empty document (no lines) — BR-16', () => {

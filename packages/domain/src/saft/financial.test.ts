@@ -352,9 +352,30 @@ describe('generateSaftFinancial — properties', () => {
         expect(m.totalDebitØre).toBe(m.totalCreditØre);
         expect(m.numberOfEntries).toBe(txs.length);
         // Every transaction lands in exactly one journal of its own type.
-        const placed = m.journals.flatMap((j) => j.transactions).length;
-        expect(placed).toBe(txs.length);
+        const allTx = m.journals.flatMap((j) => j.transactions);
+        expect(allTx.length).toBe(txs.length);
+        // Period AND PeriodYear are both derived from the transaction's own date.
+        for (const t of allTx) {
+          expect(t.period).toBe(Number(t.date.slice(5, 7)));
+          expect(t.periodYear).toBe(Number(t.date.slice(0, 4)));
+        }
       }),
+    );
+  });
+
+  it('derives Period + PeriodYear from the line date, and rejects an out-of-year transaction', () => {
+    // Both come from t.date (not the export-year header), so the pair can't disagree.
+    const m = generateSaftFinancial(salesInput(), META, accountIndex, codeIndex);
+    const t = m.journals.flatMap((j) => j.transactions)[0]!;
+    expect([t.date, t.period, t.periodYear]).toEqual(['2026-03-15', 3, 2026]);
+    // A transaction dated outside the single export year is a data-integrity error.
+    const input = salesInput();
+    const offYear: SaftFinancialInput = {
+      ...input,
+      transactions: [{ ...input.transactions[0]!, date: '2025-12-31' }],
+    };
+    expect(() => generateSaftFinancial(offYear, META, accountIndex, codeIndex)).toThrow(
+      /outside the export year/,
     );
   });
 

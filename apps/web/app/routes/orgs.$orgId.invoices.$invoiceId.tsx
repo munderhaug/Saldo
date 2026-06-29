@@ -105,7 +105,14 @@ export async function action({ request, params }: Route.ActionArgs) {
     const result = await withUserOrg(request, params.orgId, (tx) =>
       updateDraft(tx, params.orgId, params.invoiceId, parsed.data),
     );
-    if (!result.ok) return { error: t(`invoices.error.${result.error}`) };
+    if (!result.ok) {
+      return {
+        error:
+          result.error === 'not-a-draft'
+            ? t('invoices.error.notADraft')
+            : t(`invoices.error.${result.error}`),
+      };
+    }
     return redirect(detailUrl);
   }
 

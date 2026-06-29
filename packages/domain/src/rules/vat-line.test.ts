@@ -6,6 +6,7 @@ import { isBalanced } from '../posting/balance.js';
 import type { AccountNo, PostingLine, VatCode, Voucher } from '../posting/types.js';
 import { runRules } from './types.js';
 import { vatLineRule } from './vat-line.js';
+import { checkVatActivityLine } from '../vat/activity.js';
 
 const csv = readFileSync(
   new URL('../../../../db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv', import.meta.url),
@@ -97,6 +98,25 @@ describe('vatLineRule — line-level VAT validation over a voucher (ADR 0027)', 
       lines: [line('1920', 12_500, 0), line('1500', 0, 12_500)],
     };
     expect(vatLineRule({ status: 'under_threshold', codes }).evaluate(v)).toHaveLength(0);
+  });
+
+  // Boundary lock (review H7, ADR 0030): the sectoral ACTIVITY gate (checkVatActivityLine — the kap. 3
+  // "exempt-sector revenue may never carry output VAT" rule) is intentionally NOT wired into vatLineRule
+  // yet. The voucher/posting line model carries no `activity`, so there is nothing to gate on; the gate
+  // is sequenced to vat-mixed-activity. A line the activity gate WOULD block therefore passes here today.
+  // This test makes the open boundary explicit (mirroring the code-51 lock in vat/activity.test.ts) so
+  // wiring it later is a deliberate change, not a silent surprise.
+  it('does NOT yet enforce the sectoral activity gate (deferred per ADR 0030)', () => {
+    // A registered org charging output VAT (code 3) is registration-legal → vatLineRule passes it.
+    const v: Voucher = {
+      type: 'sales',
+      lines: [line('1500', 12_500, 0), line('3000', 0, 10_000, '3'), line('2700', 0, 2_500, '3')],
+    };
+    expect(errors(v, 'registered_standard')).toHaveLength(0);
+    expect(warnings(v, 'registered_standard')).toHaveLength(0);
+    // ...yet IF that revenue belonged to an exempt § 3-2 health activity, the activity gate would block
+    // it. vatLineRule has no activity input, so it cannot and does not gate that — the deferred boundary.
+    expect(checkVatActivityLine('helse', codes.get(vc('3'))!).ok).toBe(false);
   });
 
   it('plugs into runRules: an error fails the run, a warning does not', () => {

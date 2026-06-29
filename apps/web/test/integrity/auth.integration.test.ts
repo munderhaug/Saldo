@@ -12,7 +12,9 @@ import {
 } from '../../app/auth/session.server.js';
 import { authenticateWithPassword } from '../../app/auth/dev-auth.server.js';
 import {
+  createOidcUser,
   createUserWithPassword,
+  findUserByOidcIdentity,
   getMembership,
   getMemberships,
 } from '../../app/auth/users.server.js';
@@ -96,6 +98,24 @@ describe.skipIf(!ledgerDbAvailable)('Identity & sessions (real Postgres, app rol
     expect(await validateSessionToken(db, b)).toBeNull();
   });
 
+  it('sign-out-everywhere: invalidates all sessions, then a freshly minted one still validates', async () => {
+    // The semantics of the /auth/sign-out-everywhere action (review 2026-06-28): kill every existing
+    // session for the user, then re-mint for the acting device so it stays signed in.
+    const user = await createUserWithPassword(db, email(), 'secret123');
+    const a = generateSessionToken();
+    const b = generateSessionToken();
+    await createSession(db, a, user.id);
+    await createSession(db, b, user.id);
+
+    await invalidateUserSessions(db, user.id); // sign out everywhere
+    const fresh = generateSessionToken();
+    await createSession(db, fresh, user.id); // re-establish the acting device
+
+    expect(await validateSessionToken(db, a)).toBeNull(); // other devices are out
+    expect(await validateSessionToken(db, b)).toBeNull();
+    expect(await validateSessionToken(db, fresh)).not.toBeNull(); // acting device stays in
+  });
+
   it('authenticates the dev provider only with the right password', async () => {
     const e = email();
     const user = await createUserWithPassword(db, e, 'secret123');
@@ -123,5 +143,44 @@ describe.skipIf(!ledgerDbAvailable)('Identity & sessions (real Postgres, app rol
       role: 'owner',
     });
     expect(await getMembership(db, user.id, '00000000-0000-0000-0000-000000000000')).toBeNull();
+  });
+
+  // ── OIDC identity keyed on (iss, sub), not email (review H1 follow-up; ADR 0020, RFC 9700) ──
+
+  it('keys OIDC accounts on (iss, sub): the same email under two IdP subjects = two accounts', async () => {
+    const shared = email();
+    const iss = 'https://idp.example/';
+    const a = await createOidcUser(db, { iss, sub: 'sub-A', email: shared });
+    const b = await createOidcUser(db, { iss, sub: 'sub-B', email: shared });
+
+    // No takeover: a second subject asserting the same (verified) email gets its OWN account.
+    expect(a.id).not.toBe(b.id);
+    expect(a.email).toBe(shared);
+    expect(b.email).toBe(shared);
+    expect(a.passwordHash).toBeNull(); // OIDC accounts carry no password
+
+    // Re-login with the same identity resolves the SAME account; a different issuer does not.
+    expect(await findUserByOidcIdentity(db, iss, 'sub-A')).toMatchObject({ id: a.id });
+    expect(await findUserByOidcIdentity(db, 'https://other.example/', 'sub-A')).toBeNull();
+  });
+
+  it('blocks a duplicate (iss, sub): one IdP identity maps to exactly one account', async () => {
+    const iss = 'https://idp.example/';
+    const sub = `dup-${Date.now()}`;
+    await createOidcUser(db, { iss, sub, email: email() });
+    await expect(createOidcUser(db, { iss, sub, email: email() })).rejects.toThrow();
+  });
+
+  it('keeps email unique for PASSWORD users (the partial index still bites)', async () => {
+    const e = email();
+    await createUserWithPassword(db, e, 'secret123');
+    await expect(createUserWithPassword(db, e, 'secret123')).rejects.toThrow();
+  });
+
+  it('rejects a half-populated OIDC identity (the oidc pair CHECK)', async () => {
+    // Use the owner connection: this is an integrity-constraint probe, not a tenant op.
+    await expect(
+      ledger.sql`INSERT INTO app_user (email, oidc_iss) VALUES (${email()}, 'https://idp.example/')`,
+    ).rejects.toThrow(/app_user_oidc_pair_check/);
   });
 });

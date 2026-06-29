@@ -83,10 +83,23 @@ export type MvaMeldingResult =
   | { readonly registered: true; readonly melding: MvaMelding };
 
 /**
- * Whether a code reports a `grunnlag` (basis) line. Pure domestic input-deduction codes (1, 11–15)
- * report only the deducted VAT amount; every other code — output turnover, zero-rated/exempt sales,
- * and the reverse-charge basis codes — reports a basis. Derived from the committed SAF-T classification
- * (direction + reverse-charge flag), never a code-number list. Matches the committed example exactly.
+ * Whether a code is reportable on the MVA-melding at all. The no-VAT-treatment / outside-scope codes
+ * (0, 6, 7, 20 — SAF-T `direction='none'` AND `rateCategory='none'`) carry neither output VAT nor a
+ * deduction, so they are not VAT-return figures and must NOT surface as a melding line (a non-zero
+ * acquisition basis on code 0/20 would otherwise leak a bogus sats-0 grunnlag line). Everything with a
+ * VAT treatment — output turnover, zero-rated/exempt sales, input deduction, reverse-charge basis — is
+ * reportable. Derived from the committed SAF-T classification, never a code-number list.
+ */
+export function isMeldingReportable(code: SaftTaxCode): boolean {
+  return !(code.direction === 'none' && code.rateCategory === 'none');
+}
+
+/**
+ * For a REPORTABLE code (see {@link isMeldingReportable}), whether it reports a `grunnlag` (basis) line.
+ * Pure domestic input-deduction codes (1, 11–15) report only the deducted VAT amount; every other
+ * reportable code — output turnover, zero-rated/exempt sales, and the reverse-charge basis codes —
+ * reports a basis. Derived from the SAF-T classification (direction + reverse-charge flag), never a
+ * code-number list. Matches the committed example exactly.
  */
 export function reportsGrunnlag(code: SaftTaxCode): boolean {
   return !(code.direction === 'input' && !code.reverseCharge);
@@ -110,6 +123,9 @@ export function generateMvaMelding(
     if (agg.grunnlagØre === ZERO && agg.merverdiavgiftØre === ZERO) continue;
     const saft = codeIndex.get(agg.code);
     if (!saft) throw new Error(`MVA-melding: unknown SAF-T VAT code "${agg.code}"`);
+    // A no-VAT-treatment / outside-scope code (0/6/7/20) is not a return figure — skip it even if it
+    // carries a non-zero acquisition basis (review §5: don't leak a sats-0 grunnlag line).
+    if (!isMeldingReportable(saft)) continue;
 
     const line: MvaMeldingLine = reportsGrunnlag(saft)
       ? {

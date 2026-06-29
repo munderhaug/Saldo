@@ -97,4 +97,32 @@ describe.skipIf(!ledgerDbAvailable)('verify-restore.sql — post-restore integri
         if (!(e instanceof Error) || e.message !== 'rollback') throw e;
       });
   });
+
+  // The drift fix (review §9): the tenant set is derived from the catalog, and the trigger list now
+  // includes the invoice/bank triggers. Prove BOTH cover a table the OLD hand-typed list skipped.
+  it('BITES — the derived RLS check now covers a previously-skipped tenant table (bank_transaction)', async () => {
+    await db.sql
+      .begin(async (tx) => {
+        await tx.unsafe('DROP POLICY org_isolation ON bank_transaction');
+        await tx.unsafe(`SET LOCAL drill.expect_data TO '0'`);
+        await expect(tx.unsafe(doBlock)).rejects.toThrow(/no RLS policy on: bank_transaction/);
+        throw new Error('rollback');
+      })
+      .catch((e: unknown) => {
+        if (!(e instanceof Error) || e.message !== 'rollback') throw e;
+      });
+  });
+
+  it('BITES — raises on a previously-unlisted integrity trigger (bank_transaction_append_only)', async () => {
+    await db.sql
+      .begin(async (tx) => {
+        await tx.unsafe('DROP TRIGGER bank_transaction_append_only ON bank_transaction');
+        await tx.unsafe(`SET LOCAL drill.expect_data TO '0'`);
+        await expect(tx.unsafe(doBlock)).rejects.toThrow(/bank_transaction_append_only/);
+        throw new Error('rollback');
+      })
+      .catch((e: unknown) => {
+        if (!(e instanceof Error) || e.message !== 'rollback') throw e;
+      });
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hashPassword, verifyPassword } from './password.server.js';
+import { dummyVerify, hashPassword, verifyPassword } from './password.server.js';
 
 // Pure unit test (no Docker) — argon2id via @node-rs/argon2, prebuilt binary on linux-x64.
 describe('password hashing (argon2id)', () => {
@@ -13,5 +13,12 @@ describe('password hashing (argon2id)', () => {
   it('uses a random salt (same input → different hash)', async () => {
     const [a, b] = await Promise.all([hashPassword('same'), hashPassword('same')]);
     expect(a).not.toBe(b);
+  });
+
+  // The constant-work dummy verify (enumeration-timing defense): it must resolve for any input and
+  // never throw — so the absent-user branch can call it unconditionally.
+  it('dummyVerify resolves without throwing for any password', async () => {
+    await expect(dummyVerify('anything')).resolves.toBeUndefined();
+    await expect(dummyVerify('')).resolves.toBeUndefined();
   });
 });

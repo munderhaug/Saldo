@@ -125,6 +125,25 @@ describe('buildUblXml — BIS Billing 3.0 serialization', () => {
     expect(xml).toContain('<cbc:PaymentID>0000101</cbc:PaymentID>');
   });
 
+  it('emits cac:PayeeFinancialAccount for a credit transfer (code 30) when a payee account is set', () => {
+    const xml = buildUblXml({
+      ...standardInvoice(),
+      payeeAccount: { id: 'NO9386011117947', name: 'Selger ENK' },
+    });
+    expect(xml).toContain('<cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>');
+    expect(xml).toContain(
+      '<cac:PayeeFinancialAccount><cbc:ID>NO9386011117947</cbc:ID><cbc:Name>Selger ENK</cbc:Name></cac:PayeeFinancialAccount>',
+    );
+    // Child order: PaymentID precedes PayeeFinancialAccount inside PaymentMeans.
+    expect(xml.indexOf('<cbc:PaymentID>')).toBeLessThan(xml.indexOf('<cac:PayeeFinancialAccount>'));
+  });
+
+  it('omits cac:PayeeFinancialAccount when the org has no payout account configured', () => {
+    const xml = buildUblXml(standardInvoice()); // no payeeAccount
+    expect(xml).not.toContain('<cac:PayeeFinancialAccount>');
+    expect(xml).toContain('<cbc:PaymentID>0000101</cbc:PaymentID>'); // PaymentMeans still emitted for the KID
+  });
+
   it('serializes amounts as decimal kroner with the currency id, tying to the frozen totals', () => {
     const xml = buildUblXml(standardInvoice());
     expect(xml).toContain(

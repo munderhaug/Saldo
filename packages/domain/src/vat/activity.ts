@@ -76,9 +76,13 @@ export interface VatActivityVerdict {
  *   `reverse-charge` (checked before output) — so a code-51 line on an exempt sector is NOT blocked here
  *   yet; gating it belongs to `vat-reverse-charge`. It is an unrealistic combination for an exempt ENK.
  *
- * This composes with `checkVatLine` (registration): a line is valid only if BOTH gates pass. The activity
- * gate catches what registration alone cannot — a *registered* org may legally charge output VAT in
- * general, yet still must not on a § 3-2 health line.
+ * Composed with `checkVatLine` (registration), a line is valid only when BOTH gates pass — this is the
+ * activity half, catching what registration alone cannot (a *registered* org may legally charge output
+ * VAT in general, yet still must not on a § 3-2 health line). NB: that composition is the intended end
+ * state, **not yet the runtime behaviour of the voucher rules engine** — `vatLineRule` runs only the
+ * registration gate today, because the voucher/posting line model carries no `activity` to gate on
+ * (deferred per ADR 0030, sequenced to `vat-mixed-activity`). The open boundary is locked by a test in
+ * `rules/vat-line.test.ts` so wiring it later is a deliberate change, not a silent one.
  */
 export function checkVatActivityLine(activity: VatActivity, code: SaftTaxCode): VatActivityVerdict {
   const treatment = deriveVatTreatment(code);

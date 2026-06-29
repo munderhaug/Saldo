@@ -1,4 +1,4 @@
-import { pgTable, varchar, index, foreignKey, pgPolicy, check, uuid, text, timestamp, unique, char, numeric, integer, date, bigint, uniqueIndex, boolean, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, varchar, index, foreignKey, pgPolicy, check, uuid, text, timestamp, unique, numeric, integer, date, bigint, uniqueIndex, boolean, char, primaryKey } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 
@@ -31,18 +31,6 @@ export const invoiceEmail = pgTable("invoice_email", {
 		}),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("invoice_email_status_check", sql`status = ANY (ARRAY['sent'::text, 'failed'::text])`),
-]);
-
-export const organization = pgTable("organization", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgNr: char("org_nr", { length: 9 }).notNull(),
-	name: text().notNull(),
-	mvaStatus: text("mva_status").notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	unique("organization_org_nr_key").on(table.orgNr),
-	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(id = (current_setting('app.current_org'::text, true))::uuid)`  }),
-	check("organization_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
 ]);
 
 export const account = pgTable("account", {
@@ -188,16 +176,6 @@ export const voucher = pgTable("voucher", {
 	unique("voucher_id_org_uniq").on(table.id, table.organizationId),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("voucher_type_check", sql`type = ANY (ARRAY['sales'::text, 'purchase'::text, 'manual'::text, 'bank'::text, 'reversal'::text])`),
-]);
-
-export const appUser = pgTable("app_user", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	email: text().notNull(),
-	passwordHash: text("password_hash"),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	unique("app_user_email_key").on(table.email),
-	check("app_user_email_check", sql`(email = lower(email)) AND (email <> ''::text)`),
 ]);
 
 export const userSession = pgTable("user_session", {
@@ -504,6 +482,34 @@ export const bankTransaction = pgTable("bank_transaction", {
 	unique("bank_transaction_external_ref_uniq").on(table.bankAccountId, table.externalRef),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
 	check("bank_transaction_source_check", sql`source = ANY (ARRAY['camt054'::text, 'csv'::text, 'gocardless'::text])`),
+]);
+
+export const appUser = pgTable("app_user", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	email: text().notNull(),
+	passwordHash: text("password_hash"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	oidcIss: text("oidc_iss"),
+	oidcSub: text("oidc_sub"),
+}, (table) => [
+	uniqueIndex("app_user_email_pw_uniq").using("btree", table.email.asc().nullsLast().op("text_ops")).where(sql`(password_hash IS NOT NULL)`),
+	uniqueIndex("app_user_oidc_identity_uniq").using("btree", table.oidcIss.asc().nullsLast().op("text_ops"), table.oidcSub.asc().nullsLast().op("text_ops")).where(sql`(oidc_iss IS NOT NULL)`),
+	check("app_user_email_check", sql`(email = lower(email)) AND (email <> ''::text)`),
+	check("app_user_oidc_pair_check", sql`(oidc_iss IS NULL) = (oidc_sub IS NULL)`),
+]);
+
+export const organization = pgTable("organization", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgNr: char("org_nr", { length: 9 }).notNull(),
+	name: text().notNull(),
+	mvaStatus: text("mva_status").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	invoicePaymentAccount: text("invoice_payment_account"),
+	invoicePaymentAccountName: text("invoice_payment_account_name"),
+}, (table) => [
+	unique("organization_org_nr_key").on(table.orgNr),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("organization_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
 ]);
 
 export const membership = pgTable("membership", {

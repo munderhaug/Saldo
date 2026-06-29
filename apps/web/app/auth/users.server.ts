@@ -33,6 +33,24 @@ export async function findUserByEmail(db: Db, email: string): Promise<AppUserRow
   return rows[0] ?? null;
 }
 
+/**
+ * Look up an OIDC-linked account by its immutable identity — the IdP issuer + subject (ADR 0020,
+ * RFC 9700). This is the account key for the OIDC login path; email is NEVER the key (it can be
+ * re-assigned/aliased across a multi-IdP broker, which would otherwise be an account-takeover vector).
+ */
+export async function findUserByOidcIdentity(
+  db: Db,
+  iss: string,
+  sub: string,
+): Promise<AppUserRow | null> {
+  const rows = await db
+    .select({ id: appUser.id, email: appUser.email, passwordHash: appUser.passwordHash })
+    .from(appUser)
+    .where(and(eq(appUser.oidcIss, iss), eq(appUser.oidcSub, sub)))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
 export async function createUserWithPassword(
   db: Db,
   email: string,
@@ -46,11 +64,21 @@ export async function createUserWithPassword(
   return rows[0]!;
 }
 
-/** Create an OIDC-only user (no password; matched by verified email at each login). */
-export async function createOidcUser(db: Db, email: string): Promise<AppUserRow> {
+/**
+ * Create an OIDC-only user (no password). The account is keyed on the immutable `(iss, sub)` pair;
+ * the verified email is stored as a display attribute only, never as the lookup key.
+ */
+export async function createOidcUser(
+  db: Db,
+  identity: { iss: string; sub: string; email: string },
+): Promise<AppUserRow> {
   const rows = await db
     .insert(appUser)
-    .values({ email: normalizeEmail(email) })
+    .values({
+      email: normalizeEmail(identity.email),
+      oidcIss: identity.iss,
+      oidcSub: identity.sub,
+    })
     .returning({ id: appUser.id, email: appUser.email, passwordHash: appUser.passwordHash });
   return rows[0]!;
 }

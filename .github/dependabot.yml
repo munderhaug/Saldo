@@ -16,3 +16,10 @@ updates:
     directory: '/'
     schedule:
       interval: weekly
+
+  # Keeps the runtime image's base (infra/docker/Dockerfile FROM) fresh. NB: the docker updater tracks
+  # Dockerfile FROM lines only — compose.yaml / ci.yml service images are bumped manually on review.
+  - package-ecosystem: docker
+    directory: '/infra/docker'
+    schedule:
+      interval: weekly

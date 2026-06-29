@@ -15,6 +15,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 25 # the full gate matrix incl. real Postgres + build; never trips on a healthy run
     services:
       postgres:
         image: postgres:16
@@ -42,7 +43,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: git fetch --no-tags origin main 2>/dev/null || true # so origin/main..HEAD resolves below
       - run: pnpm commitlint # Conventional Commits on this branch's commits (safe no-op if unresolved)
-      - run: pnpm audit --audit-level=high # supply-chain gate
+      # Visible but NON-blocking: a freshly-disclosed transitive advisory with no fix must not red-wall
+      # every unrelated PR. The weekly freshness sweep + Dependabot security PRs are the triage path
+      # (review §9). Re-add a hard gate only against a triaged allow/deny list, not raw audit-level.
+      - run: pnpm audit --audit-level=high || true # supply-chain visibility (non-blocking)
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm lint:repo # .claude harness + cited-docs + link integrity + no-contradiction gate
@@ -57,3 +61,35 @@ jobs:
       - run: pnpm build
       - run: pnpm saft:validate # SAF-T Financial: generate + tie-out + well-formedness + XSD validation (real gate)
       - run: pnpm mva:validate # MVA-melding: generate + well-formedness + grounded subset + tie-out (real gate)
+      - run: pnpm ehf:validate # EHF/PEPPOL: generate + well-formedness + BIS Billing 3.0 subset (real gate)
+
+  # Build the production image and prove the PRUNED, non-root runtime actually boots and serves. This
+  # is the verification gate that makes the prod-only deps prune safe (review 2026-06-28, H3): without
+  # it the Dockerfile is never exercised in CI. Docker is pre-installed on ubuntu-latest, so no
+  # third-party action (and no SHA pin) is needed beyond checkout.
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: docker build -f infra/docker/Dockerfile -t saldo-web:ci .
+      - name: Smoke-test the image boots and serves
+        run: |
+          # env.ts validates DATABASE_URL (a required z.string().url()) at boot, so pass a DUMMY one —
+          # the "/" loader redirects to /auth/login (no session cookie) before any DB query, and env.ts
+          # only checks the URL shape, never connecting. So a syntactically-valid dummy boots the server
+          # and a 2xx/3xx proves the pruned image starts and serves without a real database.
+          docker run -d --name saldo-web-ci -p 3000:3000 \
+            -e DATABASE_URL='postgres://smoke:smoke@127.0.0.1:5432/smoke' \
+            saldo-web:ci
+          # Poll until the server binds.
+          code=000
+          for _ in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ || true)
+            [ "$code" != "000" ] && break
+            sleep 2
+          done
+          echo "GET / -> HTTP $code"
+          docker logs saldo-web-ci | tail -30
+          docker rm -f saldo-web-ci >/dev/null
+          case "$code" in 2??|3??) echo "smoke OK";; *) echo "smoke FAILED"; exit 1;; esac

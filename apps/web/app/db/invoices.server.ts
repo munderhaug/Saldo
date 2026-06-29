@@ -277,7 +277,13 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
 
     const unitPrice = line.unitPriceKr === '' ? øre(0) : parseKroner(line.unitPriceKr);
     const qtyNum = parseQuantity(line.quantity);
-    if (unitPrice === null || qtyNum === null) return { ok: false, error: 'unknown-vat-code' };
+    if (unitPrice === null || qtyNum === null) {
+      // Unreachable: the contract (contracts/invoice.ts) already validated these strings parse. A
+      // failure here is an invariant breach, not a VAT-code error — fail loud rather than mislabel it.
+      throw new Error(
+        'invoice prepare: unparseable price/quantity (the contract should reject this)',
+      );
+    }
 
     const computed = computeLine(status, saft, unitPrice, toQuantity(qtyNum));
     if (!computed.verdict.ok) {
@@ -350,6 +356,11 @@ export type CreateResult =
   | { readonly ok: true; readonly id: string }
   | { readonly ok: false; readonly error: PrepareError };
 
+/** updateDraft can additionally fail because the target is no longer an editable draft. */
+export type UpdateResult =
+  | { readonly ok: true; readonly id: string }
+  | { readonly ok: false; readonly error: PrepareError | 'not-a-draft' };
+
 /** Create a draft document for the current org from validated input; returns the new id. */
 export async function createDraft(
   tx: OrgTx,
@@ -382,7 +393,7 @@ export async function updateDraft(
   organizationId: string,
   invoiceId: string,
   input: InvoiceInput,
-): Promise<CreateResult> {
+): Promise<UpdateResult> {
   const prepared = await prepareInvoice(tx, input);
   if (!prepared.ok) return prepared;
   const updated = await tx
@@ -396,7 +407,7 @@ export async function updateDraft(
     })
     .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')))
     .returning({ id: invoice.id });
-  if (updated.length === 0) return { ok: false, error: 'unknown-vat-code' }; // not a draft / not found
+  if (updated.length === 0) return { ok: false, error: 'not-a-draft' }; // not a draft / not found
   await tx.delete(invoiceLine).where(eq(invoiceLine.invoiceId, invoiceId));
   await insertLines(tx, organizationId, invoiceId, prepared.lines);
   return { ok: true, id: invoiceId };
@@ -404,7 +415,10 @@ export async function updateDraft(
 
 export type IssueResult =
   | { readonly ok: true; readonly invoiceNumber: number | null }
-  | { readonly ok: false; readonly error: PrepareError | 'not-a-draft' };
+  | {
+      readonly ok: false;
+      readonly error: PrepareError | 'not-a-draft' | 'credit-note-source-not-posted';
+    };
 
 /**
  * Issue a draft: re-validate every line against the domain (authoritative), draw the GAPLESS number +
@@ -436,6 +450,21 @@ export async function issueInvoice(
       toQuantity(Number(line.quantity)),
     ).verdict;
     if (!verdict.ok) return { ok: false, error: verdict.reason ?? 'input-code-not-a-sale' };
+  }
+
+  // A credit note MUST reverse a real, posted source voucher — never an unlinked motbilag (review §5).
+  // Resolve it here, before any number allocation, so a malformed credit note (e.g. issued via the
+  // generic draft path with a blank/unresolvable creditsInvoiceId) fails typed and atomic rather than
+  // posting a reversal with no provenance back to the original.
+  if (current.kind === 'credit_note') {
+    const source = current.creditsInvoiceId
+      ? await tx
+          .select({ id: voucher.id })
+          .from(voucher)
+          .where(eq(voucher.invoiceId, current.creditsInvoiceId))
+          .limit(1)
+      : [];
+    if (!source[0]) return { ok: false, error: 'credit-note-source-not-posted' };
   }
 
   let invoiceNumber: number | null = null;
@@ -534,18 +563,22 @@ async function postIssuedVoucher(
     throw new Error(`invoice ${inv.id} derived an unpostable voucher: ${derived.error}`);
 
   // A credit note reverses the original invoice's voucher (the motbilag); a plain invoice posts as-is.
+  // The source voucher MUST resolve — issueInvoice already returned 'credit-note-source-not-posted' if
+  // it didn't, so reaching here without one is a should-never-happen; throw to roll back rather than
+  // post an unlinked reversal (review §5).
   let toPost = derived.voucher;
   let reversesVoucherId: string | null = null;
-  if (inv.kind === 'credit_note' && inv.creditsInvoiceId) {
-    const [orig] = await tx
-      .select({ id: voucher.id })
-      .from(voucher)
-      .where(eq(voucher.invoiceId, inv.creditsInvoiceId))
-      .limit(1);
-    reversesVoucherId = orig?.id ?? null;
-  }
   if (inv.kind === 'credit_note') {
-    toPost = reverseVoucher(derived.voucher, reversesVoucherId ?? undefined);
+    const [orig] = inv.creditsInvoiceId
+      ? await tx
+          .select({ id: voucher.id })
+          .from(voucher)
+          .where(eq(voucher.invoiceId, inv.creditsInvoiceId))
+          .limit(1)
+      : [];
+    if (!orig) throw new Error(`credit note ${inv.id}: no posted source voucher to reverse`);
+    reversesVoucherId = orig.id;
+    toPost = reverseVoucher(derived.voucher, reversesVoucherId);
   }
 
   const [createdVoucher] = await tx

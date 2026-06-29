@@ -6,8 +6,33 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-26 — session `saft-export` (ADR 0052: full SAF-T Financial export generated
-read-only from the posted ledger, XSD-valid in CI); prior `reporting` (ADR 0051), `mva-melding` (ADR 0050).
+**Last updated:** 2026-06-29 — session `review-followups` (the 2026-06-28 repo review, deferred-P0 + P1
++ P2; see `docs/repo-code-review-2026-06-28.md`); prior `saft-export` (ADR 0052), `reporting` (ADR 0051).
+
+### Review follow-ups landed (2026-06-28 review)
+Auth: OIDC accounts keyed on the immutable `(iss,sub)` (migration; email demoted to an attribute);
+login hardened (constant-work dummy verify, per-IP/per-account throttle, sign-out-everywhere). Domain:
+mod-11 KID matching; SAF-T `periodYear` from the line date + single-year guard; MVA-melding drops the
+no-treatment codes 0/6/7/20; EHF BR-CO-17 (VAT = base×rate) + `cac:PayeeFinancialAccount` for code 30;
+the kap.3 activity-gate deferral is now test-locked (still unwired per ADR 0030). Ledger/DR: a migration
+blocks moving an unposted voucher OUT of a locked period; the DR verifier derives its tenant/RLS set
+from `pg_catalog`. Web: LLM residency gate validates the host as an IP value (node:net); strict
+`customerEmail`; credit notes require a posted source voucher; error sentinels de-overloaded + upstream
+429 surfaced distinctly. Infra: non-root + prod-only-deps Docker image + a docker-build CI smoke job;
+non-blocking `pnpm audit`, deploy `lock_timeout`, per-job timeouts, Dependabot docker. Plus a
+**route-test harness** (env+dynamic-import seam) with XML-export/auth-tenancy/contacts route suites.
+
+### Remaining review follow-ups (open)
+- **Route tests**: the products/vouchers, send-invoice + PDF/EHF, and receipts-AI provenance-gate suites
+  (build on the committed `apps/web/test/routes/route-harness.ts`).
+- **`relations.ts`**: the generated relations join on `organization_id` instead of the real FK — fix +
+  add a Testcontainers per-relation smoke test before any `db.query.*.with` use (still latent/unused).
+- **Dedup**: single-source the org-nr Zod schema, the `kr`/`resolveYear` route helpers, and the VAT
+  keyword→classification table (the øre-rounding dedup landed).
+- **Docker digest-pinning**: pin base/service images to `@sha256:` — needs a Docker-enabled env to
+  resolve digests (Dependabot `docker` is wired to keep them fresh once set).
+- **Org payout account UI**: a settings surface to populate `organization.invoice_payment_account`
+  (the read/emit path for EHF `PayeeFinancialAccount` is wired; the column starts null).
 Branch + HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only
 go stale.
 
@@ -24,8 +49,13 @@ auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act
 - **Domain core (`packages/domain`, pure + property-tested):** money/`Øre`, ids, the VAT engine
   (`status` → per-line `line-treatment` → sectoral `activity` gate), the ENK income-`tax` estimate,
   `honest-number`, `posting`/balance, the `rules` engine, the `saft` code/account/rate model.
+  - *Sectoral activity gate (kap. 3) is pure but NOT yet wired into the voucher rules engine:*
+    `vatLineRule` runs only the registration gate (`checkVatLine`); `checkVatActivityLine` is enforced
+    only where an `activity` is in hand, because the voucher/posting line model carries no `activity`
+    field. Deferred per ADR 0030 (sequenced to `vat-mixed-activity`); the open boundary is locked by a
+    test in `rules/vat-line.test.ts`.
 - **Persistence + tenancy proven by Testcontainers:** the SQL ledger (voucher/posting/account/period/
-  invoice-counter), the 6 integrity triggers, the gapless counter, FORCE-RLS isolation — now including
+  invoice-counter), the 7 integrity triggers, the gapless counter, FORCE-RLS isolation — now including
   **stateful, model-based property testing** that drives random histories through the real Postgres
   (ADR 0039).
 - **Auth/identity landed:** sessions + argon2id dev provider; OIDC wired but **not live-verified**.

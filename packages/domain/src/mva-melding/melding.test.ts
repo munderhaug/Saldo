@@ -9,6 +9,7 @@ import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
 import { ANNUAL_TERM } from './term.js';
 import {
   generateMvaMelding,
+  isMeldingReportable,
   reportsGrunnlag,
   type MvaMeldingMeta,
   type VatCodeAggregate,
@@ -89,6 +90,20 @@ describe('generateMvaMelding — line shape (the sign rule)', () => {
     expect(r.melding.lines).toEqual([
       { mvaKode: '52', grunnlagØre: øre(20_000_00), sats: '0', merverdiavgiftØre: øre(0) },
     ]);
+  });
+
+  it('a no-VAT-treatment / outside-scope code (0/6/7/20) emits no line, even with a non-zero basis', () => {
+    // These codes carry no VAT and are not return figures — a non-zero acquisition/turnover basis on
+    // them must NOT leak a sats-0 grunnlag line (review §5). Note code 6 is outside the VAT Act.
+    for (const code of ['0', '6', '7', '20']) {
+      const r = generateMvaMelding(
+        [agg(code, øre(10_000_00), øre(0))],
+        meta('registered_standard'),
+        codeIndex,
+      );
+      if (!r.registered) throw new Error('expected registered');
+      expect(r.melding.lines).toEqual([]);
+    }
   });
 
   it('a reverse-charge code reports the import basis (grunnlag) + its deduction leg', () => {
@@ -176,6 +191,8 @@ describe('generateMvaMelding — properties', () => {
         if (!r.registered) throw new Error('expected registered');
         for (const line of r.melding.lines) {
           const saft = codeIndex.get(line.mvaKode)!;
+          // No no-treatment/outside-scope code ever reaches a line (it is dropped upstream).
+          expect(isMeldingReportable(saft)).toBe(true);
           if (reportsGrunnlag(saft)) {
             expect(line.grunnlagØre).toBeDefined();
             expect(line.sats).toBeDefined();

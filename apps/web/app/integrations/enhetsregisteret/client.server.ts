@@ -18,10 +18,12 @@ const USER_AGENT = 'Saldo/0.1 org-lookup';
 export type OrgNrLookup =
   | { ok: true; enhet: Enhet }
   | { ok: false; reason: 'not-found' }
+  | { ok: false; reason: 'rate-limited' }
   | { ok: false; reason: 'error' };
 
 export type NameSearch =
   | { ok: true; matches: Enhet[]; total: number }
+  | { ok: false; reason: 'rate-limited' }
   | { ok: false; reason: 'error' };
 
 /** Fetch with an abort-on-timeout. Throws on network error / timeout (callers map to `error`). */
@@ -47,6 +49,7 @@ export async function lookupByOrgNr(org: OrgNr): Promise<OrgNrLookup> {
     return { ok: false, reason: 'error' };
   }
   if (res.status === 404) return { ok: false, reason: 'not-found' };
+  if (res.status === 429) return { ok: false, reason: 'rate-limited' }; // brreg throttled us
   if (!res.ok) return { ok: false, reason: 'error' };
 
   const parsed = enhet.safeParse(await res.json().catch(() => null));
@@ -62,6 +65,7 @@ export async function searchByName(query: string): Promise<NameSearch> {
   } catch {
     return { ok: false, reason: 'error' };
   }
+  if (res.status === 429) return { ok: false, reason: 'rate-limited' }; // brreg throttled us
   if (!res.ok) return { ok: false, reason: 'error' };
 
   const parsed = enhetSearchResponse.safeParse(await res.json().catch(() => null));

@@ -27,7 +27,12 @@ export type ValidateResult =
   | {
       readonly ok: false;
       /** `error` covers both a network failure and a timeout/abort (both safely retryable — read-only). */
-      readonly reason: 'not-configured' | 'auth-failed' | 'error' | 'invalid-response';
+      readonly reason:
+        | 'not-configured'
+        | 'auth-failed'
+        | 'rate-limited'
+        | 'error'
+        | 'invalid-response';
     };
 
 const TIMEOUT_MS = 30_000;
@@ -81,6 +86,7 @@ export async function validateMeldingWithSkatteetaten(xml: string): Promise<Vali
     return { ok: false, reason: 'error' };
   }
   if (res.status === 401 || res.status === 403) return { ok: false, reason: 'auth-failed' };
+  if (res.status === 429) return { ok: false, reason: 'rate-limited' };
   if (!res.ok) return { ok: false, reason: 'error' };
 
   const body = await res.text().catch(() => null);

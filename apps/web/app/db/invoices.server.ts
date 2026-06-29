@@ -277,7 +277,13 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
 
     const unitPrice = line.unitPriceKr === '' ? øre(0) : parseKroner(line.unitPriceKr);
     const qtyNum = parseQuantity(line.quantity);
-    if (unitPrice === null || qtyNum === null) return { ok: false, error: 'unknown-vat-code' };
+    if (unitPrice === null || qtyNum === null) {
+      // Unreachable: the contract (contracts/invoice.ts) already validated these strings parse. A
+      // failure here is an invariant breach, not a VAT-code error — fail loud rather than mislabel it.
+      throw new Error(
+        'invoice prepare: unparseable price/quantity (the contract should reject this)',
+      );
+    }
 
     const computed = computeLine(status, saft, unitPrice, toQuantity(qtyNum));
     if (!computed.verdict.ok) {
@@ -350,6 +356,11 @@ export type CreateResult =
   | { readonly ok: true; readonly id: string }
   | { readonly ok: false; readonly error: PrepareError };
 
+/** updateDraft can additionally fail because the target is no longer an editable draft. */
+export type UpdateResult =
+  | { readonly ok: true; readonly id: string }
+  | { readonly ok: false; readonly error: PrepareError | 'not-a-draft' };
+
 /** Create a draft document for the current org from validated input; returns the new id. */
 export async function createDraft(
   tx: OrgTx,
@@ -382,7 +393,7 @@ export async function updateDraft(
   organizationId: string,
   invoiceId: string,
   input: InvoiceInput,
-): Promise<CreateResult> {
+): Promise<UpdateResult> {
   const prepared = await prepareInvoice(tx, input);
   if (!prepared.ok) return prepared;
   const updated = await tx
@@ -396,7 +407,7 @@ export async function updateDraft(
     })
     .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')))
     .returning({ id: invoice.id });
-  if (updated.length === 0) return { ok: false, error: 'unknown-vat-code' }; // not a draft / not found
+  if (updated.length === 0) return { ok: false, error: 'not-a-draft' }; // not a draft / not found
   await tx.delete(invoiceLine).where(eq(invoiceLine.invoiceId, invoiceId));
   await insertLines(tx, organizationId, invoiceId, prepared.lines);
   return { ok: true, id: invoiceId };

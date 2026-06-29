@@ -20,7 +20,7 @@ import { llmConfig } from './config.server';
 
 export type ExtractResult =
   | { ok: true; extraction: ReceiptExtraction }
-  | { ok: false; reason: 'not-configured' | 'error' | 'invalid-response' };
+  | { ok: false; reason: 'not-configured' | 'rate-limited' | 'error' | 'invalid-response' };
 
 /** A receipt image to extract from: raw bytes + its media type (e.g. `image/jpeg`). */
 export interface ReceiptImage {
@@ -104,6 +104,7 @@ export async function extractReceipt(image: ReceiptImage): Promise<ExtractResult
   } catch {
     return { ok: false, reason: 'error' };
   }
+  if (res.status === 429) return { ok: false, reason: 'rate-limited' };
   if (!res.ok) return { ok: false, reason: 'error' };
 
   const envelope = chatCompletion.safeParse(await res.json().catch(() => null));

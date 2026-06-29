@@ -80,6 +80,11 @@ describe('lookupByOrgNr', () => {
     expect(await lookupByOrgNr(equinor)).toEqual({ ok: false, reason: 'not-found' });
   });
 
+  it('maps 429 to rate-limited (distinct from a generic error)', async () => {
+    mockFetch(null, { status: 429 });
+    expect(await lookupByOrgNr(equinor)).toEqual({ ok: false, reason: 'rate-limited' });
+  });
+
   it('maps a 5xx to error', async () => {
     mockFetch(null, { status: 503 });
     expect(await lookupByOrgNr(equinor)).toEqual({ ok: false, reason: 'error' });

@@ -12,7 +12,7 @@ const CR = String.fromCharCode(0x0d);
 describe('escapeXml', () => {
   it('escapes the four predefined entities and leaves apostrophe alone', () => {
     expect(escapeXml('Tom & Jerry <AS> "x" it\'s')).toBe(
-      'Tom &amp; Jerry &lt;AS&gt; &quot;x&quot; it\'s',
+      "Tom &amp; Jerry &lt;AS&gt; &quot;x&quot; it's",
     );
   });
 

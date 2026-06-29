@@ -141,8 +141,7 @@ export const nb = {
     'Det ser ut som et organisasjonsnummer, men kontrollsifferet stemmer ikke. Sjekk tallene en gang til?',
   'oppslag.error':
     'Jeg fikk ikke kontakt med Enhetsregisteret akkurat nå. Prøv igjen om et øyeblikk.',
-  'oppslag.rateLimited':
-    'Jeg håndterer mange søk akkurat nå. Vent et lite øyeblikk og prøv igjen.',
+  'oppslag.rateLimited': 'Jeg håndterer mange søk akkurat nå. Vent et lite øyeblikk og prøv igjen.',
   'oppslag.tooShort': 'Skriv minst to tegn for å søke på navn.',
   // Detail card — field labels
   'oppslag.field.orgnr': 'Organisasjonsnummer',

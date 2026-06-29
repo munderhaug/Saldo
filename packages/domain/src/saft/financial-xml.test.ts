@@ -193,7 +193,9 @@ describe('buildSaftXml — properties', () => {
         expect(/&(?!amp;|lt;|gt;|quot;|#)/.test(x)).toBe(false);
         // No character the XML 1.0 Char production forbids survived into the document. Compute once and
         // assert once — a per-char expect() over the whole document × the property runs is needlessly slow.
-        const hasIllegal = Array.from(x).some((ch) => isXmlIllegalCodePoint(ch.codePointAt(0) ?? 0));
+        const hasIllegal = Array.from(x).some((ch) =>
+          isXmlIllegalCodePoint(ch.codePointAt(0) ?? 0),
+        );
         expect(hasIllegal).toBe(false);
         expect(x.endsWith('</AuditFile>')).toBe(true);
       }),

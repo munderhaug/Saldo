@@ -895,13 +895,36 @@
     {
       "id": "feat-supplier-invoices",
       "title": "Supplier invoices, expense rules, owner draws & mileage (purchases completion)",
-      "status": "todo",
+      "implements_adr": ["0054"],
+      "touches": [
+        "packages/domain/src/posting/purchase-invoice.ts",
+        "packages/domain/src/posting/owner.ts",
+        "packages/domain/src/vat/expense-deductibility.ts",
+        "db/migrations",
+        "apps/web/app/db/supplier-invoices.server.ts",
+        "apps/web/app/routes"
+      ],
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P4-feature",
       "depends_on": ["feat-contacts-register", "feat-manual-voucher-entry", "vat-reverse-charge"],
-      "notes": "Build-spec §8.5 + §16 Phase 4. Completes purchases beyond receipt extraction (feat-receipt-extraction, done): manual supplier-invoice entry with per-supplier defaults; the input-VAT fork by MVA status (deriveStandard*); encoded non-deductible rules (representasjon, vehicles, private use); reverse charge on foreign services (vat-reverse-charge); recurring expenses; owner outlays (utlegg) & drawings (privatuttak); mileage/travel deductions (kjøregodtgjørelse/diett) as deductions, not payroll. All posts through the existing append-only ledger path.",
-      "refs": ["docs/saldo-build-specification.md", "packages/domain/src/posting/derive.ts"]
+      "notes": "DONE (ADR 0054): supplier_invoice + supplier_invoice_line tables (no gapless number, draft→posted, append-only once posted) + voucher.supplier_invoice_id link; derivePurchaseInvoice merges per-line derivePurchase/deriveReverseChargePurchase into one balanced AP voucher (input-VAT fork reused, payable credited net on RC lines); expense-deductibility encodes the representasjon/restricted_vehicle/private_use non-deductible reasons (human-recorded → gross to cost); deriveOwnerOutlay (utlegg + mileage/diett, equity contra) + deriveDrawing (privatuttak) post owner-economy events as equity, not payroll; full routes (purchases list/new/detail + owner/new) + exhaustive/property + Testcontainers + route tests. Deferred: recurring expenses (needs graphile-worker runner — see feat-recurring-expenses), goods-withdrawal output VAT, AP aging/supplier reskontro, auto-suggesting a non-deductible reason from the account.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/decisions/0054-supplier-invoices-expense-rules.md"
+      ]
+    },
+    {
+      "id": "feat-recurring-expenses",
+      "title": "Recurring expenses — scheduled supplier-invoice/expense generation",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P4-feature",
+      "depends_on": ["feat-supplier-invoices"],
+      "notes": "Build-spec §8.5 (recurring expenses), deferred from feat-supplier-invoices (ADR 0054). Needs the in-Postgres graphile-worker runner (ADR 0010) actually stood up — recurring INVOICES are likewise still deferred for the same reason. A recurring template + cadence generates a draft supplier invoice per period; the human still confirms/posts (AI/automation never writes the ledger). Pair with recurring-invoice generation when the jobs surface lands.",
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0010-graphile-worker-jobs.md"]
     },
     {
       "id": "feat-banking-import",

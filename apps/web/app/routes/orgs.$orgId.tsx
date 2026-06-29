@@ -153,6 +153,22 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
           </li>
           <li>
             <Link
+              to={`/orgs/${org.id}/purchases`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('purchases.title')}
+            </Link>
+          </li>
+          <li>
+            <Link
+              to={`/orgs/${org.id}/owner/new`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('owner.new.title')}
+            </Link>
+          </li>
+          <li>
+            <Link
               to={`/orgs/${org.id}/bank`}
               className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
             >

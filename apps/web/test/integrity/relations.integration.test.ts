@@ -43,6 +43,9 @@ interface Graph {
   bankAccountId: string;
   bankTransactionId: string;
   invoiceEmailId: string;
+  supplierInvoiceId: string;
+  supplierInvoiceLineId: string;
+  supplierVoucherId: string;
 }
 
 /** Build one fully-connected graph touching every table that has a relation, satisfying all CHECKs. */
@@ -129,6 +132,25 @@ async function seedGraph(ledger: LedgerDb): Promise<Graph> {
     INSERT INTO invoice_email (organization_id, invoice_id, recipient, status)
     VALUES (${orgId}, ${invoiceId}, 'kunde@example.no', 'sent') RETURNING id`;
 
+  // A supplier invoice + line + the voucher that books it — exercises the AP-side relations.
+  const [supplierInvoice] = await sql<{ id: string }[]>`
+    INSERT INTO supplier_invoice (organization_id, status, supplier_id, supplier_name, net_ore, vat_ore, gross_ore)
+    VALUES (${orgId}, 'draft', ${contactId}, 'Leverandør AS', 100000, 25000, 125000)
+    RETURNING id`;
+  const supplierInvoiceId = supplierInvoice!.id;
+
+  const [supplierLine] = await sql<{ id: string }[]>`
+    INSERT INTO supplier_invoice_line (organization_id, supplier_invoice_id, line_no, description, quantity, account_id, vat_code_id, unit_price_ore, net_ore, vat_ore)
+    VALUES (${orgId}, ${supplierInvoiceId}, 1, 'Innkjøp', 1, ${debitAccountId}, ${vatCodeId}, 100000, 100000, 25000)
+    RETURNING id`;
+  const supplierInvoiceLineId = supplierLine!.id;
+
+  const [supplierVoucher] = await sql<{ id: string }[]>`
+    INSERT INTO voucher (organization_id, type, period_id, supplier_invoice_id)
+    VALUES (${orgId}, 'purchase', ${openPeriodId}, ${supplierInvoiceId})
+    RETURNING id`;
+  const supplierVoucherId = supplierVoucher!.id;
+
   return {
     orgId,
     debitAccountId,
@@ -148,6 +170,9 @@ async function seedGraph(ledger: LedgerDb): Promise<Graph> {
     bankAccountId,
     bankTransactionId: bankTx!.id,
     invoiceEmailId: email!.id,
+    supplierInvoiceId,
+    supplierInvoiceLineId,
+    supplierVoucherId,
   };
 }
 
@@ -279,6 +304,41 @@ describe.skipIf(!ledgerDbAvailable)(
         with: { reversesVoucher: true },
       });
       expect(reversal?.reversesVoucher?.id).toBe(g.voucherId);
+    });
+
+    it('supplierInvoiceLine: supplierInvoice / account / vatCode / organization', async () => {
+      const row = await db.query.supplierInvoiceLine.findFirst({
+        where: eq(schema.supplierInvoiceLine.id, g.supplierInvoiceLineId),
+        with: { supplierInvoice: true, account: true, vatCode: true, organization: true },
+      });
+      expect(row?.supplierInvoice?.id).toBe(g.supplierInvoiceId);
+      expect(row?.account?.id).toBe(g.debitAccountId);
+      expect(row?.vatCode?.id).toBe(g.vatCodeId);
+      expect(row?.organization?.id).toBe(g.orgId);
+    });
+
+    it('supplierInvoice: supplier / organization + many (lines, vouchers)', async () => {
+      const row = await db.query.supplierInvoice.findFirst({
+        where: eq(schema.supplierInvoice.id, g.supplierInvoiceId),
+        with: {
+          supplier: true,
+          organization: true,
+          supplierInvoiceLines: true,
+          vouchers: true,
+        },
+      });
+      expect(row?.supplier?.id).toBe(g.contactId);
+      expect(row?.organization?.id).toBe(g.orgId);
+      expect(row?.supplierInvoiceLines.map((l) => l.id)).toContain(g.supplierInvoiceLineId);
+      expect(row?.vouchers.map((v) => v.id)).toContain(g.supplierVoucherId);
+    });
+
+    it('voucher: supplierInvoice back-reference resolves', async () => {
+      const row = await db.query.voucher.findFirst({
+        where: eq(schema.voucher.id, g.supplierVoucherId),
+        with: { supplierInvoice: true },
+      });
+      expect(row?.supplierInvoice?.id).toBe(g.supplierInvoiceId);
     });
 
     it('aiProvenance: voucher / organization', async () => {

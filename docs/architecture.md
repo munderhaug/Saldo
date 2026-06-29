@@ -61,6 +61,6 @@ fails the build.
 - **The one hard boundary — `@saldo/domain` (pure):** 46 source modules, relative-imports-only, no wall-clock/random (enforced by `pnpm arch:check`). Submodules: banking, catalog, extraction, honest-number, ids, invoice, money, mva-melding, peppol, posting, reconciliation, reporting, rules, saft, tax, time, vat, xml.
 - **`apps/web` modules (impure side):** auth, components, contracts, copy, db, documents, integrations, jobs, lib, observability, routes.
 - **Client↔server boundary:** 36 route/index declarations in [`apps/web/app/routes.ts`](../apps/web/app/routes.ts) — loaders/actions, no separate API.
-- **SQL integrity surface** (11 migrations in `db/migrations/*.sql`): 18 tables, 21 RLS policies, 7 triggers, 14 functions. Integrity triggers: bank_transaction_append_only, invoice_immutable, invoice_line_immutable, posting_immutable, posting_period_lock, voucher_immutable, voucher_period_lock.
+- **SQL integrity surface** (12 migrations in `db/migrations/*.sql`): 18 tables, 21 RLS policies, 7 triggers, 14 functions. Integrity triggers: bank_transaction_append_only, invoice_immutable, invoice_line_immutable, posting_immutable, posting_period_lock, voucher_immutable, voucher_period_lock.
 <!-- /AUTOGEN:arch-graph -->
 

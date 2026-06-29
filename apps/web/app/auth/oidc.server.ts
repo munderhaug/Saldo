@@ -57,7 +57,7 @@ export async function beginOidcLogin(): Promise<{
 export async function completeOidcLogin(
   currentUrl: URL,
   tx: OidcTransaction,
-): Promise<{ email: string; subject: string }> {
+): Promise<{ email: string; issuer: string; subject: string }> {
   const config = await getConfig();
   const tokens = await client.authorizationCodeGrant(config, currentUrl, {
     pkceCodeVerifier: tx.codeVerifier,
@@ -67,17 +67,15 @@ export async function completeOidcLogin(
   const claims = tokens.claims();
   const email = typeof claims?.email === 'string' ? claims.email.toLowerCase() : undefined;
   if (!claims || !email) throw new Error('OIDC: the ID token has no usable email claim');
-  // The account is keyed on email (find-or-create at the callback), so the email MUST be provider-
-  // verified — otherwise an IdP that asserts an unverified address could sign a caller in as an existing
-  // account (OIDC Security BCP / RFC 9700: the "login with unverified email" account-takeover). The
-  // `email_verified` claim is an OIDC-core boolean; require a strict `true` (reject string/absent). The
-  // stronger hardening — keying the account on the immutable `(iss, sub)` pair and treating email as a
-  // mere attribute — needs a schema column for `sub` and is tracked as a follow-up; `subject` is already
-  // returned here so the callback can adopt it once that column exists.
+  // The account is keyed on the IdP's immutable `(iss, sub)` pair (ADR 0020, RFC 9700), NOT on email —
+  // email is a re-assignable, broker-fronted attribute, so keying on it is the classic "login with
+  // unverified/aliased email" account-takeover. `iss`/`sub` are validated by openid-client during the
+  // grant above and are guaranteed present on a verified ID token. We still require `email_verified`
+  // (an OIDC-core boolean; strict `true`) before storing the address so a *displayed* email is trusted.
   if (claims.email_verified !== true) {
     throw new Error('OIDC: the ID token email is not verified (email_verified must be true)');
   }
-  return { email, subject: claims.sub };
+  return { email, issuer: claims.iss, subject: claims.sub };
 }
 
 // ── Transaction cookie: state/nonce/verifier across the redirect (HttpOnly, short-lived) ──

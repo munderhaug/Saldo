@@ -47,6 +47,34 @@ describe.skipIf(!ledgerDbAvailable)('SQL ledger integrity — closed gaps (real 
 
       await expect(db.sql`DELETE FROM voucher WHERE id = ${voucherId}`).rejects.toThrow(/locked/i);
     });
+
+    it('blocks moving an unposted voucher OUT of a now-locked period (review §9)', async () => {
+      const org = await seedOrg(db.sql);
+      const voucherId = await insertVoucher(db.sql, org.orgId, org.openPeriodId);
+      // A second, non-overlapping OPEN period to attempt the move into (2024 ∉ {2026 open, 2025 locked}).
+      const [dest] = await db.sql<{ id: string }[]>`
+        INSERT INTO fiscal_period (organization_id, year, starts_on, ends_on)
+        VALUES (${org.orgId}, 2024, '2024-01-01', '2024-12-31') RETURNING id`;
+      // Lock the voucher's CURRENT period, then try to move it out. The COALESCE(NEW,OLD) form only saw
+      // the (open) destination and let this through — the bug this fix closes.
+      await db.sql`UPDATE fiscal_period SET locked_at = now() WHERE id = ${org.openPeriodId}`;
+
+      await expect(
+        db.sql`UPDATE voucher SET period_id = ${dest!.id} WHERE id = ${voucherId}`,
+      ).rejects.toThrow(/locked/i);
+    });
+
+    it('still allows moving a voucher between two OPEN periods (the fix is not over-broad)', async () => {
+      const org = await seedOrg(db.sql);
+      const voucherId = await insertVoucher(db.sql, org.orgId, org.openPeriodId);
+      const [dest] = await db.sql<{ id: string }[]>`
+        INSERT INTO fiscal_period (organization_id, year, starts_on, ends_on)
+        VALUES (${org.orgId}, 2024, '2024-01-01', '2024-12-31') RETURNING id`;
+
+      await expect(
+        db.sql`UPDATE voucher SET period_id = ${dest!.id} WHERE id = ${voucherId}`,
+      ).resolves.not.toThrow();
+    });
   });
 
   // ── Gap 2: a posted voucher must have >= 2 postings and balance ──

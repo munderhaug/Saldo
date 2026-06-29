@@ -57,3 +57,29 @@ jobs:
       - run: pnpm build
       - run: pnpm saft:validate # SAF-T Financial: generate + tie-out + well-formedness + XSD validation (real gate)
       - run: pnpm mva:validate # MVA-melding: generate + well-formedness + grounded subset + tie-out (real gate)
+
+  # Build the production image and prove the PRUNED, non-root runtime actually boots and serves. This
+  # is the verification gate that makes the prod-only deps prune safe (review 2026-06-28, H3): without
+  # it the Dockerfile is never exercised in CI. Docker is pre-installed on ubuntu-latest, so no
+  # third-party action (and no SHA pin) is needed beyond checkout.
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - run: docker build -f infra/docker/Dockerfile -t saldo-web:ci .
+      - name: Smoke-test the image boots and serves
+        run: |
+          docker run -d --name saldo-web-ci -p 3000:3000 saldo-web:ci
+          # The "/" loader redirects to /auth/login before touching the DB, so a 2xx/3xx proves the
+          # pruned image starts and serves without a database. Poll until the server binds.
+          code=000
+          for _ in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ || true)
+            [ "$code" != "000" ] && break
+            sleep 2
+          done
+          echo "GET / -> HTTP $code"
+          docker logs saldo-web-ci | tail -30
+          docker rm -f saldo-web-ci >/dev/null
+          case "$code" in 2??|3??) echo "smoke OK";; *) echo "smoke FAILED"; exit 1;; esac

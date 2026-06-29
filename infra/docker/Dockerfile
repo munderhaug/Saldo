@@ -16,15 +16,25 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS build
 COPY . .
 RUN pnpm --filter @saldo/web build
+# Produce a self-contained, PROD-ONLY deployment of @saldo/web (review 2026-06-28, H3): prod
+# `node_modules` (no vite/vitest/drizzle-kit/tailwind/testcontainers/tsx) + the freshly built tree.
+# `@saldo/domain` is BUNDLED into build/server/index.js by Vite (verified: the server bundle has no
+# external `@saldo/domain` require), so the raw-TS workspace package never loads at runtime and the
+# pruned image needs nothing from it. Deploy outside the workspace dir to avoid an in-tree target.
+RUN pnpm --filter @saldo/web deploy --prod /prod
 
 FROM base AS runtime
 ENV NODE_ENV=production
+# Copy ONLY the runtime essentials: prod node_modules, the build output, and package.json (for the
+# `start` script). No source, tests, dev dependencies, or tooling reach the production image (H3).
+COPY --from=build --chown=node:node /prod/node_modules ./node_modules
+COPY --from=build --chown=node:node /prod/build ./build
+COPY --from=build --chown=node:node /prod/package.json ./package.json
 # Run as the unprivileged `node` user (uid 1000, shipped by the node image), never root, to limit the
-# blast radius of any container escape (review 2026-06-28, H3). `--chown` hands the copied tree to node.
-# FOLLOW-UP (needs a Docker build to verify — no image is built in CI today, so it is deliberately not
-# bundled here): prune to prod-only deps, e.g. `pnpm --filter @saldo/web deploy --prod /app/out`, and
-# copy only that pruned output + the build/, so dev dependencies aren't shipped in the runtime image.
-COPY --from=build --chown=node:node /app /app
+# blast radius of any container escape (H3).
 USER node
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@saldo/web", "start"]
+# Invoke the server entry directly with node — NOT `pnpm start`: pnpm would run a deps-status check and
+# try to (re)install at boot, and the generated .bin shims bake absolute NODE_PATHs from the build-time
+# deploy dir. `node` resolves deps through pnpm's relative node_modules symlinks regardless of path.
+CMD ["node", "node_modules/@react-router/serve/bin.js", "./build/server/index.js"]

@@ -16,6 +16,7 @@
  */
 import { z } from 'zod';
 import { MVA_STATUSES } from '@saldo/domain';
+import { optionalOrgNrShape } from './org-nr';
 
 /** The one register holds both kinds; a contact may be a customer, a supplier, or both. */
 export const CONTACT_ROLES = ['customer', 'supplier', 'both'] as const;
@@ -40,13 +41,8 @@ export const contactInput = z.object({
   name: z.string().trim().min(1, 'Skriv navnet på kontakten').max(200), // personal
   role: z.enum(CONTACT_ROLES),
   // Optional: private persons have no org-nr. '' means none; otherwise 9 digits (spaces stripped).
-  orgNr: z // personal: an ENK's / private person's org-nr identifies a natural person
-    .string()
-    .trim()
-    .refine(
-      (v) => v === '' || /^\d{9}$/.test(v.replace(/\s/g, '')),
-      'Organisasjonsnummer må være 9 siffer',
-    ),
+  // personal: an ENK's / private person's org-nr identifies a natural person.
+  orgNr: optionalOrgNrShape,
   email: z.string().trim().max(320), // personal
   phone: z.string().trim().max(40), // personal
   addressLine: z.string().trim().max(200), // personal: an ENK's may be a home address

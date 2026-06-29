@@ -10,12 +10,14 @@
  */
 import { Link } from 'react-router';
 import { z } from 'zod';
-import { formatKr, generateSaftFinancial, saftBalances, øre } from '@saldo/domain';
+import { generateSaftFinancial, saftBalances } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.saft';
 import { withUserOrg } from '~/auth/auth.server';
 import { readOrgOverview } from '~/db/organizations.server';
 import { readSaftFinancial } from '~/db/saft.server';
 import { STANDARD_ACCOUNT_INDEX, STANDARD_TAX_CODE_INDEX } from '~/db/provisioning.server';
+import { resolveYear } from '~/lib/fiscal-year';
+import { kr } from '~/lib/money-format';
 import { t } from '~/copy';
 
 export function meta() {
@@ -25,13 +27,6 @@ export function meta() {
 /** Figures + org identity are financial data; keep the page off any shared cache. */
 export function headers() {
   return { 'Cache-Control': 'private, no-store' };
-}
-
-/** Resolve the fiscal year from `?year=` (4-digit), defaulting to the current year. */
-function resolveYear(request: Request): number {
-  const raw = new URL(request.url).searchParams.get('year');
-  const parsed = z.coerce.number().int().min(2000).max(2100).safeParse(raw);
-  return parsed.success ? parsed.data : new Date().getFullYear();
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -63,8 +58,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     tieOut: saftBalances(model),
   };
 }
-
-const kr = (ore: number): string => formatKr(øre(ore));
 
 export default function SaftExportRoute({ loaderData }: Route.ComponentProps) {
   const { orgId, year, accountCount, transactionCount, totalDebitOre, totalCreditOre, tieOut } =

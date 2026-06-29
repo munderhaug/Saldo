@@ -6,6 +6,7 @@
  * `./rates.ts` (docs/regulatory/mva-rates.md).
  */
 import type { VatCode } from '../posting/types.js';
+import { TAX_CODE_KEYWORDS as K } from './tax-code-keywords.js';
 
 /** The rate *category* a SAF-T code carries; the numeric percentage is resolved in `rates.ts`. */
 export type RateCategory =
@@ -62,21 +63,13 @@ function rateCategoryFromLabel(label: string): RateCategory {
 /** Classify a code's VAT direction from its (committed) Norwegian description. */
 function deriveDirection(descriptionNo: string): VatDirection {
   const s = descriptionNo.toLowerCase();
-  if (s.includes('utgående')) return 'output';
-  if (
-    s.includes('fritatt for merverdiavgift') ||
-    s.includes('omvendt avgiftplikt') ||
-    s.includes('utførsel')
-  ) {
+  if (s.includes(K.output)) return 'output';
+  if (s.includes(K.exemptOutput) || s.includes(K.reverseCharge) || s.includes(K.export)) {
     return 'output';
   }
   // "uten fradragsrett" (no deduction) must be checked before the deductible-input patterns.
-  if (s.includes('uten fradragsrett')) return 'none';
-  if (
-    s.includes('inngående') ||
-    s.includes('innførselsmerverdiavgift') ||
-    s.includes('med fradragsrett')
-  ) {
+  if (s.includes(K.nonDeductible)) return 'none';
+  if (s.includes(K.input) || s.includes(K.importVat) || s.includes(K.deductible)) {
     return 'input';
   }
   return 'none';
@@ -91,10 +84,10 @@ function deriveDirection(descriptionNo: string): VatDirection {
 function deriveReverseCharge(descriptionNo: string): boolean {
   const s = descriptionNo.toLowerCase();
   return (
-    s.includes('omvendt avgiftplikt') ||
-    s.includes('kjøpt fra utlandet') ||
-    s.includes('klimakvoter eller gull') ||
-    s.includes('innførsel av varer')
+    s.includes(K.reverseCharge) ||
+    s.includes(K.foreignServices) ||
+    s.includes(K.emissionsOrGold) ||
+    s.includes(K.importGoods)
   );
 }
 
@@ -149,8 +142,8 @@ export type ReverseChargeKind = 'foreign-services' | 'import-goods' | 'domestic'
 
 export function reverseChargeKind(code: SaftTaxCode): ReverseChargeKind {
   const s = code.descriptionNo.toLowerCase();
-  if (s.includes('kjøpt fra utlandet')) return 'foreign-services';
-  if (s.includes('innførsel av varer')) return 'import-goods';
+  if (s.includes(K.foreignServices)) return 'foreign-services';
+  if (s.includes(K.importGoods)) return 'import-goods';
   return 'domestic';
 }
 

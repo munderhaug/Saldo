@@ -1012,6 +1012,27 @@
       ]
     },
     {
+      "id": "feat-org-payout-account",
+      "title": "Org payout-account settings UI (EHF PayeeFinancialAccount source)",
+      "status": "done",
+      "implements_adr": ["0053"],
+      "value": "medium",
+      "effort": "S",
+      "phase": "P8",
+      "depends_on": ["feat-saft-export"],
+      "touches": [
+        "apps/web/app/routes/orgs.$orgId.settings.tsx",
+        "apps/web/app/db/organizations.server.ts",
+        "apps/web/app/contracts/organization.ts",
+        "packages/domain/src/ids/bank-account.ts"
+      ],
+      "notes": "DONE (ADR 0053). Settings route reads/writes organization.invoice_payment_account[_name] — the EHF cac:PayeeFinancialAccount the read/emit path already consumes. New domain isValidBankAccount (Norwegian BBAN mod-11 / Norwegian IBAN mod-97) validates at the action boundary, mirroring the org-nr pattern; stored normalized; column stays nullable (no regression). Route + domain (exhaustive + property) tests.",
+      "refs": [
+        "docs/decisions/0053-org-payout-account.md",
+        "db/migrations/20260629064638_org_invoice_payment_account.sql"
+      ]
+    },
+    {
       "id": "feat-audit-log",
       "title": "Immutable audit trail (sporbarhet) + full data export (anti-lock-in)",
       "status": "todo",

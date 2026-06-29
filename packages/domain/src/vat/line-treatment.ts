@@ -15,6 +15,7 @@
  * `./status.ts` (`chargesOutputVat` / `deductsInputVat`) — the same fork `posting/derive.ts` uses.
  */
 import type { SaftTaxCode } from '../saft/tax-codes.js';
+import { TAX_CODE_KEYWORDS } from '../saft/tax-code-keywords.js';
 import { chargesOutputVat, deductsInputVat, type MvaStatus } from './status.js';
 
 /**
@@ -58,7 +59,7 @@ export function deriveVatTreatment(code: SaftTaxCode): VatTreatment {
   }
   if (code.direction === 'input') return 'input-deductible';
   // direction === 'none' and not reverse-charge: unntatt turnover vs. a no-VAT technical code.
-  if (code.descriptionNo.toLowerCase().includes('utenfor merverdiavgiftsloven')) return 'exempt';
+  if (code.descriptionNo.toLowerCase().includes(TAX_CODE_KEYWORDS.outsideVatAct)) return 'exempt';
   return 'no-treatment';
 }
 

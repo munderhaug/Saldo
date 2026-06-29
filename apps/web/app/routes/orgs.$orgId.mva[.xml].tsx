@@ -17,6 +17,7 @@ import { withUserOrg } from '~/auth/auth.server';
 import { aggregateVatByCode } from '~/db/mva-melding.server';
 import { readOrgOverview } from '~/db/organizations.server';
 import { asMvaStatus } from '~/lib/org-format';
+import { resolveYear } from '~/lib/fiscal-year';
 import { STANDARD_TAX_CODE_INDEX } from '~/db/provisioning.server';
 
 /** Identity of the generating system (`innsending.regnskapssystem`). The reference is per org+year. */
@@ -26,12 +27,6 @@ function systemInfo(orgId: string, year: number): MvaMeldingSystemInfo {
     systemnavn: 'Saldo',
     systemversjon: '0.0.0',
   };
-}
-
-function resolveYear(request: Request): number {
-  const raw = new URL(request.url).searchParams.get('year');
-  const parsed = z.coerce.number().int().min(2000).max(2100).safeParse(raw);
-  return parsed.success ? parsed.data : new Date().getFullYear();
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {

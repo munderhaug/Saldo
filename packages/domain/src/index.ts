@@ -4,6 +4,7 @@
 export * from './money/ore.js';
 export * from './ids/org-nr.js';
 export * from './ids/kid.js';
+export * from './ids/bank-account.js';
 export * from './vat/status.js';
 export * from './vat/line-treatment.js';
 export * from './vat/activity.js';

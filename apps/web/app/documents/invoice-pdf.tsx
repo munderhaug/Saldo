@@ -10,8 +10,9 @@
  * scoped eslint override). Server-only — rendered in the `.pdf` resource-route loader.
  */
 import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
-import { formatKr, formatVatRate, øre } from '@saldo/domain';
+import { formatVatRate } from '@saldo/domain';
 import type { InvoiceDocumentModel } from '~/db/invoice-document.server';
+import { krWithUnit as kr } from '~/lib/money-format';
 import { t } from '~/copy';
 
 // Cold-white ground, neutral-12 ink (design-system.md). Hex here is intrinsic to the PDF renderer
@@ -100,11 +101,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-/** Money + currency unit, right-aligned style applied by the caller's cell. */
-function kr(value: number): string {
-  return `${formatKr(øre(value))} ${t('common.currency')}`;
-}
 
 export function InvoicePdf({ doc }: { doc: InvoiceDocumentModel }) {
   const isCredit = doc.kind === 'credit_note';

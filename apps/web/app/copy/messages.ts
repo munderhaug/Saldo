@@ -598,6 +598,22 @@ export const nb = {
   'saft.downloadXml': 'Last ned SAF-T (XML)',
   'saft.back': 'Tilbake til oversikten',
 
+  // ── Innstillinger (org-payout-account) — kontonummer for innbetaling (EHF PayeeFinancialAccount) ──
+  'settings.title': 'Innstillinger',
+  'settings.intro': 'Kontonummeret kunder betaler til. Det tas med på fakturaen og i EHF-filen.',
+  'settings.accountLabel': 'Kontonummer for innbetaling',
+  'settings.accountHint':
+    'Norsk kontonummer (11 siffer) eller IBAN. La feltet stå tomt for å fjerne det.',
+  'settings.accountNameLabel': 'Kontohavers navn (valgfritt)',
+  'settings.accountNameHint':
+    'Navnet som står på kontoen, hvis det er et annet enn foretaksnavnet.',
+  'settings.submitSave': 'Lagre',
+  'settings.errorInvalidInput':
+    'Jeg klarte ikke å lese inn det du skrev. Sjekk feltene og prøv igjen.',
+  'settings.errorInvalidAccount':
+    'Dette ser ikke ut som et gyldig kontonummer. Sjekk sifrene en gang til.',
+  'settings.back': 'Tilbake til oversikten',
+
   // ── Rapporter (feat-reporting) — read-only utledning fra det posterte regnskapet ──────────────
   'reports.title': 'Rapporter',
   'reports.period': 'Regnskapsår {year}',
@@ -1251,6 +1267,21 @@ export const en = {
     'The file is validated against the official SAF-T standard. Download it and pass it to your accountant or auditor.',
   'saft.downloadXml': 'Download SAF-T (XML)',
   'saft.back': 'Back to overview',
+
+  // ── Settings (org-payout-account) — invoice payout account (EHF PayeeFinancialAccount) ─────────
+  'settings.title': 'Settings',
+  'settings.intro':
+    'The account number customers pay into. It appears on the invoice and the EHF file.',
+  'settings.accountLabel': 'Payout account number',
+  'settings.accountHint':
+    'A Norwegian account number (11 digits) or IBAN. Leave it blank to remove it.',
+  'settings.accountNameLabel': 'Account holder name (optional)',
+  'settings.accountNameHint': 'The name on the account, if it differs from the business name.',
+  'settings.submitSave': 'Save',
+  'settings.errorInvalidInput': "I couldn't read what you entered. Check the fields and try again.",
+  'settings.errorInvalidAccount':
+    "That doesn't look like a valid account number. Double-check the digits.",
+  'settings.back': 'Back to overview',
 
   // ── Reports (feat-reporting) — read-only derivation from the posted ledger ────────────────────
   'reports.title': 'Reports',

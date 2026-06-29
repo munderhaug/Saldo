@@ -14,16 +14,16 @@ import { Link } from 'react-router';
 import { z } from 'zod';
 import {
   ANNUAL_TERM,
-  formatKr,
   generateMvaMelding,
   validateMvaMelding,
-  øre,
   type MvaMeldingLine,
 } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.mva';
 import { withUserOrg } from '~/auth/auth.server';
 import { aggregateVatByCode } from '~/db/mva-melding.server';
 import { readOrgOverview } from '~/db/organizations.server';
+import { resolveYear } from '~/lib/fiscal-year';
+import { kr } from '~/lib/money-format';
 import { asMvaStatus } from '~/lib/org-format';
 import { STANDARD_TAX_CODE_INDEX } from '~/db/provisioning.server';
 import { t } from '~/copy';
@@ -44,13 +44,6 @@ export function meta() {
 /** Figures + org identity are financial data; keep the page off any shared cache. */
 export function headers() {
   return { 'Cache-Control': 'private, no-store' };
-}
-
-/** Resolve the fiscal year from `?year=` (4-digit), defaulting to the current year. */
-function resolveYear(request: Request): number {
-  const raw = new URL(request.url).searchParams.get('year');
-  const parsed = z.coerce.number().int().min(2000).max(2100).safeParse(raw);
-  return parsed.success ? parsed.data : new Date().getFullYear();
 }
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -91,8 +84,6 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     violations: validation.violations.map((v) => v.rule),
   };
 }
-
-const kr = (ore: number): string => formatKr(øre(ore));
 
 /** The bottom-line label: positive fastsatt = to pay, negative = refund, zero = nothing to settle. */
 function settlement(fastsattOre: number): { key: 'pay' | 'refund' | 'zero'; amountOre: number } {

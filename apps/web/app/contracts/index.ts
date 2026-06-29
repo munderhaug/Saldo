@@ -3,11 +3,12 @@
  * input, integration payloads). Infer types from these; do not declare parallel interfaces.
  *
  * The per-feature contract modules are re-exported here; the shared dev-auth credentials input
- * lives below. Org-number shape validation lives in its consuming contract (`organization.ts`).
+ * lives below. The org-number shape (shared by org/contact/invoice) lives in `./org-nr`.
  */
 import { z } from 'zod';
 
 // Per-feature contract modules.
+export * from './org-nr';
 export * from './enhetsregisteret';
 export * from './organization';
 export * from './contact';

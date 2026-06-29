@@ -21,6 +21,7 @@ concurrency:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment: production # gate with a required reviewer / protection rules
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -36,4 +37,8 @@ jobs:
           # the non-owner saldo_app role — ADR 0012/0020). Neon needs SSL: include ?sslmode=require.
           # Set this as the `production` Environment secret NEON_DATABASE_URL.
           DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          # Bound every migration session: fail fast rather than block behind a long-running txn on a
+          # busy table (review §9). lock_timeout caps the wait for an ACCESS EXCLUSIVE lock; the
+          # statement cap is generous for a backfill. dbmate honours libpq PGOPTIONS.
+          PGOPTIONS: '-c lock_timeout=5s -c statement_timeout=300s'
         run: pnpm db:migrate

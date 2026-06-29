@@ -15,6 +15,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 25 # the full gate matrix incl. real Postgres + build; never trips on a healthy run
     services:
       postgres:
         image: postgres:16
@@ -42,7 +43,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: git fetch --no-tags origin main 2>/dev/null || true # so origin/main..HEAD resolves below
       - run: pnpm commitlint # Conventional Commits on this branch's commits (safe no-op if unresolved)
-      - run: pnpm audit --audit-level=high # supply-chain gate
+      # Visible but NON-blocking: a freshly-disclosed transitive advisory with no fix must not red-wall
+      # every unrelated PR. The weekly freshness sweep + Dependabot security PRs are the triage path
+      # (review §9). Re-add a hard gate only against a triaged allow/deny list, not raw audit-level.
+      - run: pnpm audit --audit-level=high || true # supply-chain visibility (non-blocking)
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm lint:repo # .claude harness + cited-docs + link integrity + no-contradiction gate

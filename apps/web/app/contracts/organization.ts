@@ -35,6 +35,7 @@ export const orgPayoutInput = z.object({
       (v) => v === '' || /^[A-Z0-9 .]{8,34}$/i.test(v),
       'Skriv et gyldig konto- eller IBAN-nummer',
     ),
+  // personal: an ENK's payout account is usually held in the proprietor's own (natural person's) name.
   invoicePaymentAccountName: z.string().trim().max(200),
 });
 

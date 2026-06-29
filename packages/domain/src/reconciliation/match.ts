@@ -20,7 +20,7 @@
  */
 import type { Øre } from '../money/ore.js';
 import { eqØre } from '../money/ore.js';
-import { isValidKid } from '../ids/kid.js';
+import { isValidKidMod10, isValidKidMod11 } from '../ids/kid.js';
 
 /** An imported bank line, reduced to exactly what matching needs (no DB/ORM types leak in). */
 export interface BankLine {
@@ -130,7 +130,11 @@ export function matchBankLine(
 
   for (const inv of invoices) {
     if (!eqØre(inv.outstanding, line.amount)) continue;
-    const kidHit = inv.kid !== null && isValidKid(inv.kid) && runs.includes(inv.kid);
+    // Norwegian KIDs are issuer-configured mod-10 OR mod-11 (ids/kid.ts). Accept a hit under either
+    // scheme — Saldo mints mod-10, but inbound/migrated/legacy invoices may carry a mod-11 KID, which
+    // a mod-10-only check would wrongly demote from the unique-kid auto-apply tier (review H4).
+    const isKidLike = (k: string): boolean => isValidKidMod10(k) || isValidKidMod11(k);
+    const kidHit = inv.kid !== null && isKidLike(inv.kid) && runs.includes(inv.kid);
     const tier: MatchTier = kidHit
       ? 'kid-exact'
       : dateProximate(line, inv, config)

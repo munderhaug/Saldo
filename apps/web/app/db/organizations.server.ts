@@ -9,6 +9,7 @@ import type { MvaStatus } from '@saldo/domain';
 import type { Db } from './client.js';
 import { withOrgTx, type OrgTx } from '../auth/middleware.js';
 import { getMemberships } from '../auth/users.server.js';
+import type { OrgPayoutInput } from '../contracts/organization.js';
 import { account, membership, organization, vatCode } from './schema.js';
 import { STANDARD_ACCOUNTS, STANDARD_VAT_CODES } from './provisioning.server.js';
 
@@ -156,4 +157,50 @@ export async function readOrgOverview(tx: OrgTx, orgId: string): Promise<OrgOver
     vatCodes,
     accountCount: counts?.n ?? 0,
   };
+}
+
+/** The org's name + its current invoice payout account (the EHF PayeeFinancialAccount source). */
+export interface OrgPayout {
+  readonly id: string;
+  readonly name: string;
+  readonly invoicePaymentAccount: string | null;
+  readonly invoicePaymentAccountName: string | null;
+}
+
+/** Read the org's payout account for the settings form (call via `withUserOrg`, which proves access). */
+export async function readOrgPayout(tx: OrgTx, orgId: string): Promise<OrgPayout | null> {
+  const [row] = await tx
+    .select({
+      id: organization.id,
+      name: organization.name,
+      invoicePaymentAccount: organization.invoicePaymentAccount,
+      invoicePaymentAccountName: organization.invoicePaymentAccountName,
+    })
+    .from(organization)
+    .where(eq(organization.id, orgId))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Set the org's payout account (the column starts NULL). `''` clears it; the account number is stored
+ * normalized (spaces/dots stripped) so the EHF emit is clean. RLS already scopes the write to the
+ * current org — the `where` is belt-and-braces. Returns false if no row matched (absent / other tenant).
+ */
+export async function updateOrgPayout(
+  tx: OrgTx,
+  orgId: string,
+  input: OrgPayoutInput,
+): Promise<boolean> {
+  const accountNo = input.invoicePaymentAccount.replace(/[\s.]/g, '');
+  const updated = await tx
+    .update(organization)
+    .set({
+      invoicePaymentAccount: accountNo === '' ? null : accountNo,
+      invoicePaymentAccountName:
+        input.invoicePaymentAccountName === '' ? null : input.invoicePaymentAccountName,
+    })
+    .where(eq(organization.id, orgId))
+    .returning({ id: organization.id });
+  return updated.length > 0;
 }

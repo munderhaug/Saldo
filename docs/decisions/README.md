@@ -57,6 +57,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0050 | MVA-melding generation on SAF-T VAT codes + Skatteetaten validation (fail-closed) | Accepted |
 | 0051 | Reporting: resultat/balanse/hovedbok/reskontro/likviditet derived read-only from the ledger | Accepted |
 | 0052 | SAF-T Financial export — pure domain generation, XSD-valid in CI | Accepted |
+| 0053 | Org payout account — settings surface + boundary BBAN/IBAN validation | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

@@ -21,18 +21,16 @@ from `pg_catalog`. Web: LLM residency gate validates the host as an IP value (no
 429 surfaced distinctly. Infra: non-root + prod-only-deps Docker image + a docker-build CI smoke job;
 non-blocking `pnpm audit`, deploy `lock_timeout`, per-job timeouts, Dependabot docker. Plus a
 **route-test harness** (env+dynamic-import seam) with XML-export/auth-tenancy/contacts route suites.
+The **deferred follow-ups** then landed: `relations.ts` FK joins corrected (composite same-org FKs no
+longer collapse to `organization_id`) + locked by a per-relation smoke test; the products/vouchers,
+send-invoice+PDF/EHF and receipts-AI provenance-gate route suites; the org-nr Zod / `kr` / `resolveYear`
+/ VAT-keyword dedups single-sourced; and the **org payout-account settings UI** (`isValidBankAccount`
+BBAN/IBAN validation, ADR 0053).
 
 ### Remaining review follow-ups (open)
-- **Route tests**: the products/vouchers, send-invoice + PDF/EHF, and receipts-AI provenance-gate suites
-  (build on the committed `apps/web/test/routes/route-harness.ts`).
-- **`relations.ts`**: the generated relations join on `organization_id` instead of the real FK — fix +
-  add a Testcontainers per-relation smoke test before any `db.query.*.with` use (still latent/unused).
-- **Dedup**: single-source the org-nr Zod schema, the `kr`/`resolveYear` route helpers, and the VAT
-  keyword→classification table (the øre-rounding dedup landed).
 - **Docker digest-pinning**: pin base/service images to `@sha256:` — needs a Docker-enabled env to
-  resolve digests (Dependabot `docker` is wired to keep them fresh once set).
-- **Org payout account UI**: a settings surface to populate `organization.invoice_payment_account`
-  (the read/emit path for EHF `PayeeFinancialAccount` is wired; the column starts null).
+  resolve the digests (none in this sandbox; the daemon is down). Dependabot `docker` is wired to keep
+  them fresh once set.
 Branch + HEAD live in `git` (`git rev-parse --abbrev-ref HEAD`), not restated here where they would only
 go stale.
 
@@ -106,8 +104,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 52 ADRs (0001–0052) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 79 tasks (40 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 53 ADRs (0001–0053) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 80 tasks (41 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-supplier-invoices` [high/L] — Supplier invoices, expense rules, owner draws & mileage (purchases completion)
 <!-- /AUTOGEN:repo-status -->
 

@@ -183,6 +183,14 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
               {t('saft.title')}
             </Link>
           </li>
+          <li>
+            <Link
+              to={`/orgs/${org.id}/settings`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('settings.title')}
+            </Link>
+          </li>
         </ul>
       </nav>
 

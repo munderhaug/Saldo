@@ -11,7 +11,12 @@
 import { sumØre } from '../money/ore.js';
 import type { SaftTaxCode } from '../saft/tax-codes.js';
 import type { VatCode } from '../posting/types.js';
-import { type MvaMelding, MVA_KATEGORIER, reportsGrunnlag } from './melding.js';
+import {
+  type MvaMelding,
+  MVA_KATEGORIER,
+  isMeldingReportable,
+  reportsGrunnlag,
+} from './melding.js';
 
 export interface MvaViolation {
   readonly rule: string;
@@ -55,6 +60,15 @@ export function validateMvaMelding(
     }
     if (line.sats !== undefined && !VALID_SATS.has(line.sats))
       fail('MVA-SATS', `sats "${line.sats}" is not in the committed sats code list.`);
+    // A no-VAT-treatment / outside-scope code (0/6/7/20) is not a return figure and must not appear on
+    // the melding at all (lockstep with the generator, which skips them).
+    if (!isMeldingReportable(saft)) {
+      fail(
+        'MVA-KODE-SCOPE',
+        `mvaKode "${line.mvaKode}" is a no-VAT-treatment / outside-scope code and must not appear on the melding.`,
+      );
+      continue;
+    }
     // grunnlag/sats presence must match the code's basis-reporting nature (the sign rule).
     const expectsGrunnlag = reportsGrunnlag(saft);
     if (expectsGrunnlag && (line.grunnlagØre === undefined || line.sats === undefined))

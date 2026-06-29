@@ -231,10 +231,19 @@ export function generateSaftFinancial(
         ...(tax !== undefined ? { tax } : {}),
       };
     });
+    // Period AND PeriodYear both come from the transaction's own date (never the export-year header),
+    // so the pair can't disagree. The export is a single fiscal year (meta.year): a transaction dated
+    // outside it is a data-integrity error — surface it loudly rather than mislabel its period.
+    const txYear = yearOf(t.date);
+    if (txYear !== meta.year) {
+      throw new Error(
+        `SAF-T export: transaction ${t.voucherId} dated ${t.date} is outside the export year ${meta.year}`,
+      );
+    }
     const transaction: SaftTransaction = {
       id: t.voucherId,
       period: monthOf(t.date),
-      periodYear: meta.year,
+      periodYear: txYear,
       date: t.date,
       description: describeVoucherType(t.voucherType),
       lines,
@@ -290,6 +299,11 @@ function byDateThenId(a: SaftTransactionInput, b: SaftTransactionInput): number 
 /** Calendar month (1–12) of a `YYYY-MM-DD` date. */
 function monthOf(date: string): number {
   return Number(date.slice(5, 7));
+}
+
+/** Calendar year of a `YYYY-MM-DD` date. */
+function yearOf(date: string): number {
+  return Number(date.slice(0, 4));
 }
 
 /**

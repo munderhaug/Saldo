@@ -100,4 +100,23 @@ describe('validateMvaMelding', () => {
   it('flags a non-digit KID', () => {
     expect(rules(valid({ kid: 'abc' }))).toContain('MVA-KID');
   });
+
+  it('flags a no-VAT-treatment / outside-scope code on the melding (MVA-KODE-SCOPE)', () => {
+    // Code 6 is outside the VAT Act — it must not appear on the melding at all (review §5).
+    expect(
+      rules(
+        valid({
+          lines: [
+            {
+              mvaKode: code('6'),
+              grunnlagØre: øre(10_000_00),
+              sats: '0',
+              merverdiavgiftØre: øre(0),
+            },
+          ],
+          fastsattØre: øre(0),
+        }),
+      ),
+    ).toContain('MVA-KODE-SCOPE');
+  });
 });

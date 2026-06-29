@@ -124,6 +124,7 @@ export const nb = {
   'auth.login.password': 'Passord',
   'auth.login.errorInvalidInput': 'Sjekk e-post og passord.',
   'auth.login.errorBadCredentials': 'Feil e-post eller passord.',
+  'auth.login.errorRateLimited': 'For mange forsøk. Vent litt og prøv igjen.',
   'auth.login.oidcNotConfigured': 'BankID er ikke konfigurert.',
   'auth.login.passwordDisabled': 'Passordpålogging er slått av.',
 
@@ -787,6 +788,7 @@ export const en = {
   'auth.login.password': 'Password',
   'auth.login.errorInvalidInput': 'Check your email and password.',
   'auth.login.errorBadCredentials': 'Wrong email or password.',
+  'auth.login.errorRateLimited': 'Too many attempts. Wait a moment and try again.',
   'auth.login.oidcNotConfigured': 'BankID is not configured.',
   'auth.login.passwordDisabled': 'Password login is disabled.',
 

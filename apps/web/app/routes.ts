@@ -47,4 +47,5 @@ export default [
   route('auth/login', 'routes/auth.login.tsx'),
   route('auth/callback', 'routes/auth.callback.tsx'),
   route('auth/logout', 'routes/auth.logout.tsx'),
+  route('auth/sign-out-everywhere', 'routes/auth.sign-out-everywhere.tsx'),
 ] satisfies RouteConfig;

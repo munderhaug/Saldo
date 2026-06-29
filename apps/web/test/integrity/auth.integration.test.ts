@@ -98,6 +98,24 @@ describe.skipIf(!ledgerDbAvailable)('Identity & sessions (real Postgres, app rol
     expect(await validateSessionToken(db, b)).toBeNull();
   });
 
+  it('sign-out-everywhere: invalidates all sessions, then a freshly minted one still validates', async () => {
+    // The semantics of the /auth/sign-out-everywhere action (review 2026-06-28): kill every existing
+    // session for the user, then re-mint for the acting device so it stays signed in.
+    const user = await createUserWithPassword(db, email(), 'secret123');
+    const a = generateSessionToken();
+    const b = generateSessionToken();
+    await createSession(db, a, user.id);
+    await createSession(db, b, user.id);
+
+    await invalidateUserSessions(db, user.id); // sign out everywhere
+    const fresh = generateSessionToken();
+    await createSession(db, fresh, user.id); // re-establish the acting device
+
+    expect(await validateSessionToken(db, a)).toBeNull(); // other devices are out
+    expect(await validateSessionToken(db, b)).toBeNull();
+    expect(await validateSessionToken(db, fresh)).not.toBeNull(); // acting device stays in
+  });
+
   it('authenticates the dev provider only with the right password', async () => {
     const e = email();
     const user = await createUserWithPassword(db, e, 'secret123');

@@ -4,6 +4,7 @@ import { db } from '~/db/client';
 import { devAuthEnabled, isProd, oidcConfigured } from '~/env';
 import { assertSameOrigin, getOptionalUser } from '~/auth/auth.server';
 import { authenticateWithPassword } from '~/auth/dev-auth.server';
+import { checkLoginRate, loginCallerKey } from '~/auth/login-throttle.server';
 import { createSession, generateSessionToken } from '~/auth/session.server';
 import { buildSessionCookie } from '~/auth/cookies.server';
 import { beginOidcLogin, buildOidcCookie } from '~/auth/oidc.server';
@@ -40,6 +41,14 @@ export async function action({ request }: Route.ActionArgs) {
   if (!parsed.success) {
     log.warn({ provider: 'password', outcome: 'invalid_input' }, 'login failed');
     return { error: t('auth.login.errorInvalidInput') };
+  }
+
+  // Brute-force throttle: per source IP AND per account (normalized email). Applied before the
+  // password check and keyed identically whether or not the account exists, so it caps guessing
+  // without leaking account existence.
+  if (!checkLoginRate(loginCallerKey(request), parsed.data.email)) {
+    log.warn({ provider: 'password', outcome: 'rate_limited' }, 'login throttled');
+    return { error: t('auth.login.errorRateLimited') };
   }
 
   const result = await authenticateWithPassword(db, parsed.data.email, parsed.data.password);

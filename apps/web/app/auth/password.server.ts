@@ -22,3 +22,20 @@ export function hashPassword(password: string): Promise<string> {
 export function verifyPassword(passwordHash: string, password: string): Promise<boolean> {
   return verify(passwordHash, password);
 }
+
+/**
+ * A throwaway argon2id hash (same OPTIONS), committed so there is no startup cost and tests stay
+ * deterministic. It exists only to spend verify work on the absent-user branch; it must never match a
+ * real password (the body is a fixed non-secret string, not a credential anyone would use).
+ */
+const DUMMY_HASH =
+  '$argon2id$v=19$m=19456,t=2,p=1$90r2/jvh9cK4Qmkow0cVhQ$cdbss7Vthg7LcoBlQkrDdFO3JMEnEPwab8OQTON7cLY';
+
+/**
+ * Spend the same argon2 work as a real verify, then discard the result — so the "no such user" branch
+ * costs the same wall-clock as a wrong-password branch and can't be used to enumerate accounts by
+ * timing. Always resolves; the boolean is intentionally ignored by the caller.
+ */
+export async function dummyVerify(password: string): Promise<void> {
+  await verifyPassword(DUMMY_HASH, password);
+}

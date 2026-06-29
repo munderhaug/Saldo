@@ -24,6 +24,11 @@ auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act
 - **Domain core (`packages/domain`, pure + property-tested):** money/`Øre`, ids, the VAT engine
   (`status` → per-line `line-treatment` → sectoral `activity` gate), the ENK income-`tax` estimate,
   `honest-number`, `posting`/balance, the `rules` engine, the `saft` code/account/rate model.
+  - *Sectoral activity gate (kap. 3) is pure but NOT yet wired into the voucher rules engine:*
+    `vatLineRule` runs only the registration gate (`checkVatLine`); `checkVatActivityLine` is enforced
+    only where an `activity` is in hand, because the voucher/posting line model carries no `activity`
+    field. Deferred per ADR 0030 (sequenced to `vat-mixed-activity`); the open boundary is locked by a
+    test in `rules/vat-line.test.ts`.
 - **Persistence + tenancy proven by Testcontainers:** the SQL ledger (voucher/posting/account/period/
   invoice-counter), the 6 integrity triggers, the gapless counter, FORCE-RLS isolation — now including
   **stateful, model-based property testing** that drives random histories through the real Postgres

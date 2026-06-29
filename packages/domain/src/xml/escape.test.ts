@@ -45,9 +45,8 @@ describe('escapeXml', () => {
       fc.property(fc.fullUnicodeString(), (s) => {
         const out = escapeXml(s);
         expect(/&(?!amp;|lt;|gt;|quot;)/.test(out)).toBe(false);
-        for (const ch of out) {
-          expect(isXmlIllegalCodePoint(ch.codePointAt(0) ?? 0)).toBe(false);
-        }
+        const hasIllegal = Array.from(out).some((ch) => isXmlIllegalCodePoint(ch.codePointAt(0) ?? 0));
+        expect(hasIllegal).toBe(false);
       }),
     );
   });

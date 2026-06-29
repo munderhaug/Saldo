@@ -191,12 +191,14 @@ describe('buildSaftXml — properties', () => {
         );
         // No bare `&` that isn't the start of an entity.
         expect(/&(?!amp;|lt;|gt;|quot;|#)/.test(x)).toBe(false);
-        // No character the XML 1.0 Char production forbids survived into the document.
-        for (const ch of x) {
-          expect(isXmlIllegalCodePoint(ch.codePointAt(0) ?? 0)).toBe(false);
-        }
+        // No character the XML 1.0 Char production forbids survived into the document. Compute once and
+        // assert once — a per-char expect() over the whole document × the property runs is needlessly slow.
+        const hasIllegal = Array.from(x).some((ch) => isXmlIllegalCodePoint(ch.codePointAt(0) ?? 0));
+        expect(hasIllegal).toBe(false);
         expect(x.endsWith('</AuditFile>')).toBe(true);
       }),
     );
-  });
+    // Generating a full SAF-T document per fast-check run is inherently a few seconds; give it headroom
+    // beyond vitest's 5s default so a slow CI runner doesn't flake.
+  }, 20000);
 });

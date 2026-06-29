@@ -14,5 +14,9 @@ import * as schema from './schema.js';
  */
 const client = postgres(env.DATABASE_URL, { prepare: false });
 
+// The relational query API (`db.query.<table>.findFirst({ with: { … } })`) is unused today, so we keep
+// the lighter non-relational client. To enable it, spread the hand-maintained relations alongside the
+// tables: `drizzle(client, { schema: { ...schema, ...relations } })` (see `./relations.ts`, whose join
+// columns are locked by `test/integrity/relations.integration.test.ts`).
 export const db = drizzle(client, { schema });
 export type Db = typeof db;

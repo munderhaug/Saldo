@@ -61,6 +61,7 @@ jobs:
       - run: pnpm build
       - run: pnpm saft:validate # SAF-T Financial: generate + tie-out + well-formedness + XSD validation (real gate)
       - run: pnpm mva:validate # MVA-melding: generate + well-formedness + grounded subset + tie-out (real gate)
+      - run: pnpm ehf:validate # EHF/PEPPOL: generate + well-formedness + BIS Billing 3.0 subset (real gate)
 
   # Build the production image and prove the PRUNED, non-root runtime actually boots and serves. This
   # is the verification gate that makes the prod-only deps prune safe (review 2026-06-28, H3): without

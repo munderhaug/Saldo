@@ -30,7 +30,7 @@ auth/identity, ledger-integrity gaps, mechanical gates, observability, EU AI Act
     field. Deferred per ADR 0030 (sequenced to `vat-mixed-activity`); the open boundary is locked by a
     test in `rules/vat-line.test.ts`.
 - **Persistence + tenancy proven by Testcontainers:** the SQL ledger (voucher/posting/account/period/
-  invoice-counter), the 6 integrity triggers, the gapless counter, FORCE-RLS isolation — now including
+  invoice-counter), the 7 integrity triggers, the gapless counter, FORCE-RLS isolation — now including
   **stateful, model-based property testing** that drives random histories through the real Postgres
   (ADR 0039).
 - **Auth/identity landed:** sessions + argon2id dev provider; OIDC wired but **not live-verified**.

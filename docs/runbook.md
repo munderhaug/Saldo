@@ -24,7 +24,9 @@ pnpm dev                      # RR7 dev server on http://localhost:3000
 | Backlog (what's next) | `pnpm backlog` (`ready` · `list` · `validate`) |
 | New migration | `pnpm db:migrate:new <name>` then edit, then `pnpm db:migrate` |
 | Regenerate Drizzle schema | `pnpm db:introspect` |
-| SAF-T validate | `pnpm saft:validate` *(scaffold — see below)* |
+| SAF-T validate | `pnpm saft:validate` (generate + tie-out + well-formedness + XSD — a real CI gate) |
+| MVA-melding validate | `pnpm mva:validate` (well-formedness + grounded subset + tie-out) |
+| EHF/PEPPOL validate | `pnpm ehf:validate` (well-formedness + BIS Billing 3.0 subset) |
 
 ## Local LLM (optional)
 ```bash

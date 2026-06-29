@@ -58,6 +58,9 @@ the generator maps the common ones and falls back to **`C62`** ("one"/piece) for
 - **BR-CO-10** — `LineExtensionAmount` (Σ line net) ties to the document's frozen net.
 - **BR-CO-13** — `TaxExclusiveAmount` = Σ line net.
 - **BR-CO-15** — `TaxInclusiveAmount` = TaxExclusive + Σ VAT (the frozen gross).
+- **BR-CO-17** — each VAT breakdown's *category tax amount* = the category taxable base × (rate ÷ 100),
+  rounded to the øre (round half away from zero). The magnitude tie BR-S-09/BR-`{cat}`-09 (direction
+  only) misses; enforced as an exact integer-øre comparison via `mulRate`.
 - **BR-CO-16 / PayableAmount** — equals the tax-inclusive amount (no prepaid/rounding handled in the
   "start now" subset).
 - Money is integer **øre** end-to-end; amounts are serialized as decimal kroner only at the XML

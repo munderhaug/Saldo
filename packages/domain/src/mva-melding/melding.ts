@@ -17,6 +17,7 @@
 import { type Øre, ZERO, sumØre } from '../money/ore.js';
 import { chargesOutputVat, type MvaStatus } from '../vat/status.js';
 import { type SaftTaxCode } from '../saft/tax-codes.js';
+import { TAX_CODE_KEYWORDS } from '../saft/tax-code-keywords.js';
 import { satsForCategory } from '../saft/rates.js';
 import type { VatCode } from '../posting/types.js';
 import type { OrgNr } from '../ids/org-nr.js';
@@ -83,15 +84,18 @@ export type MvaMeldingResult =
   | { readonly registered: true; readonly melding: MvaMelding };
 
 /**
- * Whether a code is reportable on the MVA-melding at all. The no-VAT-treatment / outside-scope codes
- * (0, 6, 7, 20 — SAF-T `direction='none'` AND `rateCategory='none'`) carry neither output VAT nor a
- * deduction, so they are not VAT-return figures and must NOT surface as a melding line (a non-zero
- * acquisition basis on code 0/20 would otherwise leak a bogus sats-0 grunnlag line). Everything with a
- * VAT treatment — output turnover, zero-rated/exempt sales, input deduction, reverse-charge basis — is
- * reportable. Derived from the committed SAF-T classification, never a code-number list.
+ * Whether a code is reportable on the MVA-melding at all. Everything with a VAT treatment — output
+ * turnover, zero-rated/exempt sales, input deduction, reverse-charge basis — is reportable. Of the
+ * no-VAT-treatment codes (SAF-T `direction='none'` AND `rateCategory='none'`), the technical
+ * acquisition/no-treatment codes (0, 7, 20) are NOT return figures and must not leak a sats-0
+ * grunnlag line — but unntatt TURNOVER ("utenfor merverdiavgiftsloven", code 6) IS reported: the
+ * official example carries an mvaKode 6 line with grunnlag + sats 0 + merverdiavgift 0
+ * (db/reference/skatt/mva-melding/examples/eksempelMedAlleTilfeller.xml; review 2026-07-03 §7b).
+ * Derived from the committed SAF-T classification/description, never a code-number list.
  */
 export function isMeldingReportable(code: SaftTaxCode): boolean {
-  return !(code.direction === 'none' && code.rateCategory === 'none');
+  if (code.direction !== 'none' || code.rateCategory !== 'none') return true;
+  return code.descriptionNo.toLowerCase().includes(TAX_CODE_KEYWORDS.outsideVatAct);
 }
 
 /**

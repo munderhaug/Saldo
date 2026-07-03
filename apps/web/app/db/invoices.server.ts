@@ -15,6 +15,7 @@
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import {
   type AccountNo,
+  type ComputedLine,
   type InvoiceKind,
   type InvoiceStatus,
   type MvaStatus,
@@ -22,19 +23,18 @@ import {
   type SaftTaxCode,
   type SalesInvoiceLine,
   type VatCode,
-  addØre,
   canTransition,
   checkSalesLine,
   computeLine,
   deriveSalesInvoice,
   drawsInvoiceNumber,
   invoiceKid,
+  invoiceTotals,
   parseKroner,
   quantity as toQuantity,
   rate,
   rateForCategory,
   reverseVoucher,
-  sumØre,
   øre,
 } from '@saldo/domain';
 import type { OrgTx } from '../auth/middleware.js';
@@ -268,6 +268,7 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
   const codeById = new Map(vatRows.map((r) => [r.id, r.code]));
 
   const prepared: PreparedLine[] = [];
+  const computed: ComputedLine[] = [];
   for (const [i, line] of input.lines.entries()) {
     const code = codeById.get(line.vatCodeId);
     const saft: SaftTaxCode | undefined = code
@@ -285,10 +286,11 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
       );
     }
 
-    const computed = computeLine(status, saft, unitPrice, toQuantity(qtyNum));
-    if (!computed.verdict.ok) {
-      return { ok: false, error: computed.verdict.reason ?? 'input-code-not-a-sale' };
+    const line_ = computeLine(status, saft, unitPrice, toQuantity(qtyNum));
+    if (!line_.verdict.ok) {
+      return { ok: false, error: line_.verdict.reason ?? 'input-code-not-a-sale' };
     }
+    computed.push(line_);
     prepared.push({
       lineNo: i + 1,
       productId: nullable(line.productId),
@@ -298,13 +300,14 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
       unitPriceOre: unitPrice,
       accountId: line.accountId,
       vatCodeId: line.vatCodeId,
-      netOre: computed.net,
-      vatOre: computed.vat,
+      netOre: line_.net,
+      vatOre: line_.vat,
     });
   }
-  const net = sumØre(prepared.map((p) => p.netOre));
-  const vat = sumØre(prepared.map((p) => p.vatOre));
-  return { ok: true, lines: prepared, net, vat, gross: addØre(net, vat) };
+  // Document totals are CATEGORY-LEVEL (VAT rounded once per rate category — BR-CO-17, ADR 0054);
+  // the stored per-line vat_ore stays the per-line display figure and may sum ±øre off the total.
+  const totals = invoiceTotals(computed);
+  return { ok: true, lines: prepared, net: totals.net, vat: totals.vat, gross: totals.gross };
 }
 
 /**

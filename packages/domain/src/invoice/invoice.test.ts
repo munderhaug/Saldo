@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { addØre, eqØre, sumØre, øre, ZERO } from '../money/ore.js';
+import { addØre, eqØre, mulRate, sumØre, øre, ZERO } from '../money/ore.js';
 import { isValidKidMod10 } from '../ids/kid.js';
 import { indexTaxCodes, parseStandardTaxCodes, type SaftTaxCode } from '../saft/tax-codes.js';
 import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
@@ -195,7 +195,7 @@ describe('invoiceTotals / vatBreakdown — document aggregation', () => {
     });
   });
 
-  it('totals equal the element-wise sums, for any set of lines', () => {
+  it('net sums the lines; VAT is category-level (Σ breakdown), gross = net + vat — any lines', () => {
     const anyCode = fc.constantFrom(OUTPUT_25, FRITATT, EXEMPT);
     const aLine = anyCode.chain((c) =>
       fc
@@ -206,10 +206,26 @@ describe('invoiceTotals / vatBreakdown — document aggregation', () => {
       fc.property(fc.array(aLine, { maxLength: 20 }), (ls) => {
         const t = invoiceTotals(ls);
         expect(t.net).toBe(sumØre(ls.map((l) => l.net)));
-        expect(t.vat).toBe(sumØre(ls.map((l) => l.vat)));
+        expect(t.vat).toBe(sumØre(vatBreakdown(ls).map((b) => b.vat)));
         expect(t.gross).toBe(addØre(t.net, t.vat));
+        // Category-level never drifts more than ½ øre per charging line from the per-line sum.
+        const perLine = sumØre(ls.map((l) => l.vat));
+        expect(Math.abs((t.vat as number) - (perLine as number))).toBeLessThanOrEqual(
+          Math.ceil(ls.length / 2),
+        );
       }),
     );
+  });
+
+  it('VAT is rounded ONCE per category, not per line (BR-CO-17 / ADR 0054 regression)', () => {
+    // Three 6-øre lines at 25 %: per-line rounding gives 2+2+2 = 6 øre (each 1,5 rounds up half
+    // away from zero); the category computation gives roundØre(18 × 0,25) = roundØre(4,5) = 5 øre.
+    const tiny = Array.from({ length: 3 }, () =>
+      computeLine('registered_standard', OUTPUT_25, øre(6), quantity(1)),
+    );
+    expect(sumØre(tiny.map((l) => l.vat))).toBe(øre(6)); // the per-line sum (what we must NOT use)
+    expect(invoiceTotals(tiny).vat).toBe(øre(5)); // the category-level document VAT
+    expect(vatBreakdown(tiny)).toEqual([{ rateCategory: 'regular', base: øre(18), vat: øre(5) }]);
   });
 
   it('groups VAT by rate category, omitting empty buckets', () => {
@@ -249,20 +265,30 @@ describe('frozenVatBreakdown — per-rate MVA-grunnlag from FROZEN amounts (no r
     ]);
   });
 
-  it('sums the frozen amounts verbatim — it never re-derives money from a rate', () => {
-    // Two regular-rate lines whose stored VAT is deliberately NOT 25 % of net (a frozen figure the
-    // renderer must reproduce exactly, e.g. after a manual correction): the breakdown echoes the
-    // stored øre rather than recomputing 0.25 × base.
-    const tampered: FrozenLine[] = [
+  it('recomputes each bucket VAT category-level from the frozen NETS (ADR 0054), never Σ line VATs', () => {
+    // Two regular-rate lines whose stored per-line VATs (7 + 3 øre) do not sum to 25 % of the base:
+    // the bucket must carry roundØre(0,25 × 20 000) = 5 000 øre — the same category-level figure the
+    // document froze at issue — not the 10-øre per-line sum.
+    const lines: FrozenLine[] = [
       { net: øre(100_00), vat: øre(7), rateCategory: 'regular' },
       { net: øre(100_00), vat: øre(3), rateCategory: 'regular' },
     ];
-    expect(frozenVatBreakdown(tampered)).toEqual([
-      { rateCategory: 'regular', vatRate: rate(0.25), base: øre(200_00), vat: øre(10) },
+    expect(frozenVatBreakdown(lines)).toEqual([
+      { rateCategory: 'regular', vatRate: rate(0.25), base: øre(200_00), vat: øre(50_00) },
     ]);
   });
 
-  it('every bucket base + VAT equals the element-wise sum of its category, for any frozen lines', () => {
+  it('a non-charging frozen line (stored VAT 0) contributes to the base but never the VAT', () => {
+    const lines: FrozenLine[] = [
+      { net: øre(100_00), vat: øre(25_00), rateCategory: 'regular' },
+      { net: øre(100_00), vat: ZERO, rateCategory: 'regular' }, // e.g. issued before registration
+    ];
+    expect(frozenVatBreakdown(lines)).toEqual([
+      { rateCategory: 'regular', vatRate: rate(0.25), base: øre(200_00), vat: øre(25_00) },
+    ]);
+  });
+
+  it('bucket bases sum to the whole and VAT is the charging base × rate, for any frozen lines', () => {
     const cat = fc.constantFrom<FrozenLine['rateCategory']>(
       'regular',
       'reduced-low',
@@ -279,7 +305,8 @@ describe('frozenVatBreakdown — per-rate MVA-grunnlag from FROZEN amounts (no r
         for (const bucket of frozenVatBreakdown(ls)) {
           const inCat = ls.filter((l) => l.rateCategory === bucket.rateCategory);
           expect(bucket.base).toBe(sumØre(inCat.map((l) => l.net)));
-          expect(bucket.vat).toBe(sumØre(inCat.map((l) => l.vat)));
+          const chargingBase = sumØre(inCat.filter((l) => l.vat !== ZERO).map((l) => l.net));
+          expect(bucket.vat).toBe(mulRate(chargingBase, bucket.vatRate));
         }
         // The bucket bases sum back to the whole — nothing dropped, nothing double-counted.
         expect(sumØre(frozenVatBreakdown(ls).map((b) => b.base))).toBe(

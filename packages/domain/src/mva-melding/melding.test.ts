@@ -92,10 +92,10 @@ describe('generateMvaMelding — line shape (the sign rule)', () => {
     ]);
   });
 
-  it('a no-VAT-treatment / outside-scope code (0/6/7/20) emits no line, even with a non-zero basis', () => {
-    // These codes carry no VAT and are not return figures — a non-zero acquisition/turnover basis on
-    // them must NOT leak a sats-0 grunnlag line (review §5). Note code 6 is outside the VAT Act.
-    for (const code of ['0', '6', '7', '20']) {
+  it('a no-VAT-treatment code (0/7/20) emits no line, even with a non-zero basis', () => {
+    // These codes carry no VAT and are not return figures — a non-zero acquisition basis on them
+    // must NOT leak a sats-0 grunnlag line (review §5).
+    for (const code of ['0', '7', '20']) {
       const r = generateMvaMelding(
         [agg(code, øre(10_000_00), øre(0))],
         meta('registered_standard'),
@@ -104,6 +104,22 @@ describe('generateMvaMelding — line shape (the sign rule)', () => {
       if (!r.registered) throw new Error('expected registered');
       expect(r.melding.lines).toEqual([]);
     }
+  });
+
+  it('code 6 (unntatt turnover, outside the VAT Act) IS reported: grunnlag with sats 0, VAT 0', () => {
+    // The official example (db/reference/skatt/mva-melding/examples/eksempelMedAlleTilfeller.xml)
+    // carries an mvaKode 6 line with grunnlag + sats 0 + merverdiavgift 0 — unntatt TURNOVER is a
+    // melding figure, unlike the technical no-treatment codes 0/7/20 (review 2026-07-03 §7b).
+    const r = generateMvaMelding(
+      [agg('6', øre(20_000_00), øre(0))],
+      meta('registered_standard'),
+      codeIndex,
+    );
+    if (!r.registered) throw new Error('expected registered');
+    expect(r.melding.lines).toEqual([
+      { mvaKode: '6', grunnlagØre: øre(20_000_00), sats: '0', merverdiavgiftØre: øre(0) },
+    ]);
+    expect(r.melding.fastsattØre).toBe(øre(0)); // reported turnover, no VAT effect
   });
 
   it('a reverse-charge code reports the import basis (grunnlag) + its deduction leg', () => {

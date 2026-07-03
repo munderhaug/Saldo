@@ -98,11 +98,21 @@ export function InvoiceForm({
 
   const onValid = () => submit(formRef.current, { method: 'post' });
 
-  // Live preview: the line nets/VAT and the document totals, computed by the domain in the browser.
+  // Live preview: the line nets and the document totals, computed by the domain in the browser.
+  // VAT is CATEGORY-LEVEL — grouped by charged rate and rounded once per rate (mirrors the server's
+  // invoiceTotals, BR-CO-17 / ADR 0054) — so the preview matches the issued document to the øre.
   const watchedLines = watch('lines');
   const previews = (watchedLines ?? []).map((line) => previewLine(line, vatCodes, orgRegistered));
   const totalNet = sumØre(previews.map((p) => p.net));
-  const totalVat = sumØre(previews.map((p) => p.vat));
+  const baseByRate = new Map<number, Øre>();
+  for (const p of previews) {
+    if (p.chargedRate !== null) {
+      baseByRate.set(p.chargedRate, addØre(baseByRate.get(p.chargedRate) ?? ZERO, p.net));
+    }
+  }
+  const totalVat = sumØre(
+    [...baseByRate.entries()].map(([r, base]) => mulRate(base, rate(r))),
+  );
   const totalGross = addØre(totalNet, totalVat);
 
   // Does any line carry an output-VAT code the unregistered org may not charge? Then warn.
@@ -429,10 +439,12 @@ export function InvoiceForm({
 
 interface LinePreview {
   readonly net: Øre;
-  readonly vat: Øre;
+  /** The VAT rate this line charges (e.g. 0.25), or null for a non-charging line — the totals above
+   * group by it and round once per rate (category-level, ADR 0054). */
+  readonly chargedRate: number | null;
 }
 
-/** Compute one line's net + VAT for the live preview — the same maths the server runs, in the browser. */
+/** Compute one line's net (and whether/at what rate it charges VAT) for the live preview. */
 function previewLine(
   line: InvoiceInput['lines'][number],
   vatCodes: readonly InvoiceVatCodeOption[],
@@ -440,10 +452,9 @@ function previewLine(
 ): LinePreview {
   const price = parseKroner(line.unitPriceKr.trim() === '' ? '0' : line.unitPriceKr);
   const qty = parseQuantity(line.quantity);
-  if (price === null || qty === null) return { net: ZERO, vat: ZERO };
+  if (price === null || qty === null) return { net: ZERO, chargedRate: null };
   const net = domainLineNet(price, toQuantity(qty));
   const code = vatCodes.find((c) => c.id === line.vatCodeId);
   const charge = orgRegistered && code?.isOutput === true;
-  const vat = charge ? mulRate(net, rate(Number(code.rate))) : ZERO;
-  return { net, vat };
+  return { net, chargedRate: charge ? Number(code.rate) : null };
 }

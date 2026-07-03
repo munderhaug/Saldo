@@ -47,6 +47,7 @@ import {
   type ManualVoucherInput,
 } from '~/contracts';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('receipts.new.title') }];
@@ -302,14 +303,13 @@ function UploadStep({ orgId, error }: { orgId: string; error: string | null }) {
         )}
       </div>
       <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="submit"
+        <SubmitButton
           name="intent"
           value="extract"
           className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
         >
           {t('receipts.new.submit')}
-        </button>
+        </SubmitButton>
         <Link
           to={`/orgs/${orgId}`}
           className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
@@ -468,12 +468,11 @@ function ReviewStep({
         )}
 
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="submit"
+          <SubmitButton
             className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
           >
             {t('receipts.new.confirmSubmit')}
-          </button>
+          </SubmitButton>
           <Link
             to={`/orgs/${orgId}/receipts/new`}
             className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"

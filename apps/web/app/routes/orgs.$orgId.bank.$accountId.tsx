@@ -37,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/table';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('bank.title') }];
@@ -178,12 +179,11 @@ export default function BankAccountRoute({ loaderData, actionData }: Route.Compo
             required
             className="border-input bg-background rounded-md border px-3 py-2 text-sm"
           />
-          <button
-            type="submit"
+          <SubmitButton
             className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
           >
             {t('bank.import.fileSubmit')}
-          </button>
+          </SubmitButton>
         </Form>
       </section>
 
@@ -198,12 +198,11 @@ export default function BankAccountRoute({ loaderData, actionData }: Route.Compo
         ) : (
           <Form method="post" className="grid gap-3">
             <input type="hidden" name="intent" value="import-gocardless" />
-            <button
-              type="submit"
+            <SubmitButton
               className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
             >
               {t('bank.import.gocardlessSubmit')}
-            </button>
+            </SubmitButton>
           </Form>
         )}
       </section>

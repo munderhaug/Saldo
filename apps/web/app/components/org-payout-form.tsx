@@ -15,6 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { orgPayoutInput, type OrgPayoutInput } from '~/contracts';
 import { TextField } from '~/components/form-field';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export interface OrgPayoutFormProps {
   readonly defaultValues: OrgPayoutInput;
@@ -70,12 +71,11 @@ export function OrgPayoutForm({ defaultValues, error }: OrgPayoutFormProps) {
         </p>
       )}
 
-      <button
-        type="submit"
+      <SubmitButton
         className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
       >
         {t('settings.submitSave')}
-      </button>
+      </SubmitButton>
     </Form>
   );
 }

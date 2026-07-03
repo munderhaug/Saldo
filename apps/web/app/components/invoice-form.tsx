@@ -31,6 +31,7 @@ import type { CustomerOption, InvoiceVatCodeOption, ProductLineOption } from '~/
 import { SelectField, TextField } from '~/components/form-field';
 import { invoiceKindLabel } from '~/lib/invoice-format';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 const KINDS = ['invoice', 'quote'] as const;
 
@@ -417,12 +418,11 @@ export function InvoiceForm({
         </p>
       )}
 
-      <button
-        type="submit"
+      <SubmitButton
         className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
       >
         {submitLabel}
-      </button>
+      </SubmitButton>
     </Form>
   );
 }

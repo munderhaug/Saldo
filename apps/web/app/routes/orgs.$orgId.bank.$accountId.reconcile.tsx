@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/table';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('recon.title') }];
@@ -166,12 +167,11 @@ export default function ReconcileRoute({ loaderData, actionData }: Route.Compone
                           </option>
                         ))}
                       </select>
-                      <button
-                        type="submit"
+                      <SubmitButton
                         className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
                       >
                         {t('recon.confirm')}
-                      </button>
+                      </SubmitButton>
                     </Form>
                   )}
                 </TableCell>

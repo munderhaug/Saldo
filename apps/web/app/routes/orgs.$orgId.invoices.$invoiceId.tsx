@@ -43,6 +43,7 @@ import {
   TableRow,
 } from '~/components/ui/table';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function headers() {
   return { 'Cache-Control': 'private, no-store' };
@@ -257,12 +258,11 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
             <p className="text-muted-foreground text-sm">{t('invoices.detail.issueNote')}</p>
             <Form method="post">
               <input type="hidden" name="intent" value="issue" />
-              <button
-                type="submit"
+              <SubmitButton
                 className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
               >
                 {t('invoices.detail.issue')}
-              </button>
+              </SubmitButton>
             </Form>
           </section>
         </>
@@ -294,12 +294,11 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
           {invoice.kind === 'invoice' && (
             <Form method="post">
               <input type="hidden" name="intent" value="credit-note" />
-              <button
-                type="submit"
+              <SubmitButton
                 className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
               >
                 {t('invoices.detail.createCreditNote')}
-              </button>
+              </SubmitButton>
             </Form>
           )}
         </section>
@@ -355,13 +354,12 @@ function DeliverySection({
           <p id="send-desc" className="text-muted-foreground text-sm">
             {t('invoices.detail.sendBody', { email: customerEmail })}
           </p>
-          <button
-            type="submit"
+          <SubmitButton
             aria-describedby="send-desc"
             className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
           >
             {t('invoices.detail.send')}
-          </button>
+          </SubmitButton>
         </Form>
       ) : (
         <p className="text-muted-foreground text-sm">{t('invoices.detail.sendNoEmail')}</p>
@@ -375,12 +373,11 @@ function LifecycleButton({ to, label }: { to: InvoiceStatus; label: string }) {
     <Form method="post">
       <input type="hidden" name="intent" value="transition" />
       <input type="hidden" name="to" value={to} />
-      <button
-        type="submit"
+      <SubmitButton
         className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
       >
         {label}
-      </button>
+      </SubmitButton>
     </Form>
   );
 }

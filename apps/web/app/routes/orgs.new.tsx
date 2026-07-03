@@ -16,6 +16,7 @@ import { lookupByOrgNr } from '~/integrations/enhetsregisteret/client.server';
 import { createOrgInput, type CreateOrgInput } from '~/contracts';
 import { mvaStatusDesc, mvaStatusLabel } from '~/lib/org-format';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('orgs.new.title') }];
@@ -163,12 +164,11 @@ export default function NewOrg({ loaderData, actionData }: Route.ComponentProps)
         )}
 
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="submit"
+          <SubmitButton
             className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
           >
             {t('orgs.new.submit')}
-          </button>
+          </SubmitButton>
           <Link
             to="/oppslag"
             className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"

@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/table';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('oppslag.title') }];
@@ -110,12 +111,11 @@ export default function Oppslag({ loaderData }: Route.ComponentProps) {
             aria-describedby="q-hint"
             className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
           />
-          <button
-            type="submit"
+          <SubmitButton
             className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm"
           >
             {t('oppslag.submit')}
-          </button>
+          </SubmitButton>
         </div>
         <p id="q-hint" className="text-muted-foreground text-sm">
           {t('oppslag.hint')}

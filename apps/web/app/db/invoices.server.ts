@@ -464,6 +464,16 @@ export async function issueInvoice(
   invoiceId: string,
   dates: { readonly issueDate: string; readonly dueDate: string },
 ): Promise<IssueResult> {
+  // Lock the document row FIRST (FOR UPDATE): a concurrent issue (double-click) serializes here, and
+  // the loser sees `issued` and returns typed — BEFORE it can draw a gapless number it would then
+  // have to waste. The not-a-draft answer must never cost a number.
+  const [locked] = await tx
+    .select({ status: invoice.status })
+    .from(invoice)
+    .where(eq(invoice.id, invoiceId))
+    .limit(1)
+    .for('update');
+  if (!locked || locked.status !== 'draft') return { ok: false, error: 'not-a-draft' };
   const current = await readInvoice(tx, invoiceId);
   if (!current || current.status !== 'draft') return { ok: false, error: 'not-a-draft' };
 
@@ -509,7 +519,7 @@ export async function issueInvoice(
     kid = invoiceKid(invoiceNumber);
   }
 
-  await tx
+  const issued = await tx
     .update(invoice)
     .set({
       status: 'issued',
@@ -520,7 +530,13 @@ export async function issueInvoice(
       issuedAt: sql`now()`,
       updatedAt: sql`now()`,
     })
-    .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')));
+    .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')))
+    .returning({ id: invoice.id });
+  // Unreachable under the FOR UPDATE lock above; if it ever misses, a number may already be drawn, so
+  // THROW to roll the whole issue back (gapless counter included) rather than commit a half-issue.
+  if (issued.length === 0) {
+    throw new Error(`invoice ${invoiceId} stopped being a draft mid-issue`);
+  }
 
   // Post the AR voucher to the general ledger in THIS SAME transaction (atomic with the number
   // allocation). A quote has no ledger effect (it drew no number); an invoice / credit note books one.

@@ -12,6 +12,7 @@ import { organization } from '~/db/schema';
 import { asMvaStatus } from '~/lib/org-format';
 import { manualVoucherInput, VOUCHER_KINDS, type ManualVoucherInput } from '~/contracts';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('vouchers.new.title') }];
@@ -177,12 +178,11 @@ export default function NewVoucher({ loaderData, actionData }: Route.ComponentPr
         )}
 
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="submit"
+          <SubmitButton
             className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
           >
             {t('vouchers.new.submit')}
-          </button>
+          </SubmitButton>
           <Link
             to={`/orgs/${orgId}`}
             className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"

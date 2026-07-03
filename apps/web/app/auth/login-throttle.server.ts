@@ -21,15 +21,8 @@ const MAX_PER_ACCOUNT = 10;
 const ipLimiter = createFixedWindowLimiter(MAX_PER_IP, WINDOW_MS);
 const accountLimiter = createFixedWindowLimiter(MAX_PER_ACCOUNT, WINDOW_MS);
 
-/**
- * Best-effort caller identity from the trusted proxy's `X-Forwarded-For` (first hop); falls back to a
- * single shared bucket when absent, so header-less or spoofed callers stay under one global cap.
- */
-export function loginCallerKey(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const first = forwarded?.split(',')[0]?.trim();
-  return first && first.length > 0 ? first : 'global';
-}
+/** Caller identity for the per-IP bucket: the trusted proxy's peer (see `~/lib/client-ip.server`). */
+export { clientIpKey as loginCallerKey } from '~/lib/client-ip.server';
 
 /**
  * Whether this login attempt may proceed. Consults BOTH limiters and consumes from each (so both

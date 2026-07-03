@@ -21,15 +21,8 @@ const CACHE_MAX_ENTRIES = 500;
 const limiter = createFixedWindowLimiter(MAX_LOOKUPS_PER_WINDOW, WINDOW_MS);
 const cache = createTtlCache<unknown>(CACHE_TTL_MS, CACHE_MAX_ENTRIES);
 
-/**
- * Best-effort caller identity from the trusted proxy's `X-Forwarded-For` (first hop); falls back to a
- * single shared bucket when absent, so even header-less or spoofed callers stay under one global cap.
- */
-export function callerKey(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const first = forwarded?.split(',')[0]?.trim();
-  return first && first.length > 0 ? first : 'global';
-}
+/** Caller identity for the lookup bucket: the trusted proxy's peer (see `~/lib/client-ip.server`). */
+export { clientIpKey as callerKey } from '~/lib/client-ip.server';
 
 /** A previously-cached lookup payload for `query`, if still fresh. */
 export function getCachedLookup<T>(query: string): T | undefined {

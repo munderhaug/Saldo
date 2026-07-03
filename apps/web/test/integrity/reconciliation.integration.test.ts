@@ -234,6 +234,66 @@ describe.skipIf(!ledgerDbAvailable)('bank reconciliation → settlement (app rol
     expect(bankVouchers?.count).toBe(1); // exactly one settlement, not two
   });
 
+  it('CONCURRENT double-confirm of the same match settles exactly once (row locks, review 2026-07-03)', async () => {
+    // Two racing transactions confirm the SAME bank transaction against the SAME invoice — the
+    // double-click / two-tab case. FOR UPDATE serializes them; the loser re-reads the winner's
+    // committed state and takes the typed rejection. Never two settlement vouchers.
+    const orgId = await provisionOrg();
+    const { invoiceId, kid, gross } = await issueOneLineInvoice(orgId, '1000');
+    const { txId } = await seedIncoming(orgId, gross, `KID ${kid}`, 'race-1');
+
+    const attempt = () =>
+      withOrgTx(appDb, orgId, (tx) =>
+        reconcileMatch(tx, orgId, { bankTransactionId: txId, invoiceId }),
+      );
+    const [a, b] = await Promise.all([attempt(), attempt()]);
+
+    const outcomes = [a, b];
+    expect(outcomes.filter((r) => r.ok)).toHaveLength(1);
+    const loser = outcomes.find((r) => !r.ok);
+    expect(loser && !loser.ok ? loser.reason : null).toBe('tx-already-matched');
+
+    // Exactly ONE settlement voucher; the transaction links to it; the invoice is paid once.
+    const winner = outcomes.find((r) => r.ok);
+    const vouchers = await db.sql<{ id: string }[]>`
+      SELECT id FROM voucher WHERE organization_id = ${orgId} AND type = 'bank'`;
+    expect(vouchers).toHaveLength(1);
+    expect(winner && winner.ok ? winner.voucherId : null).toBe(vouchers[0]!.id);
+    const [txRow] = await db.sql<{ matched: string | null }[]>`
+      SELECT matched_voucher_id AS matched FROM bank_transaction WHERE id = ${txId}`;
+    expect(txRow?.matched).toBe(vouchers[0]!.id);
+    const [inv] = await db.sql<{ status: string }[]>`
+      SELECT status FROM invoice WHERE id = ${invoiceId}`;
+    expect(inv?.status).toBe('paid');
+  });
+
+  it('CONCURRENT settlements of the same invoice from two different payments settle exactly once', async () => {
+    // Two same-amount incoming payments race to settle ONE invoice. The invoice row lock serializes
+    // them; the loser sees status = paid and is refused (invoice-not-open) — one settlement voucher.
+    const orgId = await provisionOrg();
+    const { invoiceId, kid, gross } = await issueOneLineInvoice(orgId, '1000');
+    const one = await seedIncoming(orgId, gross, `KID ${kid}`, 'race-2a');
+    const two = await seedIncoming(orgId, gross, `KID ${kid}`, 'race-2b');
+
+    const attempt = (bankTransactionId: string) =>
+      withOrgTx(appDb, orgId, (tx) =>
+        reconcileMatch(tx, orgId, { bankTransactionId, invoiceId }),
+      );
+    const results = await Promise.all([attempt(one.txId), attempt(two.txId)]);
+
+    expect(results.filter((r) => r.ok)).toHaveLength(1);
+    const loser = results.find((r) => !r.ok);
+    expect(loser && !loser.ok ? loser.reason : null).toBe('invoice-not-open');
+    const [bankVouchers] = await db.sql<{ count: number }[]>`
+      SELECT count(*)::int AS count FROM voucher WHERE organization_id = ${orgId} AND type = 'bank'`;
+    expect(bankVouchers?.count).toBe(1);
+    // The losing payment stays unmatched, available for a correct match later.
+    const matches = await db.sql<{ id: string; matched: string | null }[]>`
+      SELECT id, matched_voucher_id AS matched FROM bank_transaction
+       WHERE id IN (${one.txId}, ${two.txId})`;
+    expect(matches.filter((m) => m.matched !== null)).toHaveLength(1);
+  });
+
   it('falls back to the invoice issue-year period when the payment has no booking date', async () => {
     const orgId = await provisionOrg();
     const { invoiceId, kid, gross } = await issueOneLineInvoice(orgId, '1000'); // issued 2026

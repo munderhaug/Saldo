@@ -638,7 +638,12 @@ async function postIssuedVoucher(
   );
 }
 
-/** Advance the lifecycle of an issued document (sent / viewed / paid / overdue), stamping its time. */
+/**
+ * Advance the lifecycle of an issued document (sent / viewed / paid / overdue), stamping its time.
+ * The UPDATE is a compare-and-set on the status read above (predicate + row count), so a concurrent
+ * transition that commits in between makes this one return false instead of silently double-stamping
+ * — the reconcile settlement path relies on that to refuse a second "paid".
+ */
 export async function transitionInvoice(
   tx: OrgTx,
   invoiceId: string,
@@ -658,11 +663,12 @@ export async function transitionInvoice(
         : to === 'paid'
           ? { paidAt: sql`now()` }
           : {};
-  await tx
+  const updated = await tx
     .update(invoice)
     .set({ status: to, updatedAt: sql`now()`, ...stamp })
-    .where(eq(invoice.id, invoiceId));
-  return true;
+    .where(and(eq(invoice.id, invoiceId), eq(invoice.status, cur.status)))
+    .returning({ id: invoice.id });
+  return updated.length > 0;
 }
 
 /**

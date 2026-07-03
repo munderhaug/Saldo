@@ -307,11 +307,13 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
   return { ok: true, lines: prepared, net, vat, gross: addØre(net, vat) };
 }
 
-/** Header column values shared by create + a credit note's copy ('' → NULL; org-nr compacted). */
-function headerColumns(organizationId: string, input: InvoiceInput) {
+/**
+ * The header columns a draft save may change ('' → NULL; org-nr compacted). `kind` and
+ * `creditsInvoiceId` are deliberately NOT here: they are the document's identity, set at creation and
+ * immutable thereafter — a credit-note draft must never revert to a plain (positive) invoice.
+ */
+function editableHeaderColumns(input: InvoiceInput) {
   return {
-    organizationId,
-    kind: input.kind,
     customerId: nullable(input.customerId),
     customerName: input.customerName,
     customerEmail: nullable(input.customerEmail),
@@ -321,8 +323,17 @@ function headerColumns(organizationId: string, input: InvoiceInput) {
     language: input.language,
     issueDate: nullable(input.issueDate),
     dueDate: nullable(input.dueDate),
-    creditsInvoiceId: nullable(input.creditsInvoiceId),
     notes: nullable(input.notes),
+  };
+}
+
+/** All header columns for a NEW document (identity included). */
+function headerColumns(organizationId: string, input: InvoiceInput) {
+  return {
+    organizationId,
+    kind: input.kind,
+    creditsInvoiceId: nullable(input.creditsInvoiceId),
+    ...editableHeaderColumns(input),
   };
 }
 
@@ -356,10 +367,11 @@ export type CreateResult =
   | { readonly ok: true; readonly id: string }
   | { readonly ok: false; readonly error: PrepareError };
 
-/** updateDraft can additionally fail because the target is no longer an editable draft. */
+/** updateDraft can additionally fail because the target is no longer an editable draft, or because
+ * the input tries to change the document's identity (kind / credited invoice). */
 export type UpdateResult =
   | { readonly ok: true; readonly id: string }
-  | { readonly ok: false; readonly error: PrepareError | 'not-a-draft' };
+  | { readonly ok: false; readonly error: PrepareError | 'not-a-draft' | 'kind-immutable' };
 
 /** Create a draft document for the current org from validated input; returns the new id. */
 export async function createDraft(
@@ -387,6 +399,10 @@ export async function createDraft(
 /**
  * Update a DRAFT in place (re-deriving its lines). Only drafts are editable — an issued document is
  * frozen by the SQL trigger; the `status = 'draft'` filter makes the not-a-draft case a no-op (404).
+ * The document's IDENTITY — `kind` and `creditsInvoiceId` — is immutable: input that tries to change
+ * either is refused (`kind-immutable`), and neither column is ever in the UPDATE's SET. Otherwise a
+ * stale/tampered form could revert a credit-note draft into a second POSITIVE invoice of the same
+ * amounts — double-booking revenue instead of correcting it.
  */
 export async function updateDraft(
   tx: OrgTx,
@@ -394,12 +410,28 @@ export async function updateDraft(
   invoiceId: string,
   input: InvoiceInput,
 ): Promise<UpdateResult> {
+  const [current] = await tx
+    .select({
+      status: invoice.status,
+      kind: invoice.kind,
+      creditsInvoiceId: invoice.creditsInvoiceId,
+    })
+    .from(invoice)
+    .where(eq(invoice.id, invoiceId))
+    .limit(1);
+  if (!current || current.status !== 'draft') return { ok: false, error: 'not-a-draft' };
+  if (
+    input.kind !== current.kind ||
+    nullable(input.creditsInvoiceId) !== current.creditsInvoiceId
+  ) {
+    return { ok: false, error: 'kind-immutable' };
+  }
   const prepared = await prepareInvoice(tx, input);
   if (!prepared.ok) return prepared;
   const updated = await tx
     .update(invoice)
     .set({
-      ...headerColumns(organizationId, input),
+      ...editableHeaderColumns(input),
       netOre: prepared.net,
       vatOre: prepared.vat,
       grossOre: prepared.gross,
@@ -407,7 +439,7 @@ export async function updateDraft(
     })
     .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')))
     .returning({ id: invoice.id });
-  if (updated.length === 0) return { ok: false, error: 'not-a-draft' }; // not a draft / not found
+  if (updated.length === 0) return { ok: false, error: 'not-a-draft' }; // raced away mid-tx
   await tx.delete(invoiceLine).where(eq(invoiceLine.invoiceId, invoiceId));
   await insertLines(tx, organizationId, invoiceId, prepared.lines);
   return { ok: true, id: invoiceId };

@@ -393,6 +393,8 @@ export const nb = {
   'invoices.error.unknown-vat-code': 'Ukjent MVA-kode på en linje.',
   'invoices.error.notADraft':
     'Bare utkast kan endres. Et utstedt dokument rettes med en kreditnota.',
+  'invoices.error.kind-immutable':
+    'Dokumenttypen og fakturaen en kreditnota retter kan ikke endres. Last siden på nytt og prøv igjen.',
   'invoices.error.credit-note-source-not-posted':
     'Kreditnotaen mangler en utstedt faktura å reversere. Velg fakturaen den retter.',
   'invoices.error.creditNote': 'Kunne ikke lage kreditnota for dette dokumentet.',
@@ -1067,6 +1069,8 @@ export const en = {
   'invoices.error.unknown-vat-code': 'Unknown VAT code on a line.',
   'invoices.error.notADraft':
     'Only a draft can be changed. Correct an issued document with a credit note.',
+  'invoices.error.kind-immutable':
+    'The document type and the invoice a credit note corrects cannot be changed. Reload the page and try again.',
   'invoices.error.credit-note-source-not-posted':
     'This credit note has no issued invoice to reverse. Pick the invoice it corrects.',
   'invoices.error.creditNote': 'Could not create a credit note for this document.',

@@ -29,6 +29,7 @@ import { INVOICE_LANGUAGES, invoiceInput, parseQuantity, type InvoiceInput } fro
 import type { AccountOption } from '~/db/org-defaults.server';
 import type { CustomerOption, InvoiceVatCodeOption, ProductLineOption } from '~/db/invoices.server';
 import { SelectField, TextField } from '~/components/form-field';
+import { invoiceKindLabel } from '~/lib/invoice-format';
 import { t } from '~/copy';
 
 const KINDS = ['invoice', 'quote'] as const;
@@ -56,6 +57,7 @@ export function InvoiceForm({
   submitLabel,
   intent,
   error,
+  lockKind = false,
 }: {
   defaultValues: InvoiceInput;
   customers: readonly CustomerOption[];
@@ -66,6 +68,8 @@ export function InvoiceForm({
   submitLabel: string;
   intent?: string | undefined;
   error?: string | undefined;
+  /** Draft editor: the document's kind is set at creation and immutable — show it, don't offer it. */
+  lockKind?: boolean;
 }) {
   const submit = useSubmit();
   const formRef = useRef<HTMLFormElement>(null);
@@ -128,23 +132,34 @@ export function InvoiceForm({
       className="grid gap-6"
     >
       {intent ? <input type="hidden" name="intent" value={intent} /> : null}
+      {/* A credit note's link to the invoice it corrects rides along on every save (identity — the
+          server refuses a save that tries to change it). */}
+      <input type="hidden" {...register('creditsInvoiceId')} />
 
       {/* ── Document type + customer ─────────────────────────────────────────── */}
       <fieldset className="grid gap-5">
         <legend className="font-text text-sm">{t('invoices.form.customerLegend')}</legend>
         <div className="grid gap-5 sm:grid-cols-2">
-          <SelectField
-            id="kind"
-            label={t('invoices.form.kindLegend')}
-            error={errors.kind?.message}
-            registration={register('kind')}
-          >
-            {KINDS.map((k) => (
-              <option key={k} value={k}>
-                {k === 'quote' ? t('invoices.kind.quote') : t('invoices.kind.invoice')}
-              </option>
-            ))}
-          </SelectField>
+          {lockKind ? (
+            <div className="grid content-start gap-1.5">
+              <span className="font-text text-sm">{t('invoices.form.kindLegend')}</span>
+              <p className="text-sm">{invoiceKindLabel(defaultValues.kind)}</p>
+              <input type="hidden" {...register('kind')} />
+            </div>
+          ) : (
+            <SelectField
+              id="kind"
+              label={t('invoices.form.kindLegend')}
+              error={errors.kind?.message}
+              registration={register('kind')}
+            >
+              {KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {k === 'quote' ? t('invoices.kind.quote') : t('invoices.kind.invoice')}
+                </option>
+              ))}
+            </SelectField>
+          )}
           <SelectField
             id="customerId"
             label={t('invoices.form.customerPicker')}

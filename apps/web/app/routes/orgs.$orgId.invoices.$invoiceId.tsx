@@ -187,7 +187,7 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
   const successMessage = actionData && 'success' in actionData ? actionData.success : undefined;
 
   const defaultValues: InvoiceInput = {
-    kind: invoice.kind === 'credit_note' ? 'invoice' : invoice.kind,
+    kind: invoice.kind,
     customerId: invoice.customerId ?? '',
     customerName: invoice.customerName,
     customerEmail: invoice.customerEmail ?? '',
@@ -251,6 +251,7 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
             submitLabel={t('invoices.form.submitSave')}
             intent="save"
             error={undefined}
+            lockKind
           />
           <section className="border-input grid gap-2 border-t pt-4">
             <p className="text-muted-foreground text-sm">{t('invoices.detail.issueNote')}</p>

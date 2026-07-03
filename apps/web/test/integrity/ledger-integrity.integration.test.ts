@@ -90,6 +90,44 @@ describe.skipIf(!ledgerDbAvailable)('SQL ledger integrity (real Postgres)', () =
         /immutable/i,
       );
     });
+
+    it('blocks INSERT of new postings into a posted voucher from a later transaction', async () => {
+      // The append-only INSERT hole (review 2026-07-03 P0): a balanced PAIR appended after the fact
+      // would still satisfy the balance trigger while rewriting the voucher's economic content.
+      const { orgId, voucherId } = await postedVoucher();
+      await expect(
+        db.sql.begin(async (tx) => {
+          await tx`INSERT INTO posting (organization_id, voucher_id, account_id, debit_ore, credit_ore)
+                   SELECT ${orgId}, ${voucherId}, account_id, 50000, 0
+                     FROM posting WHERE voucher_id = ${voucherId} AND debit_ore > 0 LIMIT 1`;
+          await tx`INSERT INTO posting (organization_id, voucher_id, account_id, debit_ore, credit_ore)
+                   SELECT ${orgId}, ${voucherId}, account_id, 0, 50000
+                     FROM posting WHERE voucher_id = ${voucherId} AND credit_ore > 0 LIMIT 1`;
+        }),
+      ).rejects.toThrow(/immutable/i);
+      // Nothing landed: the posted voucher still has exactly its original two legs.
+      const [n] = await db.sql<{ count: number }[]>`
+        SELECT count(*)::int AS count FROM posting WHERE voucher_id = ${voucherId}`;
+      expect(n?.count).toBe(2);
+    });
+
+    it('still allows the legitimate issue path: voucher created posted + postings in ONE transaction', async () => {
+      // postIssuedVoucher / recordManualVoucher insert the voucher WITH posted_at = now() and then its
+      // postings inside the same tx — the same-transaction (xmin) carve-out must keep that path open.
+      const org = await seedOrg(db.sql);
+      await expect(
+        db.sql.begin(async (tx) => {
+          const [v] = await tx<{ id: string }[]>`
+            INSERT INTO voucher (organization_id, type, period_id, posted_at)
+            VALUES (${org.orgId}, 'manual', ${org.openPeriodId}, now())
+            RETURNING id`;
+          await tx`INSERT INTO posting (organization_id, voucher_id, account_id, debit_ore, credit_ore)
+                   VALUES (${org.orgId}, ${v!.id}, ${org.debitAccountId}, 100000, 0)`;
+          await tx`INSERT INTO posting (organization_id, voucher_id, account_id, debit_ore, credit_ore)
+                   VALUES (${org.orgId}, ${v!.id}, ${org.creditAccountId}, 0, 100000)`;
+        }),
+      ).resolves.not.toThrow();
+    });
   });
 
   // ── Guarantee 3: no postings (vouchers) into a locked period ──

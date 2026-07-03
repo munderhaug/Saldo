@@ -30,7 +30,8 @@ import {
   type ProposedKind,
 } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.receipts.new';
-import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
+import { assertSameOrigin, requireOrgAccess, withUserOrg } from '~/auth/auth.server';
+import { createFixedWindowLimiter } from '~/lib/rate-limit';
 import { extractReceipt } from '~/integrations/llm/client.server';
 import { llmConfig } from '~/integrations/llm/config.server';
 import { AiAssisted } from '~/components/ui/ai-assisted';
@@ -59,6 +60,9 @@ export function headers() {
 const orgIdSchema = z.string().uuid();
 /** Receipts are small; cap the upload so a stray large file can't exhaust memory. */
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+/** Per-user cap on vision-LLM extractions: generous for a human filing receipts, a wall for a loop
+ * burning the model budget. Single-process (like the login throttle); counted per attempt. */
+const extractLimiter = createFixedWindowLimiter(10, 10 * 60_000);
 
 interface ReviewProposal {
   readonly kind: ProposedKind;
@@ -170,7 +174,15 @@ export async function action({
     return redirect('/');
   }
 
-  // Default intent: extract. Validate the upload, run the vision-LLM, map to a proposal.
+  // Default intent: extract. AUTH FIRST — the vision-LLM call is the expensive resource, so prove the
+  // caller is a logged-in member of this org (401→login / 403) before touching the upload, and bound
+  // them per user (the confirm branch gets the same guarantee inside `withUserOrg`).
+  const { user } = await requireOrgAccess(request, params.orgId);
+  if (!extractLimiter.check(user.id, Date.now()).allowed) {
+    return { ok: false, error: t('receipts.new.errorRateLimited') };
+  }
+
+  // Validate the upload, run the vision-LLM, map to a proposal.
   const file = form.get('receipt');
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: t('receipts.new.errorNoImage') };

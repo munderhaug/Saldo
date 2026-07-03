@@ -109,6 +109,8 @@ export const nb = {
   'receipts.new.errorNoImage': 'Last opp et bilde av kvitteringen (JPG eller PNG).',
   'receipts.new.errorImageType': 'Det ser ikke ut som et bilde. Last opp en JPG eller PNG.',
   'receipts.new.errorImageTooLarge': 'Bildet er for stort. Maks 10 MB.',
+  'receipts.new.errorRateLimited':
+    'Mange kvitteringer på kort tid — jeg trenger en liten pause. Prøv igjen om noen minutter.',
   'receipts.new.errorRead':
     'Jeg klarte ikke å lese kvitteringen. Prøv et tydeligere bilde, eller før den opp manuelt.',
   'receipts.new.errorCurrency':
@@ -794,6 +796,8 @@ export const en = {
   'receipts.new.errorNoImage': 'Upload a photo of the receipt (JPG or PNG).',
   'receipts.new.errorImageType': "That doesn't look like an image. Upload a JPG or PNG.",
   'receipts.new.errorImageTooLarge': 'The image is too large. Max 10 MB.',
+  'receipts.new.errorRateLimited':
+    'That is a lot of receipts in a short time — I need a short break. Try again in a few minutes.',
   'receipts.new.errorRead':
     "I couldn't read the receipt. Try a clearer photo, or record it manually.",
   'receipts.new.errorCurrency':

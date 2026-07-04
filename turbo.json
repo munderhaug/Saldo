@@ -1,7 +1,12 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "stream",
-  "globalDependencies": ["tsconfig.base.json", ".env"],
+  "globalDependencies": [
+    "tsconfig.base.json",
+    ".env",
+    "eslint.config.mjs",
+    "tools/eslint-plugin-saldo/**"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

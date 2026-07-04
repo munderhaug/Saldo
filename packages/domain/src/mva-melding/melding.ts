@@ -127,8 +127,8 @@ export function generateMvaMelding(
     if (agg.grunnlagØre === ZERO && agg.merverdiavgiftØre === ZERO) continue;
     const saft = codeIndex.get(agg.code);
     if (!saft) throw new Error(`MVA-melding: unknown SAF-T VAT code "${agg.code}"`);
-    // A no-VAT-treatment / outside-scope code (0/6/7/20) is not a return figure — skip it even if it
-    // carries a non-zero acquisition basis (review §5: don't leak a sats-0 grunnlag line).
+    // A technical no-treatment code (0/7/20) is not a return figure — skip it even if it carries a
+    // non-zero acquisition basis (review §5). Code 6 (unntatt turnover) IS reportable — see above.
     if (!isMeldingReportable(saft)) continue;
 
     const line: MvaMeldingLine = reportsGrunnlag(saft)

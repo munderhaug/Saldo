@@ -178,9 +178,7 @@ export default function NewVoucher({ loaderData, actionData }: Route.ComponentPr
         )}
 
         <div className="flex flex-wrap items-center gap-4">
-          <SubmitButton
-            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm">
             {t('vouchers.new.submit')}
           </SubmitButton>
           <Link

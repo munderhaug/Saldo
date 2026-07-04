@@ -179,9 +179,7 @@ export default function BankAccountRoute({ loaderData, actionData }: Route.Compo
             required
             className="border-input bg-background rounded-md border px-3 py-2 text-sm"
           />
-          <SubmitButton
-            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
             {t('bank.import.fileSubmit')}
           </SubmitButton>
         </Form>
@@ -198,9 +196,7 @@ export default function BankAccountRoute({ loaderData, actionData }: Route.Compo
         ) : (
           <Form method="post" className="grid gap-3">
             <input type="hidden" name="intent" value="import-gocardless" />
-            <SubmitButton
-              className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-            >
+            <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
               {t('bank.import.gocardlessSubmit')}
             </SubmitButton>
           </Form>

@@ -110,9 +110,7 @@ export function InvoiceForm({
       baseByRate.set(p.chargedRate, addØre(baseByRate.get(p.chargedRate) ?? ZERO, p.net));
     }
   }
-  const totalVat = sumØre(
-    [...baseByRate.entries()].map(([r, base]) => mulRate(base, rate(r))),
-  );
+  const totalVat = sumØre([...baseByRate.entries()].map(([r, base]) => mulRate(base, rate(r))));
   const totalGross = addØre(totalNet, totalVat);
 
   // Does any line carry an output-VAT code the unregistered org may not charge? Then warn.
@@ -428,9 +426,7 @@ export function InvoiceForm({
         </p>
       )}
 
-      <SubmitButton
-        className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-      >
+      <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
         {submitLabel}
       </SubmitButton>
     </Form>

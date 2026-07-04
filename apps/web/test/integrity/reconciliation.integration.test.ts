@@ -276,9 +276,7 @@ describe.skipIf(!ledgerDbAvailable)('bank reconciliation → settlement (app rol
     const two = await seedIncoming(orgId, gross, `KID ${kid}`, 'race-2b');
 
     const attempt = (bankTransactionId: string) =>
-      withOrgTx(appDb, orgId, (tx) =>
-        reconcileMatch(tx, orgId, { bankTransactionId, invoiceId }),
-      );
+      withOrgTx(appDb, orgId, (tx) => reconcileMatch(tx, orgId, { bankTransactionId, invoiceId }));
     const results = await Promise.all([attempt(one.txId), attempt(two.txId)]);
 
     expect(results.filter((r) => r.ok)).toHaveLength(1);

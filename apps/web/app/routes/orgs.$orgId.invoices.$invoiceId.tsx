@@ -258,9 +258,7 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
             <p className="text-muted-foreground text-sm">{t('invoices.detail.issueNote')}</p>
             <Form method="post">
               <input type="hidden" name="intent" value="issue" />
-              <SubmitButton
-                className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-              >
+              <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
                 {t('invoices.detail.issue')}
               </SubmitButton>
             </Form>
@@ -294,9 +292,7 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
           {invoice.kind === 'invoice' && (
             <Form method="post">
               <input type="hidden" name="intent" value="credit-note" />
-              <SubmitButton
-                className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
-              >
+              <SubmitButton className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm">
                 {t('invoices.detail.createCreditNote')}
               </SubmitButton>
             </Form>
@@ -373,9 +369,7 @@ function LifecycleButton({ to, label }: { to: InvoiceStatus; label: string }) {
     <Form method="post">
       <input type="hidden" name="intent" value="transition" />
       <input type="hidden" name="to" value={to} />
-      <SubmitButton
-        className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
-      >
+      <SubmitButton className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm">
         {label}
       </SubmitButton>
     </Form>

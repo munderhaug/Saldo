@@ -111,9 +111,7 @@ export default function Oppslag({ loaderData }: Route.ComponentProps) {
             aria-describedby="q-hint"
             className="border-input bg-background flex-1 rounded-md border px-3 py-2 text-sm"
           />
-          <SubmitButton
-            className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm">
             {t('oppslag.submit')}
           </SubmitButton>
         </div>

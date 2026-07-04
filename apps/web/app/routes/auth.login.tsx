@@ -76,9 +76,7 @@ export default function Login() {
       {data.oidcConfigured && (
         <Form method="post">
           <input type="hidden" name="intent" value="oidc" />
-          <SubmitButton
-            className="border-input bg-background font-text w-full rounded-md border px-4 py-2 text-sm"
-          >
+          <SubmitButton className="border-input bg-background font-text w-full rounded-md border px-4 py-2 text-sm">
             {t('auth.login.bankid')}
           </SubmitButton>
         </Form>
@@ -117,9 +115,7 @@ export default function Login() {
               {actionData.error}
             </p>
           )}
-          <SubmitButton
-            className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm">
             {t('auth.login.submit')}
           </SubmitButton>
         </Form>

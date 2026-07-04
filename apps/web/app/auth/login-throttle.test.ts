@@ -28,9 +28,9 @@ describe('loginCallerKey', () => {
 
   it('falls back to a shared global bucket when the header is absent or blank', () => {
     expect(loginCallerKey(new Request('http://x'))).toBe('global');
-    expect(
-      loginCallerKey(new Request('http://x', { headers: { 'x-forwarded-for': ' , ' } })),
-    ).toBe('global');
+    expect(loginCallerKey(new Request('http://x', { headers: { 'x-forwarded-for': ' , ' } }))).toBe(
+      'global',
+    );
   });
 });
 

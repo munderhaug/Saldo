@@ -52,6 +52,11 @@ function creditLine(leg: CreditLeg): PostingLine {
     : { account: leg.account, vatCode: leg.vatCode, debit: ZERO, credit: leg.credit };
 }
 
+/** Rate 0 means the line never charges (zero-rated / exempt / unregistered-at-0). */
+function isZeroRate(r: Rate): boolean {
+  return (r as number) === 0;
+}
+
 /** An output-VAT leg being merged: the accumulated CHARGING BASE, rounded once at the end (ADR 0054). */
 interface VatLegAccumulator {
   readonly account: AccountNo;
@@ -96,12 +101,20 @@ export function deriveSalesInvoice(input: SalesInvoiceInput): DeriveResult {
       ...(revenueLeg!.vatCode === undefined ? {} : { vatCode: revenueLeg!.vatCode }),
       credit: rPrev === undefined ? revenueLeg!.credit : addØre(rPrev.credit, revenueLeg!.credit),
     });
-    if (vatLeg !== undefined) {
-      const vKey = `${vatLeg.account}␟${vatLeg.vatCode ?? ''}`;
+    // A line belongs to its category's VAT BASE whenever it CHARGES — even when its own per-line
+    // rounding is 0 øre (a sub-2-øre net at 25 % emits no per-line leg, but the category computation
+    // must still count its net, exactly as `invoiceTotals`/`vatBreakdown` do; ADR 0054). Within an
+    // `ok` derivation, a missing VAT leg with a non-zero rate means exactly that rounded-to-zero
+    // charging case (an unregistered org with a non-zero rate already returned the hard block).
+    const charges = vatLeg !== undefined || !isZeroRate(l.vatRate);
+    if (charges) {
+      const account = vatLeg?.account ?? l.outputVat;
+      const vatCode = vatLeg?.vatCode ?? l.vatCode;
+      const vKey = `${account}␟${vatCode ?? ''}`;
       const vPrev = vatLegs.get(vKey);
       vatLegs.set(vKey, {
-        account: vatLeg.account,
-        ...(vatLeg.vatCode === undefined ? {} : { vatCode: vatLeg.vatCode }),
+        account,
+        ...(vatCode === undefined ? {} : { vatCode }),
         base: vPrev === undefined ? l.net : addØre(vPrev.base, l.net),
         vatRate: l.vatRate,
       });
@@ -116,6 +129,7 @@ export function deriveSalesInvoice(input: SalesInvoiceInput): DeriveResult {
   }
   for (const v of vatLegs.values()) {
     const credit = mulRate(v.base, v.vatRate); // rounded once per merged leg (ADR 0054)
+    if (credit === ZERO) continue; // a whole-category rounding to 0 posts no leg (a 0/0 leg is invalid)
     credits.push(
       creditLine({
         account: v.account,

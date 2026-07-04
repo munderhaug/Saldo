@@ -168,6 +168,36 @@ describe('deriveSalesInvoice — the AR voucher', () => {
     );
   });
 
+  it('counts a rounds-to-zero charging line in the category base (CI fast-check counterexample)', () => {
+    // A 1-øre line at 25 % emits no per-line VAT leg (roundØre(0,25) = 0), but its net still belongs
+    // to the category base: base 6 499 989 + 1 = 6 499 990 → VAT roundØre(1 624 997,50) = 1 624 998.
+    // Dropping it (the original merge bug) gave roundØre(1 624 997,25) = 1 624 997 — one øre off the
+    // document total. Found by fast-check in CI (seed-dependent), pinned here forever.
+    const r = deriveSalesInvoice({
+      receivable: RECEIVABLE,
+      status: 'registered_standard',
+      lines: [standardLine(1), standardLine(6_499_989)],
+    });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(isBalanced(r.voucher)).toBe(true);
+    expect(r.voucher.lines.find((l) => l.account === '2700')?.credit).toBe(1_624_998);
+    expect(r.voucher.lines.find((l) => l.account === RECEIVABLE)?.debit).toBe(8_124_988);
+  });
+
+  it('posts NO VAT leg when the whole category rounds to zero (a 0/0 leg is invalid)', () => {
+    const r = deriveSalesInvoice({
+      receivable: RECEIVABLE,
+      status: 'registered_standard',
+      lines: [standardLine(1)], // base 1 øre → VAT roundØre(0,25) = 0
+    });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.voucher.lines).toHaveLength(2); // receivable + revenue only
+    expect(r.voucher.lines.some((l) => l.account === '2700')).toBe(false);
+    expect(r.voucher.lines.find((l) => l.account === RECEIVABLE)?.debit).toBe(1);
+  });
+
   it('rounds each merged VAT leg ONCE from its summed base (BR-CO-17 / ADR 0054 regression)', () => {
     // Three 6-øre lines at 25 %: per-line rounding would post 2+2+2 = 6 øre of VAT; the category
     // computation posts roundØre(18 × 0,25) = 5 øre — matching the document's frozen total exactly.

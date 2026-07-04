@@ -13,6 +13,10 @@ import { credentialsInput } from '~/contracts';
 import { t } from '~/copy';
 import { SubmitButton } from '~/components/ui/submit-button';
 
+export function meta() {
+  return [{ title: t('auth.login.title') }];
+}
+
 export async function loader({ request }: Route.LoaderArgs) {
   if (await getOptionalUser(request)) throw redirect('/');
   return { devAuthEnabled, oidcConfigured };

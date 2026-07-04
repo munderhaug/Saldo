@@ -19,6 +19,7 @@ export const nb = {
 
   // Currency unit shown after a `formatKr()` figure (the figure itself comes from @saldo/domain).
   'common.currency': 'kr',
+  'common.tableRegion': 'Tabell — kan rulles sidelengs',
   // Spelled-out unit for screen readers, so "kr" isn't read as the letters "k r".
   'common.currencyLong': 'kroner',
 
@@ -721,6 +722,7 @@ export const en = {
   'app.tagline': 'Accounting and invoicing for small Norwegian sole proprietorships.',
 
   'common.currency': 'kr',
+  'common.tableRegion': 'Table — scrolls sideways',
   'common.currencyLong': 'kroner',
 
   'home.heading': "You're caught up",

@@ -1,4 +1,5 @@
 import { Form, Link, redirect } from 'react-router';
+import { Money } from '~/components/money';
 import { z } from 'zod';
 import {
   INVOICE_STATUSES,
@@ -44,6 +45,10 @@ import {
 } from '~/components/ui/table';
 import { t } from '~/copy';
 import { SubmitButton } from '~/components/ui/submit-button';
+
+export function meta() {
+  return [{ title: t('invoices.title') }];
+}
 
 export function headers() {
   return { 'Cache-Control': 'private, no-store' };
@@ -101,8 +106,11 @@ export async function action({ request, params }: Route.ActionArgs) {
   const detailUrl = `/orgs/${params.orgId}/invoices/${params.invoiceId}`;
 
   if (intent === 'save') {
-    const parsed = invoiceInput.safeParse(invoiceFormToObject(form));
-    if (!parsed.success) return { error: t('invoices.form.errorInvalidInput') };
+    // On any failure the submitted values ride back with the error, so the no-JS round-trip
+    // re-renders the user's edits instead of resetting to the stored draft (review 2026-07-03 §13).
+    const raw = invoiceFormToObject(form) as InvoiceInput;
+    const parsed = invoiceInput.safeParse(raw);
+    if (!parsed.success) return { error: t('invoices.form.errorInvalidInput'), values: raw };
     const result = await withUserOrg(request, params.orgId, (tx) =>
       updateDraft(tx, params.orgId, params.invoiceId, parsed.data),
     );
@@ -112,6 +120,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           result.error === 'not-a-draft'
             ? t('invoices.error.notADraft')
             : t(`invoices.error.${result.error}`),
+        values: raw,
       };
     }
     return redirect(detailUrl);
@@ -187,7 +196,9 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
   const errorMessage = actionData && 'error' in actionData ? actionData.error : undefined;
   const successMessage = actionData && 'success' in actionData ? actionData.success : undefined;
 
-  const defaultValues: InvoiceInput = {
+  const submitted =
+    actionData && 'values' in actionData && actionData.values ? actionData.values : undefined;
+  const defaultValues: InvoiceInput = submitted ?? {
     kind: invoice.kind,
     customerId: invoice.customerId ?? '',
     customerName: invoice.customerName,
@@ -432,7 +443,7 @@ function ReadOnlyInvoice({
               </TableCell>
               <TableCell className="tabular">{vatLabel.get(l.vatCodeId) ?? ''}</TableCell>
               <TableCell className="tabular text-right">
-                {formatKr(øre(l.netOre))} {t('common.currency')}
+                <Money ore={l.netOre} />
               </TableCell>
             </TableRow>
           ))}
@@ -443,19 +454,19 @@ function ReadOnlyInvoice({
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsNet')}</dt>
           <dd className="tabular">
-            {formatKr(øre(invoice.netOre))} {t('common.currency')}
+            <Money ore={invoice.netOre} />
           </dd>
         </div>
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsVat')}</dt>
           <dd className="tabular">
-            {formatKr(øre(invoice.vatOre))} {t('common.currency')}
+            <Money ore={invoice.vatOre} />
           </dd>
         </div>
         <div className="font-text flex justify-between">
           <dt>{t('invoices.form.totalsGross')}</dt>
           <dd className="tabular">
-            {formatKr(øre(invoice.grossOre))} {t('common.currency')}
+            <Money ore={invoice.grossOre} />
           </dd>
         </div>
       </dl>

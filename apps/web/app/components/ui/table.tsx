@@ -1,10 +1,23 @@
+/* eslint-disable jsx-a11y/no-noninteractive-tabindex -- the Table scroll container is the W3C
+   scrollable-region pattern: tabindex=0 + role=region + aria-label (WCAG 2.1.1). */
 // shadcn/ui Table — owned in-repo. Real semantic <table>/<thead>/<tbody>/<th scope>; figure columns
 // add the `tabular` utility + `text-right` at the call site (see .claude/rules/design-system.md).
 import { cn } from '~/lib/utils';
+import { t } from '~/copy';
 
 function Table({ className, ...props }: React.ComponentProps<'table'>) {
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
+    // The scroll container is keyboard-focusable (tabIndex) so a wide table can be scrolled without
+    // a pointer (WCAG 2.1.1, review 2026-07-03 §13); role/label make the region announceable. This is
+    // the Deque/W3C scrollable-region pattern — the one legitimate tabindex on a non-interactive role
+    // (file-level eslint exception above).
+    <div
+      data-slot="table-container"
+      className="focus-visible:ring-ring relative w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2"
+      tabIndex={0}
+      role="region"
+      aria-label={t('common.tableRegion')}
+    >
       <table
         data-slot="table"
         className={cn('w-full caption-bottom text-sm', className)}

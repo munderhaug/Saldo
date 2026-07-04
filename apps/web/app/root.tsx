@@ -16,7 +16,11 @@ import '@fontsource-variable/fraunces/index.css';
 import '@fontsource-variable/ibm-plex-sans/index.css';
 import './app.css';
 
-export const links: LinksFunction = () => [{ rel: 'manifest', href: '/manifest.webmanifest' }];
+export const links: LinksFunction = () => [
+  { rel: 'manifest', href: '/manifest.webmanifest' },
+  { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+  { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
+];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

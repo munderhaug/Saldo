@@ -9,6 +9,7 @@
  * plain and calm. Off any shared cache (financial + personal data, EU-resident).
  */
 import { Link } from 'react-router';
+import { Money } from '~/components/money';
 import { z } from 'zod';
 import { generateSaftFinancial, saftBalances } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.saft';
@@ -17,7 +18,6 @@ import { readOrgOverview } from '~/db/organizations.server';
 import { readSaftFinancial } from '~/db/saft.server';
 import { STANDARD_ACCOUNT_INDEX, STANDARD_TAX_CODE_INDEX } from '~/db/provisioning.server';
 import { resolveYear } from '~/lib/fiscal-year';
-import { kr } from '~/lib/money-format';
 import { t } from '~/copy';
 
 export function meta() {
@@ -87,11 +87,11 @@ export default function SaftExportRoute({ loaderData }: Route.ComponentProps) {
             <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
               <dt className="text-muted-foreground">{t('saft.totalDebit')}</dt>
               <dd className="tabular text-right">
-                {kr(totalDebitOre)} {t('common.currency')}
+                <Money ore={totalDebitOre} />
               </dd>
               <dt className="text-muted-foreground">{t('saft.totalCredit')}</dt>
               <dd className="tabular text-right">
-                {kr(totalCreditOre)} {t('common.currency')}
+                <Money ore={totalCreditOre} />
               </dd>
             </dl>
           </section>

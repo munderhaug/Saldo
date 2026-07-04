@@ -10,6 +10,7 @@
  * the UX mirrors the server's HARD BLOCK rather than promising VAT the action will refuse.
  */
 import { useEffect, useRef } from 'react';
+import { Money } from '~/components/money';
 import { Form, useSubmit } from 'react-router';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -298,7 +299,7 @@ export function InvoiceForm({
                   label={t('invoices.form.line.quantity')}
                   error={errors.lines?.[index]?.quantity?.message}
                   registration={register(`lines.${index}.quantity`)}
-                  inputMode="numeric"
+                  inputMode="decimal"
                   tabular
                 />
                 <TextField
@@ -312,7 +313,7 @@ export function InvoiceForm({
                   label={t('invoices.form.line.price')}
                   error={errors.lines?.[index]?.unitPriceKr?.message}
                   registration={register(`lines.${index}.unitPriceKr`)}
-                  inputMode="numeric"
+                  inputMode="decimal"
                   tabular
                 />
               </div>
@@ -403,19 +404,19 @@ export function InvoiceForm({
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsNet')}</dt>
           <dd className="tabular">
-            {formatKr(totalNet)} {t('common.currency')}
+            <Money ore={totalNet} />
           </dd>
         </div>
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsVat')}</dt>
           <dd className="tabular">
-            {formatKr(totalVat)} {t('common.currency')}
+            <Money ore={totalVat} />
           </dd>
         </div>
         <div className="font-text flex justify-between">
           <dt>{t('invoices.form.totalsGross')}</dt>
           <dd className="tabular">
-            {formatKr(totalGross)} {t('common.currency')}
+            <Money ore={totalGross} />
           </dd>
         </div>
       </dl>

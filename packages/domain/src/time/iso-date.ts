@@ -21,3 +21,14 @@ export function isoDayOrdinal(iso: string | null): number | null {
   if (back.getUTCMonth() !== month - 1 || back.getUTCDate() !== day) return null;
   return Math.floor(ms / 86_400_000);
 }
+
+/**
+ * Presentation boundary: format a strict `YYYY-MM-DD` as the Norwegian day form `DD.MM.YYYY`.
+ * Pure string re-assembly (no Date, no timezone); anything malformed is returned unchanged so a
+ * bad value stays visible rather than becoming a crash or a silent blank (system owns the fault).
+ */
+export function formatIsoDate(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  return `${m[3]}.${m[2]}.${m[1]}`;
+}

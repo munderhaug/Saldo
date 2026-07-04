@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { TextField } from '~/components/form-field';
 import { Form, Link, redirect, useSubmit } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -143,31 +144,19 @@ export default function NewVoucher({ loaderData, actionData }: Route.ComponentPr
           )}
         </fieldset>
 
-        <div className="grid gap-1.5">
-          <label htmlFor="amount" className="font-text text-sm">
-            {t('vouchers.new.amountLabel')}
-          </label>
-          <input
-            id="amount"
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            aria-describedby={errors.amount ? 'amount-error amount-hint' : 'amount-hint'}
-            aria-invalid={errors.amount ? true : undefined}
-            className="border-input bg-background tabular rounded-md border px-3 py-2 text-sm"
-            {...register('amount')}
-          />
-          <p id="amount-hint" className="text-muted-foreground text-sm">
-            {isRegistered
+        <TextField
+          id="amount"
+          label={t('vouchers.new.amountLabel')}
+          hint={
+            isRegistered
               ? t('vouchers.new.amountHintRegistered')
-              : t('vouchers.new.amountHintPlain')}
-          </p>
-          {errors.amount && (
-            <p id="amount-error" role="alert" className="text-destructive text-sm">
-              {errors.amount.message}
-            </p>
-          )}
-        </div>
+              : t('vouchers.new.amountHintPlain')
+          }
+          error={errors.amount?.message}
+          registration={register('amount')}
+          inputMode="decimal"
+          tabular
+        />
 
         <p className="text-muted-foreground text-sm">{t('vouchers.new.confirmNote')}</p>
 

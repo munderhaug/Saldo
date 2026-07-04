@@ -1,4 +1,5 @@
 import { Form, Link, useSearchParams } from 'react-router';
+import { formatOrgNr } from '~/lib/org-format';
 import { isValidOrgNr, orgNr } from '@saldo/domain';
 import type { Route } from './+types/oppslag';
 import { nameSearchInput, type Enhet } from '~/contracts';
@@ -260,11 +261,6 @@ function vatStatusLabel(enhet: Enhet): string {
   if (enhet.registrertIMvaregisteret === true) return t('oppslag.vat.registered');
   if (enhet.registrertIMvaregisteret === false) return t('oppslag.vat.notRegistered');
   return t('oppslag.vat.unknown');
-}
-
-/** "923609016" → "923 609 016" (presentation only; the value stays 9 digits). */
-function formatOrgNr(value: string): string {
-  return value.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3');
 }
 
 function placeOf(enhet: Enhet): string | null {

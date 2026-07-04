@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Saldo mark: the balance glyph — two bars, the lower one settling (flat electric, ADR 0025). -->
+  <rect width="64" height="64" rx="14" fill="#2f4be0"/>
+  <rect x="19" y="23.5" width="26" height="7.5" rx="3.75" fill="#fff"/>
+  <rect x="19" y="36.5" width="18.5" height="7.5" rx="3.75" fill="#fff"/>
+</svg>

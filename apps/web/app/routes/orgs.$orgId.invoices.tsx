@@ -1,4 +1,6 @@
 import { Link } from 'react-router';
+import { formatIsoDate } from '@saldo/domain';
+import { Money } from '~/components/money';
 import { z } from 'zod';
 import {
   createColumnHelper,
@@ -6,7 +8,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { formatKr, øre } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.invoices';
 import { withUserOrg } from '~/auth/auth.server';
 import { listInvoices, type InvoiceListRow } from '~/db/invoices.server';
@@ -79,15 +80,15 @@ export default function InvoicesRoute({ loaderData }: Route.ComponentProps) {
     }),
     column.accessor('issueDate', {
       header: () => t('invoices.col.issued'),
-      cell: (info) => info.getValue() ?? '—',
+      cell: (info) => (info.getValue() ? formatIsoDate(info.getValue()!) : '—'),
     }),
     column.accessor('dueDate', {
       header: () => t('invoices.col.due'),
-      cell: (info) => info.getValue() ?? '—',
+      cell: (info) => (info.getValue() ? formatIsoDate(info.getValue()!) : '—'),
     }),
     column.accessor('grossOre', {
       header: () => t('invoices.col.total'),
-      cell: (info) => `${formatKr(øre(info.getValue()))} ${t('common.currency')}`,
+      cell: (info) => <Money ore={info.getValue()} />,
     }),
   ];
 

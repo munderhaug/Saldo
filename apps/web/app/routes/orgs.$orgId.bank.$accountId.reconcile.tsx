@@ -10,12 +10,12 @@
  * `<Form>` per row) and is off any shared cache (transactions are personal/financial data).
  */
 import { Form, Link } from 'react-router';
-import { z } from 'zod';
-import { type MatchTier } from '@saldo/domain';
+import { uuidParamsValid } from '~/lib/route-params';
+import { Money } from '~/components/money';
+import { formatIsoDate, type MatchTier } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.bank.$accountId.reconcile';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { readBankAccount } from '~/db/bank.server';
-import { kr } from '~/lib/money-format';
 import {
   buildSuggestions,
   listOpenInvoices,
@@ -46,11 +46,9 @@ export function headers() {
   return { 'Cache-Control': 'private, no-store' };
 }
 
-const idsValid = (orgId: string, accountId: string): boolean =>
-  z.string().uuid().safeParse(orgId).success && z.string().uuid().safeParse(accountId).success;
-
 export async function loader({ request, params }: Route.LoaderArgs) {
-  if (!idsValid(params.orgId, params.accountId)) throw new Response('Not found', { status: 404 });
+  if (!uuidParamsValid(params.orgId, params.accountId))
+    throw new Response('Not found', { status: 404 });
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     account: await readBankAccount(tx, params.accountId),
     transactions: await listUnmatchedIncoming(tx, params.accountId),
@@ -71,7 +69,8 @@ type ActionData =
 
 export async function action({ request, params }: Route.ActionArgs): Promise<ActionData> {
   assertSameOrigin(request);
-  if (!idsValid(params.orgId, params.accountId)) throw new Response('Not found', { status: 404 });
+  if (!uuidParamsValid(params.orgId, params.accountId))
+    throw new Response('Not found', { status: 404 });
 
   const parsed = confirmMatchInput.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) return { ok: false, error: t('recon.error.invalid') };
@@ -136,13 +135,13 @@ export default function ReconcileRoute({ loaderData, actionData }: Route.Compone
             {suggestions.map((s: TxSuggestion) => (
               <TableRow key={s.transaction.id}>
                 <TableCell className="tabular align-top">
-                  {s.transaction.bookingDate ?? '—'}
+                  {s.transaction.bookingDate ? formatIsoDate(s.transaction.bookingDate) : '—'}
                 </TableCell>
                 <TableCell className="align-top">
                   {s.transaction.remittanceInfo ?? s.transaction.counterparty ?? '—'}
                 </TableCell>
                 <TableCell className="tabular text-right align-top">
-                  {kr(s.transaction.amountOre)} {t('common.currency')}
+                  <Money ore={s.transaction.amountOre} />
                 </TableCell>
                 <TableCell className="align-top">
                   {s.candidates.length === 0 ? (

@@ -137,7 +137,7 @@ export function ProductForm({
             hint={t('products.form.priceHint')}
             error={errors.unitPriceKr?.message}
             registration={register('unitPriceKr')}
-            inputMode="numeric"
+            inputMode="decimal"
             tabular
             extraDescribedBy={priceInclVat !== null ? 'unitPriceKr-incl' : undefined}
           />

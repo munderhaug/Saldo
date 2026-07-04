@@ -4,98 +4,65 @@
     {
       "id": "pr3-gates",
       "title": "Mechanical gates & supply-chain hardening",
-      "implements_adr": [
-        "0014",
-        "0017"
-      ],
-      "touches": [
-        "tools/repo-lint.mjs",
-        ".github/workflows/ci.yml"
-      ],
+      "implements_adr": ["0014", "0017"],
+      "touches": ["tools/repo-lint.mjs", ".github/workflows/ci.yml"],
       "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P0-hardening",
       "depends_on": [],
       "notes": "Fail-closed hooks, Stop green-bar, type-coverage, squawk, SHA-pinned actions, CodeQL/gitleaks/SBOM, freshness cron.",
-      "refs": [
-        "docs/decisions/0017-mechanical-gates-supply-chain.md"
-      ]
+      "refs": ["docs/decisions/0017-mechanical-gates-supply-chain.md"]
     },
     {
       "id": "pr4-ledger-integrity",
       "title": "Close four ledger-integrity gaps in SQL",
-      "implements_adr": [
-        "0003",
-        "0012",
-        "0018"
-      ],
-      "touches": [
-        "apps/web/test/integrity"
-      ],
+      "implements_adr": ["0003", "0012", "0018"],
+      "touches": ["apps/web/test/integrity"],
       "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P0-hardening",
       "depends_on": [],
       "notes": "Posting-side period lock, posted-completeness, period non-overlap, cross-org period FK, RLS-coverage gate.",
-      "refs": [
-        "docs/decisions/0018-ledger-integrity-gaps.md"
-      ]
+      "refs": ["docs/decisions/0018-ledger-integrity-gaps.md"]
     },
     {
       "id": "meta-agentic-memory",
       "title": "Agentic memory: committed task graph + rejected-approaches log",
-      "implements_adr": [
-        "0019"
-      ],
-      "touches": [
-        "tools/backlog.mjs",
-        "docs/backlog/tasks.json",
-        "docs/decisions/rejected.md"
-      ],
+      "implements_adr": ["0019"],
+      "touches": ["tools/backlog.mjs", "docs/backlog/tasks.json", "docs/decisions/rejected.md"],
       "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "P0-hardening",
       "depends_on": [],
       "notes": "This file + tools/backlog.mjs + docs/decisions/rejected.md. Piyaz's ideas, built natively (no SaaS).",
-      "refs": [
-        "docs/decisions/0019-agentic-memory-task-graph.md"
-      ]
+      "refs": ["docs/decisions/0019-agentic-memory-task-graph.md"]
     },
     {
       "id": "pr5-auth",
       "title": "Identity & session foundation (auth) — the missing first lock",
-      "implements_adr": [
-        "0020",
-        "0055"
-      ],
+      "implements_adr": ["0020", "0055"],
       "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P0-hardening",
       "depends_on": [],
       "notes": "DONE (ADR 0020): app_user/user_session/membership; SHA-256 sessions + sliding expiry; argon2id dev provider; openid-client v6 OIDC (wired, not live); Zod env.ts; requireUser->withUserOrg->withOrgTx; /auth routes; RLS-coverage updated. OIDC live round-trip still needs Criipto + egress.",
-      "refs": [
-        "docs/decisions/0020-session-identity-model.md"
-      ]
+      "refs": ["docs/decisions/0020-session-identity-model.md"]
     },
     {
       "id": "pr6-observability",
       "title": "Observability baseline (pino + redaction + request-id)",
-      "implements_adr": [
-        "0021"
-      ],
+      "implements_adr": ["0021"],
       "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "P0-hardening",
       "depends_on": [],
       "notes": "DONE (ADR 0021): pino logger.server.ts with REDACT_PATHS backstop + requestLogger(x-request-id), wired into /auth routes (outcomes only, never PII). Always-on redaction unit test. OTel later (P2).",
-      "refs": [
-        "docs/decisions/0021-observability-baseline-pino.md"
-      ]
+      "refs": ["docs/decisions/0021-observability-baseline-pino.md"]
     },
     {
       "id": "test-stateful-ledger",
@@ -104,24 +71,15 @@
       "value": "high",
       "effort": "M",
       "phase": "P1",
-      "depends_on": [
-        "pr4-ledger-integrity"
-      ],
-      "implements_adr": [
-        "0039"
-      ],
+      "depends_on": ["pr4-ledger-integrity"],
+      "implements_adr": ["0039"],
       "notes": "Random sequences of post/reverse/lock against the invariants — the highest-value test for a system of record. Real-DB command model (fast-check asyncModelRun) over the actual triggers; apps/web/test/integrity/ledger-stateful.integration.test.ts.",
-      "refs": [
-        "docs/roadmap.md",
-        "docs/decisions/0039-stateful-ledger-property-testing.md"
-      ]
+      "refs": ["docs/roadmap.md", "docs/decisions/0039-stateful-ledger-property-testing.md"]
     },
     {
       "id": "feat-honest-number",
       "title": "Honest-number domain feature (spendable = income - VAT held - estimated tax)",
-      "touches": [
-        "packages/domain/src/honest-number"
-      ],
+      "touches": ["packages/domain/src/honest-number"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -136,17 +94,12 @@
     {
       "id": "feat-tax-estimate",
       "title": "Norwegian ENK income-tax estimation (source-grounded)",
-      "implements_adr": [
-        "0029"
-      ],
+      "implements_adr": ["0029"],
       "touches": [
         "packages/domain/src/tax/income-estimate.ts",
         "packages/domain/src/tax/params.ts"
       ],
-      "sources": [
-        "db/reference/skatt",
-        "docs/regulatory/skatt-enk-personskatt.md"
-      ],
+      "sources": ["db/reference/skatt", "docs/regulatory/skatt-enk-personskatt.md"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -163,9 +116,7 @@
     {
       "id": "feat-honest-number-surface",
       "title": "Honest-number reveal: ledger aggregation + the 'what's actually yours' UI",
-      "implements_adr": [
-        "0033"
-      ],
+      "implements_adr": ["0033"],
       "touches": [
         "packages/domain/src/honest-number/from-ledger.ts",
         "apps/web/app/db/ledger.server.ts",
@@ -176,11 +127,7 @@
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-tax-estimate",
-        "feat-keyed-microcopy",
-        "feat-org-onboarding"
-      ],
+      "depends_on": ["feat-tax-estimate", "feat-keyed-microcopy", "feat-org-onboarding"],
       "notes": "DONE (ADR 0033). aggregateLedger (db/ledger.server.ts) sums one fiscal year's POSTED ledger by kontoklasse (account.type) + vat_code.direction — revenue/expense net, output/input VAT on the liability legs only (the revenue line also carries the output code, so direction alone double-counts). Read via withUserOrg + RLS. Pure honestNumberFromLedger (packages/domain) reconstructs gross income = revenueNet + outputVatCollected and feeds profit = revenueNet - expenseNet into estimateEnkIncomeTax(.).total; 10 exhaustive + fast-check tests. home.tsx replaced with the §6 reveal (Fraunces spendable peak, permission framing) + a calm 'you're caught up' empty state. Testcontainers test: partition correctness, drafts excluded, year-scoped, RLS-isolated. NOT AI / not profiling (ADR 0022). Sequences feat-manual-voucher-entry to produce real data; active-org is feat-org-active-context.",
       "refs": [
         "docs/experience-principles.md",
@@ -191,9 +138,7 @@
     {
       "id": "feat-manual-voucher-entry",
       "title": "Manual voucher entry: the first posting surface (produce real ledger data)",
-      "implements_adr": [
-        "0034"
-      ],
+      "implements_adr": ["0034"],
       "touches": [
         "apps/web/app/routes/orgs.$orgId.vouchers.new.tsx",
         "apps/web/app/db/posting.server.ts",
@@ -205,9 +150,7 @@
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-honest-number-surface"
-      ],
+      "depends_on": ["feat-honest-number-surface"],
       "notes": "DONE (ADR 0034). Event-framed surface (orgs/:orgId/vouchers/new): the user records income or an expense + a net amount; no konto/debit/credit, no VAT-code jargon (experience §4.2). recordManualVoucher (db/posting.server.ts) reads mva_status, ensures the year's fiscal_period, derives a balanced voucher via deriveSales/derivePurchase (status-driven standard-rate VAT — 25% from rateForCategory('regular'), never a literal), gates it through runRules(vatLineRule), and inserts voucher+postings POSTED inside withUserOrg so the deferred balance/posted-completeness triggers verify at COMMIT. Designated accounts (1500/3000/2700 sale, 7798/2710/2400 purchase) + codes (3/1) are verified against the committed SAF-T lists (posting-accounts.test.ts) — source-grounded, not memory. New pure parseKroner in @saldo/domain (integer-safe inverse of formatKr, exhaustive + fast-check). §5.5 sober confirm; server-authoritative <Form> + RHF/Zod mirror. NO invoice_counter (a manual voucher is not an issued invoice). No schema change. Testcontainers posting-path test (7): balanced/posted VAT split + aggregation, unregistered gross, period-lock block, balance + completeness triggers, RLS isolation via saldo_app. home.tsx empty-state + reveal now link here; the reveal shows real numbers. Unblocks feat-receipt-extraction + sales-invoice issuance.",
       "refs": [
         "docs/decisions/0034-manual-voucher-entry.md",
@@ -218,12 +161,8 @@
     {
       "id": "feat-keyed-microcopy",
       "title": "Norwegian-first keyed microcopy system",
-      "implements_adr": [
-        "0024"
-      ],
-      "touches": [
-        "apps/web/app/copy"
-      ],
+      "implements_adr": ["0024"],
+      "touches": ["apps/web/app/copy"],
       "status": "done",
       "value": "medium",
       "effort": "M",
@@ -243,20 +182,14 @@
         "apps/web/app/integrations/enhetsregisteret/client.server.ts",
         "apps/web/app/routes/oppslag.tsx"
       ],
-      "sources": [
-        "db/reference/brreg",
-        "docs/integrations/enhetsregisteret.md"
-      ],
+      "sources": ["db/reference/brreg", "docs/integrations/enhetsregisteret.md"],
       "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": [],
       "notes": "DONE: read-only /oppslag lookup (org-nr + free-text name). Integration client (app/integrations/enhetsregisteret/client.server.ts: Zod at the boundary, AbortController timeout, typed not-found/error results), contract (contracts/enhetsregisteret.ts), captures in db/reference/brreg/ (real Equinor/REMA + a synthetic redacted ENK). Verified live end-to-end. Caching/rate-limit deferred → feat-enhetsregisteret-cache.",
-      "refs": [
-        "db/reference/brreg",
-        "docs/integrations/enhetsregisteret.md"
-      ]
+      "refs": ["db/reference/brreg", "docs/integrations/enhetsregisteret.md"]
     },
     {
       "id": "feat-enhetsregisteret-cache",
@@ -265,24 +198,15 @@
       "value": "low",
       "effort": "S",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-enhetsregisteret"
-      ],
+      "depends_on": ["feat-enhetsregisteret"],
       "notes": "DONE (review 2026-06-28 follow-up + 2026-07-03 hardening): server-side TTL+LRU cache and per-caller fixed-window limiter live in app/integrations/enhetsregisteret/throttle.server.ts (wired in routes/oppslag.tsx). The limiter keys on the TRUSTED right-most X-Forwarded-For hop (lib/client-ip.server.ts) — not the spoofable first entry.",
-      "refs": [
-        "docs/integrations/enhetsregisteret.md",
-        ".claude/rules/data-handling.md"
-      ],
-      "touches": [
-        "apps/web/app/integrations/enhetsregisteret/throttle.server.ts"
-      ]
+      "refs": ["docs/integrations/enhetsregisteret.md", ".claude/rules/data-handling.md"],
+      "touches": ["apps/web/app/integrations/enhetsregisteret/throttle.server.ts"]
     },
     {
       "id": "feat-org-onboarding",
       "title": "Org & contacts onboarding (user -> org membership UI)",
-      "implements_adr": [
-        "0032"
-      ],
+      "implements_adr": ["0032"],
       "touches": [
         "apps/web/app/db/organizations.server.ts",
         "apps/web/app/db/provisioning.server.ts",
@@ -297,14 +221,9 @@
       "value": "high",
       "effort": "L",
       "phase": "P1-feature",
-      "depends_on": [
-        "pr5-auth",
-        "feat-enhetsregisteret"
-      ],
+      "depends_on": ["pr5-auth", "feat-enhetsregisteret"],
       "notes": "DONE (ADR 0032). create-org + owner membership + provision the full committed SAF-T kontoplan (745 accounts, classifyAccountType by kontoklasse) + 30 VAT codes atomically inside withOrgTx; duplicate org-nr rolls back. RHF + @hookform/resolvers (create form, Zod contract authoritative server-side) + TanStack Table (vat-code overview) installed here. /oppslag prefills org-nr; MVA status human-confirmed from the brreg register flag (not AI). Multi-membership selection loops withOrgTx per org (RLS-correct on every topology). Testcontainers integrity test: counts scoped, owner membership, RLS isolation, atomic rollback. No schema change.",
-      "refs": [
-        "docs/decisions/0032-org-provisioning.md"
-      ]
+      "refs": ["docs/decisions/0032-org-provisioning.md"]
     },
     {
       "id": "feat-org-active-context",
@@ -313,13 +232,9 @@
       "value": "medium",
       "effort": "S",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-org-onboarding"
-      ],
+      "depends_on": ["feat-org-onboarding"],
       "notes": "Remember the org a user is acting for across requests (cookie/session), so feature routes need not carry orgId in the path. Org selection (feat-org-onboarding) sets it; withUserOrg reads it.",
-      "refs": [
-        "docs/decisions/0032-org-provisioning.md"
-      ]
+      "refs": ["docs/decisions/0032-org-provisioning.md"]
     },
     {
       "id": "feat-account-chart-curation",
@@ -328,13 +243,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-org-onboarding"
-      ],
+      "depends_on": ["feat-org-onboarding"],
       "notes": "A fresh org is provisioned with the full 745-account standard kontoplan (ADR 0032). Filter pickers to a used/favourites subset (UI-layer; does not change what is provisioned).",
-      "refs": [
-        "docs/decisions/0032-org-provisioning.md"
-      ]
+      "refs": ["docs/decisions/0032-org-provisioning.md"]
     },
     {
       "id": "feat-mobile-companion",
@@ -343,13 +254,9 @@
       "value": "medium",
       "effort": "L",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-honest-number"
-      ],
+      "depends_on": ["feat-honest-number"],
       "notes": "Built per feature, not all at once (adaptive two-surface design system). Native-feel polish: pnpm add motion + vaul here (chosen in frontend.md/tech-stack.md; removed until used).",
-      "refs": [
-        "docs/decisions/0016-adaptive-two-surface-design-system.md"
-      ]
+      "refs": ["docs/decisions/0016-adaptive-two-surface-design-system.md"]
     },
     {
       "id": "vat-reverse-charge",
@@ -359,9 +266,7 @@
       "effort": "M",
       "phase": "P2",
       "depends_on": [],
-      "implements_adr": [
-        "0044"
-      ],
+      "implements_adr": ["0044"],
       "notes": "DONE (ADR 0044): deriveReverseChargePurchase posts the dual leg (output 2704-2709 + input 2714-2718) for import/foreign-service/gold purchases; reverseChargeKind/reverseChargeInputDeductible classify from the committed SAF-T descriptions; checkSalesLine allows the domestic RC sale (51, revenue-at-net) and blocks the buyer-self-account purchase codes; recordReverseChargePurchase + Testcontainers integrity test prove both legs balance and land on the MVA basis. Below-threshold §3-30 self-accounting deferred to vat-threshold-watcher; supplier-invoice entry UI is feat-supplier-invoices.",
       "refs": [
         ".claude/skills/new-vat-scenario/SKILL.md",
@@ -371,10 +276,7 @@
     {
       "id": "mva-kunst-sectoral-doc",
       "title": "Cited regulatory page: mval § 3-7 artistic/cultural exemption (unntatt)",
-      "sources": [
-        "db/reference/mva",
-        "docs/regulatory/mva-kunstneriske-tjenester.md"
-      ],
+      "sources": ["db/reference/mva", "docs/regulatory/mva-kunstneriske-tjenester.md"],
       "status": "done",
       "value": "high",
       "effort": "S",
@@ -389,24 +291,17 @@
     {
       "id": "vat-line-level-model",
       "title": "Per-line VAT treatment in @saldo/domain (ADR 0027 accepted)",
-      "implements_adr": [
-        "0027",
-        "0028"
-      ],
+      "implements_adr": ["0027", "0028"],
       "touches": [
         "packages/domain/src/vat/line-treatment.ts",
         "packages/domain/src/rules/vat-line.ts"
       ],
-      "sources": [
-        "docs/regulatory/mva-kunstneriske-tjenester.md"
-      ],
+      "sources": ["docs/regulatory/mva-kunstneriske-tjenester.md"],
       "status": "done",
       "value": "high",
       "effort": "M",
       "phase": "P2",
-      "depends_on": [
-        "mva-kunst-sectoral-doc"
-      ],
+      "depends_on": ["mva-kunst-sectoral-doc"],
       "notes": "DONE: @saldo/domain vat/line-treatment.ts (deriveVatTreatment classifier + checkVatLine registration gate over the committed SAF-T codes) + rules/vat-line.ts (vatLineRule over a voucher). Per-line code validated against org mva_status; § 3-7 case = a registered org may post a code-6 unntatt line beside a taxable line. Output-VAT/fritatt/input-deduction require registration; reverse-charge is a non-blocking advisory EXCEPT its input-deduction claim (gated). 25 exhaustive+property tests; vat-reviewer clean. Apportionment stays vat-mixed-activity.",
       "refs": [
         "docs/decisions/0027-vat-treatment-granularity.md",
@@ -420,9 +315,7 @@
       "value": "medium",
       "effort": "L",
       "phase": "P2",
-      "depends_on": [
-        "vat-line-level-model"
-      ],
+      "depends_on": ["vat-line-level-model"],
       "notes": "Currently out of scope (spec). Needs a source-grounded apportionment basis + binding rulings (BFU/klagenemnda) captured to db/reference before coding; rules-engine enforcement with exhaustive+property tests; Testcontainers integrity test. Revisit only if ADR 0027 is accepted.",
       "refs": [
         "docs/regulatory/mva-kunstneriske-tjenester.md",
@@ -432,23 +325,14 @@
     {
       "id": "vat-sectoral-exemptions",
       "title": "Rules-engine knowledge of sectoral VAT exemptions (mval kap. 3)",
-      "implements_adr": [
-        "0030"
-      ],
-      "touches": [
-        "packages/domain/src/vat/activity.ts"
-      ],
-      "sources": [
-        "db/reference/mva",
-        "docs/regulatory/mva-sektorunntak.md"
-      ],
+      "implements_adr": ["0030"],
+      "touches": ["packages/domain/src/vat/activity.ts"],
+      "sources": ["db/reference/mva", "docs/regulatory/mva-sektorunntak.md"],
       "status": "done",
       "value": "medium",
       "effort": "L",
       "phase": "P2",
-      "depends_on": [
-        "vat-line-level-model"
-      ],
+      "depends_on": ["vat-line-level-model"],
       "notes": "DONE (ADR 0030) — revenue gate. Captured mval kap. 3 unntak verbatim (db/reference/mva/2026-06-23-mval-kap3-unntak.md), distilled docs/regulatory/mva-sektorunntak.md. VatActivity enum (helse/sosiale/undervisning/finansielle/kunst-kultur/idrett/utleie-fast-eiendom + avgiftspliktig) + checkVatActivityLine in packages/domain/src/vat/activity.ts: blocks charging output/fritatt VAT on an exempt activity, and booking taxable turnover as unntatt; composes with checkVatLine. 12 tests (exhaustive activity×code + properties). Reduced-rate matching (12/15%) and rule/DB wiring sequenced — see vat-reduced-rate-activity, vat-mixed-activity.",
       "refs": [
         "docs/decisions/0030-sectoral-vat-exemptions.md",
@@ -463,14 +347,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P2",
-      "depends_on": [
-        "vat-sectoral-exemptions"
-      ],
+      "depends_on": ["vat-sectoral-exemptions"],
       "notes": "Extend the activity gate (ADR 0030) to the reduced-rate sectors: capture mval kap. 5 scope (§5-2 næringsmidler 15%, §5-3/5-5 ff persontransport/overnatting/etc. 12%) FIRST, then validate that a reduced-rate activity's output line carries the matching rate category (not 25%). Also wire checkVatActivityLine into the rules engine (a vatActivityRule over a voucher) once a per-line activity field exists on the posting/voucher model + DB.",
-      "refs": [
-        "packages/domain/src/vat/activity.ts",
-        "docs/regulatory/mva-rates.md"
-      ]
+      "refs": ["packages/domain/src/vat/activity.ts", "docs/regulatory/mva-rates.md"]
     },
     {
       "id": "vat-threshold-watcher",
@@ -503,13 +382,8 @@
     {
       "id": "harness-doc-freshness",
       "title": "Derive repo-status from the task graph + gate it (kill doc staleness at the root)",
-      "implements_adr": [
-        "0031"
-      ],
-      "touches": [
-        "tools/status-block.mjs",
-        "tools/repo-lint.mjs"
-      ],
+      "implements_adr": ["0031"],
+      "touches": ["tools/status-block.mjs", "tools/repo-lint.mjs"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -526,26 +400,15 @@
     {
       "id": "harness-knowledge-graph",
       "title": "Enrich the task graph with typed links + evidence-based drift checks",
-      "implements_adr": [
-        "0031"
-      ],
-      "touches": [
-        "tools/repo-lint.mjs",
-        "tools/backlog.mjs",
-        "docs/backlog/tasks.json"
-      ],
+      "implements_adr": ["0031"],
+      "touches": ["tools/repo-lint.mjs", "tools/backlog.mjs", "docs/backlog/tasks.json"],
       "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1",
-      "depends_on": [
-        "harness-doc-freshness"
-      ],
+      "depends_on": ["harness-doc-freshness"],
       "notes": "DONE (ADR 0031), B of A→B. Added optional typed edges to tasks.json (implements_adr, touches[globs], sources) — backlog validate type-checks their shapes; repo-lint check K verifies against the repo: implements_adr resolves to a real ADR, stale-done (a done/in_progress task whose touches are gone = error), orphan-ADR (an ADR no task implements/references = one warning; foundational ADRs accepted). The regulatory-page-past-verify-by-with-dependents check is deferred to a later increment.",
-      "refs": [
-        "docs/backlog/tasks.json",
-        "tools/repo-lint.mjs"
-      ]
+      "refs": ["docs/backlog/tasks.json", "tools/repo-lint.mjs"]
     },
     {
       "id": "harness-status-autopr",
@@ -554,13 +417,9 @@
       "value": "low",
       "effort": "M",
       "phase": "P2",
-      "depends_on": [
-        "harness-knowledge-graph"
-      ],
+      "depends_on": ["harness-knowledge-graph"],
       "notes": "C of A→B — DEFERRED/OPTIONAL (owner-decided). Only if task↔PR proves worth the GitHub coupling, and even then a GATE-CONFIRMED SUGGESTION, never a blind write: not every task is one PR (research/doc/regulatory-capture, multi-PR features), and 'done' here = gates green + ADR + merged, richer than 'PR merged'. Link via a commit/PR trailer 'Task: <id>'.",
-      "refs": [
-        "docs/STATUS.md"
-      ]
+      "refs": ["docs/STATUS.md"]
     },
     {
       "id": "ci-pr-template",
@@ -569,13 +428,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P1",
-      "depends_on": [
-        "pr3-gates"
-      ],
+      "depends_on": ["pr3-gates"],
       "notes": "PR template requiring linked ADR/tests; a CI check that a migration PR also touches test/integrity/.",
-      "refs": [
-        "docs/roadmap.md"
-      ]
+      "refs": ["docs/roadmap.md"]
     },
     {
       "id": "test-e2e-axe",
@@ -584,30 +439,21 @@
       "value": "medium",
       "effort": "M",
       "phase": "P1",
-      "depends_on": [
-        "pr5-auth"
-      ],
+      "depends_on": ["pr5-auth"],
       "notes": "e2e for the auth + first-invoice flow; axe gate once UI lands.",
-      "refs": [
-        "docs/roadmap.md"
-      ]
+      "refs": ["docs/roadmap.md"]
     },
     {
       "id": "ops-dr-runbook",
       "title": "DR runbook: Neon PITR + restore drills, R2 retention",
-      "implements_adr": [
-        "0038"
-      ],
+      "implements_adr": ["0038"],
       "touches": [
         "docs/runbooks/disaster-recovery.md",
         "db/dr/verify-restore.sql",
         "tools/restore-drill.sh",
         "apps/web/test/integrity/restore-verify.integration.test.ts"
       ],
-      "sources": [
-        "db/reference/neon",
-        "db/reference/r2"
-      ],
+      "sources": ["db/reference/neon", "db/reference/r2"],
       "status": "done",
       "value": "high",
       "effort": "M",
@@ -628,10 +474,7 @@
       "phase": "P0-hardening",
       "depends_on": [],
       "notes": "The custom rules (no-money-arithmetic, no-arbitrary-tailwind, no-raw-color-utility) are verified by fixtures but have no committed RuleTester tests; wire a tools test runner. Expand korrodesign-style rules (focus-visible, font-family, element semantics) as UI surface grows.",
-      "refs": [
-        "tools/eslint-plugin-saldo/index.js",
-        ".claude/rules/design-system.md"
-      ]
+      "refs": ["tools/eslint-plugin-saldo/index.js", ".claude/rules/design-system.md"]
     },
     {
       "id": "compliance-eu-ai-act",
@@ -651,9 +494,7 @@
     {
       "id": "feat-receipt-extraction",
       "title": "Receipt/invoice -> structured proposal via vision-LLM (propose-only)",
-      "implements_adr": [
-        "0035"
-      ],
+      "implements_adr": ["0035"],
       "touches": [
         "apps/web/app/integrations/llm",
         "apps/web/app/contracts/receipt-extraction.ts",
@@ -680,12 +521,8 @@
       "value": "high",
       "effort": "S",
       "phase": "compliance",
-      "depends_on": [
-        "feat-receipt-extraction"
-      ],
-      "implements_adr": [
-        "0036"
-      ],
+      "depends_on": ["feat-receipt-extraction"],
+      "implements_adr": ["0036"],
       "touches": [
         "apps/web/app/components/ui/ai-assisted.tsx",
         "apps/web/app/routes/orgs.$orgId.receipts.new.tsx"
@@ -700,9 +537,7 @@
     {
       "id": "aia-provenance-logging",
       "title": "EU AI Act: AI-output provenance + 'AI-assisted' label + logging (Art 50(2))",
-      "implements_adr": [
-        "0037"
-      ],
+      "implements_adr": ["0037"],
       "touches": [
         "db/migrations",
         "apps/web/app/db/ai-provenance.server.ts",
@@ -713,10 +548,7 @@
       "value": "high",
       "effort": "M",
       "phase": "compliance",
-      "depends_on": [
-        "feat-receipt-extraction",
-        "pr6-observability"
-      ],
+      "depends_on": ["feat-receipt-extraction", "pr6-observability"],
       "notes": "DONE (ADR 0037). The code-level provenance gate (aiAssisted literal true + model/version/confidence as a REQUIRED Zod field) landed in the contract with feat-receipt-extraction (ADR 0035). This task added the DURABLE half: a dedicated ai_provenance table FK'd 1:1 to the voucher (model/model_version/confidence + linkage ONLY — no supplier/amount/image; data-handling.md), FORCE RLS + org_isolation policy, append-only saldo_app grant (SELECT/INSERT, no UPDATE/DELETE), composite (voucher_id, organization_id) FK. The confirm action (AI-only) re-validates the provenance carried through the review round-trip as hidden fields (receiptConfirmInput) and posts + records provenance in ONE tenant tx (AI never writes the ledger, ADR 0002). Plus a structured pino log line (aiProvenanceLogFields = the single, tested loggable shape; no personal data; ADR 0021). Tests: Testcontainers integrity (FK 1:1, RLS isolation, append-only grant, manual-post-writes-none, minimal columns) + contract + redaction/no-leak unit test. Chose a table over logging-only (durable + queryable, joinable to the system of record).",
       "refs": [
         "docs/decisions/0037-persisted-ai-provenance.md",
@@ -733,10 +565,7 @@
       "phase": "compliance",
       "depends_on": [],
       "notes": "At the LLM-hosting decision (Phase 4): capture the chosen model's capabilities/limitations docs under db/reference/llm/ — rely on the provider's documentation, never infer from memory.",
-      "refs": [
-        "db/reference/llm",
-        "docs/regulatory/eu-ai-act.md"
-      ]
+      "refs": ["db/reference/llm", "docs/regulatory/eu-ai-act.md"]
     },
     {
       "id": "aia-literacy-note",
@@ -747,9 +576,7 @@
       "phase": "compliance",
       "depends_on": [],
       "notes": "A short dated competence note: what the AI features do, their limits, the propose-only/confirm model. Art 4 in force since 2 Feb 2025; proportionate for a solo/small team.",
-      "refs": [
-        "docs/regulatory/eu-ai-act.md"
-      ]
+      "refs": ["docs/regulatory/eu-ai-act.md"]
     },
     {
       "id": "aia-conformity-checklist",
@@ -758,13 +585,9 @@
       "value": "medium",
       "effort": "S",
       "phase": "compliance",
-      "depends_on": [
-        "compliance-eu-ai-act"
-      ],
+      "depends_on": ["compliance-eu-ai-act"],
       "notes": "A dated checklist re-run before each AI feature ships and at each Art 113 milestone: prohibitions clear (Art 5), still not high-risk (Art 6/Annex III), transparency met (Art 50).",
-      "refs": [
-        "docs/regulatory/eu-ai-act.md"
-      ]
+      "refs": ["docs/regulatory/eu-ai-act.md"]
     },
     {
       "id": "aia-highrisk-guard",
@@ -775,10 +598,7 @@
       "phase": "compliance",
       "depends_on": [],
       "notes": "DONE: AGENTS.md invariant + .claude/rules/ai-act.md (auto-loads on AI/LLM code). No feature may evaluate a natural person's creditworthiness or profile them (Annex III 5(b); Art 6(3)) without re-opening ADR 0022.",
-      "refs": [
-        "AGENTS.md",
-        ".claude/rules/ai-act.md"
-      ]
+      "refs": ["AGENTS.md", ".claude/rules/ai-act.md"]
     },
     {
       "id": "aia-review-fold",
@@ -787,14 +607,9 @@
       "value": "low",
       "effort": "S",
       "phase": "compliance",
-      "depends_on": [
-        "feat-receipt-extraction"
-      ],
+      "depends_on": ["feat-receipt-extraction"],
       "notes": "When the AI surface exists, extend the existing privacy-reviewer subagent with the AI Act checklist (transparency, provenance, no high-risk scoring) + wire the aia-provenance-logging code gate; split out a dedicated reviewer only on demonstrated need (ADR 0022).",
-      "refs": [
-        "docs/decisions/0022-eu-ai-act-posture.md",
-        ".claude/agents/privacy-reviewer.md"
-      ]
+      "refs": ["docs/decisions/0022-eu-ai-act-posture.md", ".claude/agents/privacy-reviewer.md"]
     },
     {
       "id": "harness-vale",
@@ -805,10 +620,7 @@
       "phase": "P1",
       "depends_on": [],
       "notes": "Best-practice prose linter (replaces ad-hoc regex). Bans world-class/crown jewel/vibe-coded + enforces terminology; warn-first with a baseline. Deferred: needs the Vale binary + a CI action (errata-ai/vale-action). The repo-lint slop + rule-glob warnings cover the basics until then.",
-      "refs": [
-        "tools/repo-lint.mjs",
-        "docs/quality-bar.md"
-      ]
+      "refs": ["tools/repo-lint.mjs", "docs/quality-bar.md"]
     },
     {
       "id": "docs-consolidate-build-spec",
@@ -819,10 +631,7 @@
       "phase": "P1",
       "depends_on": [],
       "notes": "DONE (consistency-remediation session): §14 tree replaced by a pointer to git + architecture.md; §15 inlined CLAUDE.md/settings.json/.mcp.json/rules/agents removed (link to the live files); §6 stack + §17/§18 decisions condensed to pointers (tech-stack.md / decisions README / STATUS / roadmap); the 3 stacked revision banners collapsed to one. Spec dropped ~650→~424 lines.",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "AGENTS.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "AGENTS.md"]
     },
     {
       "id": "docs-consistency-remediation",
@@ -833,10 +642,7 @@
       "phase": "P1",
       "depends_on": [],
       "notes": "Owner-requested audit of the whole repo vs AGENTS.md, then fixed end-to-end: P0 correctness (bokføringsplikt vs the 50k MVA threshold; LLM default; deploy docs→ADR 0015; CI-step order; auth ADR ref); neutral-voice sweep (roadmap 'You chose', ADR 'we/our') + a repo-lint voice gate (check I) so it can't recur; 'state a fact once' condensation (build-spec §4.2/§6/§14/§15/§17/§18, domain-model, decisions/README, tech-stack, house-standards); STATUS de-staling; dead integration refs→'(planned)'; status banners; ADR supersession reciprocity; settings.json (db:lint allow / db:rollback gate); mval § 2-1 grounding. See docs/repo-consistency-audit-2026-06-23.md.",
-      "refs": [
-        "docs/repo-consistency-audit-2026-06-23.md",
-        "tools/repo-lint.mjs"
-      ]
+      "refs": ["docs/repo-consistency-audit-2026-06-23.md", "tools/repo-lint.mjs"]
     },
     {
       "id": "docs-dedup-invariants-deep",
@@ -847,10 +653,7 @@
       "phase": "P1",
       "depends_on": [],
       "notes": "README + CONTRIBUTING already point to AGENTS.md (done). Remaining restatements of the hard invariants in quality-bar.md / domain-model.md / architecture.md should become pointers too, so AGENTS.md + .claude/rules are the only normative source.",
-      "refs": [
-        "AGENTS.md",
-        "docs/quality-bar.md"
-      ]
+      "refs": ["AGENTS.md", "docs/quality-bar.md"]
     },
     {
       "id": "design-tokens-carnival",
@@ -874,14 +677,9 @@
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": [
-        "design-tokens-carnival"
-      ],
+      "depends_on": ["design-tokens-carnival"],
       "notes": "DONE (ADR 0026): self-hosted @fontsource-variable Fraunces (display/peaks, font-serif) + IBM Plex Sans (body/UI + tabular figures, the default font-sans). Weights capped at 450 (font-text token); existing UI swept off font-semibold/font-medium. Tokens in app/app.css; font-optical-sizing auto for Fraunces.",
-      "refs": [
-        "docs/decisions/0026-typography.md",
-        "apps/web/app/app.css"
-      ]
+      "refs": ["docs/decisions/0026-typography.md", "apps/web/app/app.css"]
     },
     {
       "id": "design-visual-spike",
@@ -890,15 +688,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": [
-        "design-tokens-carnival",
-        "design-typography"
-      ],
+      "depends_on": ["design-tokens-carnival", "design-typography"],
       "notes": "Typography is now done (ADR 0026). Remaining: illustration style and the companion character on top of the carnival OKLCH tokens + the Fraunces/Plex type system. Validate with real users before committing a specific companion; keep money/tables legible (neutral ink on cold-white).",
-      "refs": [
-        "docs/decisions/0025-playful-guided-experience.md",
-        ".claude/rules/design-system.md"
-      ]
+      "refs": ["docs/decisions/0025-playful-guided-experience.md", ".claude/rules/design-system.md"]
     },
     {
       "id": "feat-companion",
@@ -907,15 +699,9 @@
       "value": "high",
       "effort": "L",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-keyed-microcopy",
-        "design-visual-spike"
-      ],
+      "depends_on": ["feat-keyed-microcopy", "design-visual-spike"],
       "notes": "ADR 0025: a friendly guide that explains in the user's terms and does jobs for them. Comprehension-not-engagement (never gamification); steps back at the §5.5 moments; dismissible; never blocks the competent user. If LLM-backed it's an AI system (Art 50 disclosure, ADR 0022).",
-      "refs": [
-        "docs/decisions/0025-playful-guided-experience.md",
-        "docs/experience-principles.md"
-      ]
+      "refs": ["docs/decisions/0025-playful-guided-experience.md", "docs/experience-principles.md"]
     },
     {
       "id": "feat-trade-analogies",
@@ -924,14 +710,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-keyed-microcopy"
-      ],
+      "depends_on": ["feat-keyed-microcopy"],
       "notes": "ADR 0025 + experience-principles 4.3: explain financial concepts in the user's own trade ('the part of each cut that's Skatteetaten's'). Keyed microcopy variants per trade; formal terms tap-to-explain. No economics knowledge required.",
-      "refs": [
-        "docs/experience-principles.md",
-        "apps/web/app/copy"
-      ]
+      "refs": ["docs/experience-principles.md", "apps/web/app/copy"]
     },
     {
       "id": "feat-torpedo",
@@ -940,9 +721,7 @@
       "value": "medium",
       "effort": "M",
       "phase": "P3",
-      "depends_on": [
-        "feat-sales-invoicing"
-      ],
+      "depends_on": ["feat-sales-invoicing"],
       "notes": "ADR 0025 + spec 8.4: a characterful agent aimed OUTWARD at late payers, wielded by the user via propose->confirm (ADR 0002). Maps onto purring -> forsinkelsesrenter -> structured inkasso hand-off (full collection out of scope, spec 2). Dunning stays within god inkassoskikk; the user never feels chased. Needs sales/invoicing first.",
       "refs": [
         "docs/decisions/0025-playful-guided-experience.md",
@@ -956,12 +735,8 @@
       "value": "high",
       "effort": "M",
       "phase": "P1-feature",
-      "implements_adr": [
-        "0040"
-      ],
-      "depends_on": [
-        "feat-org-onboarding"
-      ],
+      "implements_adr": ["0040"],
+      "depends_on": ["feat-org-onboarding"],
       "notes": "Build-spec §8.2 (Phase 1). DONE (ADR 0040): one `contact` register for customers & suppliers (role flags); Enhetsregisteret autofill (reuses the /oppslag client) + per-contact MVA status (shared proposeMvaStatusFromVatRegister); per-contact defaults (terms, account, VAT code, currency, language) with same-org composite FK; RLS tenancy + Testcontainers isolation test; personal data tagged at the Zod boundary; NO/EN microcopy; list/new/edit routes. PREREQUISITE for sales invoicing (§8.4) and supplier invoices (§8.5). DEFERRED to their own tasks: feat-contacts-peppol-capability, feat-contacts-persons, feat-contacts-addresses.",
       "refs": [
         "docs/saldo-build-specification.md",
@@ -976,13 +751,9 @@
       "value": "medium",
       "effort": "S",
       "phase": "P3",
-      "depends_on": [
-        "feat-contacts-register"
-      ],
+      "depends_on": ["feat-contacts-register"],
       "notes": "Build-spec §8.2, deferred from feat-contacts-register (ADR 0040). Look up a contact's PEPPOL/ELMA receiving capability (can we send them an EHF invoice?) and store it on the contact. Feeds EHF/PEPPOL send in sales invoicing (§8.4). External lookup — Zod-validated at the boundary, no personal data to a non-EU endpoint.",
-      "refs": [
-        "docs/saldo-build-specification.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md"]
     },
     {
       "id": "feat-contacts-persons",
@@ -991,13 +762,9 @@
       "value": "low",
       "effort": "S",
       "phase": "P3",
-      "depends_on": [
-        "feat-contacts-register"
-      ],
+      "depends_on": ["feat-contacts-register"],
       "notes": "Build-spec §8.2, deferred from feat-contacts-register (ADR 0040). A child table of named contact persons (name/email/phone/role) per contact — for addressing invoices and reminders. Personal data (data-handling.md); same tenancy regime as `contact`.",
-      "refs": [
-        "docs/saldo-build-specification.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md"]
     },
     {
       "id": "feat-contacts-addresses",
@@ -1006,13 +773,9 @@
       "value": "low",
       "effort": "S",
       "phase": "P3",
-      "depends_on": [
-        "feat-contacts-register"
-      ],
+      "depends_on": ["feat-contacts-register"],
       "notes": "Build-spec §8.2, deferred from feat-contacts-register (ADR 0040). A child table of addresses (postal/visiting/delivery) per contact; `contact` ships with a single inline primary address. Personal data (data-handling.md); same tenancy regime.",
-      "refs": [
-        "docs/saldo-build-specification.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md"]
     },
     {
       "id": "feat-products-catalog",
@@ -1021,17 +784,10 @@
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
-      "implements_adr": [
-        "0041"
-      ],
-      "depends_on": [
-        "feat-org-onboarding"
-      ],
+      "implements_adr": ["0041"],
+      "depends_on": ["feat-org-onboarding"],
       "notes": "Build-spec §8.3 (Phase 1). DONE (ADR 0041): one `product` table for goods/services (kind CHECK); net unit_price_ore (bigint øre, parsed via parseKroner), pure domain grossFromNet helper for the browser incl-VAT preview; per-item defaults (account, VAT code) with same-org composite FK reusing the contacts (id, organization_id) unique targets; source-grounded VAT codes; RLS tenancy + Testcontainers isolation test; no personal data; NO/EN microcopy; list/new/edit routes + a registers nav on the org page. The catalogue item doubles as a reusable invoice-line template; it feeds sales-invoice lines (§8.4) as a defaults layer (feat-sales-invoicing does NOT hard-depend on it). DEFERRED to their own tasks: feat-product-discounts, feat-line-templates.",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "docs/decisions/0041-products-catalogue.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0041-products-catalogue.md"]
     },
     {
       "id": "feat-product-discounts",
@@ -1040,15 +796,9 @@
       "value": "low",
       "effort": "M",
       "phase": "P3",
-      "depends_on": [
-        "feat-products-catalog",
-        "feat-sales-invoicing"
-      ],
+      "depends_on": ["feat-products-catalog", "feat-sales-invoicing"],
       "notes": "Build-spec §8.3/§8.4. Per-line and whole-document discounts (percentage or amount) applied to sales-invoice lines, computed in @saldo/domain on integer øre (mulRate/roundØre, never float) with exhaustive + property tests. Deferred from feat-products-catalog: discounts feed invoice composition and have no consumer until the sales-invoice surface (feat-sales-invoicing) exists, so building them earlier would be speculative.",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        ".claude/rules/money.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", ".claude/rules/money.md"]
     },
     {
       "id": "feat-line-templates",
@@ -1057,15 +807,9 @@
       "value": "low",
       "effort": "M",
       "phase": "P3",
-      "depends_on": [
-        "feat-products-catalog",
-        "feat-sales-invoicing"
-      ],
+      "depends_on": ["feat-products-catalog", "feat-sales-invoicing"],
       "notes": "Build-spec §8.3. A saved preset of SEVERAL invoice lines (a single catalogue item already serves as a one-line template — ADR 0041). Deferred from feat-products-catalog: a multi-line template entity has no consumer until invoicing (feat-sales-invoicing) can apply it; revisit when §8.4 needs grouped presets.",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "docs/decisions/0041-products-catalogue.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0041-products-catalogue.md"]
     },
     {
       "id": "feat-opening-balances",
@@ -1074,15 +818,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-org-onboarding",
-        "feat-manual-voucher-entry"
-      ],
+      "depends_on": ["feat-org-onboarding", "feat-manual-voucher-entry"],
       "notes": "Build-spec §8.1 (Phase 1). Let a user migrating mid-year enter opening balances so the ledger and the honest-number reveal are correct from day one (today the only way in is manual vouchers from zero). Must post a balanced opening voucher through the existing posting path + integrity triggers; an opening balance is still an append-only voucher (no ledger bypass).",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        ".claude/rules/ledger-integrity.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", ".claude/rules/ledger-integrity.md"]
     },
     {
       "id": "feat-sales-invoicing",
@@ -1091,14 +829,8 @@
       "value": "high",
       "effort": "L",
       "phase": "P3",
-      "implements_adr": [
-        "0042",
-        "0054"
-      ],
-      "depends_on": [
-        "feat-contacts-register",
-        "vat-line-level-model"
-      ],
+      "implements_adr": ["0042", "0054"],
+      "depends_on": ["feat-contacts-register", "vat-line-level-model"],
       "notes": "Build-spec §8.4. DONE (ADR 0042): `invoice` + `invoice_line` tables in one `kind` model (quote/invoice/credit_note); pure @saldo/domain invoice module (per-line net/VAT via checkSalesLine reusing checkVatLine, document totals, vat breakdown, lifecycle state machine draft->issued->sent->viewed->paid + overdue, invoiceKid mod10) with exhaustive + fast-check tests. Per-line MVA HARD BLOCK is server-authoritative (the action derives every line against the committed SAF-T list and refuses a blocked line; client preview is UX only). GAPLESS numbering via allocate_invoice_number in the issuing tx + per-invoice KID; an issued document is APPEND-ONLY via SQL triggers (financial/identity columns frozen, only status+timestamps advance; lines frozen). RLS tenancy + same-org composite FKs (customer/account/VAT/product/credit-link). Testcontainers integrity test: gaplessness under concurrency AND rollback, immutability of doc + lines, same-org FK rejection, RLS isolation. NO/EN microcopy; WCAG 2.2 AA; §5.5 sober voice on issue. Ledger posting (the AR voucher) is split to feat-invoice-ledger-posting; PDF/email + recurring/reminders remain feat-invoice-pdf-email / feat-recurring-invoices-reminders.",
       "refs": [
         "docs/saldo-build-specification.md",
@@ -1114,12 +846,8 @@
       "value": "high",
       "effort": "M",
       "phase": "P3",
-      "depends_on": [
-        "feat-sales-invoicing"
-      ],
-      "implements_adr": [
-        "0043"
-      ],
+      "depends_on": ["feat-sales-invoicing"],
+      "implements_adr": ["0043"],
       "notes": "DONE (ADR 0043). Issuing a sales invoice / credit note now posts a balanced AR voucher (debit receivable gross / credit revenue per line / credit output VAT per rate) atomically in the issuing tx, via the pure deriveSalesInvoice (reuses deriveSales) + reverseVoucher for the credit-note motbilag. fiscal_period resolved from the issue date; voucher.invoice_id links the document to its ledger entry (partial UNIQUE prevents double-post). VAT is treatment-gated like computeLine so it ties out to the frozen vat_ore (a reverse-charge line posts revenue-at-net, no phantom VAT leg). Testcontainers integrity test proves balance, correct unlocked period, reverse-charge tie-out, credit-note reversal, and atomic rollback on a locked period. Follow-ons: vat-reverse-charge (dual-leg + tighten the sales-line gate), feat-invoice-pdf-email.",
       "refs": [
         "docs/saldo-build-specification.md",
@@ -1134,14 +862,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P3",
-      "depends_on": [
-        "feat-contacts-register"
-      ],
+      "depends_on": ["feat-contacts-register"],
       "notes": "Build-spec §11 + .claude/rules/data-handling.md. Project-wide gap the privacy reviewer keeps flagging (data-export is partly tracked under feat-audit-trail-export; erasure is not). Implement deletion/anonymisation ONLY for personal data not under statutory hold: contact register fields, unposted invoice drafts, marketing/notes fields — NEVER posted ledger rows or issued invoice/credit-note snapshots (5-year bokføringslov retention; the immutability triggers must keep blocking them). Document the lawful basis (legal obligation) + the retention exception, and explicitly name the held columns (e.g. invoice.customer_*). Companion to the data-export half of feat-audit-trail-export (GDPR Art. 20 vs Art. 17).",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        ".claude/rules/data-handling.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", ".claude/rules/data-handling.md"]
     },
     {
       "id": "feat-invoice-pdf-email",
@@ -1150,13 +873,8 @@
       "value": "high",
       "effort": "M",
       "phase": "P3",
-      "depends_on": [
-        "feat-sales-invoicing"
-      ],
-      "implements_adr": [
-        "0045",
-        "0046"
-      ],
+      "depends_on": ["feat-sales-invoicing"],
+      "implements_adr": ["0045", "0046"],
       "notes": "DONE (ADR 0046). Issued invoice/credit note renders to PDF via @react-pdf/renderer on the Node host (.pdf resource route); the per-rate MVA-grunnlag is summed from FROZEN line amounts via the pure frozenVatBreakdown — money never recomputed. Email delivery through the provider-agnostic nodemailer SMTP interface (Postmark EU, ADR 0045): fail-closed EMAIL_REGION=eu gate + requireTLS, credentials from env.ts only, recipients/bodies never logged (pino redaction); the send is a §5.5 explicit-confirm act that advances draft/issued->sent and records to the append-only invoice_email log (RLS + same-org FK; Testcontainers RLS test). EHF/PEPPOL BIS 3.0 generated locally (pure UBL builder in @saldo/domain/peppol) + a grounded business-rule validator + pnpm ehf:validate gate, grounded in db/reference/peppol/bis-billing-3.0.md — the subset + well-formedness ('start now' §9), full VEFA Schematron + transmission + structured buyer address deferred to feat-peppol-send.",
       "refs": [
         "docs/saldo-build-specification.md",
@@ -1171,15 +889,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P3",
-      "depends_on": [
-        "feat-sales-invoicing",
-        "feat-invoice-pdf-email"
-      ],
+      "depends_on": ["feat-sales-invoicing", "feat-invoice-pdf-email"],
       "notes": "Build-spec §8.4. Subscription/recurring invoices + reminders (purring) driven by graphile-worker (in-Postgres jobs, ADR 0010 — payloads never transit a non-EU SaaS, §11). First real consumer of the jobs layer (none exists yet under apps/web/app/jobs). Late interest (forsinkelsesrenter) + inkasso hand-off is the separate feat-torpedo.",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "docs/decisions/0010-graphile-worker-jobs.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0010-graphile-worker-jobs.md"]
     },
     {
       "id": "feat-supplier-invoices",
@@ -1188,23 +900,14 @@
       "value": "high",
       "effort": "L",
       "phase": "P4-feature",
-      "depends_on": [
-        "feat-contacts-register",
-        "feat-manual-voucher-entry",
-        "vat-reverse-charge"
-      ],
+      "depends_on": ["feat-contacts-register", "feat-manual-voucher-entry", "vat-reverse-charge"],
       "notes": "Build-spec §8.5 + §16 Phase 4. Completes purchases beyond receipt extraction (feat-receipt-extraction, done): manual supplier-invoice entry with per-supplier defaults; the input-VAT fork by MVA status (deriveStandard*); encoded non-deductible rules (representasjon, vehicles, private use); reverse charge on foreign services (vat-reverse-charge); recurring expenses; owner outlays (utlegg) & drawings (privatuttak); mileage/travel deductions (kjøregodtgjørelse/diett) as deductions, not payroll. All posts through the existing append-only ledger path.",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "packages/domain/src/posting/derive.ts"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "packages/domain/src/posting/derive.ts"]
     },
     {
       "id": "feat-banking-import",
       "title": "Banking import — GoCardless PSD2/AIS + camt.054 + CSV",
-      "implements_adr": [
-        "0047"
-      ],
+      "implements_adr": ["0047"],
       "touches": [
         "packages/domain/src/banking",
         "apps/web/app/integrations/banking",
@@ -1215,9 +918,7 @@
       "value": "high",
       "effort": "L",
       "phase": "P5",
-      "depends_on": [
-        "feat-org-onboarding"
-      ],
+      "depends_on": ["feat-org-onboarding"],
       "notes": "Build-spec §8.7 + §9 + §16 Phase 5. DONE (ADR 0047): pure domain normaliser (camt.054 + GoCardless + CSV → signed øre, exhaustive + property tests), self-built camt.054 parser (fast-xml-parser at the boundary), fail-closed GoCardless AIS client (EU-resident gate, Zod at boundary, no PII logs, 1-batch/no-poll rate-limit safety), bank_account + bank_transaction tables (force RLS + same-org FK + append-only trigger + idempotent UNIQUE(external_ref)), routes/UI for accounts + file/GoCardless import, Testcontainers integrity test. Sources captured under db/reference/banking/. AIS fetch runs inline-with-idempotency (jobs surface not built — see ADR 0047). Matching/reconciliation is the downstream task (feat-reconciliation): only a nullable kid/matched_voucher_id is stored.",
       "refs": [
         "docs/decisions/0047-banking-import.md",
@@ -1231,9 +932,7 @@
     {
       "id": "feat-reconciliation",
       "title": "Bank reconciliation — KID/amount/date auto-match + manual workflow",
-      "implements_adr": [
-        "0048"
-      ],
+      "implements_adr": ["0048"],
       "touches": [
         "packages/domain/src/reconciliation",
         "apps/web/app/db/reconciliation.server.ts",
@@ -1244,15 +943,9 @@
       "value": "high",
       "effort": "L",
       "phase": "P5",
-      "depends_on": [
-        "feat-banking-import",
-        "feat-sales-invoicing"
-      ],
+      "depends_on": ["feat-banking-import", "feat-sales-invoicing"],
       "notes": "Build-spec §8.7 + §10(2). DONE (ADR 0048): pure @saldo/domain matcher (KID-exact → amount+date → amount, exhaustive + fast-check) reusing the Kid mod-10 check, and a pure deriveSettlement (debit bank 1920 / credit receivable 1500, balanced øre); reconcileMatch posts the bank settlement voucher via the reused insertPostedVoucher, links bank_transaction.matched_voucher_id (+kid) — the only mutation the append-only trigger permits — and marks the invoice paid; a /bank/:id/reconcile route + UI (manual confirm per ADR 0002, NO/EN). Deterministic, NOT an AI system (Recital 12). Exact-amount settlement only; partial/over-payments + outgoing AP reconciliation deferred. Testcontainers integrity test (balanced legs, linked tx, invoice paid, atomic amount-mismatch reject, no double-post, undated-period fallback). vat-reviewer + privacy-reviewer run.",
-      "refs": [
-        "docs/decisions/0048-bank-reconciliation.md",
-        "docs/saldo-build-specification.md"
-      ]
+      "refs": ["docs/decisions/0048-bank-reconciliation.md", "docs/saldo-build-specification.md"]
     },
     {
       "id": "feat-mva-melding",
@@ -1261,32 +954,20 @@
       "value": "high",
       "effort": "L",
       "phase": "P6",
-      "depends_on": [
-        "feat-manual-voucher-entry",
-        "vat-line-level-model"
-      ],
+      "depends_on": ["feat-manual-voucher-entry", "vat-line-level-model"],
       "notes": "Build-spec §8.8 + §16 Phase 6. Generate the MVA report per term (or annual) from the posted ledger on the SAF-T VAT codes, and validate against Skatteetaten's validation API (free but onboarding-gated; supports inquiries from the system supplier, §9). Submission via Altinn 3 is the separate feat-altinn-mva-submission (Phase 9). The rolling-12-month 50k threshold tracker is the existing vat-threshold-watcher. Validate the generated melding against the committed schema (saft-validate skill).",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        ".claude/skills/saft-validate/SKILL.md"
-      ],
-      "implements_adr": [
-        "0050"
-      ]
+      "refs": ["docs/saldo-build-specification.md", ".claude/skills/saft-validate/SKILL.md"],
+      "implements_adr": ["0050"]
     },
     {
       "id": "feat-reporting",
       "title": "Reporting — resultat/balanse, hovedbok drill-down, reskontro aging, liquidity",
-      "implements_adr": [
-        "0051"
-      ],
+      "implements_adr": ["0051"],
       "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P7",
-      "depends_on": [
-        "feat-manual-voucher-entry"
-      ],
+      "depends_on": ["feat-manual-voucher-entry"],
       "notes": "Build-spec §8.9 + §16 Phase 7. Resultat/balanse/hovedbok/reskontro/likviditet derived read-only from the posted ledger in @saldo/domain (ADR 0051), RLS-scoped, tie-outs proven by a Testcontainers test. Deferred: open AP + supplier reskontro (feat-supplier-invoices), multi-year opening balances (feat-year-end-close), period-over-period, reskontro-control reconciliation.",
       "refs": [
         "docs/saldo-build-specification.md",
@@ -1301,10 +982,7 @@
       "value": "medium",
       "effort": "L",
       "phase": "P7",
-      "depends_on": [
-        "feat-reporting",
-        "feat-tax-estimate"
-      ],
+      "depends_on": ["feat-reporting", "feat-tax-estimate"],
       "notes": "Build-spec §8.6 + §8.10 + §16 Phase 7. Year-end close with balance carry-forward + period locking of the closed year (existing period-lock triggers); næringsspesifikasjon figure generation; beregnet personinntekt basis (builds on feat-tax-estimate, ADR 0029); saldoavskrivning (declining-balance depreciation) schedules; year-end checklist; export/handoff to Skatteetaten's pre-filled return (full submission API deferred — §16 'Later'). Skattemelding deadline 31 May.",
       "refs": [
         "docs/saldo-build-specification.md",
@@ -1315,15 +993,11 @@
       "id": "feat-saft-export",
       "title": "Full SAF-T Financial export (XSD-valid in CI) — replace the saft:validate scaffold",
       "status": "done",
-      "implements_adr": [
-        "0052"
-      ],
+      "implements_adr": ["0052"],
       "value": "high",
       "effort": "L",
       "phase": "P8",
-      "depends_on": [
-        "feat-manual-voucher-entry"
-      ],
+      "depends_on": ["feat-manual-voucher-entry"],
       "touches": [
         "packages/domain/src/saft/financial.ts",
         "packages/domain/src/saft/financial-xml.ts",
@@ -1342,15 +1016,11 @@
       "id": "feat-org-payout-account",
       "title": "Org payout-account settings UI (EHF PayeeFinancialAccount source)",
       "status": "done",
-      "implements_adr": [
-        "0053"
-      ],
+      "implements_adr": ["0053"],
       "value": "medium",
       "effort": "S",
       "phase": "P8",
-      "depends_on": [
-        "feat-saft-export"
-      ],
+      "depends_on": ["feat-saft-export"],
       "touches": [
         "apps/web/app/routes/orgs.$orgId.settings.tsx",
         "apps/web/app/db/organizations.server.ts",
@@ -1370,15 +1040,9 @@
       "value": "medium",
       "effort": "M",
       "phase": "P8",
-      "depends_on": [
-        "feat-manual-voucher-entry"
-      ],
+      "depends_on": ["feat-manual-voucher-entry"],
       "notes": "Build-spec §8.11 + §11. Append-only audit_log capturing the actor (authenticated app_user) on every consequential write — the bokføringsforskrift sporbarhet requirement and the non-repudiation gap flagged in the security audit (audit-trail actor capture is currently 'intended'). Plus a full data export (SAF-T + raw) to prevent lock-in (GDPR Art. 20). audit_log is FORCE-RLS + append-only grant, like ai_provenance (ADR 0037).",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "SECURITY.md",
-        ".claude/rules/data-handling.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "SECURITY.md", ".claude/rules/data-handling.md"]
     },
     {
       "id": "feat-accountant-access",
@@ -1387,14 +1051,9 @@
       "value": "low",
       "effort": "M",
       "phase": "P8",
-      "depends_on": [
-        "feat-org-onboarding"
-      ],
+      "depends_on": ["feat-org-onboarding"],
       "notes": "Build-spec §8.12/§8.13. A limited-role accountant membership (the membership table + role already exist, ADR 0032/0020) so a regnskapsfører can be granted scoped access to an org. RLS-correct via withUserOrg; the role gates which actions/routes are permitted.",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "docs/decisions/0032-org-provisioning.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0032-org-provisioning.md"]
     },
     {
       "id": "feat-altinn-mva-submission",
@@ -1403,14 +1062,9 @@
       "value": "medium",
       "effort": "L",
       "phase": "P9",
-      "depends_on": [
-        "feat-mva-melding"
-      ],
+      "depends_on": ["feat-mva-melding"],
       "notes": "Build-spec §8.8 + §9 + §16 Phase 9. Submit the validated MVA-melding via the Altinn 3 instance API, authenticated through ID-porten OIDC (Altinn token exchanged from ID-porten). Onboarding-gated; CAUTION (§9): the Altinn 2->3 transition and the systembruker/tilgangspakke model are in flux — confirm the current onboarding flow at build time. Open decision: PEPPOL/Altinn onboarding model (roadmap Part 6).",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "docs/integrations/README.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
     },
     {
       "id": "feat-peppol-send",
@@ -1419,15 +1073,9 @@
       "value": "medium",
       "effort": "L",
       "phase": "P9",
-      "depends_on": [
-        "feat-sales-invoicing",
-        "feat-invoice-pdf-email"
-      ],
+      "depends_on": ["feat-sales-invoicing", "feat-invoice-pdf-email"],
       "notes": "Build-spec §9 + §16 Phase 9. Send/receive EHF via a commercial PEPPOL access point (Storecove/Tickstar/etc.; API key + merchant agreement; self-hosting deferred). Local EHF/PEPPOL BIS 3.0 validation lands earlier with feat-invoice-pdf-email (VEFA, 'start now'). Open decision: PEPPOL access-point provider (roadmap Part 6).",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "docs/integrations/README.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
     },
     {
       "id": "feat-vipps",
@@ -1436,14 +1084,9 @@
       "value": "low",
       "effort": "M",
       "phase": "P9",
-      "depends_on": [
-        "feat-sales-invoicing"
-      ],
+      "depends_on": ["feat-sales-invoicing"],
       "notes": "Build-spec §9 + §16 Phase 9. Get paid by Vipps (ePayment/Recurring) and optionally Vipps Login; merchant agreement + API keys, onboarding-gated. Lower priority than the filing/banking spine.",
-      "refs": [
-        "docs/saldo-build-specification.md",
-        "docs/integrations/README.md"
-      ]
+      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
     },
     {
       "id": "sec-csp-nonce",
@@ -1454,10 +1097,7 @@
       "phase": "P8",
       "depends_on": [],
       "notes": "The safe security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, prod HSTS) ship in app/entry.server.tsx. CSP was deferred: RR7's inline hydration script (window.__reactRouterContext) needs a per-request nonce threaded through entry.server + <Scripts nonce>; a blind script-src would break hydration. Add a nonce generator, set script-src 'self' 'nonce-…' + a restrictive default-src/style-src/img-src/font-src (self + data: for fonts), and verify hydration in a running app — start report-only before enforce.",
-      "refs": [
-        "apps/web/app/entry.server.tsx",
-        "SECURITY.md"
-      ]
+      "refs": ["apps/web/app/entry.server.tsx", "SECURITY.md"]
     },
     {
       "id": "auth-oidc-server-state",
@@ -1468,31 +1108,20 @@
       "phase": "P8",
       "depends_on": [],
       "notes": "Best-practice hardening surfaced by the security review (acceptable as-is): the OIDC round-trip stores state/nonce/codeVerifier in a short-TTL HttpOnly cookie (auth/oidc.server.ts). Move to a server-side row (Postgres, ~10-min TTL) keyed by an opaque cookie token so the values never leave the server. Low priority; OIDC is not live-verified yet.",
-      "refs": [
-        "apps/web/app/auth/oidc.server.ts",
-        "docs/decisions/0020-session-identity-model.md"
-      ]
+      "refs": ["apps/web/app/auth/oidc.server.ts", "docs/decisions/0020-session-identity-model.md"]
     },
     {
       "id": "arch-truth-generator",
       "title": "Architecture-truth generator + domain-purity gate",
-      "implements_adr": [
-        "0049"
-      ],
-      "touches": [
-        "tools/arch-graph.mjs",
-        "tools/repo-lint.mjs",
-        "docs/architecture.md"
-      ],
+      "implements_adr": ["0049"],
+      "touches": ["tools/arch-graph.mjs", "tools/repo-lint.mjs", "docs/architecture.md"],
       "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "P0-hardening",
       "depends_on": [],
       "notes": "Derive the structural map (packages, domain submodules, web modules, route count, SQL integrity surface) into an AUTOGEN block in docs/architecture.md (pnpm arch:refresh), gate the drift in repo-lint, and mechanically enforce the one hard boundary: @saldo/domain source must be relative-imports-only with no Date.now/Math.random/new Date.",
-      "refs": [
-        "docs/decisions/0049-architecture-truth-generator.md"
-      ]
+      "refs": ["docs/decisions/0049-architecture-truth-generator.md"]
     },
     {
       "id": "wire-skatteetaten-validation",
@@ -1505,9 +1134,7 @@
       "value": "medium",
       "effort": "S",
       "phase": "P1-feature",
-      "depends_on": [
-        "feat-mva-melding"
-      ],
+      "depends_on": ["feat-mva-melding"],
       "notes": "The fail-closed validation client exists and is tested but no route calls it (review 2026-07-03 §15 — quarantined until wired). Add a sober 'Valider hos Skatteetaten' action (explicit click, never a silent loader call), render the typed verdict, keep the fail-closed not-configured path calm. Belongs naturally next to feat-altinn-mva-submission."
     }
   ]

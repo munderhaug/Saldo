@@ -27,6 +27,7 @@ export * from './saft/rates.js';
 export * from './saft/financial.js';
 export * from './saft/financial-xml.js';
 export * from './time/clock.js';
+export * from './time/iso-date.js';
 export * from './catalog/pricing.js';
 export * from './invoice/lifecycle.js';
 export * from './invoice/invoice.js';

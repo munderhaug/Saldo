@@ -11,7 +11,7 @@
  * Pure: it runs identically in the browser preview and the server action; the SQL balance / posted-
  * completeness triggers verify the same invariant at COMMIT.
  */
-import { addØre, ZERO, type Øre, type Rate } from '../money/ore.js';
+import { addØre, mulRate, ZERO, type Øre, type Rate } from '../money/ore.js';
 import { type MvaStatus } from '../vat/status.js';
 import { deriveSales, type DeriveResult } from './derive.js';
 import type { AccountNo, PostingLine, VatCode, Voucher } from './types.js';
@@ -52,18 +52,34 @@ function creditLine(leg: CreditLeg): PostingLine {
     : { account: leg.account, vatCode: leg.vatCode, debit: ZERO, credit: leg.credit };
 }
 
+/** Rate 0 means the line never charges (zero-rated / exempt / unregistered-at-0). */
+function isZeroRate(r: Rate): boolean {
+  return (r as number) === 0;
+}
+
+/** An output-VAT leg being merged: the accumulated CHARGING BASE, rounded once at the end (ADR 0054). */
+interface VatLegAccumulator {
+  readonly account: AccountNo;
+  readonly vatCode?: VatCode;
+  readonly base: Øre;
+  readonly vatRate: Rate;
+}
+
 /**
  * Derive the balanced AR voucher for a sales document. Each line is run through `deriveSales` (which
  * owns the registration hard block: an org that may not charge output VAT cannot post one), and the
- * resulting legs are merged — every line's receivable debit folds into a single gross debit, and the
- * revenue / output-VAT credits are summed per account + code. Balanced because a sum of balanced
- * vouchers is balanced. Returns the first line's block as the document's error (a blocked line never
- * posts), mirroring how issuing refuses the whole document.
+ * resulting legs are merged — every line's revenue credit folds per account + code, and each
+ * output-VAT leg accumulates its lines' NET BASES and is rounded ONCE per merged leg
+ * (`mulRate(Σ base, rate)`, category-level — ADR 0054), so the voucher's VAT equals the document's
+ * per-category VAT exactly. (The standard SAF-T list has one output code per rate category, so
+ * account+code merging IS category merging.) The receivable debit is revenue + VAT — balanced by
+ * construction. Returns the first line's block as the document's error (a blocked line never posts),
+ * mirroring how issuing refuses the whole document.
  */
 export function deriveSalesInvoice(input: SalesInvoiceInput): DeriveResult {
-  let receivable: Øre = ZERO;
-  // Insertion-ordered so the voucher reads top-down: receivable, then revenue/VAT in line order.
-  const credits = new Map<string, CreditLeg>();
+  // Insertion-ordered so the voucher reads top-down: receivable, then revenue legs, then VAT legs.
+  const revenues = new Map<string, CreditLeg>();
+  const vatLegs = new Map<string, VatLegAccumulator>();
 
   for (const l of input.lines) {
     const derived = deriveSales({
@@ -75,22 +91,59 @@ export function deriveSalesInvoice(input: SalesInvoiceInput): DeriveResult {
     });
     if (!derived.ok) return derived;
 
-    // `deriveSales` always emits the receivable as the first leg; the rest are this line's credits.
-    const [recv, ...rest] = derived.voucher.lines;
-    receivable = addØre(receivable, recv!.debit);
-    for (const leg of rest) {
-      const key = `${leg.account}␟${leg.vatCode ?? ''}`;
-      const prev = credits.get(key);
-      credits.set(key, {
-        account: leg.account,
-        ...(leg.vatCode === undefined ? {} : { vatCode: leg.vatCode }),
-        credit: prev === undefined ? leg.credit : addØre(prev.credit, leg.credit),
+    // `deriveSales` emits [receivable, revenue, vat?]; the fork (whether a VAT leg exists at all)
+    // stays owned there — this module only merges amounts.
+    const [, revenueLeg, vatLeg] = derived.voucher.lines;
+    const rKey = `${revenueLeg!.account}␟${revenueLeg!.vatCode ?? ''}`;
+    const rPrev = revenues.get(rKey);
+    revenues.set(rKey, {
+      account: revenueLeg!.account,
+      ...(revenueLeg!.vatCode === undefined ? {} : { vatCode: revenueLeg!.vatCode }),
+      credit: rPrev === undefined ? revenueLeg!.credit : addØre(rPrev.credit, revenueLeg!.credit),
+    });
+    // A line belongs to its category's VAT BASE whenever it CHARGES — even when its own per-line
+    // rounding is 0 øre (a sub-2-øre net at 25 % emits no per-line leg, but the category computation
+    // must still count its net, exactly as `invoiceTotals`/`vatBreakdown` do; ADR 0054). Within an
+    // `ok` derivation, a missing VAT leg with a non-zero rate means exactly that rounded-to-zero
+    // charging case (an unregistered org with a non-zero rate already returned the hard block).
+    const charges = vatLeg !== undefined || !isZeroRate(l.vatRate);
+    if (charges) {
+      const account = vatLeg?.account ?? l.outputVat;
+      const vatCode = vatLeg?.vatCode ?? l.vatCode;
+      const vKey = `${account}␟${vatCode ?? ''}`;
+      const vPrev = vatLegs.get(vKey);
+      vatLegs.set(vKey, {
+        account,
+        ...(vatCode === undefined ? {} : { vatCode }),
+        base: vPrev === undefined ? l.net : addØre(vPrev.base, l.net),
+        vatRate: l.vatRate,
       });
     }
   }
 
-  const lines: PostingLine[] = [{ account: input.receivable, debit: receivable, credit: ZERO }];
-  for (const leg of credits.values()) lines.push(creditLine(leg));
+  let receivable: Øre = ZERO;
+  const credits: PostingLine[] = [];
+  for (const leg of revenues.values()) {
+    credits.push(creditLine(leg));
+    receivable = addØre(receivable, leg.credit);
+  }
+  for (const v of vatLegs.values()) {
+    const credit = mulRate(v.base, v.vatRate); // rounded once per merged leg (ADR 0054)
+    if (credit === ZERO) continue; // a whole-category rounding to 0 posts no leg (a 0/0 leg is invalid)
+    credits.push(
+      creditLine({
+        account: v.account,
+        ...(v.vatCode === undefined ? {} : { vatCode: v.vatCode }),
+        credit,
+      }),
+    );
+    receivable = addØre(receivable, credit);
+  }
+
+  const lines: PostingLine[] = [
+    { account: input.receivable, debit: receivable, credit: ZERO },
+    ...credits,
+  ];
   return { ok: true, voucher: { type: 'sales', lines } };
 }
 

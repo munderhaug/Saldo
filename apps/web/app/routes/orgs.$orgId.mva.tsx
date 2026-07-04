@@ -11,6 +11,7 @@
  * exists at all. Off any shared cache (financial data).
  */
 import { Link } from 'react-router';
+import { Money } from '~/components/money';
 import { z } from 'zod';
 import {
   ANNUAL_TERM,
@@ -142,7 +143,7 @@ function MeldingView({
           {t(`mva.settlement.${s.key}`)}
         </h2>
         <p className="tabular text-2xl">
-          {kr(s.amountOre)} {t('common.currency')}
+          <Money ore={s.amountOre} />
         </p>
       </section>
 

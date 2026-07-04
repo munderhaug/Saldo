@@ -39,7 +39,7 @@ DECLARE
   -- posted-completeness, period locks). pg_trigger carries no "is an integrity invariant" flag, so this
   -- stays explicit — kept honest by the restore-verify integration test (it BITES on a missing one).
   required_triggers text[] := ARRAY[
-    'posting_balance','posting_immutable','posting_period_lock',
+    'posting_balance','posting_immutable','posting_immutable_insert','posting_period_lock',
     'voucher_immutable','voucher_period_lock','voucher_posted_complete',
     'invoice_immutable','invoice_line_immutable','bank_transaction_append_only'
   ];
@@ -135,10 +135,27 @@ BEGIN
       fail := fail || (imbalanced || ' posted voucher(s) do not balance after restore');
     END IF;
 
-    -- The counter must never be behind reality: next must be ≥ 1 for every org row.
+    -- The counter must never be behind reality: next ≥ 1 for every org row, AND ≥ the highest
+    -- invoice number actually issued for that org — a restore that lost the counter row (or an
+    -- older snapshot of it) would otherwise re-allocate an already-used number on the next issue
+    -- (review 2026-07-03 §11).
     SELECT count(*) INTO bad_counter FROM invoice_counter WHERE next < 1;
     IF bad_counter > 0 THEN
       fail := fail || (bad_counter || ' invoice_counter row(s) with next < 1');
+    END IF;
+    SELECT count(*) INTO bad_counter FROM (
+      SELECT m.organization_id
+      FROM (
+        SELECT organization_id, max(invoice_number) AS max_no
+        FROM invoice
+        WHERE invoice_number IS NOT NULL
+        GROUP BY organization_id
+      ) m
+      LEFT JOIN invoice_counter c ON c.organization_id = m.organization_id
+      WHERE coalesce(c.next, 0) < m.max_no
+    ) behind;
+    IF bad_counter > 0 THEN
+      fail := fail || (bad_counter || ' org(s) whose invoice_counter is BEHIND max(invoice_number) — the next issue would reuse a number');
     END IF;
 
     -- 8. Optional: a real restore should carry data. Opt in with -v expect_data=1.

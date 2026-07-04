@@ -90,8 +90,10 @@ psql "$RESTORED_URL" -v ON_ERROR_STOP=1 -f db/dr/verify-restore.sql             
 psql "$RESTORED_URL" -v ON_ERROR_STOP=1 -v expect_data=1 -f db/dr/verify-restore.sql # also require non-empty
 ```
 
-It asserts the integrity layer survived the restore: required tables; the six integrity triggers
-(append-only, balance, period-lock, posted-completeness); FORCE RLS + a policy on every tenant table;
+It asserts the integrity layer survived the restore: required tables; every required integrity
+trigger (the explicit `required_triggers` list in `db/dr/verify-restore.sql` is the source of truth —
+append-only incl. the posting INSERT guard, balance, period-lock, posted-completeness, document
+immutability); FORCE RLS + a policy on every tenant table;
 the `allocate_invoice_number` counter function **and the absence of any invoice SEQUENCE** (gaplessness
 is a counter row, never a sequence — ADR 0007); the `saldo_app` role; and a data sweep that every posted
 voucher balances. The behavioural cross-tenant RLS proof is the committed `rls-tenancy` suite, pointed

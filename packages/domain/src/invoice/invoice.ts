@@ -125,17 +125,26 @@ export function computeLine(
   };
 }
 
-/** Document totals — the sum of the line nets, VATs and grosses. */
+/** Document totals — line nets summed; VAT computed once per rate category (ADR 0054). */
 export interface InvoiceTotals {
   readonly net: Øre;
   readonly vat: Øre;
   readonly gross: Øre;
 }
 
-/** Sum computed lines into document totals. `gross` is `net + vat` (the lines already agree). */
+/** True when a computed line actually charges output VAT (it contributes to its category's VAT base). */
+function chargesVat(l: ComputedLine): boolean {
+  return l.verdict.ok && l.treatment === 'output-vat';
+}
+
+/**
+ * Sum computed lines into document totals. The VAT is CATEGORY-LEVEL (EN 16931 BR-CO-17, ADR 0054):
+ * rounded once per rate category from the category's charging base — never the sum of the per-line
+ * roundings, which drifts up to ±½ øre per extra line and fails the EHF validator.
+ */
 export function invoiceTotals(lines: readonly ComputedLine[]): InvoiceTotals {
   const net = sumØre(lines.map((l) => l.net));
-  const vat = sumØre(lines.map((l) => l.vat));
+  const vat = sumØre(vatBreakdown(lines).map((b) => b.vat));
   return { net, vat, gross: addØre(net, vat) };
 }
 
@@ -158,16 +167,18 @@ const RATE_CATEGORY_ORDER: readonly RateCategory[] = [
 
 /**
  * The VAT summary grouped by rate category, in the SAF-T category order, omitting empty categories.
- * The base is the net subject to that rate; the VAT is what was charged on it. Used for the document's
- * VAT breakdown and (later) the MVA-melding.
+ * The base is the net subject to that rate; the VAT is the category's CHARGING base × rate, rounded
+ * once (BR-CO-17, ADR 0054) — a non-charging line (zero-rated / exempt / reverse-charge sale sharing
+ * the category) contributes to the base display but never to the VAT.
  */
 export function vatBreakdown(lines: readonly ComputedLine[]): readonly VatBucket[] {
   return RATE_CATEGORY_ORDER.map((rateCategory): VatBucket => {
     const inBucket = lines.filter((l) => l.rateCategory === rateCategory);
+    const chargingBase = sumØre(inBucket.filter(chargesVat).map((l) => l.net));
     return {
       rateCategory,
       base: sumØre(inBucket.map((l) => l.net)),
-      vat: sumØre(inBucket.map((l) => l.vat)),
+      vat: mulRate(chargingBase, rateForCategory(rateCategory)),
     };
   }).filter((b) => b.base !== ZERO || b.vat !== ZERO);
 }
@@ -185,21 +196,24 @@ export interface FrozenLine {
 }
 
 /**
- * The per-rate «MVA-grunnlag» block for an ISSUED document, summed from the FROZEN line amounts via
- * `sumØre` — never re-derived from unit prices. Same categories/order as {@link vatBreakdown}, but it
- * consumes stored øre, so the rendered breakdown is guaranteed to tie out to the document's frozen
- * totals. Each bucket carries the category's `Rate` so the renderer can show the percentage.
+ * The per-rate «MVA-grunnlag» block for an ISSUED document, computed from the FROZEN line amounts —
+ * never re-derived from unit prices. Same categories/order and the same CATEGORY-LEVEL rounding as
+ * {@link vatBreakdown} (ADR 0054), so the rendered breakdown ties out to the document's frozen totals
+ * exactly. A frozen line's stored non-zero VAT marks it as charging (the only frozen signal that
+ * survives a later MVA-status change; a charging line whose VAT rounds to 0 øre would need a sub-2-øre
+ * net — not a real price). Each bucket carries the category's `Rate` for the percentage display.
  */
 export function frozenVatBreakdown(
   lines: readonly FrozenLine[],
 ): readonly (VatBucket & { readonly vatRate: Rate })[] {
   return RATE_CATEGORY_ORDER.map((rateCategory) => {
     const inBucket = lines.filter((l) => l.rateCategory === rateCategory);
+    const chargingBase = sumØre(inBucket.filter((l) => l.vat !== ZERO).map((l) => l.net));
     return {
       rateCategory,
       vatRate: rateForCategory(rateCategory),
       base: sumØre(inBucket.map((l) => l.net)),
-      vat: sumØre(inBucket.map((l) => l.vat)),
+      vat: mulRate(chargingBase, rateForCategory(rateCategory)),
     };
   }).filter((b) => b.base !== ZERO || b.vat !== ZERO);
 }

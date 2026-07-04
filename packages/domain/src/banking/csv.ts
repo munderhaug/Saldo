@@ -11,7 +11,7 @@
  * silently mis-valued.
  */
 import { addØre, negØre, øre, ZERO } from '../money/ore.js';
-import { decimalToØre, type NormalisedBankTx } from './transaction.js';
+import { cleanCurrency, decimalToØre, type NormalisedBankTx } from './transaction.js';
 
 /** Which CSV header (exact, case-insensitive) maps to which normalised field. All optional. */
 export interface CsvColumnMap {
@@ -37,10 +37,10 @@ export interface CsvParseOptions {
   readonly delimiter?: string;
 }
 
-/** A row that could not be turned into a transaction (1-based line number incl. the header). */
+/** A row that could not be turned into a transaction (1-based FILE line number incl. the header). */
 export interface CsvRowError {
   readonly line: number;
-  readonly reason: 'no-amount' | 'invalid-amount';
+  readonly reason: 'no-amount' | 'invalid-amount' | 'invalid-currency';
 }
 
 export interface CsvParseResult {
@@ -48,16 +48,26 @@ export interface CsvParseResult {
   readonly errors: readonly CsvRowError[];
 }
 
+/** One tokenised row plus the 1-based FILE line it started on (blank lines shift the numbering). */
+interface CsvRow {
+  readonly fields: readonly string[];
+  readonly line: number;
+}
+
 /**
  * Tokenise CSV text into rows of fields (RFC 4180: `"`-quoted fields, `""` escapes a quote, CR/LF and
- * the delimiter are literal inside quotes). Tolerant of a trailing newline and a leading BOM.
+ * the delimiter are literal inside quotes). Tolerant of a trailing newline and a leading BOM. Each row
+ * carries the FILE line it started on, so a skipped blank line never shifts the error line numbers the
+ * user sees (review 2026-07-03 §10; a quoted field may span lines — the row keeps its starting line).
  */
-function tokenise(text: string, delimiter: string): string[][] {
-  const rows: string[][] = [];
+function tokenise(text: string, delimiter: string): CsvRow[] {
+  const rows: CsvRow[] = [];
   let row: string[] = [];
   let field = '';
   let inQuotes = false;
   let started = false; // did this row have any content (so a trailing newline doesn't add a blank row)?
+  let lineNo = 1; // current 1-based file line
+  let rowStart = 1; // file line the current row started on
   const source = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text; // strip BOM
 
   for (let i = 0; i < source.length; i++) {
@@ -71,6 +81,11 @@ function tokenise(text: string, delimiter: string): string[][] {
           inQuotes = false;
         }
       } else {
+        if (ch === '\r' && source[i + 1] === '\n') {
+          field += ch;
+          continue; // count the pair once, at the \n
+        }
+        if (ch === '\n' || ch === '\r') lineNo++;
         field += ch;
       }
       continue;
@@ -86,11 +101,13 @@ function tokenise(text: string, delimiter: string): string[][] {
       if (ch === '\r' && source[i + 1] === '\n') i++;
       if (started || field !== '') {
         row.push(field);
-        rows.push(row);
+        rows.push({ fields: row, line: rowStart });
       }
+      lineNo++;
       row = [];
       field = '';
       started = false;
+      rowStart = lineNo;
     } else {
       field += ch;
       started = true;
@@ -98,7 +115,7 @@ function tokenise(text: string, delimiter: string): string[][] {
   }
   if (started || field !== '') {
     row.push(field);
-    rows.push(row);
+    rows.push({ fields: row, line: rowStart });
   }
   return rows;
 }
@@ -163,7 +180,7 @@ export function inferCsvColumnMap(headers: readonly string[]): CsvColumnMap {
  * derived from `amountIn` − `amountOut`.
  */
 /** Auto-detect the field delimiter from the header line: `;` (Norwegian default) vs `,`. */
-export function detectCsvDelimiter(text: string): string {
+function detectCsvDelimiter(text: string): string {
   const noBom = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
   const header = noBom.split('\n')[0] ?? '';
   return header.split(';').length > header.split(',').length ? ';' : ',';
@@ -174,7 +191,7 @@ export function parseCsvStatement(text: string, options: CsvParseOptions): CsvPa
   const rows = tokenise(text, delimiter);
   if (rows.length < 2) return { transactions: [], errors: [] };
 
-  const header = rows[0]!.map(norm);
+  const header = rows[0]!.fields.map(norm);
   const indexOf = (name: string | undefined): number =>
     name === undefined ? -1 : header.indexOf(norm(name));
   const cols = {
@@ -198,8 +215,8 @@ export function parseCsvStatement(text: string, options: CsvParseOptions): CsvPa
   const errors: CsvRowError[] = [];
 
   for (let r = 1; r < rows.length; r++) {
-    const row = rows[r]!;
-    const line = r + 1; // 1-based, header is line 1
+    const row = rows[r]!.fields;
+    const line = rows[r]!.line; // the row's real FILE line (blank lines don't shift it)
 
     let amount: NormalisedBankTx['amount'] | null = null;
     if (cols.amount >= 0) {
@@ -231,10 +248,20 @@ export function parseCsvStatement(text: string, options: CsvParseOptions): CsvPa
       continue;
     }
 
+    // A present-but-malformed currency cell is an error (never silently mis-labelled money); an
+    // absent cell falls back to the linked account's currency.
+    const rawCurrency = cellOrNull(row, cols.currency);
+    const currency =
+      rawCurrency === null ? cleanCurrency(options.defaultCurrency) : cleanCurrency(rawCurrency);
+    if (currency === null) {
+      errors.push({ line, reason: 'invalid-currency' });
+      continue;
+    }
+
     transactions.push({
       externalId: cellOrNull(row, cols.externalId) ?? '',
       amount,
-      currency: (cellOrNull(row, cols.currency) ?? options.defaultCurrency).toUpperCase(),
+      currency,
       bookingDate: isoDate(cellOrNull(row, cols.bookingDate)),
       valueDate: isoDate(cellOrNull(row, cols.valueDate)),
       remittanceInfo: cellOrNull(row, cols.remittanceInfo),

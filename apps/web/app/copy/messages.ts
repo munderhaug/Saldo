@@ -19,6 +19,7 @@ export const nb = {
 
   // Currency unit shown after a `formatKr()` figure (the figure itself comes from @saldo/domain).
   'common.currency': 'kr',
+  'common.tableRegion': 'Tabell — kan rulles sidelengs',
   // Spelled-out unit for screen readers, so "kr" isn't read as the letters "k r".
   'common.currencyLong': 'kroner',
 
@@ -109,6 +110,8 @@ export const nb = {
   'receipts.new.errorNoImage': 'Last opp et bilde av kvitteringen (JPG eller PNG).',
   'receipts.new.errorImageType': 'Det ser ikke ut som et bilde. Last opp en JPG eller PNG.',
   'receipts.new.errorImageTooLarge': 'Bildet er for stort. Maks 10 MB.',
+  'receipts.new.errorRateLimited':
+    'Mange kvitteringer på kort tid — jeg trenger en liten pause. Prøv igjen om noen minutter.',
   'receipts.new.errorRead':
     'Jeg klarte ikke å lese kvitteringen. Prøv et tydeligere bilde, eller før den opp manuelt.',
   'receipts.new.errorCurrency':
@@ -393,6 +396,8 @@ export const nb = {
   'invoices.error.unknown-vat-code': 'Ukjent MVA-kode på en linje.',
   'invoices.error.notADraft':
     'Bare utkast kan endres. Et utstedt dokument rettes med en kreditnota.',
+  'invoices.error.kind-immutable':
+    'Dokumenttypen og fakturaen en kreditnota retter kan ikke endres. Last siden på nytt og prøv igjen.',
   'invoices.error.credit-note-source-not-posted':
     'Kreditnotaen mangler en utstedt faktura å reversere. Velg fakturaen den retter.',
   'invoices.error.creditNote': 'Kunne ikke lage kreditnota for dette dokumentet.',
@@ -717,6 +722,7 @@ export const en = {
   'app.tagline': 'Accounting and invoicing for small Norwegian sole proprietorships.',
 
   'common.currency': 'kr',
+  'common.tableRegion': 'Table — scrolls sideways',
   'common.currencyLong': 'kroner',
 
   'home.heading': "You're caught up",
@@ -792,6 +798,8 @@ export const en = {
   'receipts.new.errorNoImage': 'Upload a photo of the receipt (JPG or PNG).',
   'receipts.new.errorImageType': "That doesn't look like an image. Upload a JPG or PNG.",
   'receipts.new.errorImageTooLarge': 'The image is too large. Max 10 MB.',
+  'receipts.new.errorRateLimited':
+    'That is a lot of receipts in a short time — I need a short break. Try again in a few minutes.',
   'receipts.new.errorRead':
     "I couldn't read the receipt. Try a clearer photo, or record it manually.",
   'receipts.new.errorCurrency':
@@ -1067,6 +1075,8 @@ export const en = {
   'invoices.error.unknown-vat-code': 'Unknown VAT code on a line.',
   'invoices.error.notADraft':
     'Only a draft can be changed. Correct an issued document with a credit note.',
+  'invoices.error.kind-immutable':
+    'The document type and the invoice a credit note corrects cannot be changed. Reload the page and try again.',
   'invoices.error.credit-note-source-not-posted':
     'This credit note has no issued invoice to reverse. Pick the invoice it corrects.',
   'invoices.error.creditNote': 'Could not create a credit note for this document.',

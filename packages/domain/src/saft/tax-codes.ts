@@ -6,6 +6,7 @@
  * `./rates.ts` (docs/regulatory/mva-rates.md).
  */
 import type { VatCode } from '../posting/types.js';
+import { csvDataRows, splitCsvLine } from './csv-lines.js';
 import { TAX_CODE_KEYWORDS as K } from './tax-code-keywords.js';
 
 /** The rate *category* a SAF-T code carries; the numeric percentage is resolved in `rates.ts`. */
@@ -97,15 +98,9 @@ function deriveReverseCharge(descriptionNo: string): boolean {
  * does no I/O — the impure layer reads the committed file and passes it in.
  */
 export function parseStandardTaxCodes(csv: string): readonly SaftTaxCode[] {
-  const lines = csv
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-
-  const [, ...rows] = lines; // drop the header
+  const rows = csvDataRows(csv);
   return rows.map((row) => {
-    const cols = row.split(';');
+    const cols = splitCsvLine(row); // quote-aware — same splitter as the accounts list
     const code = (cols[0] ?? '').trim();
     const descriptionNo = (cols[1] ?? '').trim();
     const descriptionEn = (cols[2] ?? '').trim();

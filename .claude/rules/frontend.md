@@ -14,8 +14,7 @@ paths: ["apps/web/app/routes/**", "apps/web/app/components/**", "apps/web/app/ro
   is authoritative for NOTHING.
 - Money/dates: render via domain helpers; never format money with raw `toFixed`.
 - Charts: Recharts (default) or visx (bespoke); keep to that family.
-- **These UI libs (React Hook Form, @hookform/resolvers, TanStack Table, Recharts, Motion, Vaul) are
-  the project's chosen tools but are NOT currently dependencies** — they were removed to keep the
-  dependency tree honest (knip-clean). When you build the feature that first needs one, `pnpm add` it
-  in that same PR (the choice is fixed here + in `docs/tech-stack.md`; only the install is deferred).
-  Never re-add them speculatively, ahead of a consuming feature.
+- **React Hook Form, @hookform/resolvers and TanStack Table are installed and in use.** Recharts,
+  Motion and Vaul are chosen but **still deferred** (not dependencies) — `pnpm add` one in the same
+  PR as the first feature that needs it (the choice is fixed here + in `docs/tech-stack.md`; only
+  the install is deferred). Never re-add a deferred lib speculatively, ahead of a consuming feature.

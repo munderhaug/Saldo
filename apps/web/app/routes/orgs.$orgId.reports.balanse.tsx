@@ -5,6 +5,7 @@
  * — NOT an AI system. Off any shared cache.
  */
 import { z } from 'zod';
+import { ReportTotalRow as TotalRow } from '~/components/report-total-row';
 import { buildBalanse, buildResultat } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.reports.balanse';
 import { withUserOrg } from '~/auth/auth.server';
@@ -148,18 +149,5 @@ function Section({
         </TableRow>
       ))}
     </>
-  );
-}
-
-function TotalRow({ label, ore }: { label: string; ore: number }) {
-  return (
-    <TableRow className="border-t-2">
-      <th scope="row" className="p-2 text-right align-middle">
-        {label}
-      </th>
-      <TableCell className="tabular text-right">
-        <Money ore={ore} />
-      </TableCell>
-    </TableRow>
   );
 }

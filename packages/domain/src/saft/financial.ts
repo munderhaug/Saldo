@@ -322,7 +322,8 @@ export function saftBalances(model: SaftFinancial): boolean {
   );
 }
 
-/** Σ of every account master's closing balance, signed (debit +, credit −) — 0 for a balanced ledger. */
+/** Σ of every account master's closing balance, signed (debit +, credit −) — 0 for a balanced ledger.
+ * Consumed by the SAF-T export INTEGRITY test as the whole-ledger tie-out (not dead — review §6). */
 export function saftClosingBalanceNet(model: SaftFinancial): Øre {
   return sumØre(
     model.accounts.map((a) =>

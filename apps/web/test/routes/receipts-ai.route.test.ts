@@ -120,6 +120,58 @@ describe.skipIf(!ledgerDbAvailable)('receipts/new — AI provenance gate (confir
     expect(await counts(org.orgId)).toEqual({ vouchers: 0, provenance: 0 });
   });
 
+  // ── The extract (vision-LLM) branch: auth + rate limit sit IN FRONT of the model call. The model
+  //    itself is never reached here — an authenticated member with no file stops at upload validation,
+  //    which is exactly the boundary these tests pin (auth → limiter → validation → LLM).
+
+  function extractForm(): FormData {
+    const fd = new FormData();
+    fd.set('intent', 'extract');
+    return fd;
+  }
+
+  it('extract: an unauthenticated POST is redirected to login — the LLM branch is never reached', async () => {
+    const orgId = await provisionOrg(h.ledger.sql);
+    const res = await post(orgId, '', extractForm());
+    expect(res).toBeInstanceOf(Response);
+    expect((res as Response).status).toBe(302);
+    expect((res as Response).headers.get('location')).toBe('/auth/login');
+  });
+
+  it('extract: 403 for an authenticated non-member', async () => {
+    const orgId = await provisionOrg(h.ledger.sql);
+    const cookie = await h.sessionCookie(await h.createMember(null));
+    const res = await post(orgId, cookie, extractForm());
+    expect((res as Response).status).toBe(403);
+  });
+
+  it('extract: a member passes auth and stops at upload validation (no image → form error)', async () => {
+    const orgId = await provisionOrg(h.ledger.sql);
+    const cookie = await h.sessionCookie(await h.createMember(orgId));
+    const res = await post(orgId, cookie, extractForm());
+    expect(res).toMatchObject({ ok: false });
+    expect(res).not.toBeInstanceOf(Response);
+  });
+
+  it('extract: the per-user rate limit refuses the 11th attempt in the window', async () => {
+    const orgId = await provisionOrg(h.ledger.sql);
+    const cookie = await h.sessionCookie(await h.createMember(orgId));
+    const errors: string[] = [];
+    for (let i = 0; i < 11; i += 1) {
+      const res = (await post(orgId, cookie, extractForm())) as { ok: false; error: string };
+      errors.push(res.error);
+    }
+    // The first 10 attempts reach upload validation; the 11th is refused by the limiter (a different,
+    // rate-limit-specific message) — the wall sits per user, in front of the model.
+    expect(errors[10]).not.toBe(errors[0]);
+    expect(new Set(errors.slice(0, 10)).size).toBe(1);
+
+    // Another user in the same org is NOT throttled by the first user's burst (per-user key).
+    const otherCookie = await h.sessionCookie(await h.createMember(orgId));
+    const other = (await post(orgId, otherCookie, extractForm())) as { ok: false; error: string };
+    expect(other.error).toBe(errors[0]);
+  });
+
   it('confirm: 404 on a non-uuid org id (before auth)', async () => {
     const res = await h.invoke(() =>
       action({

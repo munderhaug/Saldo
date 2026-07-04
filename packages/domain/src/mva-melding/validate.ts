@@ -60,7 +60,7 @@ export function validateMvaMelding(
     }
     if (line.sats !== undefined && !VALID_SATS.has(line.sats))
       fail('MVA-SATS', `sats "${line.sats}" is not in the committed sats code list.`);
-    // A no-VAT-treatment / outside-scope code (0/6/7/20) is not a return figure and must not appear on
+    // A technical no-treatment code (0/7/20) is not a return figure and must not appear on
     // the melding at all (lockstep with the generator, which skips them).
     if (!isMeldingReportable(saft)) {
       fail(

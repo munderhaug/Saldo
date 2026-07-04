@@ -189,6 +189,9 @@ export async function reconcileMatch(
   organizationId: string,
   input: ConfirmMatchInput,
 ): Promise<ReconcileResult> {
+  // Lock BOTH rows for the duration of this transaction (FOR UPDATE): two concurrent confirms of the
+  // same transaction/invoice serialize here, and the loser re-reads the winner's committed state —
+  // matched / paid — and takes the typed rejection below instead of posting a second settlement.
   const [btx] = await tx
     .select({
       id: bankTransaction.id,
@@ -198,7 +201,8 @@ export async function reconcileMatch(
     })
     .from(bankTransaction)
     .where(eq(bankTransaction.id, input.bankTransactionId))
-    .limit(1);
+    .limit(1)
+    .for('update');
   if (!btx) return { ok: false, reason: 'tx-not-found' };
   if (btx.matchedVoucherId !== null) return { ok: false, reason: 'tx-already-matched' };
   if (!(btx.amountOre > 0)) return { ok: false, reason: 'tx-not-incoming' };
@@ -214,7 +218,8 @@ export async function reconcileMatch(
     })
     .from(invoice)
     .where(eq(invoice.id, input.invoiceId))
-    .limit(1);
+    .limit(1)
+    .for('update');
   if (
     !inv ||
     inv.kind !== 'invoice' ||
@@ -244,11 +249,17 @@ export async function reconcileMatch(
   if (!inserted.ok) return { ok: false, reason: 'chart-incomplete' };
 
   // The ONLY mutations the imported row's append-only trigger permits: link the settlement voucher and
-  // stamp the KID that matched (provenance for the reconciliation).
-  await tx
+  // stamp the KID that matched (provenance for the reconciliation). Guarded (matched_voucher_id must
+  // still be NULL) + row-count checked as a backstop to the FOR UPDATE lock: if this ever misses, the
+  // settlement voucher above must NOT commit, so throw to roll the whole confirm back.
+  const linked = await tx
     .update(bankTransaction)
     .set({ matchedVoucherId: inserted.voucherId, kid: inv.kid })
-    .where(eq(bankTransaction.id, btx.id));
+    .where(and(eq(bankTransaction.id, btx.id), isNull(bankTransaction.matchedVoucherId)))
+    .returning({ id: bankTransaction.id });
+  if (linked.length === 0) {
+    throw new Error(`bank transaction ${btx.id} was matched concurrently during reconcile`);
+  }
 
   // The open-status guard above guarantees `→ paid` is a legal move, so this cannot fail here; throw if
   // that ever stops holding so the whole transaction rolls back rather than committing a half-match.

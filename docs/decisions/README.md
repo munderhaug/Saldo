@@ -58,6 +58,8 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0051 | Reporting: resultat/balanse/hovedbok/reskontro/likviditet derived read-only from the ledger | Accepted |
 | 0052 | SAF-T Financial export — pure domain generation, XSD-valid in CI | Accepted |
 | 0053 | Org payout account — settings surface + boundary BBAN/IBAN validation | Accepted |
+| 0054 | Category-level VAT rounding at issue (EN 16931 BR-CO-17) | Accepted |
+| 0055 | Dev password login requires explicit DEV_AUTH=true (never in prod) | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

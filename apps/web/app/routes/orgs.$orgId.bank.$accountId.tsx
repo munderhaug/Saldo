@@ -13,11 +13,11 @@
  * Rate-limit safety (capture §"Rate limits"): a fetch is one batch; a 429 is surfaced calmly.
  */
 import { Form, Link } from 'react-router';
-import { z } from 'zod';
-import { parseBankCsv } from '@saldo/domain';
+import { uuidParamsValid } from '~/lib/route-params';
+import { Money } from '~/components/money';
+import { formatIsoDate, parseBankCsv } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.bank.$accountId';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
-import { kr } from '~/lib/money-format';
 import {
   importTransactions,
   listBankTransactions,
@@ -37,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/table';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('bank.title') }];
@@ -50,11 +51,9 @@ export function headers() {
 /** Statements are small; cap the upload so a stray large file can't exhaust memory. */
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
-const idsValid = (orgId: string, accountId: string): boolean =>
-  z.string().uuid().safeParse(orgId).success && z.string().uuid().safeParse(accountId).success;
-
 export async function loader({ request, params }: Route.LoaderArgs) {
-  if (!idsValid(params.orgId, params.accountId)) throw new Response('Not found', { status: 404 });
+  if (!uuidParamsValid(params.orgId, params.accountId))
+    throw new Response('Not found', { status: 404 });
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     account: await readBankAccount(tx, params.accountId),
     transactions: await listBankTransactions(tx, params.accountId),
@@ -76,7 +75,8 @@ type ActionData =
 
 export async function action({ request, params }: Route.ActionArgs): Promise<ActionData> {
   assertSameOrigin(request);
-  if (!idsValid(params.orgId, params.accountId)) throw new Response('Not found', { status: 404 });
+  if (!uuidParamsValid(params.orgId, params.accountId))
+    throw new Response('Not found', { status: 404 });
   const form = await request.formData();
   const intent = form.get('intent');
 
@@ -178,12 +178,9 @@ export default function BankAccountRoute({ loaderData, actionData }: Route.Compo
             required
             className="border-input bg-background rounded-md border px-3 py-2 text-sm"
           />
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
             {t('bank.import.fileSubmit')}
-          </button>
+          </SubmitButton>
         </Form>
       </section>
 
@@ -198,12 +195,9 @@ export default function BankAccountRoute({ loaderData, actionData }: Route.Compo
         ) : (
           <Form method="post" className="grid gap-3">
             <input type="hidden" name="intent" value="import-gocardless" />
-            <button
-              type="submit"
-              className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-            >
+            <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
               {t('bank.import.gocardlessSubmit')}
-            </button>
+            </SubmitButton>
           </Form>
         )}
       </section>
@@ -237,11 +231,13 @@ export default function BankAccountRoute({ loaderData, actionData }: Route.Compo
             <TableBody>
               {transactions.map((tx: BankTransactionRow) => (
                 <TableRow key={tx.id}>
-                  <TableCell className="tabular">{tx.bookingDate ?? '—'}</TableCell>
+                  <TableCell className="tabular">
+                    {tx.bookingDate ? formatIsoDate(tx.bookingDate) : '—'}
+                  </TableCell>
                   <TableCell>{tx.remittanceInfo ?? t('bank.detail.descriptionNone')}</TableCell>
                   <TableCell>{tx.counterparty ?? '—'}</TableCell>
                   <TableCell className="tabular text-right">
-                    {kr(tx.amountOre)} {t('common.currency')}
+                    <Money ore={tx.amountOre} />
                   </TableCell>
                 </TableRow>
               ))}

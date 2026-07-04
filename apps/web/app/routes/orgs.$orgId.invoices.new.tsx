@@ -17,6 +17,10 @@ import { invoiceFormToObject } from '~/lib/invoice-form-data';
 import { InvoiceForm, emptyLine } from '~/components/invoice-form';
 import { t } from '~/copy';
 
+export function meta() {
+  return [{ title: t('invoices.form.newTitle') }];
+}
+
 export function headers() {
   return { 'Cache-Control': 'private, no-store' };
 }
@@ -44,13 +48,16 @@ export async function action({ request, params }: Route.ActionArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
     throw new Response('Not found', { status: 404 });
   }
-  const parsed = invoiceInput.safeParse(invoiceFormToObject(await request.formData()));
-  if (!parsed.success) return { error: t('invoices.form.errorInvalidInput') };
+  // Failed submissions carry the values back so a no-JS round-trip keeps the user's input
+  // (review 2026-07-03 §13); the contract re-validates on the next attempt regardless.
+  const raw = invoiceFormToObject(await request.formData()) as InvoiceInput;
+  const parsed = invoiceInput.safeParse(raw);
+  if (!parsed.success) return { error: t('invoices.form.errorInvalidInput'), values: raw };
 
   const result = await withUserOrg(request, params.orgId, (tx) =>
     createDraft(tx, params.orgId, parsed.data),
   );
-  if (!result.ok) return { error: t(`invoices.error.${result.error}`) };
+  if (!result.ok) return { error: t(`invoices.error.${result.error}`), values: raw };
   return redirect(`/orgs/${params.orgId}/invoices/${result.id}`);
 }
 
@@ -61,7 +68,8 @@ export default function NewInvoiceRoute({ loaderData, actionData }: Route.Compon
   if (prefill?.defaultAccountId) firstLine.accountId = prefill.defaultAccountId;
   if (prefill?.defaultVatCodeId) firstLine.vatCodeId = prefill.defaultVatCodeId;
 
-  const defaultValues: InvoiceInput = {
+  const submitted = actionData?.values;
+  const defaultValues: InvoiceInput = submitted ?? {
     kind: 'invoice',
     customerId: prefill?.id ?? '',
     customerName: prefill?.name ?? '',

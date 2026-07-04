@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { TextField } from '~/components/form-field';
 import { Form, Link, redirect, useSubmit } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +17,7 @@ import { lookupByOrgNr } from '~/integrations/enhetsregisteret/client.server';
 import { createOrgInput, type CreateOrgInput } from '~/contracts';
 import { mvaStatusDesc, mvaStatusLabel } from '~/lib/org-format';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('orgs.new.title') }];
@@ -92,35 +94,23 @@ export default function NewOrg({ loaderData, actionData }: Route.ComponentProps)
       >
         {prefill && <p className="text-muted-foreground text-sm">{t('orgs.new.prefilled')}</p>}
 
-        <Field
+        <TextField
           id="orgNr"
           label={t('orgs.new.orgNrLabel')}
           hint={t('orgs.new.orgNrHint')}
           error={errors.orgNr?.message}
-        >
-          <input
-            id="orgNr"
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            aria-describedby={errors.orgNr ? 'orgNr-error orgNr-hint' : 'orgNr-hint'}
-            aria-invalid={errors.orgNr ? true : undefined}
-            className="border-input bg-background tabular rounded-md border px-3 py-2 text-sm"
-            {...register('orgNr')}
-          />
-        </Field>
+          registration={register('orgNr')}
+          inputMode="numeric"
+          tabular
+        />
 
-        <Field id="name" label={t('orgs.new.nameLabel')} error={errors.name?.message}>
-          <input
-            id="name"
-            type="text"
-            autoComplete="organization"
-            aria-describedby={errors.name ? 'name-error' : undefined}
-            aria-invalid={errors.name ? true : undefined}
-            className="border-input bg-background rounded-md border px-3 py-2 text-sm"
-            {...register('name')}
-          />
-        </Field>
+        <TextField
+          id="name"
+          label={t('orgs.new.nameLabel')}
+          error={errors.name?.message}
+          registration={register('name')}
+          autoComplete="organization"
+        />
 
         {/* Consequential choice (§5.5): plain language, each option explained, no default magic. */}
         <fieldset className="grid gap-3">
@@ -163,12 +153,9 @@ export default function NewOrg({ loaderData, actionData }: Route.ComponentProps)
         )}
 
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm">
             {t('orgs.new.submit')}
-          </button>
+          </SubmitButton>
           <Link
             to="/oppslag"
             className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
@@ -182,35 +169,3 @@ export default function NewOrg({ loaderData, actionData }: Route.ComponentProps)
 }
 
 /** A labelled field wrapper: associates label, optional hint, and an announced error with the input. */
-function Field({
-  id,
-  label,
-  hint,
-  error,
-  children,
-}: {
-  id: string;
-  label: string;
-  hint?: string | undefined;
-  error?: string | undefined;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="grid gap-1.5">
-      <label htmlFor={id} className="font-text text-sm">
-        {label}
-      </label>
-      {children}
-      {hint && (
-        <p id={`${id}-hint`} className="text-muted-foreground text-sm">
-          {hint}
-        </p>
-      )}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}

@@ -97,6 +97,7 @@ export const posting = pgTable("posting", {
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	creditOre: bigint("credit_ore", { mode: "number" }).default(0).notNull(),
 }, (table) => [
+	index("posting_account_idx").using("btree", table.accountId.asc().nullsLast().op("uuid_ops")),
 	index("posting_voucher_idx").using("btree", table.voucherId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
 			columns: [table.organizationId],
@@ -148,6 +149,7 @@ export const voucher = pgTable("voucher", {
 	invoiceId: uuid("invoice_id"),
 }, (table) => [
 	uniqueIndex("voucher_invoice_uniq").using("btree", table.invoiceId.asc().nullsLast().op("uuid_ops")).where(sql`(invoice_id IS NOT NULL)`),
+	index("voucher_period_idx").using("btree", table.periodId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
 			columns: [table.organizationId],
 			foreignColumns: [organization.id],
@@ -470,14 +472,14 @@ export const bankTransaction = pgTable("bank_transaction", {
 			name: "bank_transaction_organization_id_fkey"
 		}),
 	foreignKey({
-			columns: [table.matchedVoucherId],
-			foreignColumns: [voucher.id],
-			name: "bank_transaction_matched_voucher_id_fkey"
-		}),
-	foreignKey({
 			columns: [table.organizationId, table.bankAccountId],
 			foreignColumns: [bankAccount.id, bankAccount.organizationId],
 			name: "bank_transaction_account_same_org"
+		}),
+	foreignKey({
+			columns: [table.organizationId, table.matchedVoucherId],
+			foreignColumns: [voucher.id, voucher.organizationId],
+			name: "bank_transaction_matched_voucher_same_org_fk"
 		}),
 	unique("bank_transaction_external_ref_uniq").on(table.bankAccountId, table.externalRef),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),

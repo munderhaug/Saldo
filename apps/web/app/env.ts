@@ -14,6 +14,8 @@ import { z } from 'zod';
  */
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  /** Explicit opt-in for the dev email/password provider (ADR 0055). Never honoured in production. */
+  DEV_AUTH: z.string().optional(),
   /** App DB connection (the `saldo_app` role in real environments). */
   DATABASE_URL: z.string().url(),
   /** Canonical app origin — used for the Origin-check CSRF guard and the OIDC redirect base. */
@@ -59,5 +61,9 @@ export const isProd = env.NODE_ENV === 'production';
 export const oidcConfigured = Boolean(
   env.OIDC_ISSUER && env.OIDC_CLIENT_ID && env.OIDC_CLIENT_SECRET,
 );
-/** The dev email/password provider is available outside production, or until OIDC is configured. */
-export const devAuthEnabled = !isProd || !oidcConfigured;
+/**
+ * The dev email/password provider requires an EXPLICIT `DEV_AUTH=true` AND a non-production build
+ * (ADR 0055). It previously auto-enabled whenever OIDC was unconfigured — which would have exposed
+ * password login on a misconfigured PRODUCTION deploy (review 2026-07-03 §14).
+ */
+export const devAuthEnabled = env.DEV_AUTH === 'true' && !isProd;

@@ -20,6 +20,7 @@ import { mvaStatusLabel } from '~/lib/org-format';
 import { contactLanguageLabel, contactRoleLabel } from '~/lib/contact-format';
 import { SelectField, TextField } from '~/components/form-field';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export interface ContactFormProps {
   readonly defaultValues: ContactInput;
@@ -262,12 +263,9 @@ export function ContactForm({
         </p>
       )}
 
-      <button
-        type="submit"
-        className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-      >
+      <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
         {submitLabel}
-      </button>
+      </SubmitButton>
     </Form>
   );
 }

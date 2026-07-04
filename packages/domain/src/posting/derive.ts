@@ -55,6 +55,10 @@ export interface PurchaseInput {
  */
 export function derivePurchase(input: PurchaseInput): Voucher {
   const { net, vatRate, status, accounts, vatCode } = input;
+  // A negative net would silently flip the voucher's economic direction (postings are sign-checked
+  // in SQL, but the flip would surface as a confusing balance error, not the real cause). A
+  // correction is a motbilag, never a negative amount (review 2026-07-03 §10).
+  if (net < ZERO) throw new RangeError(`purchase net must be non-negative, got ${net}`);
   const vat = mulRate(net, vatRate);
   const gross = addØre(net, vat);
 
@@ -186,6 +190,11 @@ export type DeriveResult =
  */
 export function deriveSales(input: SalesInput): DeriveResult {
   const { net, vatRate, status, accounts, vatCode } = input;
+  // Typed refusal (not a throw — this runs on user input at issue time): a negative line never
+  // posts; a correction is a motbilag / kreditnota (review 2026-07-03 §10).
+  if (net < ZERO) {
+    return { ok: false, error: 'Amounts must be non-negative: correct with a credit note' };
+  }
   const vat = mulRate(net, vatRate);
 
   if (!chargesOutputVat(status)) {

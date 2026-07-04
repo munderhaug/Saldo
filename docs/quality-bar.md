@@ -6,7 +6,10 @@
 
 ## Definition of Done — every change
 A change is "done" only when ALL of the following hold:
-- ✅ `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm format:check`, and `pnpm audit --audit-level=high` are green.
+- ✅ **Every CI gate is green** — the authoritative, always-current list is the `verify` job in
+  [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) (typecheck, lint, lint:repo, format:check,
+  type-coverage, knip, tests, db gates, build, SAF-T/MVA/EHF validation, …). Don't restate it here;
+  it drifts.
 - ✅ New behavior is covered by tests. Domain (money/VAT/posting): **exhaustive + fast-check property**
   tests. UI: component/interaction tests for non-trivial logic.
 - ✅ Ledger-touching change has a **Testcontainers integration test** proving the SQL trigger/constraint

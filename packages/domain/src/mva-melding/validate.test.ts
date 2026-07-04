@@ -101,8 +101,27 @@ describe('validateMvaMelding', () => {
     expect(rules(valid({ kid: 'abc' }))).toContain('MVA-KID');
   });
 
-  it('flags a no-VAT-treatment / outside-scope code on the melding (MVA-KODE-SCOPE)', () => {
-    // Code 6 is outside the VAT Act — it must not appear on the melding at all (review §5).
+  it('flags a no-VAT-treatment code on the melding (MVA-KODE-SCOPE)', () => {
+    // Code 0 is a technical no-treatment acquisition code — never a melding line (review §5).
+    expect(
+      rules(
+        valid({
+          lines: [
+            {
+              mvaKode: code('0'),
+              grunnlagØre: øre(10_000_00),
+              sats: '0',
+              merverdiavgiftØre: øre(0),
+            },
+          ],
+          fastsattØre: øre(0),
+        }),
+      ),
+    ).toContain('MVA-KODE-SCOPE');
+  });
+
+  it('accepts a code-6 unntatt-turnover grunnlag line (reported per the official example)', () => {
+    // eksempelMedAlleTilfeller.xml carries mvaKode 6 with grunnlag + sats 0 (review 2026-07-03 §7b).
     expect(
       rules(
         valid({
@@ -117,6 +136,6 @@ describe('validateMvaMelding', () => {
           fastsattØre: øre(0),
         }),
       ),
-    ).toContain('MVA-KODE-SCOPE');
+    ).toEqual([]);
   });
 });

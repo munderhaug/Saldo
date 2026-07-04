@@ -13,7 +13,7 @@ function Table({ className, 'aria-label': ariaLabel, ...props }: React.Component
     // (file-level eslint exception above).
     <div
       data-slot="table-container"
-      className="focus-visible:ring-ring relative w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2"
+      className="focus-visible:ring-ring relative w-full overflow-x-auto focus-visible:ring-2 focus-visible:outline-none"
       tabIndex={0}
       role="region"
       aria-label={ariaLabel ?? t('common.tableRegion')}

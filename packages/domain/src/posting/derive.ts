@@ -180,8 +180,7 @@ export interface SalesInput {
 }
 
 export type DeriveResult =
-  | { readonly ok: true; readonly voucher: Voucher }
-  | { readonly ok: false; readonly error: string };
+  { readonly ok: true; readonly voucher: Voucher } | { readonly ok: false; readonly error: string };
 
 /**
  * Derive a sales voucher. Output VAT is charged ONLY when the org is VAT-registered; attempting to

@@ -63,7 +63,7 @@ export function assertSameOrigin(request: Request): void {
   const host = request.headers.get('host');
   // `Origin: null` (sandboxed iframe, some privacy modes) and any unparsable value are cross-origin
   // by definition — refuse with 403, never crash into a 500 (review 2026-07-03 §14).
-  let originHost: string | null = null;
+  let originHost: string | null;
   try {
     originHost = origin ? new URL(origin).host : null;
   } catch {

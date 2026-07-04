@@ -148,15 +148,13 @@ describe('matchBankLine — properties', () => {
           maxLength: 8,
         }),
         (amount, raw) => {
-          const invoices = raw.map(
-            ([id, out], i): OpenInvoice => ({
-              invoiceId: `${id}-${i}`,
-              kid: null,
-              outstanding: øre(out),
-              issueDate: '2026-06-01',
-              dueDate: '2026-06-15',
-            }),
-          );
+          const invoices = raw.map(([id, out], i): OpenInvoice => ({
+            invoiceId: `${id}-${i}`,
+            kid: null,
+            outstanding: øre(out),
+            issueDate: '2026-06-01',
+            dueDate: '2026-06-15',
+          }));
           const result = matchBankLine(line({ amount }), invoices);
           return result.candidates.every((c) => {
             const matched = invoices.find((v) => v.invoiceId === c.invoiceId)!;
@@ -171,15 +169,13 @@ describe('matchBankLine — properties', () => {
     fc.assert(
       fc.property(safePositiveØre(), fc.array(fc.string(), { maxLength: 6 }), (amount, ids) => {
         const kid = withMod10ControlDigit('5005') as string;
-        const invoices = ids.map(
-          (id, i): OpenInvoice => ({
-            invoiceId: `${id}-${i}`,
-            kid,
-            outstanding: amount,
-            issueDate: null,
-            dueDate: null,
-          }),
-        );
+        const invoices = ids.map((id, i): OpenInvoice => ({
+          invoiceId: `${id}-${i}`,
+          kid,
+          outstanding: amount,
+          issueDate: null,
+          dueDate: null,
+        }));
         const result = matchBankLine(line({ amount, remittanceInfo: kid }), invoices);
         if (result.auto === null) return true;
         const kidExact = result.candidates.filter((c) => c.tier === 'kid-exact');

@@ -367,8 +367,7 @@ async function insertLines(
 // ── Mutations ───────────────────────────────────────────────────────────────────────────────────────
 
 export type CreateResult =
-  | { readonly ok: true; readonly id: string }
-  | { readonly ok: false; readonly error: PrepareError };
+  { readonly ok: true; readonly id: string } | { readonly ok: false; readonly error: PrepareError };
 
 /** updateDraft can additionally fail because the target is no longer an editable draft, or because
  * the input tries to change the document's identity (kind / credited invoice). */

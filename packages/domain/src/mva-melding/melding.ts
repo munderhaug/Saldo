@@ -80,8 +80,7 @@ export interface MvaMelding {
  * rather than an empty melding, so the caller renders the "not registered" state, never a zero return.
  */
 export type MvaMeldingResult =
-  | { readonly registered: false }
-  | { readonly registered: true; readonly melding: MvaMelding };
+  { readonly registered: false } | { readonly registered: true; readonly melding: MvaMelding };
 
 /**
  * Whether a code is reportable on the MVA-melding at all. Everything with a VAT treatment — output

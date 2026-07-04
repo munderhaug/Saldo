@@ -5,7 +5,6 @@
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["node", "vite/client"],
     "rootDirs": [".", "./.react-router/types"],
-    "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"]
     },

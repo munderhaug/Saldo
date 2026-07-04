@@ -176,10 +176,10 @@ describe('buildSaftXml — masters', () => {
 
 describe('buildSaftXml — properties', () => {
   it('emits no bare ampersand, no XML-illegal char, and always closes the AuditFile', () => {
-    // fullUnicodeString exercises the control/noncharacter range a real free-text field can carry
+    // The binary string unit exercises the control/noncharacter range a real free-text field can carry
     // (a pasted NUL, vertical tab, etc.) — exactly what would otherwise yield a non-well-formed export.
     fc.assert(
-      fc.property(fc.fullUnicodeString({ maxLength: 40 }), (name) => {
+      fc.property(fc.string({ unit: 'binary', maxLength: 40 }), (name) => {
         const x = buildSaftXml(
           generateSaftFinancial(
             { ...input(), customers: [{ id: 'K1', name, countryCode: 'NO' }] },

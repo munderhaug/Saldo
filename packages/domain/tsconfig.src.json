@@ -1,0 +1,11 @@
+{
+  // The purity gate: production sources only, with `types: []` — the domain is a pure accounting
+  // core (no I/O), so node globals must not typecheck here. Tests/fixtures are excluded; they are
+  // covered by tsconfig.json (which grants node types for reading committed reference files).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.fixtures.ts"]
+}

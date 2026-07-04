@@ -14,6 +14,13 @@ import { organization, invoiceEmail, invoice, account, vatCode, fiscalPeriod, po
  * This file restores the correct join column for every relation. Re-introspection will reintroduce the
  * bug, so the relations are locked by `test/integrity/relations.integration.test.ts`, which exercises
  * every relation against a seeded graph — if a regenerate clobbers this, that suite fails in CI.
+ *
+ * Related quirk in the GENERATED `schema.ts` (review 2026-07-03 §11): introspect emits each composite
+ * same-org FK with its column/foreignColumn arrays in MISMATCHED order (e.g.
+ * `columns: [organizationId, matchedVoucherId] → foreignColumns: [voucher.id, voucher.organizationId]`).
+ * The real constraint in SQL is correct — schema.ts FK metadata is never used to generate DDL here
+ * (db/migrations is the source of truth, ADR 0011) — so the pairing is misleading to READ but has no
+ * runtime effect. Don't "fix" schema.ts by hand (a hook blocks it); the truth lives in the migration.
  */
 
 export const invoiceEmailRelations = relations(invoiceEmail, ({one}) => ({

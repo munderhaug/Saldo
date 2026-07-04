@@ -1,6 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { TransactionSql } from 'postgres';
-import { type LedgerDb, ledgerDbAvailable, seedOrg, startLedgerDb } from './db-harness.js';
+import {
+  insertVoucher,
+  type LedgerDb,
+  ledgerDbAvailable,
+  seedOrg,
+  startLedgerDb,
+} from './db-harness.js';
 
 // Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Skips cleanly otherwise.
 
@@ -119,6 +125,26 @@ describe.skipIf(!ledgerDbAvailable)(
         { kid: string }[]
       >`SELECT kid FROM bank_transaction WHERE id = ${txId}`;
       expect(row!.kid).toBe('1234567890128');
+    });
+
+    it('rejects linking a settlement voucher that belongs to ANOTHER tenant (same-org composite FK)', async () => {
+      // review 2026-07-03 §11: the plain voucher(id) FK allowed a cross-tenant matched_voucher_id;
+      // the composite (matched_voucher_id, organization_id) → voucher(id, organization_id) makes the
+      // write structurally impossible, not merely invisible under RLS.
+      const a = await seedOrg(db.sql);
+      const b = await seedOrg(db.sql);
+      const { txId } = await seedAccountWithTx(a.orgId);
+      const foreignVoucherId = await insertVoucher(db.sql, b.orgId, b.openPeriodId);
+
+      await expect(
+        db.sql`UPDATE bank_transaction SET matched_voucher_id = ${foreignVoucherId} WHERE id = ${txId}`,
+      ).rejects.toThrow(/bank_transaction_matched_voucher_same_org_fk/);
+
+      // The same link within the SAME org is accepted.
+      const ownVoucherId = await insertVoucher(db.sql, a.orgId, a.openPeriodId);
+      const updated = await db.sql`
+        UPDATE bank_transaction SET matched_voucher_id = ${ownVoucherId} WHERE id = ${txId}`;
+      expect(updated.count).toBe(1);
     });
 
     it('rejects a duplicate (bank_account_id, external_ref) — the idempotency key', async () => {

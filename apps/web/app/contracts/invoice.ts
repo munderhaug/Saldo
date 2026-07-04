@@ -18,6 +18,7 @@
  */
 import { z } from 'zod';
 import { INVOICE_KINDS, parseKroner } from '@saldo/domain';
+import { optionalOrgNrShape } from './org-nr';
 
 /** Document language — the two Saldo ships (matches the contacts register). */
 export const INVOICE_LANGUAGES = ['nb', 'en'] as const;
@@ -25,10 +26,12 @@ export const INVOICE_LANGUAGES = ['nb', 'en'] as const;
 /** True for '' (not given) or a syntactically valid uuid — an optional reference submits ''. */
 const blankOrUuid = (value: string) => value === '' || z.string().uuid().safeParse(value).success;
 
-/** A non-negative decimal quantity ("2", "2,5", "0.75") → number, or `null` when malformed. */
+/** A non-negative decimal quantity ("2", "2,5", "0.75") → number, or `null` when malformed. The
+ * integer part is bounded to 9 digits so quantity × price stays far inside safe-integer øre (an
+ * unbounded digit run would silently lose precision through the float multiply). */
 export function parseQuantity(input: string): number | null {
   const cleaned = input.replace(/\s/g, '').replace(',', '.');
-  if (!/^\d+(?:\.\d{1,3})?$/.test(cleaned)) return null;
+  if (!/^\d{1,9}(?:\.\d{1,3})?$/.test(cleaned)) return null;
   const value = Number(cleaned);
   return Number.isFinite(value) && value >= 0 ? value : null;
 }
@@ -67,19 +70,14 @@ const invoiceLineInput = z.object({
   vatCodeId: z.string().uuid('Velg en MVA-kode for linjen'),
 });
 
-export const invoiceInput = z.object({
+const invoiceInputShape = z.object({
   kind: z.enum(INVOICE_KINDS),
   // Optional link to a contact; the snapshot below is authoritative and frozen on issue regardless.
   customerId: z.string().refine(blankOrUuid, 'Ugyldig kunde'),
   customerName: z.string().trim().min(1, 'Skriv kundens navn').max(200), // personal
   customerEmail: z.string().trim().max(320).refine(blankOrEmail, 'Ugyldig e-postadresse'), // personal
-  customerOrgNr: z
-    .string()
-    .trim()
-    .refine(
-      (v) => v === '' || /^\d{9}$/.test(v.replace(/\s/g, '')),
-      'Organisasjonsnummer må være 9 siffer',
-    ), // personal: an ENK's / private person's org-nr identifies a natural person
+  // personal: an ENK's / private person's org-nr identifies a natural person.
+  customerOrgNr: optionalOrgNrShape,
   customerAddress: z.string().trim().max(300), // personal: an ENK's may be a home address
   currency: z
     .string()
@@ -93,6 +91,25 @@ export const invoiceInput = z.object({
   creditsInvoiceId: z.string().refine(blankOrUuid, 'Ugyldig faktura'),
   notes: z.string().trim().max(2000), // personal: free text, may describe a natural person
   lines: z.array(invoiceLineInput).min(1, 'En faktura må ha minst én linje').max(200),
+});
+
+/** `kind` ↔ `creditsInvoiceId` are correlated: only a credit note corrects an invoice, and a credit
+ * note must name one (review 2026-07-03 §9). The db layer additionally freezes both after creation. */
+export const invoiceInput = invoiceInputShape.superRefine((value, ctx) => {
+  if (value.kind === 'credit_note' && value.creditsInvoiceId === '') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['creditsInvoiceId'],
+      message: 'En kreditnota må peke på fakturaen den retter',
+    });
+  }
+  if (value.kind !== 'credit_note' && value.creditsInvoiceId !== '') {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['creditsInvoiceId'],
+      message: 'Bare en kreditnota kan peke på en faktura',
+    });
+  }
 });
 
 export type InvoiceInput = z.infer<typeof invoiceInput>;

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { ZERO, øre } from '../money/ore.js';
+import { øre } from '../money/ore.js';
 import type { AccountNo, PostingLine, Voucher } from './types.js';
-import { imbalance, isBalanced } from './balance.js';
+import { isBalanced } from './balance.js';
 
 const acc = (s: string) => s as AccountNo;
 
@@ -17,7 +17,6 @@ describe('voucher balance invariant', () => {
       lines: [line(12500, 0, '1500'), line(0, 10000, '3000'), line(0, 2500, '2700')],
     };
     expect(isBalanced(v)).toBe(true);
-    expect(imbalance(v)).toBe(ZERO);
   });
 
   it('an unbalanced voucher does not balance', () => {

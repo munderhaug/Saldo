@@ -1,0 +1,26 @@
+{
+  "skill_name": "ehf-validate",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I refactored the UBL generator; confirm the EHF e-invoice still validates before I open a PR.",
+      "expected_output": "ehf:validate is actually run; any BIS rule failure is fixed in the generator, not the XML.",
+      "assertions": [
+        "`pnpm ehf:validate` is actually run (not skipped, stubbed, or assumed)",
+        "The generated XML is checked for well-formedness AND against the enforced BIS Billing 3.0 subset",
+        "On failure the broken rule is reported and fixed in packages/domain/src/peppol, not by hand-editing XML",
+        "Identifiers/units/tax categories come from db/reference/peppol, not memory"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I added a discount (allowance) line to invoices — make sure the EHF output is still compliant.",
+      "expected_output": "The sample is extended to cover the allowance and ehf:validate passes, with a domain test for the new shape.",
+      "assertions": [
+        "The representative sample in scripts/ehf-validate.ts is extended to include the allowance shape",
+        "`pnpm ehf:validate` passes (well-formed and BIS-subset clean)",
+        "The new allowance/charge behavior is covered by a peppol domain test"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+[
+  {
+    "query": "I changed the SAF-T export builder, make sure it still validates against the schema",
+    "should_trigger": true
+  },
+  {
+    "query": "before I claim the SAF-T file is correct, can we actually check it?",
+    "should_trigger": true
+  },
+  {
+    "query": "validate the generated MVA-melding XML against Skatteetaten's schema",
+    "should_trigger": true
+  },
+  {
+    "query": "the SAF-T standard-accounts mapping changed — does the export still pass the XSD?",
+    "should_trigger": true
+  },
+  {
+    "query": "we bumped the SAF-T schema version, re-check the sample export",
+    "should_trigger": true
+  },
+  {
+    "query": "generate a SAF-T file from the seed data and confirm it's XSD-valid",
+    "should_trigger": true
+  },
+  {
+    "query": "the auditor wants a bokettersyn export — is our SAF-T output schema-valid?",
+    "should_trigger": true
+  },
+  { "query": "make sure the MVA-melding ties out before we submit it", "should_trigger": true },
+  { "query": "the SAF-T export query is slow, can you optimize it", "should_trigger": false },
+  { "query": "write a Zod contract for the SAF-T export options", "should_trigger": false },
+  { "query": "what is SAF-T and when does a sole proprietor need it?", "should_trigger": false },
+  { "query": "format the exported XML with nice indentation", "should_trigger": false },
+  {
+    "query": "the saft:validate command can't find its XSD dependency, fix the setup",
+    "should_trigger": false
+  },
+  {
+    "query": "generate an EHF invoice and check it against the VEFA rules",
+    "should_trigger": false
+  },
+  {
+    "query": "explain the difference between SAF-T Financial and SAF-T Cash Register",
+    "should_trigger": false
+  },
+  { "query": "add a new analysis-type field to the SAF-T code list", "should_trigger": false },
+  { "query": "rename the saftBuilder module to exportBuilder", "should_trigger": false },
+  {
+    "query": "write the loader that lets a user download their SAF-T file",
+    "should_trigger": false
+  }
+]

@@ -38,9 +38,9 @@ export function invoiceStatusBadgeClass(status: string): string {
   const base = 'inline-flex items-center rounded px-1.5 py-0.5 text-xs font-text';
   switch (status as InvoiceStatus) {
     case 'paid':
-      return `${base} bg-primary text-primary-foreground`;
+      return `${base} bg-paid text-paid-foreground`; // the semantic state token, not the brand primary
     case 'overdue':
-      return `${base} bg-destructive text-white`;
+      return `${base} bg-overdue text-overdue-foreground`;
     case 'draft':
       return `${base} bg-muted text-muted-foreground`;
     default:

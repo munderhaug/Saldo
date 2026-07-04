@@ -15,6 +15,7 @@
 import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import {
   type AccountNo,
+  type ComputedLine,
   type InvoiceKind,
   type InvoiceStatus,
   type MvaStatus,
@@ -22,19 +23,18 @@ import {
   type SaftTaxCode,
   type SalesInvoiceLine,
   type VatCode,
-  addØre,
   canTransition,
   checkSalesLine,
   computeLine,
   deriveSalesInvoice,
   drawsInvoiceNumber,
   invoiceKid,
+  invoiceTotals,
   parseKroner,
   quantity as toQuantity,
   rate,
   rateForCategory,
   reverseVoucher,
-  sumØre,
   øre,
 } from '@saldo/domain';
 import type { OrgTx } from '../auth/middleware.js';
@@ -268,6 +268,7 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
   const codeById = new Map(vatRows.map((r) => [r.id, r.code]));
 
   const prepared: PreparedLine[] = [];
+  const computed: ComputedLine[] = [];
   for (const [i, line] of input.lines.entries()) {
     const code = codeById.get(line.vatCodeId);
     const saft: SaftTaxCode | undefined = code
@@ -285,10 +286,11 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
       );
     }
 
-    const computed = computeLine(status, saft, unitPrice, toQuantity(qtyNum));
-    if (!computed.verdict.ok) {
-      return { ok: false, error: computed.verdict.reason ?? 'input-code-not-a-sale' };
+    const line_ = computeLine(status, saft, unitPrice, toQuantity(qtyNum));
+    if (!line_.verdict.ok) {
+      return { ok: false, error: line_.verdict.reason ?? 'input-code-not-a-sale' };
     }
+    computed.push(line_);
     prepared.push({
       lineNo: i + 1,
       productId: nullable(line.productId),
@@ -298,20 +300,23 @@ async function prepareInvoice(tx: OrgTx, input: InvoiceInput): Promise<Prepared>
       unitPriceOre: unitPrice,
       accountId: line.accountId,
       vatCodeId: line.vatCodeId,
-      netOre: computed.net,
-      vatOre: computed.vat,
+      netOre: line_.net,
+      vatOre: line_.vat,
     });
   }
-  const net = sumØre(prepared.map((p) => p.netOre));
-  const vat = sumØre(prepared.map((p) => p.vatOre));
-  return { ok: true, lines: prepared, net, vat, gross: addØre(net, vat) };
+  // Document totals are CATEGORY-LEVEL (VAT rounded once per rate category — BR-CO-17, ADR 0054);
+  // the stored per-line vat_ore stays the per-line display figure and may sum ±øre off the total.
+  const totals = invoiceTotals(computed);
+  return { ok: true, lines: prepared, net: totals.net, vat: totals.vat, gross: totals.gross };
 }
 
-/** Header column values shared by create + a credit note's copy ('' → NULL; org-nr compacted). */
-function headerColumns(organizationId: string, input: InvoiceInput) {
+/**
+ * The header columns a draft save may change ('' → NULL; org-nr compacted). `kind` and
+ * `creditsInvoiceId` are deliberately NOT here: they are the document's identity, set at creation and
+ * immutable thereafter — a credit-note draft must never revert to a plain (positive) invoice.
+ */
+function editableHeaderColumns(input: InvoiceInput) {
   return {
-    organizationId,
-    kind: input.kind,
     customerId: nullable(input.customerId),
     customerName: input.customerName,
     customerEmail: nullable(input.customerEmail),
@@ -321,8 +326,17 @@ function headerColumns(organizationId: string, input: InvoiceInput) {
     language: input.language,
     issueDate: nullable(input.issueDate),
     dueDate: nullable(input.dueDate),
-    creditsInvoiceId: nullable(input.creditsInvoiceId),
     notes: nullable(input.notes),
+  };
+}
+
+/** All header columns for a NEW document (identity included). */
+function headerColumns(organizationId: string, input: InvoiceInput) {
+  return {
+    organizationId,
+    kind: input.kind,
+    creditsInvoiceId: nullable(input.creditsInvoiceId),
+    ...editableHeaderColumns(input),
   };
 }
 
@@ -356,10 +370,11 @@ export type CreateResult =
   | { readonly ok: true; readonly id: string }
   | { readonly ok: false; readonly error: PrepareError };
 
-/** updateDraft can additionally fail because the target is no longer an editable draft. */
+/** updateDraft can additionally fail because the target is no longer an editable draft, or because
+ * the input tries to change the document's identity (kind / credited invoice). */
 export type UpdateResult =
   | { readonly ok: true; readonly id: string }
-  | { readonly ok: false; readonly error: PrepareError | 'not-a-draft' };
+  | { readonly ok: false; readonly error: PrepareError | 'not-a-draft' | 'kind-immutable' };
 
 /** Create a draft document for the current org from validated input; returns the new id. */
 export async function createDraft(
@@ -387,6 +402,10 @@ export async function createDraft(
 /**
  * Update a DRAFT in place (re-deriving its lines). Only drafts are editable — an issued document is
  * frozen by the SQL trigger; the `status = 'draft'` filter makes the not-a-draft case a no-op (404).
+ * The document's IDENTITY — `kind` and `creditsInvoiceId` — is immutable: input that tries to change
+ * either is refused (`kind-immutable`), and neither column is ever in the UPDATE's SET. Otherwise a
+ * stale/tampered form could revert a credit-note draft into a second POSITIVE invoice of the same
+ * amounts — double-booking revenue instead of correcting it.
  */
 export async function updateDraft(
   tx: OrgTx,
@@ -394,12 +413,28 @@ export async function updateDraft(
   invoiceId: string,
   input: InvoiceInput,
 ): Promise<UpdateResult> {
+  const [current] = await tx
+    .select({
+      status: invoice.status,
+      kind: invoice.kind,
+      creditsInvoiceId: invoice.creditsInvoiceId,
+    })
+    .from(invoice)
+    .where(eq(invoice.id, invoiceId))
+    .limit(1);
+  if (!current || current.status !== 'draft') return { ok: false, error: 'not-a-draft' };
+  if (
+    input.kind !== current.kind ||
+    nullable(input.creditsInvoiceId) !== current.creditsInvoiceId
+  ) {
+    return { ok: false, error: 'kind-immutable' };
+  }
   const prepared = await prepareInvoice(tx, input);
   if (!prepared.ok) return prepared;
   const updated = await tx
     .update(invoice)
     .set({
-      ...headerColumns(organizationId, input),
+      ...editableHeaderColumns(input),
       netOre: prepared.net,
       vatOre: prepared.vat,
       grossOre: prepared.gross,
@@ -407,7 +442,7 @@ export async function updateDraft(
     })
     .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')))
     .returning({ id: invoice.id });
-  if (updated.length === 0) return { ok: false, error: 'not-a-draft' }; // not a draft / not found
+  if (updated.length === 0) return { ok: false, error: 'not-a-draft' }; // raced away mid-tx
   await tx.delete(invoiceLine).where(eq(invoiceLine.invoiceId, invoiceId));
   await insertLines(tx, organizationId, invoiceId, prepared.lines);
   return { ok: true, id: invoiceId };
@@ -432,6 +467,16 @@ export async function issueInvoice(
   invoiceId: string,
   dates: { readonly issueDate: string; readonly dueDate: string },
 ): Promise<IssueResult> {
+  // Lock the document row FIRST (FOR UPDATE): a concurrent issue (double-click) serializes here, and
+  // the loser sees `issued` and returns typed — BEFORE it can draw a gapless number it would then
+  // have to waste. The not-a-draft answer must never cost a number.
+  const [locked] = await tx
+    .select({ status: invoice.status })
+    .from(invoice)
+    .where(eq(invoice.id, invoiceId))
+    .limit(1)
+    .for('update');
+  if (!locked || locked.status !== 'draft') return { ok: false, error: 'not-a-draft' };
   const current = await readInvoice(tx, invoiceId);
   if (!current || current.status !== 'draft') return { ok: false, error: 'not-a-draft' };
 
@@ -477,7 +522,7 @@ export async function issueInvoice(
     kid = invoiceKid(invoiceNumber);
   }
 
-  await tx
+  const issued = await tx
     .update(invoice)
     .set({
       status: 'issued',
@@ -488,7 +533,13 @@ export async function issueInvoice(
       issuedAt: sql`now()`,
       updatedAt: sql`now()`,
     })
-    .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')));
+    .where(and(eq(invoice.id, invoiceId), eq(invoice.status, 'draft')))
+    .returning({ id: invoice.id });
+  // Unreachable under the FOR UPDATE lock above; if it ever misses, a number may already be drawn, so
+  // THROW to roll the whole issue back (gapless counter included) rather than commit a half-issue.
+  if (issued.length === 0) {
+    throw new Error(`invoice ${invoiceId} stopped being a draft mid-issue`);
+  }
 
   // Post the AR voucher to the general ledger in THIS SAME transaction (atomic with the number
   // allocation). A quote has no ledger effect (it drew no number); an invoice / credit note books one.
@@ -606,7 +657,12 @@ async function postIssuedVoucher(
   );
 }
 
-/** Advance the lifecycle of an issued document (sent / viewed / paid / overdue), stamping its time. */
+/**
+ * Advance the lifecycle of an issued document (sent / viewed / paid / overdue), stamping its time.
+ * The UPDATE is a compare-and-set on the status read above (predicate + row count), so a concurrent
+ * transition that commits in between makes this one return false instead of silently double-stamping
+ * — the reconcile settlement path relies on that to refuse a second "paid".
+ */
 export async function transitionInvoice(
   tx: OrgTx,
   invoiceId: string,
@@ -626,11 +682,12 @@ export async function transitionInvoice(
         : to === 'paid'
           ? { paidAt: sql`now()` }
           : {};
-  await tx
+  const updated = await tx
     .update(invoice)
     .set({ status: to, updatedAt: sql`now()`, ...stamp })
-    .where(eq(invoice.id, invoiceId));
-  return true;
+    .where(and(eq(invoice.id, invoiceId), eq(invoice.status, cur.status)))
+    .returning({ id: invoice.id });
+  return updated.length > 0;
 }
 
 /**

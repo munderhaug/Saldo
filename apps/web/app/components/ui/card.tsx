@@ -22,9 +22,17 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
+function CardTitle({
+  className,
+  as: Comp = 'div',
+  ...props
+}: React.ComponentProps<'div'> & {
+  /** Render as a real heading (`as="h2"`) when the card title IS the section heading — a styled
+   * `<div>` is invisible to screen-reader heading navigation (WCAG 1.3.1, review 2026-07-03 §13). */
+  as?: 'div' | 'h2' | 'h3' | 'h4';
+}) {
   return (
-    <div
+    <Comp
       data-slot="card-title"
       className={cn('font-text leading-none tracking-tight', className)}
       {...props}

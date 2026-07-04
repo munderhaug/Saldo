@@ -20,6 +20,9 @@ Follow the workflow loop; keep the domain pure and the integrity in SQL.
    typecheck/lint. Then run **`/verify`** as an INDEPENDENT judge: it drives the actual app/route and
    observes behavior rather than trusting the diff that just claimed success. The author asserting
    "done" is not evidence; an independent observation is. Don't skip it for "obvious" changes.
+   When the change touches the domain VAT/posting/rules core or the LLM/AI surface, **record** the
+   reviewer pass with a `Reviewed-by: vat-reviewer` / `Reviewed-by: ai-act-reviewer` commit trailer —
+   `pnpm review:check` (CI) fails an unrecorded review on those surfaces.
 8. **Commit** a focused checkpoint.
 
 ## Invariants to honor
@@ -39,4 +42,5 @@ AI proposes only · client authoritative for nothing.
 
 ## Done means (evidence required — see docs/quality-bar.md)
 - [ ] typecheck + lint + format + test green · [ ] new behavior covered by tests
-- [ ] relevant reviewer subagent run · [ ] STATUS.md updated · [ ] lands via a reviewed PR
+- [ ] relevant reviewer subagent run (recorded via `Reviewed-by:` trailer where `review:check`
+  requires it) · [ ] STATUS.md updated · [ ] lands via a reviewed PR

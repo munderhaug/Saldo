@@ -1,0 +1,26 @@
+{
+  "skill_name": "regulatory-update",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Skatteetaten updated the MVA rates for next year; update our reference.",
+      "expected_output": "The primary source captured under db/reference, the compiled page citing it with a fresh verify-by date, and lint:repo passing.",
+      "assertions": [
+        "The primary source is captured under db/reference/<topic>/ as a dated file, not paraphrased from memory",
+        "The compiled page in docs/regulatory cites the raw source in a `## Sources` section",
+        "A future `verify-by:` date is set or refreshed",
+        "`pnpm lint:repo` passes (Sources present, verify-by present, links valid)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our Altinn onboarding page's verify-by date has passed — re-confirm it.",
+      "expected_output": "The in-flux Altinn flow re-confirmed against a captured source with the verify-by moved forward.",
+      "assertions": [
+        "The in-flux flow (Altinn 2→3 / systembruker / tilgangspakke) is re-confirmed against a freshly captured source",
+        "The `verify-by:` date is moved forward by a realistic interval",
+        "The raw capture is committed under db/reference/ with its source URL and collection date"
+      ]
+    }
+  ]
+}

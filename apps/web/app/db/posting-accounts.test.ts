@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  OWNER_ACCOUNTS,
   POSTING_ACCOUNTS,
   POSTING_VAT_CODES,
   REVERSE_CHARGE_ACCOUNTS,
   REVERSE_CHARGE_OUTPUT_CODES,
   SALES_INVOICE_ACCOUNTS,
   SETTLEMENT_ACCOUNTS,
+  SUPPLIER_INVOICE_ACCOUNTS,
 } from './posting.server.js';
 import { STANDARD_ACCOUNTS, STANDARD_VAT_CODES } from './provisioning.server.js';
 
@@ -120,6 +122,43 @@ describe('designated posting accounts/codes are source-grounded', () => {
     for (const kind of Object.values(REVERSE_CHARGE_ACCOUNTS)) {
       for (const number of Object.values(kind.output)) expect(number).toMatch(/^270[4-9]$/);
       for (const number of Object.values(kind.input)) expect(number).toMatch(/^271[4-8]$/);
+    }
+  });
+
+  // ── Supplier-invoice AP posting (feat-supplier-invoices) ──
+  it.each(Object.values(SUPPLIER_INVOICE_ACCOUNTS))(
+    'supplier-invoice account %s exists in the committed kontoplan',
+    (number) => {
+      expect(accountNumbers.has(number)).toBe(true);
+    },
+  );
+
+  it('designates a liability supplier payable and an input-VAT account', () => {
+    const typeOf = (number: string) => STANDARD_ACCOUNTS.find((a) => a.number === number)?.type;
+    expect(typeOf(SUPPLIER_INVOICE_ACCOUNTS.payable)).toBe('equity_liability'); // 2400 Leverandørgjeld
+    expect(typeOf(SUPPLIER_INVOICE_ACCOUNTS.inputVat)).toBe('equity_liability'); // 2710 Inngående mva
+  });
+
+  // ── Owner-economy events: drawings / outlay / mileage / diett (feat-supplier-invoices) ──
+  const ownerAccounts = [
+    OWNER_ACCOUNTS.drawings,
+    OWNER_ACCOUNTS.equity,
+    OWNER_ACCOUNTS.bank,
+    OWNER_ACCOUNTS.inputVat,
+    ...Object.values(OWNER_ACCOUNTS.cost),
+  ];
+
+  it.each(ownerAccounts)('owner-event account %s exists in the committed kontoplan', (number) => {
+    expect(accountNumbers.has(number)).toBe(true);
+  });
+
+  it('designates owner equity (klasse 2) against a bank asset and expense cost accounts', () => {
+    const typeOf = (number: string) => STANDARD_ACCOUNTS.find((a) => a.number === number)?.type;
+    expect(typeOf(OWNER_ACCOUNTS.drawings)).toBe('equity_liability'); // 2060 Uttak kontanter
+    expect(typeOf(OWNER_ACCOUNTS.equity)).toBe('equity_liability'); // 2062 Innskudd kontanter
+    expect(typeOf(OWNER_ACCOUNTS.bank)).toBe('asset'); // 1920 Bankinnskudd
+    for (const number of Object.values(OWNER_ACCOUNTS.cost)) {
+      expect(typeOf(number)).toBe('expense'); // 7798 / 7100 / 7160
     }
   });
 });

@@ -10,7 +10,7 @@ import { z } from 'zod';
 import type { Route } from './+types/orgs.$orgId.reports';
 import { withUserOrg } from '~/auth/auth.server';
 import { readOrgOverview } from '~/db/organizations.server';
-import { resolveReportYear } from '~/lib/reporting';
+import { resolveYear } from '~/lib/fiscal-year';
 import { ReportShell } from '~/components/report-shell';
 import { Card, CardContent, CardTitle } from '~/components/ui/card';
 import { t } from '~/copy';
@@ -27,7 +27,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
     throw new Response('Not found', { status: 404 });
   }
-  const year = resolveReportYear(request);
+  const year = resolveYear(request);
   const overview = await withUserOrg(request, params.orgId, (tx) =>
     readOrgOverview(tx, params.orgId),
   );
@@ -62,7 +62,9 @@ export default function ReportsHubRoute({ loaderData }: Route.ComponentProps) {
             >
               <Card className="hover:border-primary transition-colors">
                 <CardContent className="grid gap-1 pt-6">
-                  <CardTitle className="font-text text-primary text-lg">{t(r.title)}</CardTitle>
+                  <CardTitle as="h2" className="font-text text-primary text-lg">
+                    {t(r.title)}
+                  </CardTitle>
                   <p className="text-muted-foreground text-sm">{t(r.desc)}</p>
                 </CardContent>
               </Card>

@@ -5,12 +5,14 @@
  * — NOT an AI system. Off any shared cache.
  */
 import { z } from 'zod';
+import { ReportTotalRow as TotalRow } from '~/components/report-total-row';
 import { buildBalanse, buildResultat } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.reports.balanse';
 import { withUserOrg } from '~/auth/auth.server';
 import { aggregateAccountBalances } from '~/db/reporting.server';
 import { readOrgOverview } from '~/db/organizations.server';
-import { kr, resolveReportYear } from '~/lib/reporting';
+import { kr } from '~/lib/money-format';
+import { resolveYear } from '~/lib/fiscal-year';
 import { Money } from '~/components/money';
 import { ReportShell } from '~/components/report-shell';
 import { t } from '~/copy';
@@ -36,7 +38,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
     throw new Response('Not found', { status: 404 });
   }
-  const year = resolveReportYear(request);
+  const year = resolveYear(request);
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     overview: await readOrgOverview(tx, params.orgId),
     balances: await aggregateAccountBalances(tx, year),
@@ -147,18 +149,5 @@ function Section({
         </TableRow>
       ))}
     </>
-  );
-}
-
-function TotalRow({ label, ore }: { label: string; ore: number }) {
-  return (
-    <TableRow className="border-t-2">
-      <th scope="row" className="p-2 text-right align-middle">
-        {label}
-      </th>
-      <TableCell className="tabular text-right">
-        <Money ore={ore} />
-      </TableCell>
-    </TableRow>
   );
 }

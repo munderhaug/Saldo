@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { MoneyText } from '~/components/money';
 import {
   chargesOutputVat,
   formatKr,
@@ -98,7 +99,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 {t('home.reveal.spendableLabel')}
               </p>
               <p className="tabular font-serif text-4xl tracking-tight sm:text-5xl">
-                <Amount value={loaderData.spendable} />
+                <MoneyText value={loaderData.spendable} />
               </p>
               <p className="text-muted-foreground text-sm">
                 {t('home.reveal.spendableHelp', { year })}
@@ -176,21 +177,8 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex items-baseline justify-between gap-4">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="tabular">
-        <Amount value={value} />
+        <MoneyText value={value} />
       </dd>
     </div>
-  );
-}
-
-/**
- * A formatted øre figure with its unit. The visible "kr" glyph is hidden from assistive tech, which
- * instead reads the spelled-out "kroner" — otherwise screen readers announce the letters "k r".
- */
-function Amount({ value }: { value: string }) {
-  return (
-    <>
-      {value}&nbsp;<span aria-hidden="true">{t('common.currency')}</span>
-      <span className="sr-only">{t('common.currencyLong')}</span>
-    </>
   );
 }

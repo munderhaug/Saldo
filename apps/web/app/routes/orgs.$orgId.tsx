@@ -93,7 +93,9 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
       </Card>
 
       <section className="grid gap-3">
-        <CardTitle className="font-text text-lg">{t('orgs.overview.vatTitle')}</CardTitle>
+        <CardTitle as="h2" className="font-text text-lg">
+          {t('orgs.overview.vatTitle')}
+        </CardTitle>
         <Table>
           <TableCaption>{t('orgs.overview.vatCaption', { count: vatCodes.length })}</TableCaption>
           <TableHeader>
@@ -125,7 +127,9 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
       </section>
 
       <nav aria-label={t('orgs.overview.registersTitle')} className="grid gap-3">
-        <CardTitle className="font-text text-lg">{t('orgs.overview.registersTitle')}</CardTitle>
+        <CardTitle as="h2" className="font-text text-lg">
+          {t('orgs.overview.registersTitle')}
+        </CardTitle>
         <ul className="grid gap-2">
           <li>
             <Link
@@ -149,6 +153,22 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
               className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
             >
               {t('invoices.title')}
+            </Link>
+          </li>
+          <li>
+            <Link
+              to={`/orgs/${org.id}/purchases`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('purchases.title')}
+            </Link>
+          </li>
+          <li>
+            <Link
+              to={`/orgs/${org.id}/owner/new`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('owner.new.title')}
             </Link>
           </li>
           <li>
@@ -181,6 +201,14 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
               className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
             >
               {t('saft.title')}
+            </Link>
+          </li>
+          <li>
+            <Link
+              to={`/orgs/${org.id}/settings`}
+              className="text-primary font-text inline-flex min-h-11 w-fit items-center text-sm underline-offset-4 hover:underline"
+            >
+              {t('settings.title')}
             </Link>
           </li>
         </ul>

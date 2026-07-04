@@ -43,7 +43,7 @@
     {
       "id": "pr5-auth",
       "title": "Identity & session foundation (auth) — the missing first lock",
-      "implements_adr": ["0020"],
+      "implements_adr": ["0020", "0055"],
       "status": "done",
       "value": "high",
       "effort": "L",
@@ -194,13 +194,14 @@
     {
       "id": "feat-enhetsregisteret-cache",
       "title": "Enhetsregisteret: EU-resident response cache + rate-limit",
-      "status": "todo",
+      "status": "done",
       "value": "low",
       "effort": "S",
       "phase": "P1-feature",
       "depends_on": ["feat-enhetsregisteret"],
-      "notes": "/oppslag is unauthenticated and hits brreg per request with no cache (currently Cache-Control: private, no-store — responses carry ENK personal data, so must NOT be edge/CDN-cached: residency). Add an EU-resident server-side TTL cache (register is stable) + a basic per-IP/session throttle. Flagged by integration-auditor + privacy-reviewer in the feat-enhetsregisteret PR.",
-      "refs": ["docs/integrations/enhetsregisteret.md", ".claude/rules/data-handling.md"]
+      "notes": "DONE (review 2026-06-28 follow-up + 2026-07-03 hardening): server-side TTL+LRU cache and per-caller fixed-window limiter live in app/integrations/enhetsregisteret/throttle.server.ts (wired in routes/oppslag.tsx). The limiter keys on the TRUSTED right-most X-Forwarded-For hop (lib/client-ip.server.ts) — not the spoofable first entry.",
+      "refs": ["docs/integrations/enhetsregisteret.md", ".claude/rules/data-handling.md"],
+      "touches": ["apps/web/app/integrations/enhetsregisteret/throttle.server.ts"]
     },
     {
       "id": "feat-org-onboarding",
@@ -640,8 +641,8 @@
       "effort": "L",
       "phase": "P1",
       "depends_on": [],
-      "notes": "Owner-requested audit of the whole repo vs AGENTS.md, then fixed end-to-end: P0 correctness (bokføringsplikt vs the 50k MVA threshold; LLM default; deploy docs→ADR 0015; CI-step order; auth ADR ref); neutral-voice sweep (roadmap 'You chose', ADR 'we/our') + a repo-lint voice gate (check I) so it can't recur; 'state a fact once' condensation (build-spec §4.2/§6/§14/§15/§17/§18, domain-model, decisions/README, tech-stack, house-standards); STATUS de-staling; dead integration refs→'(planned)'; status banners; ADR supersession reciprocity; settings.json (db:lint allow / db:rollback gate); mval § 2-1 grounding. See docs/repo-consistency-audit-2026-06-23.md.",
-      "refs": ["docs/repo-consistency-audit-2026-06-23.md", "tools/repo-lint.mjs"]
+      "notes": "Owner-requested audit of the whole repo vs AGENTS.md, then fixed end-to-end: P0 correctness (bokføringsplikt vs the 50k MVA threshold; LLM default; deploy docs→ADR 0015; CI-step order; auth ADR ref); neutral-voice sweep (roadmap 'You chose', ADR 'we/our') + a repo-lint voice gate (check I) so it can't recur; 'state a fact once' condensation (build-spec §4.2/§6/§14/§15/§17/§18, domain-model, decisions/README, tech-stack, house-standards); STATUS de-staling; dead integration refs→'(planned)'; status banners; ADR supersession reciprocity; settings.json (db:lint allow / db:rollback gate); mval § 2-1 grounding. See docs/archive/repo-consistency-audit-2026-06-23.md.",
+      "refs": ["docs/archive/repo-consistency-audit-2026-06-23.md", "tools/repo-lint.mjs"]
     },
     {
       "id": "docs-dedup-invariants-deep",
@@ -828,7 +829,7 @@
       "value": "high",
       "effort": "L",
       "phase": "P3",
-      "implements_adr": ["0042"],
+      "implements_adr": ["0042", "0054"],
       "depends_on": ["feat-contacts-register", "vat-line-level-model"],
       "notes": "Build-spec §8.4. DONE (ADR 0042): `invoice` + `invoice_line` tables in one `kind` model (quote/invoice/credit_note); pure @saldo/domain invoice module (per-line net/VAT via checkSalesLine reusing checkVatLine, document totals, vat breakdown, lifecycle state machine draft->issued->sent->viewed->paid + overdue, invoiceKid mod10) with exhaustive + fast-check tests. Per-line MVA HARD BLOCK is server-authoritative (the action derives every line against the committed SAF-T list and refuses a blocked line; client preview is UX only). GAPLESS numbering via allocate_invoice_number in the issuing tx + per-invoice KID; an issued document is APPEND-ONLY via SQL triggers (financial/identity columns frozen, only status+timestamps advance; lines frozen). RLS tenancy + same-org composite FKs (customer/account/VAT/product/credit-link). Testcontainers integrity test: gaplessness under concurrency AND rollback, immutability of doc + lines, same-org FK rejection, RLS isolation. NO/EN microcopy; WCAG 2.2 AA; §5.5 sober voice on issue. Ledger posting (the AR voucher) is split to feat-invoice-ledger-posting; PDF/email + recurring/reminders remain feat-invoice-pdf-email / feat-recurring-invoices-reminders.",
       "refs": [
@@ -895,13 +896,36 @@
     {
       "id": "feat-supplier-invoices",
       "title": "Supplier invoices, expense rules, owner draws & mileage (purchases completion)",
-      "status": "todo",
+      "implements_adr": ["0056"],
+      "touches": [
+        "packages/domain/src/posting/purchase-invoice.ts",
+        "packages/domain/src/posting/owner.ts",
+        "packages/domain/src/vat/expense-deductibility.ts",
+        "db/migrations",
+        "apps/web/app/db/supplier-invoices.server.ts",
+        "apps/web/app/routes"
+      ],
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P4-feature",
       "depends_on": ["feat-contacts-register", "feat-manual-voucher-entry", "vat-reverse-charge"],
-      "notes": "Build-spec §8.5 + §16 Phase 4. Completes purchases beyond receipt extraction (feat-receipt-extraction, done): manual supplier-invoice entry with per-supplier defaults; the input-VAT fork by MVA status (deriveStandard*); encoded non-deductible rules (representasjon, vehicles, private use); reverse charge on foreign services (vat-reverse-charge); recurring expenses; owner outlays (utlegg) & drawings (privatuttak); mileage/travel deductions (kjøregodtgjørelse/diett) as deductions, not payroll. All posts through the existing append-only ledger path.",
-      "refs": ["docs/saldo-build-specification.md", "packages/domain/src/posting/derive.ts"]
+      "notes": "DONE (ADR 0056): supplier_invoice + supplier_invoice_line tables (no gapless number, draft→posted, append-only once posted) + voucher.supplier_invoice_id link; derivePurchaseInvoice merges per-line derivePurchase/deriveReverseChargePurchase into one balanced AP voucher (input-VAT fork reused, payable credited net on RC lines); expense-deductibility encodes the representasjon/restricted_vehicle/private_use non-deductible reasons (human-recorded → gross to cost); deriveOwnerOutlay (utlegg + mileage/diett, equity contra) + deriveDrawing (privatuttak) post owner-economy events as equity, not payroll; full routes (purchases list/new/detail + owner/new) + exhaustive/property + Testcontainers + route tests. Deferred: recurring expenses (needs graphile-worker runner — see feat-recurring-expenses), goods-withdrawal output VAT, AP aging/supplier reskontro, auto-suggesting a non-deductible reason from the account.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/decisions/0056-supplier-invoices-expense-rules.md"
+      ]
+    },
+    {
+      "id": "feat-recurring-expenses",
+      "title": "Recurring expenses — scheduled supplier-invoice/expense generation",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P4-feature",
+      "depends_on": ["feat-supplier-invoices"],
+      "notes": "Build-spec §8.5 (recurring expenses), deferred from feat-supplier-invoices (ADR 0056). Needs the in-Postgres graphile-worker runner (ADR 0010) actually stood up — recurring INVOICES are likewise still deferred for the same reason. A recurring template + cadence generates a draft supplier invoice per period; the human still confirms/posts (AI/automation never writes the ledger). Pair with recurring-invoice generation when the jobs surface lands.",
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0010-graphile-worker-jobs.md"]
     },
     {
       "id": "feat-banking-import",
@@ -1012,6 +1036,27 @@
       ]
     },
     {
+      "id": "feat-org-payout-account",
+      "title": "Org payout-account settings UI (EHF PayeeFinancialAccount source)",
+      "status": "done",
+      "implements_adr": ["0053"],
+      "value": "medium",
+      "effort": "S",
+      "phase": "P8",
+      "depends_on": ["feat-saft-export"],
+      "touches": [
+        "apps/web/app/routes/orgs.$orgId.settings.tsx",
+        "apps/web/app/db/organizations.server.ts",
+        "apps/web/app/contracts/organization.ts",
+        "packages/domain/src/ids/bank-account.ts"
+      ],
+      "notes": "DONE (ADR 0053). Settings route reads/writes organization.invoice_payment_account[_name] — the EHF cac:PayeeFinancialAccount the read/emit path already consumes. New domain isValidBankAccount (Norwegian BBAN mod-11 / Norwegian IBAN mod-97) validates at the action boundary, mirroring the org-nr pattern; stored normalized; column stays nullable (no regression). Route + domain (exhaustive + property) tests.",
+      "refs": [
+        "docs/decisions/0053-org-payout-account.md",
+        "db/migrations/20260629064638_org_invoice_payment_account.sql"
+      ]
+    },
+    {
       "id": "feat-audit-log",
       "title": "Immutable audit trail (sporbarhet) + full data export (anti-lock-in)",
       "status": "todo",
@@ -1100,6 +1145,41 @@
       "depends_on": [],
       "notes": "Derive the structural map (packages, domain submodules, web modules, route count, SQL integrity surface) into an AUTOGEN block in docs/architecture.md (pnpm arch:refresh), gate the drift in repo-lint, and mechanically enforce the one hard boundary: @saldo/domain source must be relative-imports-only with no Date.now/Math.random/new Date.",
       "refs": ["docs/decisions/0049-architecture-truth-generator.md"]
+    },
+    {
+      "id": "harness-verification-gates",
+      "title": "Harness verification gates (reviewer gate, skill evals, incremental gates)",
+      "implements_adr": ["0057"],
+      "touches": [
+        "tools/review-gate.mjs",
+        "tools/eval-validate.mjs",
+        "tools/skill-eval.mjs",
+        ".claude/scripts/precommit-check.sh",
+        ".claude/scripts/green-bar.sh",
+        ".claude/scripts/review-reminder.sh",
+        ".github/workflows/ci.yml"
+      ],
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Make the harness keep its own promises: review:check (CI) fails a domain VAT/posting/rules or LLM/AI diff without a Reviewed-by trailer; eval:validate (CI) fails a load-bearing skill missing well-formed trigger+output evals (the five now carry them); precommit-check scopes to the edited package and green-bar runs the domain suite only on source-touching turns; reviewer agents use model: inherit; next-adr bundled+tested. NOTE: registering review-reminder.sh + the synced allowlist in settings.json is pending (auto-mode self-modification guard) — the CI gate enforces regardless.",
+      "refs": ["docs/decisions/0057-harness-verification-gates.md"]
+    },
+    {
+      "id": "wire-skatteetaten-validation",
+      "title": "Wire the Skatteetaten MVA validation client to an explicit action on the MVA screen",
+      "touches": [
+        "apps/web/app/routes/orgs.$orgId.mva.tsx",
+        "apps/web/app/integrations/skatteetaten/validation-client.server.ts"
+      ],
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P1-feature",
+      "depends_on": ["feat-mva-melding"],
+      "notes": "The fail-closed validation client exists and is tested but no route calls it (review 2026-07-03 §15 — quarantined until wired). Add a sober 'Valider hos Skatteetaten' action (explicit click, never a silent loader call), render the typed verdict, keep the fail-closed not-configured path calm. Belongs naturally next to feat-altinn-mva-submission."
     }
   ]
 }

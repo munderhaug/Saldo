@@ -5,12 +5,14 @@
  * to the balanse by construction. Deterministic — NOT an AI system. Off any shared cache.
  */
 import { z } from 'zod';
+import { ReportTotalRow } from '~/components/report-total-row';
 import { buildResultat } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.reports.resultat';
 import { withUserOrg } from '~/auth/auth.server';
 import { aggregateAccountBalances } from '~/db/reporting.server';
 import { readOrgOverview } from '~/db/organizations.server';
-import { kontoklasseLabel, resolveReportYear } from '~/lib/reporting';
+import { kontoklasseLabel } from '~/lib/reporting';
+import { resolveYear } from '~/lib/fiscal-year';
 import { Money } from '~/components/money';
 import { ReportShell } from '~/components/report-shell';
 import { t } from '~/copy';
@@ -36,7 +38,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
     throw new Response('Not found', { status: 404 });
   }
-  const year = resolveReportYear(request);
+  const year = resolveYear(request);
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     overview: await readOrgOverview(tx, params.orgId),
     balances: await aggregateAccountBalances(tx, year),
@@ -89,27 +91,28 @@ export default function ResultatRoute({ loaderData }: Route.ComponentProps) {
             {groups.map((g) => (
               <Group key={g.klasse} label={g.label} subtotalØre={g.subtotalØre} lines={g.lines} />
             ))}
-            <SummaryRow
+            <ReportTotalRow
               label={t('reports.resultat.driftsinntekter')}
               ore={loaderData.driftsinntekterØre}
+              strong={false}
             />
-            <SummaryRow
+            <ReportTotalRow
               label={t('reports.resultat.driftskostnader')}
               ore={loaderData.driftskostnaderØre}
+              strong={false}
             />
-            <SummaryRow
+            <ReportTotalRow
               label={t('reports.resultat.driftsresultat')}
               ore={loaderData.driftsresultatØre}
-              strong
             />
-            <SummaryRow
+            <ReportTotalRow
               label={t('reports.resultat.finansposter')}
               ore={loaderData.finansposterØre}
+              strong={false}
             />
-            <SummaryRow
+            <ReportTotalRow
               label={t('reports.resultat.aarsresultat')}
               ore={loaderData.aarsresultatØre}
-              strong
             />
           </TableBody>
         </Table>
@@ -154,18 +157,5 @@ function Group({
         </TableCell>
       </TableRow>
     </>
-  );
-}
-
-function SummaryRow({ label, ore, strong }: { label: string; ore: number; strong?: boolean }) {
-  return (
-    <TableRow className={strong ? 'border-t-2' : undefined}>
-      <th scope="row" className="p-2 text-right align-middle">
-        {label}
-      </th>
-      <TableCell className="tabular text-right">
-        <Money ore={ore} />
-      </TableCell>
-    </TableRow>
   );
 }

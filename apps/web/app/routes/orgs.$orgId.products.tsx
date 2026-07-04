@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { Money } from '~/components/money';
 import { z } from 'zod';
 import {
   createColumnHelper,
@@ -6,7 +7,6 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { formatKr, øre } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.products';
 import { withUserOrg } from '~/auth/auth.server';
 import { listProducts, type ProductListRow } from '~/db/products.server';
@@ -62,7 +62,7 @@ export default function ProductsRoute({ loaderData }: Route.ComponentProps) {
     column.accessor('unit', { header: () => t('products.col.unit') }),
     column.accessor('unitPriceOre', {
       header: () => t('products.col.price'),
-      cell: (info) => `${formatKr(øre(info.getValue()))} ${t('common.currency')}`,
+      cell: (info) => <Money ore={info.getValue()} />,
     }),
   ];
 

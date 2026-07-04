@@ -1,6 +1,8 @@
 # Multi-stage build for the RR7 app (persistent Node server). Runs on an EU-region container host
 # (ADR 0015); the Hetzner/Kamal self-host is the ADR 0008 sovereignty fallback.
-FROM node:22-slim AS base
+# Base image pinned by digest (review 2026-06-28) for reproducible builds; the tag is kept so
+# Dependabot `docker` bumps tag+digest together. Digest = the multi-arch index for `node:22-slim`.
+FROM node:26-slim@sha256:a1d9d671994fc2d26e297ac56b4b1522a8bc7fa71c43b14cd1b1fe6c5116f7dc AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable

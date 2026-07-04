@@ -19,6 +19,7 @@ export const nb = {
 
   // Currency unit shown after a `formatKr()` figure (the figure itself comes from @saldo/domain).
   'common.currency': 'kr',
+  'common.tableRegion': 'Tabell — kan rulles sidelengs',
   // Spelled-out unit for screen readers, so "kr" isn't read as the letters "k r".
   'common.currencyLong': 'kroner',
 
@@ -109,6 +110,8 @@ export const nb = {
   'receipts.new.errorNoImage': 'Last opp et bilde av kvitteringen (JPG eller PNG).',
   'receipts.new.errorImageType': 'Det ser ikke ut som et bilde. Last opp en JPG eller PNG.',
   'receipts.new.errorImageTooLarge': 'Bildet er for stort. Maks 10 MB.',
+  'receipts.new.errorRateLimited':
+    'Mange kvitteringer på kort tid — jeg trenger en liten pause. Prøv igjen om noen minutter.',
   'receipts.new.errorRead':
     'Jeg klarte ikke å lese kvitteringen. Prøv et tydeligere bilde, eller før den opp manuelt.',
   'receipts.new.errorCurrency':
@@ -393,6 +396,8 @@ export const nb = {
   'invoices.error.unknown-vat-code': 'Ukjent MVA-kode på en linje.',
   'invoices.error.notADraft':
     'Bare utkast kan endres. Et utstedt dokument rettes med en kreditnota.',
+  'invoices.error.kind-immutable':
+    'Dokumenttypen og fakturaen en kreditnota retter kan ikke endres. Last siden på nytt og prøv igjen.',
   'invoices.error.credit-note-source-not-posted':
     'Kreditnotaen mangler en utstedt faktura å reversere. Velg fakturaen den retter.',
   'invoices.error.creditNote': 'Kunne ikke lage kreditnota for dette dokumentet.',
@@ -598,6 +603,22 @@ export const nb = {
   'saft.downloadXml': 'Last ned SAF-T (XML)',
   'saft.back': 'Tilbake til oversikten',
 
+  // ── Innstillinger (org-payout-account) — kontonummer for innbetaling (EHF PayeeFinancialAccount) ──
+  'settings.title': 'Innstillinger',
+  'settings.intro': 'Kontonummeret kunder betaler til. Det tas med på fakturaen og i EHF-filen.',
+  'settings.accountLabel': 'Kontonummer for innbetaling',
+  'settings.accountHint':
+    'Norsk kontonummer (11 siffer) eller IBAN. La feltet stå tomt for å fjerne det.',
+  'settings.accountNameLabel': 'Kontohavers navn (valgfritt)',
+  'settings.accountNameHint':
+    'Navnet som står på kontoen, hvis det er et annet enn foretaksnavnet.',
+  'settings.submitSave': 'Lagre',
+  'settings.errorInvalidInput':
+    'Jeg klarte ikke å lese inn det du skrev. Sjekk feltene og prøv igjen.',
+  'settings.errorInvalidAccount':
+    'Dette ser ikke ut som et gyldig kontonummer. Sjekk sifrene en gang til.',
+  'settings.back': 'Tilbake til oversikten',
+
   // ── Rapporter (feat-reporting) — read-only utledning fra det posterte regnskapet ──────────────
   'reports.title': 'Rapporter',
   'reports.period': 'Regnskapsår {year}',
@@ -686,6 +707,115 @@ export const nb = {
   'reports.likviditet.projected': 'Forventet posisjon',
   'reports.likviditet.caption': 'Likvide kontoer (konto 19xx).',
   'reports.likviditet.empty': 'Ingen likvide midler registrert enda.',
+
+  // ── Kjøp — leverandørfakturaer (build-spec §8.5) ─────────────────────────────────────────────────
+  'purchases.title': 'Kjøp og leverandørfakturaer',
+  'purchases.intro': 'Leverandørfakturaer du har mottatt. Før dem inn og bokfør dem.',
+  'purchases.new': 'Ny leverandørfaktura',
+  'purchases.back': 'Tilbake til foretaket',
+  'purchases.empty.body': 'Du har ingen leverandørfakturaer enda. Før inn den første.',
+  'purchases.listCaption': '{count} leverandørfakturaer.',
+  'purchases.col.supplier': 'Leverandør',
+  'purchases.col.number': 'Fakturanr.',
+  'purchases.col.status': 'Status',
+  'purchases.col.date': 'Dato',
+  'purchases.col.due': 'Forfall',
+  'purchases.col.total': 'Sum',
+  'purchases.status.draft': 'Utkast',
+  'purchases.status.posted': 'Bokført',
+
+  // Dokumentskjema (opprett + rediger deler disse).
+  'purchases.form.newTitle': 'Ny leverandørfaktura',
+  'purchases.form.editTitle': 'Rediger utkast',
+  'purchases.form.intro':
+    'Før inn leverandøren og linjene. Du kan lagre som utkast og bokføre når du er klar.',
+  'purchases.form.supplierLegend': 'Leverandør',
+  'purchases.form.supplierPicker': 'Hent fra kontakter',
+  'purchases.form.supplierPickerHint':
+    'Velg en leverandør for å forhåndsutfylle navn og betingelser. Valgfritt.',
+  'purchases.form.supplierName': 'Leverandørnavn',
+  'purchases.form.supplierOrgNr': 'Organisasjonsnummer',
+  'purchases.form.invoiceNumber': 'Leverandørens fakturanummer',
+  'purchases.form.kid': 'KID eller betalingsreferanse',
+  'purchases.form.currency': 'Valuta',
+  'purchases.form.invoiceDate': 'Fakturadato',
+  'purchases.form.dueDate': 'Forfallsdato',
+  'purchases.form.notes': 'Notat',
+  'purchases.form.notesHint': 'Valgfri tekst på dokumentet.',
+  'purchases.form.linesLegend': 'Linjer',
+  'purchases.form.addLine': 'Legg til linje',
+  'purchases.form.removeLine': 'Fjern linje',
+  'purchases.form.line.description': 'Beskrivelse',
+  'purchases.form.line.quantity': 'Antall',
+  'purchases.form.line.unit': 'Enhet',
+  'purchases.form.line.price': 'Pris uten mva',
+  'purchases.form.line.account': 'Kostnadskonto',
+  'purchases.form.line.vat': 'MVA-kode',
+  'purchases.form.line.deduction': 'Fradrag for inngående mva',
+  'purchases.form.deduction.full': 'Fullt fradrag',
+  'purchases.form.deduction.representasjon': 'Representasjon — ikke fradrag',
+  'purchases.form.deduction.restricted_vehicle': 'Personkjøretøy — ikke fradrag',
+  'purchases.form.deduction.private_use': 'Privat bruk — ikke fradrag',
+  'purchases.form.noneOption': 'Ingen',
+  'purchases.form.chooseOption': 'Velg …',
+  'purchases.form.totalsNet': 'Netto',
+  'purchases.form.totalsVat': 'Merverdiavgift',
+  'purchases.form.totalsGross': 'Sum å betale',
+  'purchases.form.submitCreate': 'Lagre utkast',
+  'purchases.form.submitSave': 'Lagre endringer',
+  'purchases.form.errorInvalidInput': 'Sjekk feltene og prøv igjen.',
+  // Linjevise blokkeringer (server-autoritativt; vist som en skjemafeil).
+  'purchases.error.output-code-not-a-purchase':
+    'Denne MVA-koden er for salg, ikke kjøp. Velg en kjøpskode.',
+  'purchases.error.unknown-vat-code': 'Ukjent MVA-kode på en linje.',
+  'purchases.error.not-a-draft':
+    'Bare utkast kan endres. Et bokført dokument rettes med et motbilag.',
+  'purchases.error.missing-invoice-date': 'Sett en fakturadato før du bokfører.',
+  'purchases.error.rule-violation':
+    'Føringen passerte ikke kontrollen. Sjekk linjene og prøv igjen.',
+  'purchases.error.generic': 'Noe gikk galt. Prøv igjen.',
+
+  // Detaljvisning + bokføring. Nøktern tone for den konsekvensrike handlingen (§5.5).
+  'purchases.detail.draftTitle': 'Leverandørfaktura (utkast)',
+  'purchases.detail.postedTitle': 'Leverandørfaktura',
+  'purchases.detail.supplier': 'Leverandør',
+  'purchases.detail.invoiceNumber': 'Fakturanummer',
+  'purchases.detail.date': 'Fakturadato',
+  'purchases.detail.due': 'Forfall',
+  'purchases.detail.linesCaption': 'Linjer på fakturaen.',
+  'purchases.detail.lineHeaderDescription': 'Beskrivelse',
+  'purchases.detail.lineHeaderAmount': 'Netto',
+  'purchases.detail.net': 'Netto',
+  'purchases.detail.vat': 'Merverdiavgift',
+  'purchases.detail.gross': 'Sum',
+  'purchases.detail.edit': 'Rediger',
+  'purchases.detail.postIntro':
+    'Når du bokfører, føres fakturaen i regnskapet som leverandørgjeld.',
+  'purchases.detail.post': 'Bokfør',
+  'purchases.detail.posted': 'Bokført',
+  'purchases.detail.postedNote':
+    'Fakturaen er ført i regnskapet. Rett den med et motbilag om nødvendig.',
+
+  // ── Privatøkonomi — uttak, utlegg, kjøregodtgjørelse og diett (build-spec §8.5) ───────────────────
+  // §5.5: penger som flytter inn/ut av foretaket — nøktern, klar tone, ingen pynt.
+  'owner.new.title': 'Privatuttak og utlegg',
+  'owner.new.intro': 'Penger mellom deg og foretaket. Det blir bokført med en gang.',
+  'owner.new.kindLegend': 'Hva gjelder det?',
+  'owner.new.kind.drawing.label': 'Privatuttak',
+  'owner.new.kind.drawing.desc': 'Penger du tar ut av foretaket til privat bruk.',
+  'owner.new.kind.outlay.label': 'Utlegg',
+  'owner.new.kind.outlay.desc': 'En utgift for foretaket som du betalte privat.',
+  'owner.new.kind.mileage.label': 'Kjøregodtgjørelse',
+  'owner.new.kind.mileage.desc': 'Godtgjørelse for bruk av egen bil — et fradrag, ikke lønn.',
+  'owner.new.kind.diett.label': 'Diett',
+  'owner.new.kind.diett.desc': 'Kostgodtgjørelse på reise — et fradrag, ikke lønn.',
+  'owner.new.amountLabel': 'Beløp',
+  'owner.new.amountHint': 'Beløpet i kroner. For utlegg: uten mva når foretaket er MVA-registrert.',
+  'owner.new.confirmNote': 'Beløpet bokføres som en føring mot egenkapitalen din.',
+  'owner.new.submit': 'Bokfør',
+  'owner.new.cancel': 'Avbryt',
+  'owner.new.errorInvalidInput': 'Sjekk feltene og prøv igjen.',
+  'owner.new.errorGeneric': 'Noe gikk galt. Prøv igjen.',
 } as const;
 
 export type Messages = typeof nb;
@@ -701,6 +831,7 @@ export const en = {
   'app.tagline': 'Accounting and invoicing for small Norwegian sole proprietorships.',
 
   'common.currency': 'kr',
+  'common.tableRegion': 'Table — scrolls sideways',
   'common.currencyLong': 'kroner',
 
   'home.heading': "You're caught up",
@@ -776,6 +907,8 @@ export const en = {
   'receipts.new.errorNoImage': 'Upload a photo of the receipt (JPG or PNG).',
   'receipts.new.errorImageType': "That doesn't look like an image. Upload a JPG or PNG.",
   'receipts.new.errorImageTooLarge': 'The image is too large. Max 10 MB.',
+  'receipts.new.errorRateLimited':
+    'That is a lot of receipts in a short time — I need a short break. Try again in a few minutes.',
   'receipts.new.errorRead':
     "I couldn't read the receipt. Try a clearer photo, or record it manually.",
   'receipts.new.errorCurrency':
@@ -1051,6 +1184,8 @@ export const en = {
   'invoices.error.unknown-vat-code': 'Unknown VAT code on a line.',
   'invoices.error.notADraft':
     'Only a draft can be changed. Correct an issued document with a credit note.',
+  'invoices.error.kind-immutable':
+    'The document type and the invoice a credit note corrects cannot be changed. Reload the page and try again.',
   'invoices.error.credit-note-source-not-posted':
     'This credit note has no issued invoice to reverse. Pick the invoice it corrects.',
   'invoices.error.creditNote': 'Could not create a credit note for this document.',
@@ -1252,6 +1387,21 @@ export const en = {
   'saft.downloadXml': 'Download SAF-T (XML)',
   'saft.back': 'Back to overview',
 
+  // ── Settings (org-payout-account) — invoice payout account (EHF PayeeFinancialAccount) ─────────
+  'settings.title': 'Settings',
+  'settings.intro':
+    'The account number customers pay into. It appears on the invoice and the EHF file.',
+  'settings.accountLabel': 'Payout account number',
+  'settings.accountHint':
+    'A Norwegian account number (11 digits) or IBAN. Leave it blank to remove it.',
+  'settings.accountNameLabel': 'Account holder name (optional)',
+  'settings.accountNameHint': 'The name on the account, if it differs from the business name.',
+  'settings.submitSave': 'Save',
+  'settings.errorInvalidInput': "I couldn't read what you entered. Check the fields and try again.",
+  'settings.errorInvalidAccount':
+    "That doesn't look like a valid account number. Double-check the digits.",
+  'settings.back': 'Back to overview',
+
   // ── Reports (feat-reporting) — read-only derivation from the posted ledger ────────────────────
   'reports.title': 'Reports',
   'reports.period': 'Fiscal year {year}',
@@ -1340,4 +1490,109 @@ export const en = {
   'reports.likviditet.projected': 'Projected position',
   'reports.likviditet.caption': 'Liquid accounts (account 19xx).',
   'reports.likviditet.empty': 'No liquid funds recorded yet.',
+
+  // ── Purchases — supplier invoices (build-spec §8.5) ──────────────────────────────────────────────
+  'purchases.title': 'Purchases and supplier invoices',
+  'purchases.intro': 'Supplier invoices you have received. Enter them and post them.',
+  'purchases.new': 'New supplier invoice',
+  'purchases.back': 'Back to the company',
+  'purchases.empty.body': 'You have no supplier invoices yet. Enter the first one.',
+  'purchases.listCaption': '{count} supplier invoices.',
+  'purchases.col.supplier': 'Supplier',
+  'purchases.col.number': 'Invoice no.',
+  'purchases.col.status': 'Status',
+  'purchases.col.date': 'Date',
+  'purchases.col.due': 'Due',
+  'purchases.col.total': 'Total',
+  'purchases.status.draft': 'Draft',
+  'purchases.status.posted': 'Posted',
+
+  // Document form (create + edit share these).
+  'purchases.form.newTitle': 'New supplier invoice',
+  'purchases.form.editTitle': 'Edit draft',
+  'purchases.form.intro':
+    'Enter the supplier and the lines. You can save as a draft and post when ready.',
+  'purchases.form.supplierLegend': 'Supplier',
+  'purchases.form.supplierPicker': 'Fetch from contacts',
+  'purchases.form.supplierPickerHint': 'Pick a supplier to prefill name and terms. Optional.',
+  'purchases.form.supplierName': 'Supplier name',
+  'purchases.form.supplierOrgNr': 'Organisation number',
+  'purchases.form.invoiceNumber': "The supplier's invoice number",
+  'purchases.form.kid': 'KID or payment reference',
+  'purchases.form.currency': 'Currency',
+  'purchases.form.invoiceDate': 'Invoice date',
+  'purchases.form.dueDate': 'Due date',
+  'purchases.form.notes': 'Note',
+  'purchases.form.notesHint': 'Optional text on the document.',
+  'purchases.form.linesLegend': 'Lines',
+  'purchases.form.addLine': 'Add line',
+  'purchases.form.removeLine': 'Remove line',
+  'purchases.form.line.description': 'Description',
+  'purchases.form.line.quantity': 'Quantity',
+  'purchases.form.line.unit': 'Unit',
+  'purchases.form.line.price': 'Price excl. VAT',
+  'purchases.form.line.account': 'Cost account',
+  'purchases.form.line.vat': 'VAT code',
+  'purchases.form.line.deduction': 'Input VAT deduction',
+  'purchases.form.deduction.full': 'Full deduction',
+  'purchases.form.deduction.representasjon': 'Entertainment — no deduction',
+  'purchases.form.deduction.restricted_vehicle': 'Passenger vehicle — no deduction',
+  'purchases.form.deduction.private_use': 'Private use — no deduction',
+  'purchases.form.noneOption': 'None',
+  'purchases.form.chooseOption': 'Choose …',
+  'purchases.form.totalsNet': 'Net',
+  'purchases.form.totalsVat': 'VAT',
+  'purchases.form.totalsGross': 'Total payable',
+  'purchases.form.submitCreate': 'Save draft',
+  'purchases.form.submitSave': 'Save changes',
+  'purchases.form.errorInvalidInput': 'Check the fields and try again.',
+  'purchases.error.output-code-not-a-purchase':
+    'This VAT code is for sales, not purchases. Pick a purchase code.',
+  'purchases.error.unknown-vat-code': 'Unknown VAT code on a line.',
+  'purchases.error.not-a-draft':
+    'Only drafts can be changed. A posted document is corrected with a reversal.',
+  'purchases.error.missing-invoice-date': 'Set an invoice date before posting.',
+  'purchases.error.rule-violation':
+    'The entry did not pass validation. Check the lines and try again.',
+  'purchases.error.generic': 'Something went wrong. Try again.',
+
+  'purchases.detail.draftTitle': 'Supplier invoice (draft)',
+  'purchases.detail.postedTitle': 'Supplier invoice',
+  'purchases.detail.supplier': 'Supplier',
+  'purchases.detail.invoiceNumber': 'Invoice number',
+  'purchases.detail.date': 'Invoice date',
+  'purchases.detail.due': 'Due',
+  'purchases.detail.linesCaption': 'Lines on the invoice.',
+  'purchases.detail.lineHeaderDescription': 'Description',
+  'purchases.detail.lineHeaderAmount': 'Net',
+  'purchases.detail.net': 'Net',
+  'purchases.detail.vat': 'VAT',
+  'purchases.detail.gross': 'Total',
+  'purchases.detail.edit': 'Edit',
+  'purchases.detail.postIntro':
+    'When you post, the invoice is recorded in the books as accounts payable.',
+  'purchases.detail.post': 'Post',
+  'purchases.detail.posted': 'Posted',
+  'purchases.detail.postedNote': 'The invoice is recorded. Correct it with a reversal if needed.',
+
+  // ── Owner economy — drawings, outlays, mileage and subsistence (build-spec §8.5) ──────────────────
+  'owner.new.title': 'Drawings and outlays',
+  'owner.new.intro': 'Money between you and the company. It is posted right away.',
+  'owner.new.kindLegend': 'What is it?',
+  'owner.new.kind.drawing.label': 'Drawing',
+  'owner.new.kind.drawing.desc': 'Money you take out of the company for private use.',
+  'owner.new.kind.outlay.label': 'Outlay',
+  'owner.new.kind.outlay.desc': 'A company cost you paid privately.',
+  'owner.new.kind.mileage.label': 'Mileage allowance',
+  'owner.new.kind.mileage.desc': 'Allowance for using your own car — a deduction, not payroll.',
+  'owner.new.kind.diett.label': 'Subsistence',
+  'owner.new.kind.diett.desc': 'Subsistence allowance while travelling — a deduction, not payroll.',
+  'owner.new.amountLabel': 'Amount',
+  'owner.new.amountHint':
+    'The amount in kroner. For an outlay: excl. VAT when the company is VAT-registered.',
+  'owner.new.confirmNote': 'The amount is posted as an entry against your equity.',
+  'owner.new.submit': 'Post',
+  'owner.new.cancel': 'Cancel',
+  'owner.new.errorInvalidInput': 'Check the fields and try again.',
+  'owner.new.errorGeneric': 'Something went wrong. Try again.',
 } satisfies Record<MessageKey, string>;

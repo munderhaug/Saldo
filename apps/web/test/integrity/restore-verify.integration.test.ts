@@ -83,6 +83,30 @@ describe.skipIf(!ledgerDbAvailable)('verify-restore.sql — post-restore integri
     await expect(runVerify('1')).resolves.toBeUndefined();
   });
 
+  it('BITES — raises when an org invoice counter is BEHIND max(invoice_number) (review 2026-07-03 §11)', async () => {
+    // A restore that lost (or rewound) the counter row would re-allocate an already-used number on
+    // the next issue. Seed an issued invoice numbered 5 with a counter stuck at 3, prove the
+    // verifier catches it, then roll back so the shared DB stays intact.
+    const org = await seedOrg(db.sql);
+    await db.sql
+      .begin(async (tx) => {
+        await tx`
+          INSERT INTO invoice
+            (organization_id, kind, status, customer_name, currency, language,
+             invoice_number, kid, issue_date, due_date, issued_at, net_ore, vat_ore, gross_ore)
+          VALUES (${org.orgId}, 'invoice', 'issued', 'Kunde AS', 'NOK', 'nb',
+             5, '0000059', '2026-06-01', '2026-06-15', now(), 100000, 25000, 125000)`;
+        await tx`
+          INSERT INTO invoice_counter (organization_id, next) VALUES (${org.orgId}, 3)`;
+        await tx.unsafe(`SET LOCAL drill.expect_data TO '0'`);
+        await expect(tx.unsafe(doBlock)).rejects.toThrow(/BEHIND max\(invoice_number\)/);
+        throw new Error('rollback');
+      })
+      .catch((e: unknown) => {
+        if (!(e instanceof Error) || e.message !== 'rollback') throw e;
+      });
+  });
+
   it('BITES — raises when an integrity trigger is missing', async () => {
     // Drop one immutability trigger inside a transaction, prove the verifier catches it, then roll
     // back so the shared DB is left intact for any other suite.

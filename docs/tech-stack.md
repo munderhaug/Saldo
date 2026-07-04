@@ -11,6 +11,12 @@
 
 ## Decision table
 
+> **Chosen ≠ installed.** This table fixes the *choice*; the package manifests are the truth for what
+> is installed **today**. Rows marked **(deferred)** are decided but not yet dependencies — each is
+> installed in the same PR as the first feature that consumes it (keeps the tree knip-clean). As of
+> 2026-07-04: React Hook Form + resolvers and TanStack Table **are installed**; Motion, Vaul,
+> vite-plugin-pwa, Dexie, Capacitor, Recharts, visx, graphile-worker and Langfuse are **deferred**.
+
 | Concern | Current choice | OSS | Notes / rationale |
 |---|---|---|---|
 | Language | **TypeScript (strict)**, Node.js 22 LTS | ✅ | `noUncheckedIndexedAccess`, no `any`. Load-bearing for money/VAT correctness. |
@@ -19,10 +25,10 @@
 | UI components | **shadcn/ui** (Radix + Tailwind v4) | ✅ | Own-every-pixel — required for the native-feel PWA, and more agent-legible (component code in-repo). Replaces Mantine. |
 | Forms | **React Hook Form + Zod resolver** | ✅ | Reuses the Zod contracts; huge agent corpus. |
 | Tables | **TanStack Table** (headless) + shadcn styling | ✅ | Ledgers, reskontro, drill-downs. Tabular-nums everywhere figures appear. |
-| Native PWA | **Motion** (gestures/springs), **Vaul** (sheets), **View Transitions API**, **vite-plugin-pwa** (Workbox) | ✅ | Native feel layered on a semantic-HTML substrate, never replacing it. |
-| Offline | **Dexie** (IndexedDB) outbox | ✅ | Receipt-capture queues offline; postings stay online (ADR 0001). |
-| Native escape hatch | **Capacitor** (held in reserve) | ✅ | Same codebase → App Store/Play with native camera/haptics/biometric if iOS PWA limits bite. |
-| Data viz | **Recharts** (workhorse) + **visx** (bespoke) | ✅ | Standard business charts + native-feel mobile sparklines. Keep one chart family. |
+| Native PWA | **Motion** (gestures/springs), **Vaul** (sheets), **View Transitions API**, **vite-plugin-pwa** (Workbox) *(deferred)* | ✅ | Native feel layered on a semantic-HTML substrate, never replacing it. |
+| Offline | **Dexie** (IndexedDB) outbox *(deferred)* | ✅ | Receipt-capture queues offline; postings stay online (ADR 0001). |
+| Native escape hatch | **Capacitor** (held in reserve; not installed) | ✅ | Same codebase → App Store/Play with native camera/haptics/biometric if iOS PWA limits bite. |
+| Data viz | **Recharts** (workhorse) + **visx** (bespoke) *(deferred)* | ✅ | Standard business charts + native-feel mobile sparklines. Keep one chart family. |
 | Database | **PostgreSQL** — hosted on **Neon** (EU; ADR 0013), self-host fallback | ✅ | Relational integrity, triggers, constraints, RLS — the entire architecture. |
 | Queries | **Drizzle ORM** | ✅ | Typed queries. **Schema source of truth = raw SQL migrations**; Drizzle schema generated via `drizzle-kit introspect` → no drift. |
 | Migrations | **dbmate** (SQL-first) | ✅ | Plain `.sql` up/down. All integrity (triggers/RLS/constraints/invoice-counter) lives here, not the ORM. |
@@ -30,16 +36,16 @@
 | CI ephemeral DB | **Testcontainers** | ✅ | Real Postgres per run — tests the actual triggers. Replaces Neon branching (ADR 0014). |
 | Money | branded integer **`Øre`** + custom ESLint rule | ✅ | No `decimal.js`. Integer-only; round half-away-from-zero at boundaries only. |
 | Validation | **Zod** at every boundary | ✅ | Single source of truth for shapes; infer types from schemas. |
-| Auth | **`openid-client` v6 + `@oslojs/*` + Postgres sessions** | ✅ | BankID/Vipps via **Criipto/Signicat** broker (the one unavoidable non-OSS dep). `oslo` umbrella deprecated → `@oslojs/crypto`/`encoding`. ID-porten scoped to Altinn only. |
+| Auth | **`openid-client` v6 + `@oslojs/*` + `@node-rs/argon2` + Postgres sessions** | ✅ | BankID/Vipps via **Criipto/Signicat** broker (the one unavoidable non-OSS dep). `oslo` umbrella deprecated → `@oslojs/crypto`/`encoding`. ID-porten scoped to Altinn only. |
 | Tenancy | app-layer org filter **+ Postgres RLS** via `SET LOCAL app.current_org` | ✅ | Defense-in-depth; GUC pattern (not `auth.uid()`). |
-| Background jobs | **graphile-worker** | ✅ | Runs on the app's Postgres; payloads never leave the DB. Replaces Inngest. |
+| Background jobs | **graphile-worker** *(deferred — ADR 0010 is Proposed; no job runner is wired yet)* | ✅ | Runs on the app's Postgres; payloads never leave the DB. Replaces Inngest. |
 | Email | **nodemailer** (provider-agnostic SMTP) | ✅ | EU provider behind a swappable interface. |
 | PDF | **`@react-pdf/renderer`** | ✅ | Invoice PDFs in React/TS, no headless browser. |
 | E-invoice | typed **UBL builder** + **VEFA validator** | ✅ | EHF/PEPPOL BIS 3.0; validate locally. |
 | LLM / OCR | **OpenAI-compatible abstraction** → **Ollama/vLLM** serving **Qwen2.5-VL** | ✅ | Local-first; hosted is just another base URL. OCR fallback: **Surya/docTR**. **Propose-only.** |
-| LLM observability | **Langfuse** (self-hosted) | ✅ | Traces, evals, cost. |
-| App observability | **OpenTelemetry** + **SigNoz** (or Grafana) ; **GlitchTip** for errors; **pino** logs | ✅ | Fully self-hostable, vendor-independent. |
-| Testing | **Vitest**, **fast-check**, **Testing Library**, **Playwright**, **Testcontainers** | ✅ | Property tests on accounting invariants are the core safety net. |
+| LLM observability | **Langfuse** (self-hosted) *(deferred)* | ✅ | Traces, evals, cost. |
+| App observability | **pino** logs (installed); **OpenTelemetry** + **SigNoz**/Grafana + **GlitchTip** *(deferred)* | ✅ | Fully self-hostable, vendor-independent. Only structured pino logging is wired today. |
+| Testing | **Vitest**, **fast-check**, **Testcontainers** (installed); **Testing Library**, **Playwright** *(deferred)* | ✅ | Property tests on accounting invariants are the core safety net. |
 | Lint/format | **typescript-eslint + Prettier** (+ custom money rule) | ✅ | ESLint kept over Biome specifically for the typed custom rule. |
 | Deploy | **Persistent Node on an EU PaaS** (Railway/Render/Fly EU) + **Cloudflare** edge/CDN + **R2** | 🟡 | Standard-Node host for OAuth/Altinn/PDF/SAF-T/in-process jobs (ADR 0015). Self-host **Docker + Kamal** on Hetzner EU retained as the OSS sovereignty fallback. |
 | SAF-T reference | committed copy of `Skatteetaten/saf-t` | ✅ | Codes/accounts/XSD never hardcoded from memory. |

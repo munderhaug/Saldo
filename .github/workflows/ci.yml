@@ -18,7 +18,9 @@ jobs:
     timeout-minutes: 25 # the full gate matrix incl. real Postgres + build; never trips on a healthy run
     services:
       postgres:
-        image: postgres:16
+        # Digest-pinned like infra/compose.yaml (supply-chain hardening, ADR 0017); Dependabot docker
+        # bumps tag+digest together.
+        image: postgres:16@sha256:fe03a7605299a34ddf5e4f285dff78c3d7190a576b3c6b46f2fcff69f4bffd54
         env:
           POSTGRES_USER: saldo
           POSTGRES_PASSWORD: saldo
@@ -32,11 +34,11 @@ jobs:
     steps:
       # All third-party actions are SHA-pinned (supply-chain hardening, ADR 0017). Dependabot's
       # github-actions ecosystem keeps the pins fresh; the trailing comment tracks the human version.
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0 # full history so commit-lint can resolve origin/main..HEAD
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 22
           cache: pnpm
@@ -50,14 +52,23 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm lint:repo # .claude harness + cited-docs + link integrity + no-contradiction gate
+      - run: pnpm review:check # reviewer gate: domain VAT/posting/rules + AI surface need a recorded review
+      - run: pnpm eval:validate # load-bearing skills must carry well-formed trigger + output evals
       - run: pnpm backlog validate # task graph: schema + no dangling deps + acyclic
       - run: pnpm format:check
       - run: pnpm type-coverage # no implicit-any leaks past the strict bar (>= 97%)
       - run: pnpm knip # dead-code gate: no unused files / exports / types (runs after typegen)
       - run: pnpm test
+      - run: pnpm test:tools # node:test for bundled skill/tool scripts (e.g. ADR numbering)
       - run: pnpm db:lint # squawk: unsafe-migration linter (forward migrations only)
       - run: pnpm db:migrate # migration check against real Postgres
       - run: pnpm db:introspect # schema generation stays in sync with migrations
+      # drizzle-kit introspect mis-derives relations.ts from the composite same-org FKs (documented in
+      # its header; locked by relations.integration.test.ts), so restore the hand-maintained file, then
+      # require the GENERATED schema to be drift-free against what is committed — a migration merged
+      # without re-running introspect fails here instead of shipping a stale schema.ts.
+      - run: git checkout -- apps/web/app/db/relations.ts
+      - run: git diff --exit-code -- apps/web/app/db/ # introspect drift gate (review 2026-07-03 §8)
       - run: pnpm build
       - run: pnpm saft:validate # SAF-T Financial: generate + tie-out + well-formedness + XSD validation (real gate)
       - run: pnpm mva:validate # MVA-melding: generate + well-formedness + grounded subset + tie-out (real gate)
@@ -71,7 +82,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - run: docker build -f infra/docker/Dockerfile -t saldo-web:ci .
       - name: Smoke-test the image boots and serves
         run: |

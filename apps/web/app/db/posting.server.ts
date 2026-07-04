@@ -21,9 +21,13 @@
  */
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
+  deductsInputVat,
+  deriveDrawing,
+  deriveOwnerOutlay,
   deriveReverseChargePurchase,
   deriveStandardExpense,
   deriveStandardIncome,
+  rate,
   rateForCategory,
   reverseChargeInputDeductible,
   reverseChargeKind,
@@ -36,6 +40,7 @@ import {
   type VoucherType,
 } from '@saldo/domain';
 import type { OrgTx } from '../auth/middleware.js';
+import type { OwnerEventKind } from '../contracts/owner-event.js';
 import type { VoucherKind } from '../contracts/voucher.js';
 import { asMvaStatus } from '../lib/org-format.js';
 import { account, fiscalPeriod, organization, posting, vatCode, voucher } from './schema.js';
@@ -117,6 +122,33 @@ export const REVERSE_CHARGE_OUTPUT_CODES = {
   'reduced-middle': '31',
   'reduced-low': '33',
   'reduced-raw-fish': '32',
+} as const;
+
+/**
+ * Designated accounts for posting a SUPPLIER INVOICE's AP voucher (feat-supplier-invoices, §8.5). The
+ * supplier payable (Leverandørgjeld 2400) is credited the document gross; deductible input VAT is
+ * debited to 2710 (Inngående mva — purchases book all rates to the one input account; the rate lives
+ * on the VAT code, not the account). Each line's COST account is the line's own `account_id`. The
+ * reverse-charge VAT accounts come from `REVERSE_CHARGE_ACCOUNTS`. Source-grounded in the committed
+ * kontoplan and verified by `posting-accounts.test.ts`.
+ */
+export const SUPPLIER_INVOICE_ACCOUNTS = { payable: '2400', inputVat: '2710' } as const;
+
+/**
+ * Designated accounts for the owner-economy events of a sole proprietorship (feat-supplier-invoices,
+ * §8.5) — equity movements, NOT payroll. A drawing (privatuttak) debits 2060 (Uttak kontanter) and
+ * credits the bank 1920; an outlay (utlegg) and a tax-free travel allowance credit the owner's equity
+ * contribution 2062 (Innskudd kontanter) against a cost account: outlay → 7798 (annen kostnad, the
+ * manual-expense default), kjøregodtgjørelse → 7100 (Bilgodtgjørelse, opplysningspliktig), diett →
+ * 7160 (Diettkostnad, ikke opplysningspliktig). Source-grounded in the committed kontoplan and verified
+ * by `posting-accounts.test.ts`.
+ */
+export const OWNER_ACCOUNTS = {
+  drawings: '2060',
+  equity: '2062',
+  bank: '1920',
+  inputVat: '2710',
+  cost: { outlay: '7798', mileage: '7100', diett: '7160' },
 } as const;
 
 /** The designated accounts as the branded `AccountNo` shapes the domain derivation expects. */
@@ -358,4 +390,70 @@ export async function recordReverseChargePurchase(
 
   const periodId = await ensureFiscalPeriod(tx, input.organizationId, input.year);
   return insertPostedVoucher(tx, input.organizationId, 'purchase', periodId, proposed);
+}
+
+export type RecordOwnerEventResult =
+  | { ok: true; voucherId: string }
+  | { ok: false; reason: 'rule-violation' | 'chart-incomplete' };
+
+interface RecordOwnerEventInput {
+  readonly organizationId: string;
+  readonly kind: OwnerEventKind;
+  /** Net amount in øre (excl. MVA when registered, for an outlay). Integer-validated at the boundary. */
+  readonly net: number;
+  readonly year: number;
+}
+
+/**
+ * Record one owner-economy event (drawing / outlay / mileage / diett) as a posted voucher — the
+ * sole-proprietor equity movements that post through the ledger, NOT payroll (build-spec §8.5). The leg
+ * layout is the pure `deriveDrawing` / `deriveOwnerOutlay`; an outlay applies the org's STANDARD
+ * input-VAT fork (status-driven, like the manual expense), while mileage/diett carry no VAT. Same
+ * derive → rules → posted chain as the manual path; a blocked combination is a typed result.
+ */
+export async function recordOwnerEvent(
+  tx: OrgTx,
+  input: RecordOwnerEventInput,
+): Promise<RecordOwnerEventResult> {
+  const [org] = await tx
+    .select({ mvaStatus: organization.mvaStatus })
+    .from(organization)
+    .where(eq(organization.id, input.organizationId))
+    .limit(1);
+  if (!org) return { ok: false, reason: 'chart-incomplete' };
+  const status = asMvaStatus(org.mvaStatus);
+  const net = øre(input.net);
+
+  let proposed: Voucher;
+  if (input.kind === 'drawing') {
+    proposed = deriveDrawing(net, {
+      drawings: OWNER_ACCOUNTS.drawings as AccountNo,
+      asset: OWNER_ACCOUNTS.bank as AccountNo,
+    });
+  } else {
+    // outlay applies the standard input-VAT fork (25 % when registered, else gross); mileage/diett have
+    // no VAT (rate 0). The cost account is the event's designated kontoplan line; the contra is owner
+    // equity (Innskudd kontanter). The MVA-status fork lives in derivePurchase via deriveOwnerOutlay.
+    const registered = deductsInputVat(status);
+    const isOutlay = input.kind === 'outlay';
+    const vatRate = isOutlay && registered ? rateForCategory('regular') : rate(0);
+    proposed = deriveOwnerOutlay({
+      net,
+      vatRate,
+      status,
+      accounts: {
+        cost: OWNER_ACCOUNTS.cost[input.kind] as AccountNo,
+        inputVat: OWNER_ACCOUNTS.inputVat as AccountNo,
+        equity: OWNER_ACCOUNTS.equity as AccountNo,
+      },
+      ...(isOutlay && registered ? { vatCode: POSTING_VAT_CODES.input as VatCode } : {}),
+    });
+  }
+
+  // The rules gate (ADR 0002): validate any coded lines before the post (a drawing has none → passes).
+  const verdict = runRules([vatLineRule({ status, codes: STANDARD_TAX_CODE_INDEX })], proposed);
+  if (!verdict.ok) return { ok: false, reason: 'rule-violation' };
+
+  const periodId = await ensureFiscalPeriod(tx, input.organizationId, input.year);
+  return insertPostedVoucher(tx, input.organizationId, proposed.type, periodId, proposed);
 }

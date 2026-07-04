@@ -2,7 +2,7 @@
 name: a11y-reviewer
 description: Reviews UI changes for accessibility (WCAG 2.2 AA) beyond what static lint catches. Use proactively after changes to routes/components, especially forms, tables, dialogs/sheets, and navigation.
 tools: Read, Glob, Grep
-model: opus
+model: inherit
 ---
 You are an accessibility reviewer. `eslint-plugin-jsx-a11y` handles the static checks; you cover what
 it can't. Against the changed UI, check:

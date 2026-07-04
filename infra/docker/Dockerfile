@@ -2,7 +2,7 @@
 # (ADR 0015); the Hetzner/Kamal self-host is the ADR 0008 sovereignty fallback.
 # Base image pinned by digest (review 2026-06-28) for reproducible builds; the tag is kept so
 # Dependabot `docker` bumps tag+digest together. Digest = the multi-arch index for `node:22-slim`.
-FROM node:26-slim@sha256:a1d9d671994fc2d26e297ac56b4b1522a8bc7fa71c43b14cd1b1fe6c5116f7dc AS base
+FROM node:22-slim@sha256:813a7480f28fdadac1f7f5c824bcdad435b5bc1322a5968bbbdef8d058f9dff4 AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -39,4 +39,4 @@ EXPOSE 3000
 # Invoke the server entry directly with node — NOT `pnpm start`: pnpm would run a deps-status check and
 # try to (re)install at boot, and the generated .bin shims bake absolute NODE_PATHs from the build-time
 # deploy dir. `node` resolves deps through pnpm's relative node_modules symlinks regardless of path.
-CMD ["node", "node_modules/@react-router/serve/bin.js", "./build/server/index.js"]
+CMD ["node", "node_modules/@react-router/serve/bin.cjs", "./build/server/index.js"]

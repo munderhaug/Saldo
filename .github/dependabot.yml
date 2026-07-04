@@ -23,3 +23,9 @@ updates:
     directory: '/infra/docker'
     schedule:
       interval: weekly
+    ignore:
+      # The whole toolchain is pinned to Node 22 (.nvmrc, engines, CI setup-node). A base-image major
+      # would silently fork prod off the tested runtime — node:26-slim also drops corepack, breaking
+      # the pnpm bootstrap. Bump the major deliberately, everywhere at once, not via Dependabot.
+      - dependency-name: node
+        update-types: ['version-update:semver-major']

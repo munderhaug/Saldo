@@ -121,6 +121,29 @@ describe('parseCsvStatement — robustness', () => {
     expect(result.errors).toEqual([{ line: 3, reason: 'invalid-amount' }]);
   });
 
+  it('reports the real FILE line for an error after a blank line (review 2026-07-03 §10)', () => {
+    // A blank line between rows must not shift the error's line number: 'rubbish' sits on FILE
+    // line 4 (header 1, row 2, blank 3, rubbish 4).
+    const csv = 'Bel\u00f8p\n100,00\n\nrubbish\n50,00';
+    const result = parseCsvStatement(csv, {
+      map: { amount: 'Bel\u00f8p' },
+      defaultCurrency: 'NOK',
+    });
+    expect(result.transactions.map((t) => t.amount)).toEqual([10000, 5000]);
+    expect(result.errors).toEqual([{ line: 4, reason: 'invalid-amount' }]);
+  });
+
+  it('rejects a malformed currency cell as an error; an absent cell falls back to the default', () => {
+    const csv = 'Bel\u00f8p;Valuta\n100,00;NOK\n50,00;bogus!\n25,00;';
+    const result = parseCsvStatement(csv, {
+      map: { amount: 'Bel\u00f8p', currency: 'Valuta' },
+      defaultCurrency: 'NOK',
+    });
+    expect(result.transactions.map((t) => t.currency)).toEqual(['NOK', 'NOK']);
+    expect(result.transactions.map((t) => t.amount)).toEqual([10000, 2500]);
+    expect(result.errors).toEqual([{ line: 3, reason: 'invalid-currency' }]);
+  });
+
   it('returns nothing for a header-only or empty file', () => {
     expect(
       parseCsvStatement('Beløp', { map: { amount: 'Beløp' }, defaultCurrency: 'NOK' }),

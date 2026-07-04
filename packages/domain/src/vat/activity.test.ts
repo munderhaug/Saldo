@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { indexTaxCodes, parseStandardTaxCodes, type SaftTaxCode } from '../saft/tax-codes.js';
+import type { SaftTaxCode } from '../saft/tax-codes.js';
+import { STANDARD_TAX_CODES as codes, taxCode as code } from '../saft/tax-code-fixtures.js';
 import { checkVatLine } from './line-treatment.js';
 import {
   VAT_ACTIVITIES,
@@ -12,17 +12,6 @@ import {
 } from './activity.js';
 
 // Parse the REAL committed SAF-T list (never hardcode codes from memory — hard invariant §4.3).
-const csv = readFileSync(
-  new URL('../../../../db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv', import.meta.url),
-  'utf8',
-);
-const codes = parseStandardTaxCodes(csv);
-const byCode = indexTaxCodes(codes);
-const code = (c: string): SaftTaxCode => {
-  const found = byCode.get(c as SaftTaxCode['code']);
-  if (found === undefined) throw new Error(`fixture missing committed code ${c}`);
-  return found;
-};
 
 // ── Independent oracle: revenue-treatment code sets hand-read from the committed CSV (not the SUT's
 // classifier), and the exempt-activity hand-list (not the SUT's set). The activity rule's logic below is

@@ -19,6 +19,7 @@
  * in the browser identically.
  */
 import type { Øre } from '../money/ore.js';
+import { isoDayOrdinal } from '../time/iso-date.js';
 import { eqØre } from '../money/ore.js';
 import { isValidKidMod10, isValidKidMod11 } from '../ids/kid.js';
 
@@ -82,23 +83,6 @@ const SCORE: Record<MatchTier, number> = { 'kid-exact': 100, 'amount-date': 60, 
 export function digitRuns(text: string | null): readonly string[] {
   if (text === null) return [];
   return text.match(/\d+/g) ?? [];
-}
-
-/** Parse a strict `YYYY-MM-DD` string to a UTC day ordinal, or `null` if malformed. Pure. */
-function isoDayOrdinal(iso: string | null): number | null {
-  if (iso === null) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!m) return null;
-  const year = Number(m[1]);
-  const month = Number(m[2]);
-  const day = Number(m[3]);
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-  const ms = Date.UTC(year, month - 1, day);
-  const ordinal = Math.floor(ms / 86_400_000);
-  // Reject overflow (e.g. 2026-02-31 rolls into March): the round-trip must match the input.
-  const back = new Date(ms);
-  if (back.getUTCMonth() !== month - 1 || back.getUTCDate() !== day) return null;
-  return ordinal;
 }
 
 /** Whether the bank line's booking date is within the config window of the invoice's due/issue date. */

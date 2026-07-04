@@ -90,7 +90,8 @@ const cleanDate = (value: string | null | undefined): string | null => {
   const text = cleanText(value);
   return text && ISO_DATE.test(text) ? text : null;
 };
-const cleanCurrency = (value: string | null | undefined): string | null => {
+/** Uppercase + validate an ISO-4217 code; `null` when absent or malformed. Shared with the CSV path. */
+export const cleanCurrency = (value: string | null | undefined): string | null => {
   const text = cleanText(value);
   if (!text) return null;
   const upper = text.toUpperCase();

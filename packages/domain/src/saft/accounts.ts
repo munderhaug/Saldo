@@ -5,6 +5,7 @@
  * Account numbers are loaded from this list, never hardcoded from memory.
  */
 import type { AccountNo } from '../posting/types.js';
+import { csvDataRows } from './csv-lines.js';
 
 export interface SaftStandardAccount {
   /** Standard account id — `"10"` (2-digit grouping) or `"1500"` (4-digit). Branded. */
@@ -51,13 +52,7 @@ function splitCsvLine(line: string): string[] {
  * the file contents and does no I/O.
  */
 export function parseStandardAccounts(csv: string): readonly SaftStandardAccount[] {
-  const lines = csv
-    .replace(/^\uFEFF/, '')
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
-
-  const [, ...rows] = lines; // drop the header
+  const rows = csvDataRows(csv);
   return rows.map((row) => {
     const cols = splitCsvLine(row);
     const id = (cols[0] ?? '').trim();

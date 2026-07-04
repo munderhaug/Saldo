@@ -1,9 +1,8 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { addØre, eqØre, mulRate, sumØre, øre, ZERO } from '../money/ore.js';
 import { isValidKidMod10 } from '../ids/kid.js';
-import { indexTaxCodes, parseStandardTaxCodes, type SaftTaxCode } from '../saft/tax-codes.js';
+import { taxCode as code } from '../saft/tax-code-fixtures.js';
 import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
 import {
   checkSalesLine,
@@ -18,18 +17,6 @@ import {
   type FrozenLine,
 } from './invoice.js';
 import { rate } from '../money/ore.js';
-
-// Parse the REAL committed SAF-T list (never hardcode codes from memory — hard invariant §4.3).
-const csv = readFileSync(
-  new URL('../../../../db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv', import.meta.url),
-  'utf8',
-);
-const byCode = indexTaxCodes(parseStandardTaxCodes(csv));
-const code = (c: string): SaftTaxCode => {
-  const found = byCode.get(c as SaftTaxCode['code']);
-  if (found === undefined) throw new Error(`fixture missing committed code ${c}`);
-  return found;
-};
 
 const OUTPUT_25 = code('3'); // 25 % output VAT — registered only
 const FRITATT = code('5'); // zero-rated output (fritatt/export) — registered only

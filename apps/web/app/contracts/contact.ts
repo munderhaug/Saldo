@@ -43,7 +43,15 @@ export const contactInput = z.object({
   // Optional: private persons have no org-nr. '' means none; otherwise 9 digits (spaces stripped).
   // personal: an ENK's / private person's org-nr identifies a natural person.
   orgNr: optionalOrgNrShape,
-  email: z.string().trim().max(320), // personal
+  // Optional, but when set it becomes an SMTP recipient downstream — so it must parse as an address.
+  email: z
+    .string()
+    .trim()
+    .max(320)
+    .refine(
+      (value) => value === '' || z.string().email().safeParse(value).success,
+      'Ugyldig e-postadresse',
+    ), // personal
   phone: z.string().trim().max(40), // personal
   addressLine: z.string().trim().max(200), // personal: an ENK's may be a home address
   postalCode: z.string().trim().max(16),

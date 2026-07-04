@@ -1,9 +1,8 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { øre, sumØre, type Øre } from '../money/ore.js';
 import { orgNr } from '../ids/org-nr.js';
-import { indexTaxCodes, parseStandardTaxCodes } from '../saft/tax-codes.js';
+import { TAX_CODE_INDEX as codeIndex } from '../saft/tax-code-fixtures.js';
 import type { VatCode } from '../posting/types.js';
 import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
 import { ANNUAL_TERM } from './term.js';
@@ -16,12 +15,6 @@ import {
 } from './melding.js';
 import { validateMvaMelding } from './validate.js';
 
-// The REAL committed SAF-T list — codes are loaded, never hardcoded from memory (hard invariant §4.3).
-const csv = readFileSync(
-  new URL('../../../../db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv', import.meta.url),
-  'utf8',
-);
-const codeIndex = indexTaxCodes(parseStandardTaxCodes(csv));
 const ORG = orgNr('974760673');
 
 const meta = (mvaStatus: MvaStatus): MvaMeldingMeta => ({

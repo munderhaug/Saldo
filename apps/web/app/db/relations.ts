@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, invoiceEmail, invoice, account, vatCode, fiscalPeriod, posting, voucher, invoiceCounter, appUser, userSession, contact, aiProvenance, product, invoiceLine, bankAccount, bankTransaction, membership } from "./schema";
+import { organization, invoiceEmail, invoice, account, vatCode, fiscalPeriod, posting, voucher, invoiceCounter, appUser, userSession, contact, aiProvenance, product, invoiceLine, bankAccount, bankTransaction, supplierInvoice, supplierInvoiceLine, membership } from "./schema";
 
 /**
  * Drizzle relations — HAND-MAINTAINED (do not blindly overwrite with `drizzle-kit introspect`).
@@ -49,6 +49,8 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	invoiceLines: many(invoiceLine),
 	bankAccounts: many(bankAccount),
 	bankTransactions: many(bankTransaction),
+	supplierInvoices: many(supplierInvoice),
+	supplierInvoiceLines: many(supplierInvoiceLine),
 	memberships: many(membership),
 }));
 
@@ -83,6 +85,7 @@ export const accountRelations = relations(account, ({one, many}) => ({
 	contacts: many(contact),
 	products: many(product),
 	invoiceLines: many(invoiceLine),
+	supplierInvoiceLines: many(supplierInvoiceLine),
 }));
 
 export const vatCodeRelations = relations(vatCode, ({one, many}) => ({
@@ -94,6 +97,7 @@ export const vatCodeRelations = relations(vatCode, ({one, many}) => ({
 	contacts: many(contact),
 	products: many(product),
 	invoiceLines: many(invoiceLine),
+	supplierInvoiceLines: many(supplierInvoiceLine),
 }));
 
 export const fiscalPeriodRelations = relations(fiscalPeriod, ({one, many}) => ({
@@ -144,6 +148,10 @@ export const voucherRelations = relations(voucher, ({one, many}) => ({
 		fields: [voucher.invoiceId],
 		references: [invoice.id]
 	}),
+	supplierInvoice: one(supplierInvoice, {
+		fields: [voucher.supplierInvoiceId],
+		references: [supplierInvoice.id]
+	}),
 	postings: many(posting),
 	aiProvenances: many(aiProvenance),
 	bankTransactions: many(bankTransaction),
@@ -182,6 +190,7 @@ export const contactRelations = relations(contact, ({one, many}) => ({
 		references: [vatCode.id]
 	}),
 	invoices: many(invoice),
+	supplierInvoices: many(supplierInvoice),
 }));
 
 export const aiProvenanceRelations = relations(aiProvenance, ({one}) => ({
@@ -254,6 +263,38 @@ export const bankTransactionRelations = relations(bankTransaction, ({one}) => ({
 	bankAccount: one(bankAccount, {
 		fields: [bankTransaction.bankAccountId],
 		references: [bankAccount.id]
+	}),
+}));
+
+export const supplierInvoiceRelations = relations(supplierInvoice, ({one, many}) => ({
+	organization: one(organization, {
+		fields: [supplierInvoice.organizationId],
+		references: [organization.id]
+	}),
+	supplier: one(contact, {
+		fields: [supplierInvoice.supplierId],
+		references: [contact.id]
+	}),
+	supplierInvoiceLines: many(supplierInvoiceLine),
+	vouchers: many(voucher),
+}));
+
+export const supplierInvoiceLineRelations = relations(supplierInvoiceLine, ({one}) => ({
+	organization: one(organization, {
+		fields: [supplierInvoiceLine.organizationId],
+		references: [organization.id]
+	}),
+	supplierInvoice: one(supplierInvoice, {
+		fields: [supplierInvoiceLine.supplierInvoiceId],
+		references: [supplierInvoice.id]
+	}),
+	account: one(account, {
+		fields: [supplierInvoiceLine.accountId],
+		references: [account.id]
+	}),
+	vatCode: one(vatCode, {
+		fields: [supplierInvoiceLine.vatCodeId],
+		references: [vatCode.id]
 	}),
 }));
 

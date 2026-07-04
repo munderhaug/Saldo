@@ -14,6 +14,8 @@ export * from './organization';
 export * from './contact';
 export * from './product';
 export * from './invoice';
+export * from './supplier-invoice';
+export * from './owner-event';
 export * from './voucher';
 export * from './receipt-extraction';
 export * from './banking';

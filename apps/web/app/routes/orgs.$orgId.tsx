@@ -22,8 +22,8 @@ import {
   TableRow,
 } from '~/components/ui/table';
 
-export function meta({ data }: Route.MetaArgs) {
-  return [{ title: data?.org.name ?? t('orgs.title') }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [{ title: loaderData?.org.name ?? t('orgs.title') }];
 }
 
 /** This org may hold an ENK's personal data (name/org-nr); keep it off any shared/edge cache. */

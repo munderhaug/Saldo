@@ -13,8 +13,8 @@ import { contactInput, roleFromFlags, type ContactInput } from '~/contracts';
 import { ContactForm } from '~/components/contact-form';
 import { t } from '~/copy';
 
-export function meta({ data }: Route.MetaArgs) {
-  return [{ title: data?.contact.name ?? t('contacts.form.editTitle') }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [{ title: loaderData?.contact.name ?? t('contacts.form.editTitle') }];
 }
 
 export function headers() {

@@ -36,7 +36,7 @@
 | CI ephemeral DB | **Testcontainers** | ✅ | Real Postgres per run — tests the actual triggers. Replaces Neon branching (ADR 0014). |
 | Money | branded integer **`Øre`** + custom ESLint rule | ✅ | No `decimal.js`. Integer-only; round half-away-from-zero at boundaries only. |
 | Validation | **Zod** at every boundary | ✅ | Single source of truth for shapes; infer types from schemas. |
-| Auth | **`openid-client` v6 + `@oslojs/*` + Postgres sessions** | ✅ | BankID/Vipps via **Criipto/Signicat** broker (the one unavoidable non-OSS dep). `oslo` umbrella deprecated → `@oslojs/crypto`/`encoding`. ID-porten scoped to Altinn only. |
+| Auth | **`openid-client` v6 + `@oslojs/*` + `@node-rs/argon2` + Postgres sessions** | ✅ | BankID/Vipps via **Criipto/Signicat** broker (the one unavoidable non-OSS dep). `oslo` umbrella deprecated → `@oslojs/crypto`/`encoding`. ID-porten scoped to Altinn only. |
 | Tenancy | app-layer org filter **+ Postgres RLS** via `SET LOCAL app.current_org` | ✅ | Defense-in-depth; GUC pattern (not `auth.uid()`). |
 | Background jobs | **graphile-worker** *(deferred — ADR 0010 is Proposed; no job runner is wired yet)* | ✅ | Runs on the app's Postgres; payloads never leave the DB. Replaces Inngest. |
 | Email | **nodemailer** (provider-agnostic SMTP) | ✅ | EU provider behind a swappable interface. |
@@ -44,8 +44,8 @@
 | E-invoice | typed **UBL builder** + **VEFA validator** | ✅ | EHF/PEPPOL BIS 3.0; validate locally. |
 | LLM / OCR | **OpenAI-compatible abstraction** → **Ollama/vLLM** serving **Qwen2.5-VL** | ✅ | Local-first; hosted is just another base URL. OCR fallback: **Surya/docTR**. **Propose-only.** |
 | LLM observability | **Langfuse** (self-hosted) *(deferred)* | ✅ | Traces, evals, cost. |
-| App observability | **OpenTelemetry** + **SigNoz** (or Grafana) ; **GlitchTip** for errors; **pino** logs | ✅ | Fully self-hostable, vendor-independent. |
-| Testing | **Vitest**, **fast-check**, **Testing Library**, **Playwright**, **Testcontainers** | ✅ | Property tests on accounting invariants are the core safety net. |
+| App observability | **pino** logs (installed); **OpenTelemetry** + **SigNoz**/Grafana + **GlitchTip** *(deferred)* | ✅ | Fully self-hostable, vendor-independent. Only structured pino logging is wired today. |
+| Testing | **Vitest**, **fast-check**, **Testcontainers** (installed); **Testing Library**, **Playwright** *(deferred)* | ✅ | Property tests on accounting invariants are the core safety net. |
 | Lint/format | **typescript-eslint + Prettier** (+ custom money rule) | ✅ | ESLint kept over Biome specifically for the typed custom rule. |
 | Deploy | **Persistent Node on an EU PaaS** (Railway/Render/Fly EU) + **Cloudflare** edge/CDN + **R2** | 🟡 | Standard-Node host for OAuth/Altinn/PDF/SAF-T/in-process jobs (ADR 0015). Self-host **Docker + Kamal** on Hetzner EU retained as the OSS sovereignty fallback. |
 | SAF-T reference | committed copy of `Skatteetaten/saf-t` | ✅ | Codes/accounts/XSD never hardcoded from memory. |

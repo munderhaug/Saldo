@@ -41,7 +41,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Generate CycloneDX SBOM (pnpm-aware)
         continue-on-error: true # an audit artifact, never a gate
-        run: pnpm dlx @cyclonedx/cdxgen@12.6.0 -t pnpm -o sbom.json --no-recurse
+        run: pnpm exec cdxgen -t pnpm -o sbom.json --no-recurse # lockfile-pinned devDependency, not dlx
       - name: Upload SBOM
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

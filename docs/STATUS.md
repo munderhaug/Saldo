@@ -37,8 +37,13 @@ explicitly quarantined until `wire-skatteetaten-validation`.
 **Open follow-ups from that review:** the two remaining §12/13 nice-to-haves — consolidating the
 remaining bespoke labelled fields beyond the amount inputs, and per-table `aria-label`s at call sites
 (the component accepts one). `recordReverseChargePurchase` is intentionally kept for the in-flight
-supplier-invoices PR (#58). The 2026-07-03 review REPORT itself was not present in the repo — the
-task description's findings list was the working source of truth.
+supplier-invoices PR (#58), and `saftClosingBalanceNet` is kept as the SAF-T export integrity
+tie-out (both were flagged dead). The review report lives on branch `claude/repo-code-review-bbupxz`
+(`docs/repo-code-review-2026-07-03.md` there); every finding was cross-checked against it after it
+surfaced, and the last gaps (db:lint pipe swallow, lockfile-pinned squawk/cdxgen, quote-aware SAF-T
+splitter, the orgs.new/bank.new local Field copies, likviditet total row, CardTitle-as-heading,
+manifest orientation lock, remaining tech-stack rows, the 2026-06-23 audit archived, the
+termMonths/BIMONTHLY_TERMS/imbalance dead exports) were closed in follow-up commits.
 
 ### Review follow-ups landed (2026-06-28 review)
 Auth: OIDC accounts keyed on the immutable `(iss,sub)` (migration; email demoted to an attribute);

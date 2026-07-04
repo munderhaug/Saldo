@@ -145,7 +145,7 @@ for (const f of [...docFiles, join(root, 'AGENTS.md')].filter(existsSync)) {
 // example ("You're caught up") does not trip the gate.
 const voiceAllow = new Set([
   'docs/experience-principles.md',
-  'docs/repo-consistency-audit-2026-06-23.md',
+  'docs/archive/repo-consistency-audit-2026-06-23.md',
 ]);
 const stripSpans = (s) =>
   s

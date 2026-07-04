@@ -19,12 +19,6 @@ export type MvaTerm =
 /** The annual term singleton. */
 export const ANNUAL_TERM: MvaTerm = { kind: 'annual' };
 
-/** The six bimonthly terms, in order. */
-export const BIMONTHLY_TERMS: readonly MvaTerm[] = [1, 2, 3, 4, 5, 6].map((t) => ({
-  kind: 'bimonthly',
-  term: t as 1 | 2 | 3 | 4 | 5 | 6,
-}));
-
 /**
  * The schema enum value for the term's `periode` choice — `skattleggingsperiodeToMaaneder` for a
  * bimonthly term (e.g. `mars-april`), `skattleggingsperiodeAar` = `aarlig` for the annual term. The
@@ -46,16 +40,6 @@ export function periodeValue(term: MvaTerm): string {
 /** The XSD element name inside `<periode>` for the term's choice branch. */
 export function periodElementName(term: MvaTerm): string {
   return term.kind === 'annual' ? 'skattleggingsperiodeAar' : 'skattleggingsperiodeToMaaneder';
-}
-
-/** The inclusive month window [from, to] (1-based) the term covers — the annual term is the full year. */
-export function termMonths(term: MvaTerm): {
-  readonly fromMonth: number;
-  readonly toMonth: number;
-} {
-  if (term.kind === 'annual') return { fromMonth: 1, toMonth: 12 };
-  const fromMonth = term.term * 2 - 1;
-  return { fromMonth, toMonth: fromMonth + 1 };
 }
 
 /** A stable, human-legible key for the term within a year — `2026-T3` or `2026-aar`. */

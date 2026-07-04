@@ -641,8 +641,8 @@
       "effort": "L",
       "phase": "P1",
       "depends_on": [],
-      "notes": "Owner-requested audit of the whole repo vs AGENTS.md, then fixed end-to-end: P0 correctness (bokføringsplikt vs the 50k MVA threshold; LLM default; deploy docs→ADR 0015; CI-step order; auth ADR ref); neutral-voice sweep (roadmap 'You chose', ADR 'we/our') + a repo-lint voice gate (check I) so it can't recur; 'state a fact once' condensation (build-spec §4.2/§6/§14/§15/§17/§18, domain-model, decisions/README, tech-stack, house-standards); STATUS de-staling; dead integration refs→'(planned)'; status banners; ADR supersession reciprocity; settings.json (db:lint allow / db:rollback gate); mval § 2-1 grounding. See docs/repo-consistency-audit-2026-06-23.md.",
-      "refs": ["docs/repo-consistency-audit-2026-06-23.md", "tools/repo-lint.mjs"]
+      "notes": "Owner-requested audit of the whole repo vs AGENTS.md, then fixed end-to-end: P0 correctness (bokføringsplikt vs the 50k MVA threshold; LLM default; deploy docs→ADR 0015; CI-step order; auth ADR ref); neutral-voice sweep (roadmap 'You chose', ADR 'we/our') + a repo-lint voice gate (check I) so it can't recur; 'state a fact once' condensation (build-spec §4.2/§6/§14/§15/§17/§18, domain-model, decisions/README, tech-stack, house-standards); STATUS de-staling; dead integration refs→'(planned)'; status banners; ADR supersession reciprocity; settings.json (db:lint allow / db:rollback gate); mval § 2-1 grounding. See docs/archive/repo-consistency-audit-2026-06-23.md.",
+      "refs": ["docs/archive/repo-consistency-audit-2026-06-23.md", "tools/repo-lint.mjs"]
     },
     {
       "id": "docs-dedup-invariants-deep",

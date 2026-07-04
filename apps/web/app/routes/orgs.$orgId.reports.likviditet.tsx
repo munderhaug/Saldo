@@ -5,6 +5,7 @@
  * NOT an AI system. Off any shared cache.
  */
 import { z } from 'zod';
+import { ReportTotalRow } from '~/components/report-total-row';
 import { buildLiquidity, bucketReskontro, øre } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.reports.likviditet';
 import { withUserOrg } from '~/auth/auth.server';
@@ -103,32 +104,24 @@ export default function LikviditetRoute({ loaderData }: Route.ComponentProps) {
                 </TableCell>
               </TableRow>
             ))}
-            <Line label={t('reports.likviditet.cash')} ore={loaderData.cashØre} strong />
-            <Line
+            <ReportTotalRow label={t('reports.likviditet.cash')} ore={loaderData.cashØre} />
+            <ReportTotalRow
               label={t('reports.likviditet.receivables')}
               ore={loaderData.outstandingReceivablesØre}
+              strong={false}
             />
-            <Line
+            <ReportTotalRow
               label={t('reports.likviditet.payables')}
               ore={loaderData.outstandingPayablesØre}
+              strong={false}
             />
-            <Line label={t('reports.likviditet.projected')} ore={loaderData.projectedØre} strong />
+            <ReportTotalRow
+              label={t('reports.likviditet.projected')}
+              ore={loaderData.projectedØre}
+            />
           </TableBody>
         </Table>
       )}
     </ReportShell>
-  );
-}
-
-function Line({ label, ore, strong }: { label: string; ore: number; strong?: boolean }) {
-  return (
-    <TableRow className={strong ? 'border-t-2' : undefined}>
-      <th scope="row" className="p-2 text-right align-middle">
-        {label}
-      </th>
-      <TableCell className="tabular text-right">
-        <Money ore={ore} />
-      </TableCell>
-    </TableRow>
   );
 }

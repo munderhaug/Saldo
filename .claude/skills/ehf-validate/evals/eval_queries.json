@@ -1,0 +1,47 @@
+[
+  {
+    "query": "I changed the UBL generator, make sure the EHF invoice still validates",
+    "should_trigger": true
+  },
+  {
+    "query": "before I claim our e-invoice is PEPPOL-compliant, can we actually check it?",
+    "should_trigger": true
+  },
+  {
+    "query": "validate the generated EHF against the BIS Billing 3.0 rules",
+    "should_trigger": true
+  },
+  {
+    "query": "I added an allowance/charge line to the e-invoice — does the EHF output still pass?",
+    "should_trigger": true
+  },
+  {
+    "query": "the invoice→EHF route changed, re-run the e-invoice validation",
+    "should_trigger": true
+  },
+  {
+    "query": "is our outbound e-invoice well-formed and rule-clean before we send to the access point?",
+    "should_trigger": true
+  },
+  {
+    "query": "we mapped a new unit code in the UBL builder, confirm BIS still accepts it",
+    "should_trigger": true
+  },
+  { "query": "check the PEPPOL e-invoice XML before the PR", "should_trigger": true },
+  { "query": "validate the SAF-T export against its XSD", "should_trigger": false },
+  { "query": "validate the MVA-melding before submission", "should_trigger": false },
+  { "query": "what is PEPPOL and do Norwegian ENKs have to use EHF?", "should_trigger": false },
+  { "query": "format the generated UBL XML with indentation", "should_trigger": false },
+  {
+    "query": "build the commercial PEPPOL access point so we can actually send invoices",
+    "should_trigger": false
+  },
+  { "query": "write a Zod contract for the e-invoice form", "should_trigger": false },
+  {
+    "query": "the ehf-validate script can't find fast-xml-parser, fix the deps",
+    "should_trigger": false
+  },
+  { "query": "render the invoice as a PDF for email", "should_trigger": false },
+  { "query": "explain the difference between EHF and PEPPOL BIS", "should_trigger": false },
+  { "query": "add a column to store the buyer's PEPPOL participant id", "should_trigger": false }
+]

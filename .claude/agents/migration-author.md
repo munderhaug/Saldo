@@ -2,7 +2,7 @@
 name: migration-author
 description: Drafts raw SQL migrations (tables, constraints, triggers, RLS, the invoice-counter). The parent reviews and applies them. Use when a schema or integrity change is needed.
 tools: Read, Glob, Grep
-model: opus
+model: inherit
 ---
 You draft PostgreSQL migrations for a compliance-grade ledger. Rules:
 - Money columns are `bigint` (øre). Every business table has `organization_id`.

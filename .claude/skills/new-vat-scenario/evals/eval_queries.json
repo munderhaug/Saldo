@@ -1,0 +1,53 @@
+[
+  {
+    "query": "we need to handle reverse charge on consulting services bought from an EU supplier",
+    "should_trigger": true
+  },
+  { "query": "add support for the 15% food VAT rate on invoice lines", "should_trigger": true },
+  {
+    "query": "representation expenses shouldn't have deductible input VAT — fix the posting",
+    "should_trigger": true
+  },
+  {
+    "query": "input VAT is being claimed even when the org is under the threshold, that's wrong",
+    "should_trigger": true
+  },
+  { "query": "implement zero-rated sales for a registered_zero_rated org", "should_trigger": true },
+  {
+    "query": "vehicle running costs are only partly deductible, handle that in the posting",
+    "should_trigger": true
+  },
+  {
+    "query": "the private-use portion of this cost should not have deductible VAT",
+    "should_trigger": true
+  },
+  {
+    "query": "add the 11.11% rate for raw fish sales to the posting logic",
+    "should_trigger": true
+  },
+  {
+    "query": "change how output VAT is calculated when the customer is also VAT-registered abroad",
+    "should_trigger": true
+  },
+  {
+    "query": "the invoice total isn't adding up in the UI preview, fix the component",
+    "should_trigger": false
+  },
+  {
+    "query": "format the VAT amount with two decimals on the invoice PDF",
+    "should_trigger": false
+  },
+  { "query": "add a column to store the VAT code on the posting line", "should_trigger": false },
+  { "query": "what VAT rate applies to e-books in Norway right now?", "should_trigger": false },
+  { "query": "write a test for the existing income-tax estimate", "should_trigger": false },
+  { "query": "the MVA-melding XML is missing the box for reverse charge", "should_trigger": false },
+  {
+    "query": "rename the vatCode field to taxCode across the domain package",
+    "should_trigger": false
+  },
+  {
+    "query": "explain how the input-VAT fork differs across the four MVA statuses",
+    "should_trigger": false
+  },
+  { "query": "set up the database table for storing VAT codes", "should_trigger": false }
+]

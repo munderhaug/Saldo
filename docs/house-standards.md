@@ -14,6 +14,12 @@ harness-design knowledge base; deviations from its defaults are noted with a rea
 - Package runner: `pnpm` (pinned via `packageManager`). Node 22 (`.nvmrc`).
 - **Skill scripts: Node + `tsx`** — DEVIATION from the KB default (Python + uv). Reason: a TS
   monorepo; skill scripts should import the real `@saldo/domain` rather than reimplement logic.
+- **Bundled skill logic is tested, never re-derived from prose.** Non-trivial skill logic lives
+  either in `skill/scripts/*.mjs` (e.g. `new-adr/scripts/next-adr.mjs`) or in a repo `tools/*` script
+  exposed as a `pnpm` command — `pnpm test:tools` runs the `node:test` suites for both.
+- **Subagent model: `inherit`.** Reviewer/author agents inherit the session model; only cheap
+  mechanical agents (`explore`, `test-runner`) pin `sonnet`. Don't hard-pin `opus` — it adds cost and
+  overrides the session's own model choice.
 - Preferred MCP: `postgres` (read-only, local dev), `context7`, `brreg`. Keep the set minimal.
 
 ## 3. Harness design rules
@@ -25,8 +31,10 @@ harness-design knowledge base; deviations from its defaults are noted with a rea
   denying `.env`/secret reads.
 - Skills use progressive disclosure, one default + escape hatch (never a menu of equals). The
   **load-bearing** skills — the ones that gate correctness: `add-migration`, `new-vat-scenario`,
-  `saft-validate`, `new-feature`, `regulatory-update` — get trigger + with/without-skill evals before
-  they're trusted.
+  `saft-validate`, `ehf-validate`, `new-feature`, `regulatory-update` — get trigger + with/without-skill evals before
+  they're trusted. Their sets live in `skill/evals/{eval_queries,evals}.json`; `pnpm eval:validate`
+  (CI) fails if any is missing or malformed, and `pnpm eval:trigger <skill>` runs the trigger loop
+  locally (model-dependent, so not a CI gate). (ADR 0057.)
 - **Evidence before done.** Each load-bearing skill ends with **Red flags — STOP** and **Done means
   (evidence required)** — so a task can't be claimed done without the listed proof (tests green,
   validator passed, reviewer run) — plus a **Rationalizations** table (excuse → reality) where the
@@ -40,13 +48,17 @@ harness-design knowledge base; deviations from its defaults are noted with a rea
 ### Consistency: match each concern to the cheapest mechanism
 Secure consistency with the cheapest mechanism that works; reserve subagents for substantive review.
 - **Hooks / lint / tests** (deterministic) — money rule, jsx-a11y, typecheck/lint gates, property tests.
+- **CI gates** (deterministic, diff-aware) — `review:check` (a recorded `Reviewed-by:` trailer on
+  domain VAT/posting/rules + LLM/AI diffs), `eval:validate` (load-bearing skills carry evals),
+  `test:tools` (bundled skill/tool scripts). The reviewer subagents are thus enforced, not just
+  suggested (ADR 0057).
 - **Path-scoped rules** (always-on constraints) — money, ledger-integrity, vat, frontend, pwa-native,
   integrations, **data-handling (GDPR)**, **accessibility**, **design-system**.
 - **Read-only subagents** (isolated review) — `vat-reviewer`, `privacy-reviewer`, `a11y-reviewer`,
   `integration-auditor`, plus `explore` / `migration-author` / `test-runner`.
 - **Skills** (procedural) — the `.claude/skills/` directory is the source of truth: add-migration,
-  new-vat-scenario, saft-validate, new-feature, html-report, design-review, backlog, handover, new-adr,
-  regulatory-update.
+  new-vat-scenario, saft-validate, ehf-validate, new-feature, html-report, design-review, backlog,
+  handover, new-adr, regulatory-update.
 
 Do NOT create subagents for "repo structure", "app design", or "accounting rules" — those are
 constraints (rules/docs/tests/ADRs), not recurring reviews. Add a new subagent only on a demonstrated
@@ -80,4 +92,4 @@ money/VAT/posting behavior. The authoritative statements live in `AGENTS.md` (in
 > Add an item whenever the same correction is needed twice.
 - (none yet — fill in during the build)
 
-Last updated: 2026-06-23
+Last updated: 2026-06-27

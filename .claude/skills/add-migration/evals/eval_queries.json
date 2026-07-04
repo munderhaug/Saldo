@@ -1,0 +1,47 @@
+[
+  { "query": "I need to add a due_date column to the invoice table", "should_trigger": true },
+  {
+    "query": "we need a new table to store bank reconciliation matches between statement lines and postings",
+    "should_trigger": true
+  },
+  {
+    "query": "add a check constraint so a posting line can't have a zero amount",
+    "should_trigger": true
+  },
+  {
+    "query": "the period lock isn't actually enforced in the database — can you add the trigger?",
+    "should_trigger": true
+  },
+  {
+    "query": "set up row-level security on the new contacts table so one org can't read another org's rows",
+    "should_trigger": true
+  },
+  {
+    "query": "we need gapless numbering for credit notes the same way invoices work",
+    "should_trigger": true
+  },
+  {
+    "query": "make posted vouchers immutable at the db level, not just in the app",
+    "should_trigger": true
+  },
+  { "query": "store the KID on each invoice — add the column", "should_trigger": true },
+  {
+    "query": "I want to record reverse charge so add whatever schema we need for it",
+    "should_trigger": true
+  },
+  { "query": "write a query to list all overdue invoices for an org", "should_trigger": false },
+  {
+    "query": "add client-side validation to the invoice form so the amount can't be negative",
+    "should_trigger": false
+  },
+  { "query": "how do I run the existing migrations locally?", "should_trigger": false },
+  {
+    "query": "the typecheck is failing in app/db/queries/invoices.ts, fix the types",
+    "should_trigger": false
+  },
+  { "query": "add a Zod contract for the new contact payload", "should_trigger": false },
+  { "query": "explain how the invoice counter prevents gaps on rollback", "should_trigger": false },
+  { "query": "the generated schema.ts looks fine, just format the file", "should_trigger": false },
+  { "query": "roll back the migration I just applied", "should_trigger": false },
+  { "query": "why do we keep integrity in SQL instead of the ORM?", "should_trigger": false }
+]

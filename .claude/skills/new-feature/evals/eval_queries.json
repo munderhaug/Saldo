@@ -1,0 +1,47 @@
+[
+  {
+    "query": "add a recurring-invoices feature end to end — domain, db, and the UI",
+    "should_trigger": true
+  },
+  {
+    "query": "build the expenses module: record an expense, post it, and list expenses per org",
+    "should_trigger": true
+  },
+  {
+    "query": "we need a new screen to record and post manual journal entries",
+    "should_trigger": true
+  },
+  {
+    "query": "implement customer statements — a page listing all open items per customer",
+    "should_trigger": true
+  },
+  {
+    "query": "add invoice reminders: the scheduled job plus the settings UI",
+    "should_trigger": true
+  },
+  {
+    "query": "create the products & services catalogue with list/new/edit pages",
+    "should_trigger": true
+  },
+  {
+    "query": "add a bank-import flow: upload a file, parse it, match, and post the settlement",
+    "should_trigger": true
+  },
+  {
+    "query": "I want a whole new dashboard that spans a loader, a domain calc, and components",
+    "should_trigger": true
+  },
+  { "query": "fix the typo in the invoice page heading", "should_trigger": false },
+  { "query": "the contacts list isn't sorting by name, fix the bug", "should_trigger": false },
+  { "query": "add one more column to the existing products table view", "should_trigger": false },
+  { "query": "write an ADR for the reporting decision we made", "should_trigger": false },
+  { "query": "refactor the loader in invoices/new to remove duplication", "should_trigger": false },
+  { "query": "update the README with the local setup steps", "should_trigger": false },
+  { "query": "bump react-router to the latest version", "should_trigger": false },
+  { "query": "add a unit test for the existing pricing helper", "should_trigger": false },
+  {
+    "query": "change the button color on the dashboard to match the token",
+    "should_trigger": false
+  },
+  { "query": "explain how loaders and actions work in this app", "should_trigger": false }
+]

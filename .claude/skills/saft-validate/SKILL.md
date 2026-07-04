@@ -1,6 +1,7 @@
 ---
 name: saft-validate
 description: Generate and XSD-validate a SAF-T Financial export, or validate an MVA-melding against the schema. Use when touching export/reporting logic or before claiming SAF-T/VAT output is correct.
+allowed-tools: Bash(pnpm saft:validate) Bash(pnpm mva:validate) Read Glob Grep
 ---
 # SAF-T validate
 

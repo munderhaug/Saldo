@@ -1,0 +1,28 @@
+{
+  "skill_name": "new-feature",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add an 'expenses' feature: record an expense, derive its posting, and list expenses for an org.",
+      "expected_output": "Pure posting logic in @saldo/domain with tests, a Zod contract, a loader/action boundary, Øre money, and accessible bilingual UI.",
+      "assertions": [
+        "Pure posting/calculation logic lives in @saldo/domain with tests, not inline in the route",
+        "Input is validated with a Zod contract in app/contracts and types are inferred from it",
+        "The loader/action is the authoritative client↔server boundary; the client is trusted for nothing",
+        "Money values use the Øre type and addØre/subØre/mulRate — never number or float math",
+        "Figures use tabular-nums and user-facing copy is bilingual (NO/EN)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Build a page to issue a credit note from an existing invoice.",
+      "expected_output": "An append-only issued document with gapless numbering and a recorded reviewer pass.",
+      "assertions": [
+        "The issued document is append-only (no UPDATE/DELETE of posted rows); correction is via kreditnota",
+        "Credit-note numbering is gapless via the per-org counter, not a SEQUENCE",
+        "Per-line MVA is validated server-side via the domain checkVatLine, not only on the client",
+        "A reviewer subagent is run and recorded with a Reviewed-by trailer where review:check requires it"
+      ]
+    }
+  ]
+}

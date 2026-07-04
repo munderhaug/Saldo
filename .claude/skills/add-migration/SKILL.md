@@ -1,6 +1,7 @@
 ---
 name: add-migration
 description: Create a new raw SQL migration for the Saldo ledger (tables, constraints, triggers, RLS, sequences-via-counter) and regenerate the Drizzle schema. Use when the database schema or any integrity rule must change.
+allowed-tools: Bash(pnpm db:migrate:new:*) Bash(pnpm db:migrate) Bash(pnpm db:introspect) Read Glob Grep
 ---
 # Add a migration
 

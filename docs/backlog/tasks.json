@@ -1147,6 +1147,27 @@
       "refs": ["docs/decisions/0049-architecture-truth-generator.md"]
     },
     {
+      "id": "harness-verification-gates",
+      "title": "Harness verification gates (reviewer gate, skill evals, incremental gates)",
+      "implements_adr": ["0057"],
+      "touches": [
+        "tools/review-gate.mjs",
+        "tools/eval-validate.mjs",
+        "tools/skill-eval.mjs",
+        ".claude/scripts/precommit-check.sh",
+        ".claude/scripts/green-bar.sh",
+        ".claude/scripts/review-reminder.sh",
+        ".github/workflows/ci.yml"
+      ],
+      "status": "done",
+      "value": "high",
+      "effort": "M",
+      "phase": "P0-hardening",
+      "depends_on": [],
+      "notes": "Make the harness keep its own promises: review:check (CI) fails a domain VAT/posting/rules or LLM/AI diff without a Reviewed-by trailer; eval:validate (CI) fails a load-bearing skill missing well-formed trigger+output evals (the five now carry them); precommit-check scopes to the edited package and green-bar runs the domain suite only on source-touching turns; reviewer agents use model: inherit; next-adr bundled+tested. NOTE: registering review-reminder.sh + the synced allowlist in settings.json is pending (auto-mode self-modification guard) — the CI gate enforces regardless.",
+      "refs": ["docs/decisions/0057-harness-verification-gates.md"]
+    },
+    {
       "id": "wire-skatteetaten-validation",
       "title": "Wire the Skatteetaten MVA validation client to an explicit action on the MVA screen",
       "touches": [

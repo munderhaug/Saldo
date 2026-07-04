@@ -1,0 +1,41 @@
+[
+  { "query": "Altinn is moving from 2 to 3 — update our onboarding notes", "should_trigger": true },
+  {
+    "query": "the GoCardless AIS API changed, refresh our integration page",
+    "should_trigger": true
+  },
+  {
+    "query": "Skatteetaten published new MVA rates for 2026, update the reference",
+    "should_trigger": true
+  },
+  { "query": "our PEPPOL page's verify-by date has passed, re-confirm it", "should_trigger": true },
+  { "query": "capture the latest BankID OIDC docs and update our page", "should_trigger": true },
+  {
+    "query": "Regnskap Norge revised the SAF-T standard accounts list, ingest the new version",
+    "should_trigger": true
+  },
+  {
+    "query": "double-check the systembruker / tilgangspakke flow, it's still in flux",
+    "should_trigger": true
+  },
+  {
+    "query": "update our cited source for the bokføringsloven retention period",
+    "should_trigger": true
+  },
+  { "query": "remind me what the standard Norwegian MVA rate is", "should_trigger": false },
+  {
+    "query": "the regulatory docs page has a broken internal link, fix it",
+    "should_trigger": false
+  },
+  { "query": "add a VAT scenario in the domain for the new rate", "should_trigger": false },
+  { "query": "run prettier over the regulatory markdown pages", "should_trigger": false },
+  {
+    "query": "write the client code that calls the Skatteetaten validation API",
+    "should_trigger": false
+  },
+  { "query": "summarize what our eu-ai-act.md page already says", "should_trigger": false },
+  { "query": "the GoCardless client throws a 429 — add backoff", "should_trigger": false },
+  { "query": "explain why we keep raw sources under db/reference", "should_trigger": false },
+  { "query": "rename the docs/integrations folder to docs/external", "should_trigger": false },
+  { "query": "what does verify-by mean in our docs?", "should_trigger": false }
+]

@@ -1,0 +1,26 @@
+{
+  "skill_name": "saft-validate",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I refactored the SAF-T export builder; confirm the output is still valid before I open a PR.",
+      "expected_output": "saft:validate is actually run against the committed XSD, with any line:col/rule failures fixed in the mapping.",
+      "assertions": [
+        "`pnpm saft:validate` is actually run (not skipped, stubbed, or assumed)",
+        "The generated SAF-T file is validated against the official XSD committed under db/reference/saf-t",
+        "On failure, the specific line:col / rule is reported and the mapping (codes/accounts from the SAF-T lists) is corrected",
+        "Correctness is claimed only after validation passes"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Validate the generated MVA-melding before we submit it to Skatteetaten.",
+      "expected_output": "The MVA-melding XML is validated against Skatteetaten's schema with an explicit pass/fail result.",
+      "assertions": [
+        "The MVA-melding XML is validated against Skatteetaten's schema/validation API",
+        "The result is reported explicitly as pass/fail rather than assumed correct",
+        "Any VAT-code/account mapping uses the committed SAF-T lists, not memory"
+      ]
+    }
+  ]
+}

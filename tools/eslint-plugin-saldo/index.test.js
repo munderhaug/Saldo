@@ -13,9 +13,12 @@ import tseslint from 'typescript-eslint';
 import plugin from './index.js';
 
 // RuleTester wires itself to whatever test framework is present; point it at vitest's hooks.
+// The FIRST type-aware case pays the projectService/TypeScript program bootstrap (~6 s on a cold CI
+// runner), so every case gets a generous timeout instead of vitest's 5 s default.
+const CASE_TIMEOUT_MS = 30_000;
 RuleTester.describe = describe;
-RuleTester.it = it;
-RuleTester.itOnly = it.only;
+RuleTester.it = (name, fn) => it(name, fn, CASE_TIMEOUT_MS);
+RuleTester.itOnly = (name, fn) => it.only(name, fn, CASE_TIMEOUT_MS);
 
 const jsxTester = new RuleTester({
   languageOptions: {

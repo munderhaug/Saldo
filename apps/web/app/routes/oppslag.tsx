@@ -29,7 +29,8 @@ export function meta() {
 
 /**
  * Responses can carry an ENK's name/address (personal data). Forbid any shared/edge cache from
- * retaining it (GDPR residency). A proper EU-resident, rate-limited lookup cache is a separate task.
+ * retaining it (GDPR residency). The EU-resident server-side TTL cache + per-caller rate limit live
+ * in `~/integrations/enhetsregisteret/throttle.server` (wired below).
  */
 export function headers() {
   return { 'Cache-Control': 'private, no-store' };

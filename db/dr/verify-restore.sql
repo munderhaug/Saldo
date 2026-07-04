@@ -39,7 +39,7 @@ DECLARE
   -- posted-completeness, period locks). pg_trigger carries no "is an integrity invariant" flag, so this
   -- stays explicit — kept honest by the restore-verify integration test (it BITES on a missing one).
   required_triggers text[] := ARRAY[
-    'posting_balance','posting_immutable','posting_period_lock',
+    'posting_balance','posting_immutable','posting_immutable_insert','posting_period_lock',
     'voucher_immutable','voucher_period_lock','voucher_posted_complete',
     'invoice_immutable','invoice_line_immutable','bank_transaction_append_only'
   ];

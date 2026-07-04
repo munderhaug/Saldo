@@ -7,7 +7,7 @@
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
 **Last updated:** 2026-06-29 — session `review-followups` (the 2026-06-28 repo review, deferred-P0 + P1
-+ P2; see `docs/repo-code-review-2026-06-28.md`); prior `saft-export` (ADR 0052), `reporting` (ADR 0051).
++ P2; see `docs/archive/repo-code-review-2026-06-28.md`); prior `saft-export` (ADR 0052), `reporting` (ADR 0051).
 
 ### Review follow-ups landed (2026-06-28 review)
 Auth: OIDC accounts keyed on the immutable `(iss,sub)` (migration; email demoted to an attribute);
@@ -104,7 +104,7 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
 - **Decisions:** 55 ADRs (0001–0055) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 80 tasks (41 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Backlog:** 81 tasks (42 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-supplier-invoices` [high/L] — Supplier invoices, expense rules, owner draws & mileage (purchases completion)
 <!-- /AUTOGEN:repo-status -->
 

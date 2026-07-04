@@ -39,4 +39,4 @@ EXPOSE 3000
 # Invoke the server entry directly with node — NOT `pnpm start`: pnpm would run a deps-status check and
 # try to (re)install at boot, and the generated .bin shims bake absolute NODE_PATHs from the build-time
 # deploy dir. `node` resolves deps through pnpm's relative node_modules symlinks regardless of path.
-CMD ["node", "node_modules/@react-router/serve/bin.js", "./build/server/index.js"]
+CMD ["node", "node_modules/@react-router/serve/bin.cjs", "./build/server/index.js"]

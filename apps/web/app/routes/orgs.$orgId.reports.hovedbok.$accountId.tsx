@@ -33,7 +33,11 @@ import type { MessageKey } from '~/copy';
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: loaderData ? `${loaderData.account.number} ${loaderData.account.name}` : t('reports.hovedbok.title') },
+    {
+      title: loaderData
+        ? `${loaderData.account.number} ${loaderData.account.name}`
+        : t('reports.hovedbok.title'),
+    },
   ];
 }
 

@@ -62,7 +62,9 @@ export default function ReportsHubRoute({ loaderData }: Route.ComponentProps) {
             >
               <Card className="hover:border-primary transition-colors">
                 <CardContent className="grid gap-1 pt-6">
-                  <CardTitle className="font-text text-primary text-lg">{t(r.title)}</CardTitle>
+                  <CardTitle as="h2" className="font-text text-primary text-lg">
+                    {t(r.title)}
+                  </CardTitle>
                   <p className="text-muted-foreground text-sm">{t(r.desc)}</p>
                 </CardContent>
               </Card>

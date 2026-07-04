@@ -11,6 +11,11 @@ export function meta() {
   return [{ title: t('orgs.title') }];
 }
 
+/** The org list is per-user (names + org-nrs); keep it off any shared cache (review 2026-07-03 §14). */
+export function headers() {
+  return { 'Cache-Control': 'private, no-store' };
+}
+
 /** The org-selection surface: which businesses this user may act for (multi-membership). */
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);

@@ -1,18 +1,11 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { øre } from '../money/ore.js';
-import { indexTaxCodes, parseStandardTaxCodes } from '../saft/tax-codes.js';
+import { TAX_CODE_INDEX as codes } from '../saft/tax-code.fixtures.js';
 import { isBalanced } from '../posting/balance.js';
 import type { AccountNo, PostingLine, VatCode, Voucher } from '../posting/types.js';
 import { runRules } from './types.js';
 import { vatLineRule } from './vat-line.js';
 import { checkVatActivityLine } from '../vat/activity.js';
-
-const csv = readFileSync(
-  new URL('../../../../db/reference/saf-t/tax-codes/Standard_Tax_Codes.csv', import.meta.url),
-  'utf8',
-);
-const codes = indexTaxCodes(parseStandardTaxCodes(csv));
 
 const acc = (s: string): AccountNo => s as AccountNo;
 const vc = (s: string): VatCode => s as VatCode;

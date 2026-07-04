@@ -18,7 +18,9 @@ jobs:
     timeout-minutes: 25 # the full gate matrix incl. real Postgres + build; never trips on a healthy run
     services:
       postgres:
-        image: postgres:16
+        # Digest-pinned like infra/compose.yaml (supply-chain hardening, ADR 0017); Dependabot docker
+        # bumps tag+digest together.
+        image: postgres:16@sha256:fe03a7605299a34ddf5e4f285dff78c3d7190a576b3c6b46f2fcff69f4bffd54
         env:
           POSTGRES_USER: saldo
           POSTGRES_PASSWORD: saldo
@@ -58,6 +60,12 @@ jobs:
       - run: pnpm db:lint # squawk: unsafe-migration linter (forward migrations only)
       - run: pnpm db:migrate # migration check against real Postgres
       - run: pnpm db:introspect # schema generation stays in sync with migrations
+      # drizzle-kit introspect mis-derives relations.ts from the composite same-org FKs (documented in
+      # its header; locked by relations.integration.test.ts), so restore the hand-maintained file, then
+      # require the GENERATED schema to be drift-free against what is committed — a migration merged
+      # without re-running introspect fails here instead of shipping a stale schema.ts.
+      - run: git checkout -- apps/web/app/db/relations.ts
+      - run: git diff --exit-code -- apps/web/app/db/ # introspect drift gate (review 2026-07-03 §8)
       - run: pnpm build
       - run: pnpm saft:validate # SAF-T Financial: generate + tie-out + well-formedness + XSD validation (real gate)
       - run: pnpm mva:validate # MVA-melding: generate + well-formedness + grounded subset + tie-out (real gate)

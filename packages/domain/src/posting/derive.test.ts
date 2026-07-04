@@ -345,3 +345,37 @@ describe('deriveSales — output VAT only when registered', () => {
     );
   });
 });
+
+describe('negative-amount guard (review 2026-07-03 §10)', () => {
+  const accounts = {
+    cost: '4000' as AccountNo,
+    inputVat: '2710' as AccountNo,
+    payable: '2400' as AccountNo,
+  };
+  const salesAccounts = {
+    receivable: '1500' as AccountNo,
+    revenue: '3000' as AccountNo,
+    outputVat: '2700' as AccountNo,
+  };
+
+  it('derivePurchase throws on a negative net (a correction is a motbilag)', () => {
+    expect(() =>
+      derivePurchase({
+        net: øre(-100),
+        vatRate: rate(0.25),
+        status: 'registered_standard',
+        accounts,
+      }),
+    ).toThrow(RangeError);
+  });
+
+  it('deriveSales refuses a negative net typed (never a flipped voucher)', () => {
+    const r = deriveSales({
+      net: øre(-100),
+      vatRate: rate(0.25),
+      status: 'registered_standard',
+      accounts: salesAccounts,
+    });
+    expect(r.ok).toBe(false);
+  });
+});

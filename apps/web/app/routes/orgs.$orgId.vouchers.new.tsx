@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { TextField } from '~/components/form-field';
 import { Form, Link, redirect, useSubmit } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +13,7 @@ import { organization } from '~/db/schema';
 import { asMvaStatus } from '~/lib/org-format';
 import { manualVoucherInput, VOUCHER_KINDS, type ManualVoucherInput } from '~/contracts';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('vouchers.new.title') }];
@@ -142,31 +144,19 @@ export default function NewVoucher({ loaderData, actionData }: Route.ComponentPr
           )}
         </fieldset>
 
-        <div className="grid gap-1.5">
-          <label htmlFor="amount" className="font-text text-sm">
-            {t('vouchers.new.amountLabel')}
-          </label>
-          <input
-            id="amount"
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            aria-describedby={errors.amount ? 'amount-error amount-hint' : 'amount-hint'}
-            aria-invalid={errors.amount ? true : undefined}
-            className="border-input bg-background tabular rounded-md border px-3 py-2 text-sm"
-            {...register('amount')}
-          />
-          <p id="amount-hint" className="text-muted-foreground text-sm">
-            {isRegistered
+        <TextField
+          id="amount"
+          label={t('vouchers.new.amountLabel')}
+          hint={
+            isRegistered
               ? t('vouchers.new.amountHintRegistered')
-              : t('vouchers.new.amountHintPlain')}
-          </p>
-          {errors.amount && (
-            <p id="amount-error" role="alert" className="text-destructive text-sm">
-              {errors.amount.message}
-            </p>
-          )}
-        </div>
+              : t('vouchers.new.amountHintPlain')
+          }
+          error={errors.amount?.message}
+          registration={register('amount')}
+          inputMode="decimal"
+          tabular
+        />
 
         <p className="text-muted-foreground text-sm">{t('vouchers.new.confirmNote')}</p>
 
@@ -177,12 +167,9 @@ export default function NewVoucher({ loaderData, actionData }: Route.ComponentPr
         )}
 
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm">
             {t('vouchers.new.submit')}
-          </button>
+          </SubmitButton>
           <Link
             to={`/orgs/${orgId}`}
             className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"

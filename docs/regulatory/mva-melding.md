@@ -26,12 +26,15 @@ description the domain generator (`@saldo/domain/mva-melding`) and the validator
 | Deductible input VAT (codes 1, 11–15) | — | — | **negative** |
 | Zero-rated / exempt turnover (5, 51, 52) | yes | 0 | 0 |
 | Reverse charge (snudd avregning, 81–92) | yes (the import/service basis) | yes | output **+**, deduction **−** |
-| Outside the VAT Act / no treatment (0, 6, 7, 20) | — | — | **not reported** (not a return figure) |
+| Unntatt turnover, outside the VAT Act (6) | yes | 0 | 0 |
+| No VAT treatment (0, 7, 20) | — | — | **not reported** (not a return figure) |
 
 Code **6** (*omsetning og uttak utenfor merverdiavgiftsloven*) is **unntatt / outside the VAT Act**, not
 zero-rated turnover — `Standard_Tax_Codes.csv` classifies it `direction='none'` / `rateCategory='none'`
-(it has no VAT treatment), matching `mva-rates.md`. It is therefore **not** a melding line; the generator
-(`isMeldingReportable`) and validator both skip the 0/6/7/20 family.
+(it has no VAT treatment), matching `mva-rates.md`. It **is** nonetheless a melding line: the committed
+all-cases example carries `mvaKode 6` with a `grunnlag`, `sats 0` and `merverdiavgift 0` (unntatt
+turnover is reported; it just never produces VAT). The technical no-treatment codes **0, 7, 20** are the
+ones the generator (`isMeldingReportable`) and validator skip.
 
 `fastsattMerverdiavgift` is **exactly the signed sum of every line's `merverdiavgift`** (output minus
 deductible input). This is verifiable: the all-cases example

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { oreToAmount } from '../money/ore.js';
 import fc from 'fast-check';
 import { øre, sumØre } from '../money/ore.js';
 import { orgNr } from '../ids/org-nr.js';
@@ -6,7 +7,6 @@ import {
   BIS_CUSTOMIZATION_ID,
   BIS_PROFILE_ID,
   buildUblXml,
-  oreToAmount,
   unitCodeFor,
   vatCategoryFor,
   type EhfInvoiceModel,

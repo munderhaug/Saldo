@@ -58,9 +58,9 @@ fails the build.
 <!-- AUTOGEN:arch-graph -->
 <!-- Generated from committed sources by tools/arch-graph.mjs — DO NOT EDIT BY HAND; run `pnpm arch:refresh`. -->
 - **Workspace packages:** `@saldo/domain` (packages/domain), `@saldo/web` (apps/web), `eslint-plugin-saldo` (tools/eslint-plugin-saldo)
-- **The one hard boundary — `@saldo/domain` (pure):** 51 source modules, relative-imports-only, no wall-clock/random (enforced by `pnpm arch:check`). Submodules: banking, catalog, extraction, honest-number, ids, invoice, money, mva-melding, peppol, posting, reconciliation, reporting, rules, saft, tax, time, vat, xml.
+- **The one hard boundary — `@saldo/domain` (pure):** 54 source modules, relative-imports-only, no wall-clock/random (enforced by `pnpm arch:check`). Submodules: banking, catalog, extraction, honest-number, ids, invoice, money, mva-melding, peppol, posting, reconciliation, reporting, rules, saft, tax, time, vat, xml.
 - **`apps/web` modules (impure side):** auth, components, contracts, copy, db, documents, integrations, jobs, lib, observability, routes.
 - **Client↔server boundary:** 42 route/index declarations in [`apps/web/app/routes.ts`](../apps/web/app/routes.ts) — loaders/actions, no separate API.
-- **SQL integrity surface** (15 migrations in `db/migrations/*.sql`): 20 tables, 23 RLS policies, 9 triggers, 18 functions. Integrity triggers: bank_transaction_append_only, invoice_immutable, invoice_line_immutable, posting_immutable, posting_period_lock, supplier_invoice_immutable, supplier_invoice_line_immutable, voucher_immutable, voucher_period_lock.
+- **SQL integrity surface** (17 migrations in `db/migrations/*.sql`): 20 tables, 23 RLS policies, 10 triggers, 19 functions. Integrity triggers: bank_transaction_append_only, invoice_immutable, invoice_line_immutable, posting_immutable, posting_immutable_insert, posting_period_lock, supplier_invoice_immutable, supplier_invoice_line_immutable, voucher_immutable, voucher_period_lock.
 <!-- /AUTOGEN:arch-graph -->
 

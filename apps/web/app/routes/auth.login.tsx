@@ -11,6 +11,11 @@ import { beginOidcLogin, buildOidcCookie } from '~/auth/oidc.server';
 import { requestLogger } from '~/observability/logger.server';
 import { credentialsInput } from '~/contracts';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
+
+export function meta() {
+  return [{ title: t('auth.login.title') }];
+}
 
 export async function loader({ request }: Route.LoaderArgs) {
   if (await getOptionalUser(request)) throw redirect('/');
@@ -75,12 +80,9 @@ export default function Login() {
       {data.oidcConfigured && (
         <Form method="post">
           <input type="hidden" name="intent" value="oidc" />
-          <button
-            type="submit"
-            className="border-input bg-background font-text w-full rounded-md border px-4 py-2 text-sm"
-          >
+          <SubmitButton className="border-input bg-background font-text w-full rounded-md border px-4 py-2 text-sm">
             {t('auth.login.bankid')}
-          </button>
+          </SubmitButton>
         </Form>
       )}
 
@@ -117,12 +119,9 @@ export default function Login() {
               {actionData.error}
             </p>
           )}
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm">
             {t('auth.login.submit')}
-          </button>
+          </SubmitButton>
         </Form>
       )}
     </main>

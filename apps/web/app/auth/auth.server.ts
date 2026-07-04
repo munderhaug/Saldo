@@ -25,8 +25,10 @@ export async function requireUser(request: Request): Promise<SessionUser> {
   return user;
 }
 
-/** Authz gate: the user must be a member of `organizationId`, else 403. Returns the user + role. */
-async function requireOrgAccess(
+/** Authz gate: the user must be a member of `organizationId`, else 403. Returns the user + role.
+ * Use directly (instead of `withUserOrg`) when an action needs the proven user BEFORE doing non-DB
+ * work — e.g. gating an outbound LLM call — without opening a tenant transaction. */
+export async function requireOrgAccess(
   request: Request,
   organizationId: string,
 ): Promise<{ user: SessionUser; membership: MembershipRow }> {
@@ -59,7 +61,15 @@ export function assertSameOrigin(request: Request): void {
   if (request.method === 'GET' || request.method === 'HEAD') return;
   const origin = request.headers.get('origin');
   const host = request.headers.get('host');
-  if (!origin || !host || new URL(origin).host !== host) {
+  // `Origin: null` (sandboxed iframe, some privacy modes) and any unparsable value are cross-origin
+  // by definition — refuse with 403, never crash into a 500 (review 2026-07-03 §14).
+  let originHost: string | null = null;
+  try {
+    originHost = origin ? new URL(origin).host : null;
+  } catch {
+    originHost = null;
+  }
+  if (!originHost || !host || originHost !== host) {
     throw new Response('Cross-origin request blocked', { status: 403 });
   }
 }

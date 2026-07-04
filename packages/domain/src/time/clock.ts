@@ -9,7 +9,3 @@ export interface Clock {
 export const systemClock: Clock = {
   now: () => new Date(),
 };
-
-export function fixedClock(at: Date): Clock {
-  return { now: () => new Date(at.getTime()) };
-}

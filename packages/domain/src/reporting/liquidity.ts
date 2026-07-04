@@ -4,18 +4,18 @@
  * (kontoklasse 19 — bankinnskudd, kontanter og lignende, source-grounded in the kontoplan); the
  * forward view adds open receivables and subtracts open payables (both from the reskontro totals).
  */
-import { type Øre, ZERO, addØre, subØre, sumØre } from '../money/ore.js';
+import { type Øre, addØre, subØre, sumØre } from '../money/ore.js';
 import { type LedgerAccountBalance, debitBalance } from './account-balance.js';
 
 /** Kontoklasse 19 — bankinnskudd, kontanter og lignende (the liquid asset group). */
-export const LIQUID_ACCOUNT_PREFIX = '19';
+const LIQUID_ACCOUNT_PREFIX = '19';
 
 /**
  * Konto 1950 — Bankinnskudd for skattetrekk — is withheld-tax money the business holds in trust and may
  * NOT freely dispose of (skattebetalingsloven § 5-12), so it is excluded from available cash. Source-
  * grounded in the SAF-T kontoplan.
  */
-export const RESTRICTED_LIQUID_ACCOUNT = '1950';
+const RESTRICTED_LIQUID_ACCOUNT = '1950';
 
 /** One liquid account's contribution to the cash position. */
 export interface LiquidLine {
@@ -64,12 +64,3 @@ export function buildLiquidity(input: {
     projectedØre,
   };
 }
-
-/** A zero cash position — every figure ZERO (the empty state). */
-export const EMPTY_LIQUIDITY: LiquidityReport = {
-  cashAccounts: [],
-  cashØre: ZERO,
-  outstandingReceivablesØre: ZERO,
-  outstandingPayablesØre: ZERO,
-  projectedØre: ZERO,
-};

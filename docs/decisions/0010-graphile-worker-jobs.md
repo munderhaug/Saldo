@@ -1,6 +1,7 @@
 # ADR 0010 — graphile-worker (in-Postgres jobs) over a hosted workflow SaaS
 
-- **Status:** Accepted
+- **Status:** Accepted — **implementation deferred** (no job runner is wired as of 2026-07-04; the
+  choice stands, the install lands with the first feature that needs a background job)
 - **Date:** 2026-06-22
 
 ## Context

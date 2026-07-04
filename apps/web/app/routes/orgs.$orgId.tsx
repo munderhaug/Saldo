@@ -93,7 +93,9 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
       </Card>
 
       <section className="grid gap-3">
-        <CardTitle className="font-text text-lg">{t('orgs.overview.vatTitle')}</CardTitle>
+        <CardTitle as="h2" className="font-text text-lg">
+          {t('orgs.overview.vatTitle')}
+        </CardTitle>
         <Table>
           <TableCaption>{t('orgs.overview.vatCaption', { count: vatCodes.length })}</TableCaption>
           <TableHeader>
@@ -125,7 +127,9 @@ export default function OrgOverviewRoute({ loaderData }: Route.ComponentProps) {
       </section>
 
       <nav aria-label={t('orgs.overview.registersTitle')} className="grid gap-3">
-        <CardTitle className="font-text text-lg">{t('orgs.overview.registersTitle')}</CardTitle>
+        <CardTitle as="h2" className="font-text text-lg">
+          {t('orgs.overview.registersTitle')}
+        </CardTitle>
         <ul className="grid gap-2">
           <li>
             <Link

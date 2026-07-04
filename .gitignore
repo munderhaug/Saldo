@@ -53,3 +53,6 @@ db/schema.sql
 # Claude Code local
 .claude/settings.local.json
 CLAUDE.local.md
+
+# db:lint scratch output (the concatenated up-migrations squawk lints)
+.migrations-up.sql

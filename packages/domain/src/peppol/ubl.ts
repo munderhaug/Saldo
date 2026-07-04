@@ -11,7 +11,7 @@
  * `feat-peppol-send` (Phase 9). Validation of a built model is `./validate.ts`.
  */
 import { escapeXml as esc } from '../xml/escape.js';
-import type { Øre } from '../money/ore.js';
+import { oreToAmount, type Øre } from '../money/ore.js';
 import type { OrgNr } from '../ids/org-nr.js';
 import type { VatTreatment } from '../vat/line-treatment.js';
 
@@ -20,7 +20,7 @@ export const BIS_CUSTOMIZATION_ID =
   'urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0';
 export const BIS_PROFILE_ID = 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0';
 /** ISO 6523 scheme id for a Norwegian organisation number (party + endpoint identifiers). */
-export const NO_ORGNR_SCHEME = '0192';
+const NO_ORGNR_SCHEME = '0192';
 
 /** UNCL5305 VAT category codes Saldo issues (capture: bis-billing-3.0.md). */
 export type UnclVatCategory = 'S' | 'Z' | 'E' | 'AE';
@@ -135,20 +135,6 @@ export interface EhfInvoiceModel {
   readonly vatOre: Øre;
   readonly grossOre: Øre;
   readonly notes?: string;
-}
-
-/**
- * Render integer øre as a UBL decimal-kroner string (dot decimal, no grouping): `123456` → `"1234.56"`,
- * `-50` → `"-0.50"`. Pure string assembly — no float division — so the domain stays float-free and the
- * cents are exact.
- */
-export function oreToAmount(value: Øre): string {
-  const n = value as number;
-  const sign = n < 0 ? '-' : '';
-  const abs = Math.abs(n);
-  const kroner = Math.floor(abs / 100);
-  const cents = abs % 100;
-  return `${sign}${kroner}.${String(cents).padStart(2, '0')}`;
 }
 
 /** A VAT percent as a UBL numeric string (no trailing-zero noise): 25 → `"25"`, 11.11 → `"11.11"`. */

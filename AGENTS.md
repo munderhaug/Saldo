@@ -15,7 +15,7 @@ Full stack: `docs/tech-stack.md`. Experience & voice: `docs/experience-principle
 ```
 pnpm install                                   # install deps
 pnpm dev                                        # RR7 dev server (http://localhost:3000)
-pnpm typecheck · pnpm lint · pnpm format        # static gates
+pnpm typecheck · pnpm lint · pnpm format:check  # static gates (pnpm format = fix in place)
 pnpm test                                       # vitest (domain: exhaustive + fast-check)
 pnpm lint:repo                                  # docs/harness hygiene + no-contradiction gate
 pnpm db:migrate · pnpm db:introspect · pnpm db:lint   # SQL migrations / schema gen / squawk

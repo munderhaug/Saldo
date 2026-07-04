@@ -7,15 +7,30 @@ const WINDOW_MS = 15 * 60_000;
 const t0 = 1_000_000;
 
 describe('loginCallerKey', () => {
-  it('uses the first X-Forwarded-For hop', () => {
+  it('uses the RIGHT-most X-Forwarded-For hop — the one the trusted proxy appended', () => {
     const req = new Request('http://x', {
       headers: { 'x-forwarded-for': '203.0.113.7, 10.0.0.1' },
     });
-    expect(loginCallerKey(req)).toBe('203.0.113.7');
+    expect(loginCallerKey(req)).toBe('10.0.0.1');
   });
 
-  it('falls back to a shared global bucket when the header is absent', () => {
+  it('is not spoofable: client-minted left entries never change the key', () => {
+    // An attacker sending a random left-most entry per request must stay in the SAME bucket —
+    // keying on the first hop (the old behavior) handed out a fresh bucket per request.
+    const a = new Request('http://x', {
+      headers: { 'x-forwarded-for': '1.2.3.4, 198.51.100.9' },
+    });
+    const b = new Request('http://x', {
+      headers: { 'x-forwarded-for': '5.6.7.8, 198.51.100.9' },
+    });
+    expect(loginCallerKey(a)).toBe(loginCallerKey(b));
+  });
+
+  it('falls back to a shared global bucket when the header is absent or blank', () => {
     expect(loginCallerKey(new Request('http://x'))).toBe('global');
+    expect(loginCallerKey(new Request('http://x', { headers: { 'x-forwarded-for': ' , ' } }))).toBe(
+      'global',
+    );
   });
 });
 

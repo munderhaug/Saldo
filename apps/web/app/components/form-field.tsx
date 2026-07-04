@@ -43,15 +43,19 @@ export function TextField({
   maxLength,
   min,
   max,
+  autoComplete,
   uppercase,
   tabular,
   extraDescribedBy,
 }: FieldShared & {
   type?: string;
-  inputMode?: 'numeric';
+  inputMode?: 'numeric' | 'decimal';
   maxLength?: number;
   min?: number;
   max?: number;
+  /** Browser autofill hint. Left undefined by default — autofill is the user's helper, never
+   * blanket-disabled (review 2026-07-03 §13); pass 'off' only where autofill is truly nonsense. */
+  autoComplete?: string;
   uppercase?: boolean;
   tabular?: boolean;
   /** An extra element id to fold into `aria-describedby` (e.g. a derived incl-VAT readout). */
@@ -69,7 +73,7 @@ export function TextField({
         maxLength={maxLength}
         min={min}
         max={max}
-        autoComplete="off"
+        autoComplete={autoComplete}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy(id, !!hint, !!error, extraDescribedBy)}
         className={cn(

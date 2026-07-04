@@ -90,6 +90,20 @@ export function eqØre(a: Øre, b: Øre): boolean {
 }
 
 /**
+ * XML/interchange boundary: render integer øre as a dot-decimal kroner string (`123456` → `"1234.56"`,
+ * `-50` → `"-0.50"`). Pure string assembly — no float division — so the cents are exact. The ONE
+ * implementation shared by the EHF/UBL and SAF-T writers (review 2026-07-03 §10).
+ */
+export function oreToAmount(value: Øre): string {
+  const n = value as number;
+  const sign = n < 0 ? '-' : '';
+  const abs = Math.abs(n);
+  const kroner = Math.floor(abs / 100);
+  const cents = abs % 100;
+  return `${sign}${kroner}.${String(cents).padStart(2, '0')}`;
+}
+
+/**
  * Presentation boundary: format øre as Norwegian kroner (e.g. 12550 → "125,50").
  * Float division is acceptable HERE (display only) and nowhere else.
  */

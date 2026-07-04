@@ -5,7 +5,7 @@ import { provisionOrg } from './provision.js';
 // Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Skips cleanly otherwise.
 
 /**
- * Route-level tests for the supplier-invoice + owner-economy actions (build-spec §8.5, ADR 0054). Both
+ * Route-level tests for the supplier-invoice + owner-economy actions (build-spec §8.5, ADR 0056). Both
  * run through the real withUserOrg auth/tenancy chain and the assertSameOrigin CSRF guard.
  * purchases/new creates a draft and redirects to its detail; purchases/:id posts the AP voucher; the
  * output-code gate is surfaced as a typed {error}; owner/new posts a balanced equity voucher.

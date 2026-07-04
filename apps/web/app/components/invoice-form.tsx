@@ -10,6 +10,7 @@
  * the UX mirrors the server's HARD BLOCK rather than promising VAT the action will refuse.
  */
 import { useEffect, useRef } from 'react';
+import { Money, MoneyText } from '~/components/money';
 import { Form, useSubmit } from 'react-router';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,7 +30,9 @@ import { INVOICE_LANGUAGES, invoiceInput, parseQuantity, type InvoiceInput } fro
 import type { AccountOption } from '~/db/org-defaults.server';
 import type { CustomerOption, InvoiceVatCodeOption, ProductLineOption } from '~/db/invoices.server';
 import { SelectField, TextField } from '~/components/form-field';
+import { invoiceKindLabel } from '~/lib/invoice-format';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 const KINDS = ['invoice', 'quote'] as const;
 
@@ -56,6 +59,7 @@ export function InvoiceForm({
   submitLabel,
   intent,
   error,
+  lockKind = false,
 }: {
   defaultValues: InvoiceInput;
   customers: readonly CustomerOption[];
@@ -66,6 +70,8 @@ export function InvoiceForm({
   submitLabel: string;
   intent?: string | undefined;
   error?: string | undefined;
+  /** Draft editor: the document's kind is set at creation and immutable — show it, don't offer it. */
+  lockKind?: boolean;
 }) {
   const submit = useSubmit();
   const formRef = useRef<HTMLFormElement>(null);
@@ -93,11 +99,19 @@ export function InvoiceForm({
 
   const onValid = () => submit(formRef.current, { method: 'post' });
 
-  // Live preview: the line nets/VAT and the document totals, computed by the domain in the browser.
+  // Live preview: the line nets and the document totals, computed by the domain in the browser.
+  // VAT is CATEGORY-LEVEL — grouped by charged rate and rounded once per rate (mirrors the server's
+  // invoiceTotals, BR-CO-17 / ADR 0054) — so the preview matches the issued document to the øre.
   const watchedLines = watch('lines');
   const previews = (watchedLines ?? []).map((line) => previewLine(line, vatCodes, orgRegistered));
   const totalNet = sumØre(previews.map((p) => p.net));
-  const totalVat = sumØre(previews.map((p) => p.vat));
+  const baseByRate = new Map<number, Øre>();
+  for (const p of previews) {
+    if (p.chargedRate !== null) {
+      baseByRate.set(p.chargedRate, addØre(baseByRate.get(p.chargedRate) ?? ZERO, p.net));
+    }
+  }
+  const totalVat = sumØre([...baseByRate.entries()].map(([r, base]) => mulRate(base, rate(r))));
   const totalGross = addØre(totalNet, totalVat);
 
   // Does any line carry an output-VAT code the unregistered org may not charge? Then warn.
@@ -128,23 +142,34 @@ export function InvoiceForm({
       className="grid gap-6"
     >
       {intent ? <input type="hidden" name="intent" value={intent} /> : null}
+      {/* A credit note's link to the invoice it corrects rides along on every save (identity — the
+          server refuses a save that tries to change it). */}
+      <input type="hidden" {...register('creditsInvoiceId')} />
 
       {/* ── Document type + customer ─────────────────────────────────────────── */}
       <fieldset className="grid gap-5">
         <legend className="font-text text-sm">{t('invoices.form.customerLegend')}</legend>
         <div className="grid gap-5 sm:grid-cols-2">
-          <SelectField
-            id="kind"
-            label={t('invoices.form.kindLegend')}
-            error={errors.kind?.message}
-            registration={register('kind')}
-          >
-            {KINDS.map((k) => (
-              <option key={k} value={k}>
-                {k === 'quote' ? t('invoices.kind.quote') : t('invoices.kind.invoice')}
-              </option>
-            ))}
-          </SelectField>
+          {lockKind ? (
+            <div className="grid content-start gap-1.5">
+              <span className="font-text text-sm">{t('invoices.form.kindLegend')}</span>
+              <p className="text-sm">{invoiceKindLabel(defaultValues.kind)}</p>
+              <input type="hidden" {...register('kind')} />
+            </div>
+          ) : (
+            <SelectField
+              id="kind"
+              label={t('invoices.form.kindLegend')}
+              error={errors.kind?.message}
+              registration={register('kind')}
+            >
+              {KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {k === 'quote' ? t('invoices.kind.quote') : t('invoices.kind.invoice')}
+                </option>
+              ))}
+            </SelectField>
+          )}
           <SelectField
             id="customerId"
             label={t('invoices.form.customerPicker')}
@@ -274,7 +299,7 @@ export function InvoiceForm({
                   label={t('invoices.form.line.quantity')}
                   error={errors.lines?.[index]?.quantity?.message}
                   registration={register(`lines.${index}.quantity`)}
-                  inputMode="numeric"
+                  inputMode="decimal"
                   tabular
                 />
                 <TextField
@@ -288,7 +313,7 @@ export function InvoiceForm({
                   label={t('invoices.form.line.price')}
                   error={errors.lines?.[index]?.unitPriceKr?.message}
                   registration={register(`lines.${index}.unitPriceKr`)}
-                  inputMode="numeric"
+                  inputMode="decimal"
                   tabular
                 />
               </div>
@@ -322,8 +347,8 @@ export function InvoiceForm({
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-muted-foreground tabular text-sm">
-                  {t('invoices.form.totalsNet')}: {formatKr(previews[index]?.net ?? ZERO)}{' '}
-                  {t('common.currency')}
+                  {t('invoices.form.totalsNet')}:{' '}
+                  <MoneyText value={formatKr(previews[index]?.net ?? ZERO)} />
                 </p>
                 {fields.length > 1 && (
                   <button
@@ -375,23 +400,24 @@ export function InvoiceForm({
         </p>
       )}
 
-      <dl className="border-input grid gap-1 border-t pt-4 text-sm" aria-live="polite">
+      <dl className="border-input grid gap-1 border-t pt-4 text-sm">
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsNet')}</dt>
           <dd className="tabular">
-            {formatKr(totalNet)} {t('common.currency')}
+            <Money ore={totalNet} />
           </dd>
         </div>
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsVat')}</dt>
           <dd className="tabular">
-            {formatKr(totalVat)} {t('common.currency')}
+            <Money ore={totalVat} />
           </dd>
         </div>
-        <div className="font-text flex justify-between">
+        {/* Only the gross announces (aria-live): re-reading all three totals per keystroke is noise. */}
+        <div className="font-text flex justify-between" aria-live="polite">
           <dt>{t('invoices.form.totalsGross')}</dt>
           <dd className="tabular">
-            {formatKr(totalGross)} {t('common.currency')}
+            <Money ore={totalGross} />
           </dd>
         </div>
       </dl>
@@ -402,22 +428,21 @@ export function InvoiceForm({
         </p>
       )}
 
-      <button
-        type="submit"
-        className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-      >
+      <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
         {submitLabel}
-      </button>
+      </SubmitButton>
     </Form>
   );
 }
 
 interface LinePreview {
   readonly net: Øre;
-  readonly vat: Øre;
+  /** The VAT rate this line charges (e.g. 0.25), or null for a non-charging line — the totals above
+   * group by it and round once per rate (category-level, ADR 0054). */
+  readonly chargedRate: number | null;
 }
 
-/** Compute one line's net + VAT for the live preview — the same maths the server runs, in the browser. */
+/** Compute one line's net (and whether/at what rate it charges VAT) for the live preview. */
 function previewLine(
   line: InvoiceInput['lines'][number],
   vatCodes: readonly InvoiceVatCodeOption[],
@@ -425,10 +450,9 @@ function previewLine(
 ): LinePreview {
   const price = parseKroner(line.unitPriceKr.trim() === '' ? '0' : line.unitPriceKr);
   const qty = parseQuantity(line.quantity);
-  if (price === null || qty === null) return { net: ZERO, vat: ZERO };
+  if (price === null || qty === null) return { net: ZERO, chargedRate: null };
   const net = domainLineNet(price, toQuantity(qty));
   const code = vatCodes.find((c) => c.id === line.vatCodeId);
   const charge = orgRegistered && code?.isOutput === true;
-  const vat = charge ? mulRate(net, rate(Number(code.rate))) : ZERO;
-  return { net, vat };
+  return { net, chargedRate: charge ? Number(code.rate) : null };
 }

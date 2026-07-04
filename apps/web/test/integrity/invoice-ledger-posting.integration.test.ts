@@ -3,7 +3,13 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { type LedgerDb, ledgerDbAvailable, startLedgerDb } from './db-harness.js';
 import * as schema from '../../app/db/schema.js';
 import { withOrgTx } from '../../app/auth/middleware.js';
-import { createCreditNoteDraft, createDraft, issueInvoice } from '../../app/db/invoices.server.js';
+import {
+  createCreditNoteDraft,
+  createDraft,
+  issueInvoice,
+  readInvoice,
+  updateDraft,
+} from '../../app/db/invoices.server.js';
 import { SALES_INVOICE_ACCOUNTS } from '../../app/db/posting.server.js';
 import { STANDARD_ACCOUNTS, STANDARD_VAT_CODES } from '../../app/db/provisioning.server.js';
 import type { InvoiceInput } from '../../app/contracts/invoice.js';
@@ -320,6 +326,89 @@ describe.skipIf(!ledgerDbAvailable)('invoice → ledger posting (app role + RLS)
     const vouchers = await db.sql<{ count: number }[]>`
       SELECT count(*)::int AS count FROM voucher WHERE organization_id = ${orgId}`;
     expect(vouchers[0]?.count).toBe(0);
+  });
+
+  it('updateDraft edits a draft in place and re-derives its totals', async () => {
+    const orgId = await provisionOrg('registered_standard');
+    const input = oneLineInput({
+      accountId: await accountId(orgId, '3000'),
+      vatCodeId: await vatCodeId(orgId, '3'),
+      unitPriceKr: '1000',
+    });
+    const created = await withOrgTx(appDb, orgId, (tx) => createDraft(tx, orgId, input));
+    const invoiceId = created.ok ? created.id : '';
+
+    const edited: InvoiceInput = {
+      ...input,
+      customerName: 'Ny Kunde AS',
+      lines: [{ ...input.lines[0]!, unitPriceKr: '2000' }],
+    };
+    const updated = await withOrgTx(appDb, orgId, (tx) =>
+      updateDraft(tx, orgId, invoiceId, edited),
+    );
+    expect(updated).toEqual({ ok: true, id: invoiceId });
+
+    const after = await withOrgTx(appDb, orgId, (tx) => readInvoice(tx, invoiceId));
+    expect(after?.customerName).toBe('Ny Kunde AS');
+    expect(after?.netOre).toBe(200_000); // 2 000,00 kr net, re-derived server-side
+    expect(after?.vatOre).toBe(50_000);
+    expect(after?.grossOre).toBe(250_000);
+  });
+
+  it('updateDraft REFUSES to change a credit-note draft back into a positive invoice (kind/creditsInvoiceId immutable)', async () => {
+    // The P0 scenario: issue an invoice, create its correcting credit-note draft, then save the draft
+    // with a form payload claiming kind='invoice' and no credited source (what a stale/kind-reverting
+    // form would submit). Accepting it would double-book the revenue instead of correcting it.
+    const orgId = await provisionOrg('registered_standard');
+    const input = oneLineInput({
+      accountId: await accountId(orgId, '3000'),
+      vatCodeId: await vatCodeId(orgId, '3'),
+      unitPriceKr: '1000',
+    });
+    const created = await withOrgTx(appDb, orgId, (tx) => createDraft(tx, orgId, input));
+    const invoiceId = created.ok ? created.id : '';
+    await withOrgTx(appDb, orgId, (tx) =>
+      issueInvoice(tx, orgId, invoiceId, { issueDate: '2026-06-25', dueDate: '2026-07-09' }),
+    );
+    const creditNoteId = await withOrgTx(appDb, orgId, (tx) =>
+      createCreditNoteDraft(tx, orgId, invoiceId),
+    );
+
+    const reverted = await withOrgTx(appDb, orgId, (tx) =>
+      updateDraft(tx, orgId, creditNoteId!, { ...input, kind: 'invoice', creditsInvoiceId: '' }),
+    );
+    expect(reverted).toEqual({ ok: false, error: 'kind-immutable' });
+
+    // Changing ONLY the credited-source link is refused too (it is identity, set at creation).
+    const relinked = await withOrgTx(appDb, orgId, (tx) =>
+      updateDraft(tx, orgId, creditNoteId!, {
+        ...input,
+        kind: 'credit_note',
+        creditsInvoiceId: creditNoteId!,
+      }),
+    );
+    expect(relinked).toEqual({ ok: false, error: 'kind-immutable' });
+
+    // The draft kept its identity — still the linked credit note, amounts untouched.
+    const after = await withOrgTx(appDb, orgId, (tx) => readInvoice(tx, creditNoteId!));
+    expect(after?.kind).toBe('credit_note');
+    expect(after?.creditsInvoiceId).toBe(invoiceId);
+    expect(after?.status).toBe('draft');
+
+    // A save that KEEPS the identity is fine — the credit-note draft stays editable.
+    const kept = await withOrgTx(appDb, orgId, (tx) =>
+      updateDraft(tx, orgId, creditNoteId!, {
+        ...input,
+        kind: 'credit_note',
+        creditsInvoiceId: invoiceId,
+        customerName: 'Rettet Kunde AS',
+      }),
+    );
+    expect(kept).toEqual({ ok: true, id: creditNoteId });
+    const kept2 = await withOrgTx(appDb, orgId, (tx) => readInvoice(tx, creditNoteId!));
+    expect(kept2?.customerName).toBe('Rettet Kunde AS');
+    expect(kept2?.kind).toBe('credit_note');
+    expect(kept2?.creditsInvoiceId).toBe(invoiceId);
   });
 
   it('refuses to post (and to issue) into a LOCKED period, atomically — nothing left behind', async () => {

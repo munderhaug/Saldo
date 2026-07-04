@@ -16,12 +16,15 @@
  * posts through exactly the same server-authoritative truth as the manual surface.
  */
 import { useRef } from 'react';
+import { MoneyText } from '~/components/money';
+import { TextField } from '~/components/form-field';
 import { Form, Link, redirect, useSubmit } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import {
+  formatIsoDate,
   chargesOutputVat,
   formatKr,
   mapExtractionToProposal,
@@ -30,7 +33,8 @@ import {
   type ProposedKind,
 } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.receipts.new';
-import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
+import { assertSameOrigin, requireOrgAccess, withUserOrg } from '~/auth/auth.server';
+import { createFixedWindowLimiter } from '~/lib/rate-limit';
 import { extractReceipt } from '~/integrations/llm/client.server';
 import { llmConfig } from '~/integrations/llm/config.server';
 import { AiAssisted } from '~/components/ui/ai-assisted';
@@ -46,6 +50,7 @@ import {
   type ManualVoucherInput,
 } from '~/contracts';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('receipts.new.title') }];
@@ -59,6 +64,9 @@ export function headers() {
 const orgIdSchema = z.string().uuid();
 /** Receipts are small; cap the upload so a stray large file can't exhaust memory. */
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+/** Per-user cap on vision-LLM extractions: generous for a human filing receipts, a wall for a loop
+ * burning the model budget. Single-process (like the login throttle); counted per attempt. */
+const extractLimiter = createFixedWindowLimiter(10, 10 * 60_000);
 
 interface ReviewProposal {
   readonly kind: ProposedKind;
@@ -76,7 +84,7 @@ interface ReviewProposal {
 }
 
 type ActionData =
-  | { readonly ok: false; readonly error: string }
+  | { readonly ok: false; readonly error: string; readonly review?: ReviewProposal }
   | { readonly ok: true; readonly review: ReviewProposal };
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -111,6 +119,28 @@ export async function action({
   }
   const form = await request.formData();
   const intent = form.get('intent');
+  const str = (key: string): string => {
+    const value = form.get(key);
+    return typeof value === 'string' ? value.slice(0, 500) : '';
+  };
+  /** Rebuild the review card from the fields carried through the round-trip, so a FAILED confirm
+   * re-renders the proposal (with the error) instead of dumping the user back at the upload step
+   * with everything lost (review 2026-07-03 §13). Display-only strings — never posted. */
+  const carriedReview = (): ReviewProposal | undefined => {
+    if (str('model') === '' || str('amount') === '') return undefined;
+    return {
+      kind: (str('kind') === 'sale' ? 'sale' : 'expense') as ProposedKind,
+      amount: str('amount'),
+      netFormatted: str('netFormatted'),
+      vatFormatted: str('vatFormatted'),
+      supplier: str('supplier') === '' ? null : str('supplier'),
+      documentDate: str('documentDate') === '' ? null : str('documentDate'),
+      vatLooksStandard: str('vatLooksStandard') === 'true',
+      model: str('model'),
+      modelVersion: str('modelVersion'),
+      confidence: Number.isFinite(Number(str('confidence'))) ? Number(str('confidence')) : 0,
+    };
+  };
 
   if (intent === 'confirm') {
     // This confirm path is AI-only, so the provenance carried through the review round-trip is REQUIRED
@@ -123,7 +153,14 @@ export async function action({
       modelVersion: form.get('modelVersion'),
       confidence: form.get('confidence'),
     });
-    if (!parsed.success) return { ok: false, error: t('vouchers.new.errorInvalidInput') };
+    if (!parsed.success) {
+      const review = carriedReview();
+      return {
+        ok: false,
+        error: t('vouchers.new.errorInvalidInput'),
+        ...(review ? { review } : {}),
+      };
+    }
     const net = parseKroner(parsed.data.amount)!; // passed the boundary's parseKroner refine
     const year = systemClock.now().getFullYear();
     // Post AND record provenance in ONE tenant transaction: the voucher and its provenance commit
@@ -153,6 +190,7 @@ export async function action({
           result.reason === 'vat-not-registered'
             ? t('vouchers.new.errorVatNotRegistered')
             : t('vouchers.new.errorGeneric'),
+        ...(carriedReview() ? { review: carriedReview()! } : {}),
       };
     }
     // Structured provenance log (Art. 50(2) observability) — model/version/confidence + linkage ONLY,
@@ -170,7 +208,15 @@ export async function action({
     return redirect('/');
   }
 
-  // Default intent: extract. Validate the upload, run the vision-LLM, map to a proposal.
+  // Default intent: extract. AUTH FIRST — the vision-LLM call is the expensive resource, so prove the
+  // caller is a logged-in member of this org (401→login / 403) before touching the upload, and bound
+  // them per user (the confirm branch gets the same guarantee inside `withUserOrg`).
+  const { user } = await requireOrgAccess(request, params.orgId);
+  if (!extractLimiter.check(user.id, Date.now()).allowed) {
+    return { ok: false, error: t('receipts.new.errorRateLimited') };
+  }
+
+  // Validate the upload, run the vision-LLM, map to a proposal.
   const file = form.get('receipt');
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: t('receipts.new.errorNoImage') };
@@ -233,7 +279,11 @@ export async function action({
 
 export default function NewReceipt({ loaderData, actionData }: Route.ComponentProps) {
   const { orgId, orgName, isRegistered, available } = loaderData;
-  const review = actionData?.ok ? actionData.review : null;
+  const review = actionData
+    ? actionData.ok
+      ? actionData.review
+      : (actionData.review ?? null)
+    : null;
   const error = actionData && !actionData.ok ? actionData.error : null;
 
   return (
@@ -290,14 +340,13 @@ function UploadStep({ orgId, error }: { orgId: string; error: string | null }) {
         )}
       </div>
       <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="submit"
+        <SubmitButton
           name="intent"
           value="extract"
           className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
         >
           {t('receipts.new.submit')}
-        </button>
+        </SubmitButton>
         <Link
           to={`/orgs/${orgId}`}
           className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
@@ -357,15 +406,23 @@ function ReviewStep({
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">{t('receipts.new.fieldDate')}</dt>
-            <dd className="tabular">{review.documentDate ?? t('receipts.new.dateUnknown')}</dd>
+            <dd className="tabular">
+              {review.documentDate
+                ? formatIsoDate(review.documentDate)
+                : t('receipts.new.dateUnknown')}
+            </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">{t('receipts.new.fieldNet')}</dt>
-            <dd className="tabular">{review.netFormatted}</dd>
+            <dd className="tabular">
+              <MoneyText value={review.netFormatted} />
+            </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">{t('receipts.new.fieldVat')}</dt>
-            <dd className="tabular">{review.vatFormatted}</dd>
+            <dd className="tabular">
+              <MoneyText value={review.vatFormatted} />
+            </dd>
           </div>
         </dl>
         {!review.vatLooksStandard && (
@@ -391,6 +448,13 @@ function ReviewStep({
         <input type="hidden" name="model" value={review.model} />
         <input type="hidden" name="modelVersion" value={review.modelVersion} />
         <input type="hidden" name="confidence" value={review.confidence} />
+        {/* Display-only fields ride along too, so a FAILED confirm can re-render this review card
+            instead of losing the extraction (they are never part of the posted voucher). */}
+        <input type="hidden" name="netFormatted" value={review.netFormatted} />
+        <input type="hidden" name="vatFormatted" value={review.vatFormatted} />
+        <input type="hidden" name="supplier" value={review.supplier ?? ''} />
+        <input type="hidden" name="documentDate" value={review.documentDate ?? ''} />
+        <input type="hidden" name="vatLooksStandard" value={String(review.vatLooksStandard)} />
         <p className="text-muted-foreground text-sm">{t('receipts.new.confirmIntro')}</p>
         <fieldset className="grid gap-3">
           <legend className="font-text text-sm">{t('vouchers.new.kindLegend')}</legend>
@@ -420,31 +484,19 @@ function ReviewStep({
           )}
         </fieldset>
 
-        <div className="grid gap-1.5">
-          <label htmlFor="amount" className="font-text text-sm">
-            {t('vouchers.new.amountLabel')}
-          </label>
-          <input
-            id="amount"
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            aria-describedby={errors.amount ? 'amount-error amount-hint' : 'amount-hint'}
-            aria-invalid={errors.amount ? true : undefined}
-            className="border-input bg-background tabular rounded-md border px-3 py-2 text-sm"
-            {...register('amount')}
-          />
-          <p id="amount-hint" className="text-muted-foreground text-sm">
-            {isRegistered
+        <TextField
+          id="amount"
+          label={t('vouchers.new.amountLabel')}
+          hint={
+            isRegistered
               ? t('vouchers.new.amountHintRegistered')
-              : t('vouchers.new.amountHintPlain')}
-          </p>
-          {errors.amount && (
-            <p id="amount-error" role="alert" className="text-destructive text-sm">
-              {errors.amount.message}
-            </p>
-          )}
-        </div>
+              : t('vouchers.new.amountHintPlain')
+          }
+          error={errors.amount?.message}
+          registration={register('amount')}
+          inputMode="decimal"
+          tabular
+        />
 
         <p className="text-muted-foreground text-sm">{t('vouchers.new.confirmNote')}</p>
 
@@ -456,12 +508,9 @@ function ReviewStep({
         )}
 
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm">
             {t('receipts.new.confirmSubmit')}
-          </button>
+          </SubmitButton>
           <Link
             to={`/orgs/${orgId}/receipts/new`}
             className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"

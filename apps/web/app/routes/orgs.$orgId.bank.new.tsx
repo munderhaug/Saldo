@@ -5,6 +5,7 @@
  * (the action re-validates — the client is authoritative for nothing). Account number is financial data.
  */
 import { useRef } from 'react';
+import { TextField } from '~/components/form-field';
 import { Form, Link, redirect, useSubmit } from 'react-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +15,7 @@ import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { createBankAccount } from '~/db/bank.server';
 import { bankAccountInput, type BankAccountInput } from '~/contracts';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export function meta() {
   return [{ title: t('bank.form.title') }];
@@ -80,33 +82,36 @@ export default function NewBankAccountRoute({ loaderData, actionData }: Route.Co
         onSubmit={(event) => void handleSubmit(onValid)(event)}
         className="grid gap-5"
       >
-        <Field
+        <TextField
           id="label"
           label={t('bank.form.labelLabel')}
           hint={t('bank.form.labelHint')}
           error={errors.label?.message}
-          inputProps={{ ...register('label'), autoComplete: 'off' }}
+          registration={register('label')}
         />
-        <Field
+        <TextField
           id="accountNumber"
           label={t('bank.form.accountNumberLabel')}
           hint={t('bank.form.accountNumberHint')}
           error={errors.accountNumber?.message}
-          inputProps={{ ...register('accountNumber'), autoComplete: 'off', inputMode: 'numeric' }}
+          registration={register('accountNumber')}
+          inputMode="numeric"
           tabular
         />
-        <Field
+        <TextField
           id="currency"
           label={t('bank.form.currencyLabel')}
           error={errors.currency?.message}
-          inputProps={{ ...register('currency'), autoComplete: 'off' }}
+          registration={register('currency')}
+          uppercase
         />
-        <Field
+        <TextField
           id="gocardlessAccountId"
           label={t('bank.form.gocardlessLabel')}
           hint={t('bank.form.gocardlessHint')}
           error={errors.gocardlessAccountId?.message}
-          inputProps={{ ...register('gocardlessAccountId'), autoComplete: 'off' }}
+          registration={register('gocardlessAccountId')}
+          autoComplete="off"
         />
 
         {actionData?.error && (
@@ -116,12 +121,9 @@ export default function NewBankAccountRoute({ loaderData, actionData }: Route.Co
         )}
 
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm"
-          >
+          <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 items-center rounded-md px-4 py-2 text-sm">
             {t('bank.form.submit')}
-          </button>
+          </SubmitButton>
           <Link
             to={`/orgs/${orgId}/bank`}
             className="text-muted-foreground inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline"
@@ -131,54 +133,5 @@ export default function NewBankAccountRoute({ loaderData, actionData }: Route.Co
         </div>
       </Form>
     </main>
-  );
-}
-
-function Field({
-  id,
-  label,
-  hint,
-  error,
-  inputProps,
-  tabular,
-}: {
-  id: string;
-  label: string;
-  hint?: string | undefined;
-  error?: string | undefined;
-  inputProps: React.InputHTMLAttributes<HTMLInputElement>;
-  tabular?: boolean | undefined;
-}) {
-  const hintId = hint ? `${id}-hint` : undefined;
-  const errorId = error ? `${id}-error` : undefined;
-  return (
-    <div className="grid gap-1.5">
-      <label htmlFor={id} className="font-text text-sm">
-        {label}
-      </label>
-      <input
-        id={id}
-        type="text"
-        aria-describedby={[errorId, hintId].filter(Boolean).join(' ') || undefined}
-        aria-invalid={error ? true : undefined}
-        className={[
-          'border-input bg-background rounded-md border px-3 py-2 text-sm',
-          tabular ? 'tabular' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-        {...inputProps}
-      />
-      {hint && (
-        <p id={hintId} className="text-muted-foreground text-sm">
-          {hint}
-        </p>
-      )}
-      {error && (
-        <p id={errorId} role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
-      )}
-    </div>
   );
 }

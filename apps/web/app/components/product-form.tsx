@@ -21,6 +21,7 @@ import type { AccountOption, VatCodeOption } from '~/db/products.server';
 import { productKindLabel } from '~/lib/product-format';
 import { SelectField, TextField } from '~/components/form-field';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
 
 export interface ProductFormProps {
   readonly defaultValues: ProductInput;
@@ -136,7 +137,7 @@ export function ProductForm({
             hint={t('products.form.priceHint')}
             error={errors.unitPriceKr?.message}
             registration={register('unitPriceKr')}
-            inputMode="numeric"
+            inputMode="decimal"
             tabular
             extraDescribedBy={priceInclVat !== null ? 'unitPriceKr-incl' : undefined}
           />
@@ -192,12 +193,9 @@ export function ProductForm({
         </p>
       )}
 
-      <button
-        type="submit"
-        className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-      >
+      <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
         {submitLabel}
-      </button>
+      </SubmitButton>
     </Form>
   );
 }

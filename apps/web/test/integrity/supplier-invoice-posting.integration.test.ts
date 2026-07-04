@@ -15,7 +15,7 @@ import type { SupplierInvoiceInput } from '../../app/contracts/supplier-invoice.
 // Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Skips cleanly otherwise.
 
 /**
- * Supplier-invoice → ledger posting path (feat-supplier-invoices, ADR 0054). Drives the REAL route
+ * Supplier-invoice → ledger posting path (feat-supplier-invoices, ADR 0056). Drives the REAL route
  * helpers (`createDraft` → `postSupplierInvoice`) through the non-owner `saldo_app` role under
  * FORCE-RLS, exactly as the action runs them, against a fully-provisioned org. It proves: a registered
  * org's deductible line posts a BALANCED, POSTED AP voucher (cost net + input VAT split + supplier

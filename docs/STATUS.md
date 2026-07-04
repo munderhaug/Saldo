@@ -6,10 +6,46 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-06-29 — session `feat-supplier-invoices` (Purchases completed, ADR 0054); prior
-`review-followups` (2026-06-28 repo review), `saft-export` (ADR 0052), `reporting` (ADR 0051).
+**Last updated:** 2026-07-04 — sessions `review-2026-07-03-fixes` (the 2026-07-03 repo review, P0
+through P2 + docs) and `feat-supplier-invoices` (Purchases completed, ADR 0056); prior
+`review-followups` (2026-06-28 review, archived at `docs/archive/repo-code-review-2026-06-28.md`).
 
-### Latest landed — Purchases completed (feat-supplier-invoices, ADR 0054)
+### Review 2026-07-03 — landed this session (details: git log on the branch)
+**P0:** a credit-note draft can no longer revert to a positive invoice (kind/creditsInvoiceId are
+immutable in `updateDraft` + the editor locks kind); the vision-LLM receipt extract requires org
+membership + a per-user rate limit; posting append-only now covers INSERT (new trigger
+`posting_immutable_insert`, same-tx carve-out, in the DR verifier's required list). **P1:** rate
+limiters key on the trusted right-most XFF hop; reconciliation serializes concurrent confirms (FOR
+UPDATE + guarded UPDATEs + CAS `transitionInvoice`; concurrency tests); a shared pending-aware
+`SubmitButton` backs every submit; `issueInvoice` locks before allocating (a raced issue never wastes
+a gapless number); **ADR 0054 — category-level VAT rounding** (BR-CO-17) across totals/voucher legs/
+frozen breakdown/preview; MVA-melding reports code 6 unntatt turnover per the official example; CI
+gained the introspect-drift gate, digest-pinned PG, RuleTester coverage for eslint-plugin-saldo, and
+lost `--passWithNoTests`. **P2:** contracts correlate kind↔creditsInvoiceId (+ email/quantity bounds);
+CSV import validates currency + reports true file lines; domain dedups (isoDayOrdinal, oreToAmount,
+SAF-T CSV prelude, tax-code test fixture) + negative-amount guards + dead-export prune; same-org FK on
+`bank_transaction.matched_voucher_id` + hot-path indexes + DR counter-vs-max(invoice_number) check;
+web dedups (Money everywhere, MoneyText, report total row, TextField amounts, route-param guard) +
+a11y (keyboard-scrollable tables, titles, decimal inputMode, --paid/--overdue badge tokens, review
+state survives a failed receipt confirm, no-JS invoice form round-trip keeps input) + real PWA icons/
+favicon; root loader re-issues the sliding session cookie; **ADR 0055 — dev auth requires explicit
+`DEV_AUTH=true` and never runs in prod** (set it in local `.env` for password login); `Origin: null`
+→ 403. Docs reconciled with the manifests (RHF/TanStack installed; the deferred set marked), the CI
+gate list single-sourced to `ci.yml`, ADR 0010 marked deferred, the Skatteetaten validation client
+explicitly quarantined until `wire-skatteetaten-validation`.
+
+**Open follow-ups from that review:** the two remaining §12/13 nice-to-haves — consolidating the
+remaining bespoke labelled fields beyond the amount inputs, and per-table `aria-label`s at call sites
+(the component accepts one). `recordReverseChargePurchase` is intentionally kept for the
+supplier-invoices PR (#58, since merged), and `saftClosingBalanceNet` is kept as the SAF-T export integrity
+tie-out (both were flagged dead). The review report lives on branch `claude/repo-code-review-bbupxz`
+(`docs/repo-code-review-2026-07-03.md` there); every finding was cross-checked against it after it
+surfaced, and the last gaps (db:lint pipe swallow, lockfile-pinned squawk/cdxgen, quote-aware SAF-T
+splitter, the orgs.new/bank.new local Field copies, likviditet total row, CardTitle-as-heading,
+manifest orientation lock, remaining tech-stack rows, the 2026-06-23 audit archived, the
+termMonths/BIMONTHLY_TERMS/imbalance dead exports) were closed in follow-up commits.
+
+### Latest landed — Purchases completed (feat-supplier-invoices, ADR 0056)
 The accounts-payable side of purchases is now end-to-end. **Domain:** `derivePurchaseInvoice` merges
 per-line `derivePurchase` / `deriveReverseChargePurchase` into one balanced AP voucher (the input-VAT
 fork reused, payable credited net on reverse-charge lines); `expense-deductibility` encodes the
@@ -99,8 +135,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 54 ADRs (0001–0054) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 81 tasks (42 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 56 ADRs (0001–0056) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 82 tasks (43 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `design-visual-spike` [medium/M] — Visual-identity spike — illustration style + the companion's look (on carnival tokens + type)
 <!-- /AUTOGEN:repo-status -->
 

@@ -29,7 +29,7 @@ export type VatTreatment =
   | 'exempt' // unntatt — turnover outside the VAT Act; any status (6) — the § 3-7 revenue line
   | 'input-deductible' // deductible input VAT — registered only (1, 11, 12, 13, 14, 15)
   | 'reverse-charge' // buyer/seller self-accounts both legs — sequenced to `vat-reverse-charge`
-  | 'no-treatment'; // technical no-VAT codes; any status (0, 7, 20)
+  | 'no-treatment'; // technical no-VAT codes; any status (0, 7 — NOT 20, which is import reverse-charge basis)
 
 /** Why a `checkVatLine` verdict is not a plain pass — a blocking error, or the RC advisory. */
 export type VatLineReason =

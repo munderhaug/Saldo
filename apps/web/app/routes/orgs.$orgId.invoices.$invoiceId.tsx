@@ -1,4 +1,5 @@
 import { Form, Link, redirect } from 'react-router';
+import { Money } from '~/components/money';
 import { z } from 'zod';
 import {
   INVOICE_STATUSES,
@@ -43,6 +44,11 @@ import {
   TableRow,
 } from '~/components/ui/table';
 import { t } from '~/copy';
+import { SubmitButton } from '~/components/ui/submit-button';
+
+export function meta() {
+  return [{ title: t('invoices.title') }];
+}
 
 export function headers() {
   return { 'Cache-Control': 'private, no-store' };
@@ -100,8 +106,11 @@ export async function action({ request, params }: Route.ActionArgs) {
   const detailUrl = `/orgs/${params.orgId}/invoices/${params.invoiceId}`;
 
   if (intent === 'save') {
-    const parsed = invoiceInput.safeParse(invoiceFormToObject(form));
-    if (!parsed.success) return { error: t('invoices.form.errorInvalidInput') };
+    // On any failure the submitted values ride back with the error, so the no-JS round-trip
+    // re-renders the user's edits instead of resetting to the stored draft (review 2026-07-03 §13).
+    const raw = invoiceFormToObject(form) as InvoiceInput;
+    const parsed = invoiceInput.safeParse(raw);
+    if (!parsed.success) return { error: t('invoices.form.errorInvalidInput'), values: raw };
     const result = await withUserOrg(request, params.orgId, (tx) =>
       updateDraft(tx, params.orgId, params.invoiceId, parsed.data),
     );
@@ -111,6 +120,7 @@ export async function action({ request, params }: Route.ActionArgs) {
           result.error === 'not-a-draft'
             ? t('invoices.error.notADraft')
             : t(`invoices.error.${result.error}`),
+        values: raw,
       };
     }
     return redirect(detailUrl);
@@ -186,8 +196,10 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
   const errorMessage = actionData && 'error' in actionData ? actionData.error : undefined;
   const successMessage = actionData && 'success' in actionData ? actionData.success : undefined;
 
-  const defaultValues: InvoiceInput = {
-    kind: invoice.kind === 'credit_note' ? 'invoice' : invoice.kind,
+  const submitted =
+    actionData && 'values' in actionData && actionData.values ? actionData.values : undefined;
+  const defaultValues: InvoiceInput = submitted ?? {
+    kind: invoice.kind,
     customerId: invoice.customerId ?? '',
     customerName: invoice.customerName,
     customerEmail: invoice.customerEmail ?? '',
@@ -251,17 +263,15 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
             submitLabel={t('invoices.form.submitSave')}
             intent="save"
             error={undefined}
+            lockKind
           />
           <section className="border-input grid gap-2 border-t pt-4">
             <p className="text-muted-foreground text-sm">{t('invoices.detail.issueNote')}</p>
             <Form method="post">
               <input type="hidden" name="intent" value="issue" />
-              <button
-                type="submit"
-                className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
-              >
+              <SubmitButton className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm">
                 {t('invoices.detail.issue')}
-              </button>
+              </SubmitButton>
             </Form>
           </section>
         </>
@@ -293,12 +303,9 @@ export default function InvoiceDetailRoute({ loaderData, actionData }: Route.Com
           {invoice.kind === 'invoice' && (
             <Form method="post">
               <input type="hidden" name="intent" value="credit-note" />
-              <button
-                type="submit"
-                className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
-              >
+              <SubmitButton className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm">
                 {t('invoices.detail.createCreditNote')}
-              </button>
+              </SubmitButton>
             </Form>
           )}
         </section>
@@ -354,13 +361,12 @@ function DeliverySection({
           <p id="send-desc" className="text-muted-foreground text-sm">
             {t('invoices.detail.sendBody', { email: customerEmail })}
           </p>
-          <button
-            type="submit"
+          <SubmitButton
             aria-describedby="send-desc"
             className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"
           >
             {t('invoices.detail.send')}
-          </button>
+          </SubmitButton>
         </Form>
       ) : (
         <p className="text-muted-foreground text-sm">{t('invoices.detail.sendNoEmail')}</p>
@@ -374,12 +380,9 @@ function LifecycleButton({ to, label }: { to: InvoiceStatus; label: string }) {
     <Form method="post">
       <input type="hidden" name="intent" value="transition" />
       <input type="hidden" name="to" value={to} />
-      <button
-        type="submit"
-        className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
-      >
+      <SubmitButton className="border-input font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm">
         {label}
-      </button>
+      </SubmitButton>
     </Form>
   );
 }
@@ -440,7 +443,7 @@ function ReadOnlyInvoice({
               </TableCell>
               <TableCell className="tabular">{vatLabel.get(l.vatCodeId) ?? ''}</TableCell>
               <TableCell className="tabular text-right">
-                {formatKr(øre(l.netOre))} {t('common.currency')}
+                <Money ore={l.netOre} />
               </TableCell>
             </TableRow>
           ))}
@@ -451,19 +454,19 @@ function ReadOnlyInvoice({
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsNet')}</dt>
           <dd className="tabular">
-            {formatKr(øre(invoice.netOre))} {t('common.currency')}
+            <Money ore={invoice.netOre} />
           </dd>
         </div>
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsVat')}</dt>
           <dd className="tabular">
-            {formatKr(øre(invoice.vatOre))} {t('common.currency')}
+            <Money ore={invoice.vatOre} />
           </dd>
         </div>
         <div className="font-text flex justify-between">
           <dt>{t('invoices.form.totalsGross')}</dt>
           <dd className="tabular">
-            {formatKr(øre(invoice.grossOre))} {t('common.currency')}
+            <Money ore={invoice.grossOre} />
           </dd>
         </div>
       </dl>

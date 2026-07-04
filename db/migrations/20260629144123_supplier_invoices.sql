@@ -1,4 +1,4 @@
--- Supplier invoices (build-spec §8.5, feat-supplier-invoices, ADR 0054): the accounts-payable side of
+-- Supplier invoices (build-spec §8.5, feat-supplier-invoices, ADR 0056): the accounts-payable side of
 -- purchases — a RECEIVED supplier invoice the org records and books to the ledger. UNLIKE a sales
 -- invoice we ISSUE, this document arrives already finalised by the supplier, so there is NO gapless
 -- per-org number (the supplier's own invoice number is a free-text reference) and no issue lifecycle —

@@ -10,7 +10,7 @@ import type { OwnerEventKind } from '../../app/contracts/owner-event.js';
 // Needs a real Postgres (Docker/Testcontainers, or SALDO_TEST_PG_URI). Skips cleanly otherwise.
 
 /**
- * Owner-economy events → ledger posting (feat-supplier-invoices, ADR 0054). Drives the REAL
+ * Owner-economy events → ledger posting (feat-supplier-invoices, ADR 0056). Drives the REAL
  * `recordOwnerEvent` helper through the non-owner `saldo_app` role under FORCE-RLS, exactly as the
  * action runs it, against a fully-provisioned org. It proves each sole-proprietor equity event posts a
  * BALANCED, POSTED voucher: a drawing (privatuttak) debits 2060 / credits the bank; an outlay (utlegg)

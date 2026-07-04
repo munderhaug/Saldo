@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ANNUAL_TERM,
-  BIMONTHLY_TERMS,
-  periodElementName,
-  periodeValue,
-  termKey,
-  termMonths,
-  type MvaTerm,
-} from './term.js';
+import { ANNUAL_TERM, periodElementName, periodeValue, termKey, type MvaTerm } from './term.js';
+
+// Local fixture: the six bimonthly terms, in order (the runtime model keeps only the mapping —
+// review 2026-07-03 §6 pruned the unused exported list + month-window helper as speculative).
+const BIMONTHLY_TERMS: readonly MvaTerm[] = ([1, 2, 3, 4, 5, 6] as const).map((t) => ({
+  kind: 'bimonthly',
+  term: t,
+}));
 
 describe('MVA term model', () => {
   it('has six bimonthly terms in order', () => {
@@ -25,20 +24,10 @@ describe('MVA term model', () => {
   it('the annual term maps to the schema aarlig value + element', () => {
     expect(periodeValue(ANNUAL_TERM)).toBe('aarlig');
     expect(periodElementName(ANNUAL_TERM)).toBe('skattleggingsperiodeAar');
-    expect(termMonths(ANNUAL_TERM)).toEqual({ fromMonth: 1, toMonth: 12 });
     expect(termKey(ANNUAL_TERM)).toBe('aar');
   });
 
-  it('bimonthly terms cover contiguous, non-overlapping two-month windows spanning the year', () => {
-    const windows = BIMONTHLY_TERMS.map(termMonths);
-    expect(windows).toEqual([
-      { fromMonth: 1, toMonth: 2 },
-      { fromMonth: 3, toMonth: 4 },
-      { fromMonth: 5, toMonth: 6 },
-      { fromMonth: 7, toMonth: 8 },
-      { fromMonth: 9, toMonth: 10 },
-      { fromMonth: 11, toMonth: 12 },
-    ]);
+  it('every bimonthly term maps to the two-month schema element', () => {
     for (const t of BIMONTHLY_TERMS) {
       expect(periodElementName(t)).toBe('skattleggingsperiodeToMaaneder');
     }

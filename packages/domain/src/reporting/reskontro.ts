@@ -13,6 +13,7 @@
  * `asOf` (overdue is positive); a missing due date is treated as not-yet-due.
  */
 import { type Øre, ZERO, addØre, sumØre } from '../money/ore.js';
+import { isoDayOrdinal } from '../time/iso-date.js';
 
 /** An open receivable item the query layer hands us: one issued, unpaid invoice (or credit note). */
 export interface OpenReceivable {
@@ -60,20 +61,6 @@ const EMPTY_BUCKETS: AgingTotals = {
   d61_90: ZERO,
   d90plus: ZERO,
 };
-
-/** Parse a strict `YYYY-MM-DD` to a UTC day ordinal, or `null` if malformed (pure; same rule as the matcher). */
-function isoDayOrdinal(iso: string): number | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (!m) return null;
-  const year = Number(m[1]);
-  const month = Number(m[2]);
-  const day = Number(m[3]);
-  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-  const ms = Date.UTC(year, month - 1, day);
-  const back = new Date(ms);
-  if (back.getUTCMonth() !== month - 1 || back.getUTCDate() !== day) return null;
-  return Math.floor(ms / 86_400_000);
-}
 
 /** The aging bucket for a due date relative to `asOf` (both ISO). Unparseable/missing → current. */
 export function agingBucket(dueDate: string | null, asOf: string): AgingBucket {

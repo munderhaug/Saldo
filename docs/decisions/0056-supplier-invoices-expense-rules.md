@@ -1,4 +1,4 @@
-# ADR 0054 — Supplier invoices, expense rules, owner draws & mileage
+# ADR 0056 — Supplier invoices, expense rules, owner draws & mileage
 
 - **Status:** Accepted
 - **Date:** 2026-06-29

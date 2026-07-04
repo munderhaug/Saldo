@@ -31,9 +31,13 @@ import {
 } from '~/components/ui/table';
 import type { MessageKey } from '~/copy';
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: data ? `${data.account.number} ${data.account.name}` : t('reports.hovedbok.title') },
+    {
+      title: loaderData
+        ? `${loaderData.account.number} ${loaderData.account.name}`
+        : t('reports.hovedbok.title'),
+    },
   ];
 }
 

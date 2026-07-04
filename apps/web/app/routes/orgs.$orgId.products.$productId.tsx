@@ -13,8 +13,8 @@ import { productInput, type ProductInput } from '~/contracts';
 import { ProductForm } from '~/components/product-form';
 import { t } from '~/copy';
 
-export function meta({ data }: Route.MetaArgs) {
-  return [{ title: data?.product.name ?? t('products.form.editTitle') }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [{ title: loaderData?.product.name ?? t('products.form.editTitle') }];
 }
 
 export function headers() {

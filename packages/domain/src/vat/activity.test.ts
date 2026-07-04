@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import type { SaftTaxCode } from '../saft/tax-codes.js';
-import { STANDARD_TAX_CODES as codes, taxCode as code } from '../saft/tax-code-fixtures.js';
+import { STANDARD_TAX_CODES as codes, taxCode as code } from '../saft/tax-code.fixtures.js';
 import { checkVatLine } from './line-treatment.js';
 import {
   VAT_ACTIVITIES,

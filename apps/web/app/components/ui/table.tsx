@@ -5,7 +5,7 @@
 import { cn } from '~/lib/utils';
 import { t } from '~/copy';
 
-function Table({ className, ...props }: React.ComponentProps<'table'>) {
+function Table({ className, 'aria-label': ariaLabel, ...props }: React.ComponentProps<'table'>) {
   return (
     // The scroll container is keyboard-focusable (tabIndex) so a wide table can be scrolled without
     // a pointer (WCAG 2.1.1, review 2026-07-03 §13); role/label make the region announceable. This is
@@ -16,7 +16,7 @@ function Table({ className, ...props }: React.ComponentProps<'table'>) {
       className="focus-visible:ring-ring relative w-full overflow-x-auto focus-visible:outline-none focus-visible:ring-2"
       tabIndex={0}
       role="region"
-      aria-label={t('common.tableRegion')}
+      aria-label={ariaLabel ?? t('common.tableRegion')}
     >
       <table
         data-slot="table"

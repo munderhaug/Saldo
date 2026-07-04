@@ -76,7 +76,11 @@ const PURITY_SEAM = new Set(['packages/domain/src/time/clock.ts']);
 
 export function domainPurityViolations() {
   const srcDir = join(root, 'packages/domain/src');
-  const files = walk(srcDir, (p) => p.endsWith('.ts') && !p.endsWith('.test.ts'));
+  // *.fixtures.ts are test-support modules (imported only by tests) — exempt like the tests themselves.
+  const files = walk(
+    srcDir,
+    (p) => p.endsWith('.ts') && !p.endsWith('.test.ts') && !p.endsWith('.fixtures.ts'),
+  );
   const rel = (p) => p.slice(root.length + 1);
   const violations = [];
   const fromRe = /\bfrom\s+['"]([^'"]+)['"]/; // import/export ... from 'x'

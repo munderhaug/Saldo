@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { øre } from '../money/ore.js';
-import { TAX_CODE_INDEX as codes } from '../saft/tax-code-fixtures.js';
+import { TAX_CODE_INDEX as codes } from '../saft/tax-code.fixtures.js';
 import { isBalanced } from '../posting/balance.js';
 import type { AccountNo, PostingLine, VatCode, Voucher } from '../posting/types.js';
 import { runRules } from './types.js';

@@ -16,6 +16,7 @@
  * posts through exactly the same server-authoritative truth as the manual surface.
  */
 import { useRef } from 'react';
+import { MoneyText } from '~/components/money';
 import { TextField } from '~/components/form-field';
 import { Form, Link, redirect, useSubmit } from 'react-router';
 import { useForm } from 'react-hook-form';
@@ -413,11 +414,15 @@ function ReviewStep({
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">{t('receipts.new.fieldNet')}</dt>
-            <dd className="tabular">{review.netFormatted}</dd>
+            <dd className="tabular">
+              <MoneyText value={review.netFormatted} />
+            </dd>
           </div>
           <div className="flex justify-between gap-4">
             <dt className="text-muted-foreground">{t('receipts.new.fieldVat')}</dt>
-            <dd className="tabular">{review.vatFormatted}</dd>
+            <dd className="tabular">
+              <MoneyText value={review.vatFormatted} />
+            </dd>
           </div>
         </dl>
         {!review.vatLooksStandard && (

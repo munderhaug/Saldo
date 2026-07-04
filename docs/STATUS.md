@@ -103,7 +103,7 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 54 ADRs (0001–0054) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Decisions:** 55 ADRs (0001–0055) — index in [`docs/decisions/README.md`](decisions/README.md).
 - **Backlog:** 80 tasks (41 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `feat-supplier-invoices` [high/L] — Supplier invoices, expense rules, owner draws & mileage (purchases completion)
 <!-- /AUTOGEN:repo-status -->

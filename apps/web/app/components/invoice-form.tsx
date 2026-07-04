@@ -10,7 +10,7 @@
  * the UX mirrors the server's HARD BLOCK rather than promising VAT the action will refuse.
  */
 import { useEffect, useRef } from 'react';
-import { Money } from '~/components/money';
+import { Money, MoneyText } from '~/components/money';
 import { Form, useSubmit } from 'react-router';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -347,8 +347,8 @@ export function InvoiceForm({
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-muted-foreground tabular text-sm">
-                  {t('invoices.form.totalsNet')}: {formatKr(previews[index]?.net ?? ZERO)}{' '}
-                  {t('common.currency')}
+                  {t('invoices.form.totalsNet')}:{' '}
+                  <MoneyText value={formatKr(previews[index]?.net ?? ZERO)} />
                 </p>
                 {fields.length > 1 && (
                   <button
@@ -400,7 +400,7 @@ export function InvoiceForm({
         </p>
       )}
 
-      <dl className="border-input grid gap-1 border-t pt-4 text-sm" aria-live="polite">
+      <dl className="border-input grid gap-1 border-t pt-4 text-sm">
         <div className="flex justify-between">
           <dt>{t('invoices.form.totalsNet')}</dt>
           <dd className="tabular">
@@ -413,7 +413,8 @@ export function InvoiceForm({
             <Money ore={totalVat} />
           </dd>
         </div>
-        <div className="font-text flex justify-between">
+        {/* Only the gross announces (aria-live): re-reading all three totals per keystroke is noise. */}
+        <div className="font-text flex justify-between" aria-live="polite">
           <dt>{t('invoices.form.totalsGross')}</dt>
           <dd className="tabular">
             <Money ore={totalGross} />

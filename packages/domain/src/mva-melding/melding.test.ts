@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { øre, sumØre, type Øre } from '../money/ore.js';
 import { orgNr } from '../ids/org-nr.js';
-import { TAX_CODE_INDEX as codeIndex } from '../saft/tax-code-fixtures.js';
+import { TAX_CODE_INDEX as codeIndex } from '../saft/tax-code.fixtures.js';
 import type { VatCode } from '../posting/types.js';
 import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
 import { ANNUAL_TERM } from './term.js';

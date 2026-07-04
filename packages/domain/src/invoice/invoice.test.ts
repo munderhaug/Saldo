@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { addØre, eqØre, mulRate, sumØre, øre, ZERO } from '../money/ore.js';
 import { isValidKidMod10 } from '../ids/kid.js';
-import { taxCode as code } from '../saft/tax-code-fixtures.js';
+import { taxCode as code } from '../saft/tax-code.fixtures.js';
 import { MVA_STATUSES, type MvaStatus } from '../vat/status.js';
 import {
   checkSalesLine,

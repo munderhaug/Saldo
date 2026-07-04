@@ -1,6 +1,7 @@
 ---
 name: new-adr
 description: Scaffold the next-numbered Architecture Decision Record from the template in docs/decisions/. Use whenever a decision needs recording — a new ADR, or superseding an existing one. Computes the next number deterministically so an ADR is never mis-numbered or referenced before it exists (the repo-lint contradiction gate enforces that every "ADR NNNN" cross-reference resolves).
+allowed-tools: Bash(node .claude/skills/new-adr/scripts/next-adr.mjs) Bash(cp docs/decisions/*) Bash(pnpm lint:repo) Read Write Glob Grep
 ---
 
 # New ADR
@@ -11,9 +12,10 @@ zero-padded to four digits. The repo-lint gate (`pnpm lint:repo`) FAILS CI if an
 
 ## Steps
 
-1. **Compute the next number** (don't eyeball it):
+1. **Compute the next number** (don't eyeball it) — a bundled, unit-tested script, not a retyped
+   shell pipeline:
    ```sh
-   printf '%04d\n' "$(( $(ls docs/decisions | grep -oE '^[0-9]{4}' | sort -n | tail -1 | sed 's/^0*//') + 1 ))"
+   node .claude/skills/new-adr/scripts/next-adr.mjs   # prints the next number, e.g. 0052
    ```
 2. **Create** `docs/decisions/NNNN-<kebab-title>.md` from the template:
    ```sh

@@ -7,12 +7,21 @@ set -uo pipefail
 cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
 
 # 1. Dependencies — container state is cached after the hook completes, so a plain install is fine.
+# Keep stdout quiet on success, but on FAILURE surface the real error (the last lines of the install
+# log) instead of swallowing it — a silent half-install just produces confusing fail-closed gate
+# errors later (precommit-check / green-bar block when node_modules is incomplete).
 if command -v corepack >/dev/null 2>&1; then
   corepack enable >/dev/null 2>&1 || true
 fi
 if command -v pnpm >/dev/null 2>&1; then
-  pnpm install --prefer-offline >/dev/null 2>&1 || pnpm install >/dev/null 2>&1 || \
-    echo "session-start: pnpm install did not complete cleanly — run it manually."
+  log="$(mktemp)"
+  if ! pnpm install --prefer-offline >"$log" 2>&1 && ! pnpm install >"$log" 2>&1; then
+    echo "session-start: pnpm install FAILED — the edit-time and turn-end gates will fail closed." >&2
+    echo "session-start: last lines of the install log:" >&2
+    tail -n 15 "$log" >&2
+    echo "session-start: fix the above and re-run 'pnpm install'." >&2
+  fi
+  rm -f "$log"
 fi
 
 # 2. Handover context (printed into the session so pickup is automatic — see .claude/skills/handover).

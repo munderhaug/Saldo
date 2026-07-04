@@ -1,4 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignore": ["apps/web/app/db/relations.ts"]
+  "ignore": ["apps/web/app/db/relations.ts"],
+  "ignoreBinaries": ["claude"]
 }

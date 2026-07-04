@@ -7,8 +7,11 @@
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
 **Last updated:** 2026-07-04 — sessions `review-2026-07-03-fixes` (the 2026-07-03 repo review, P0
-through P2 + docs) and `feat-supplier-invoices` (Purchases completed, ADR 0056); prior
-`review-followups` (2026-06-28 review, archived at `docs/archive/repo-code-review-2026-06-28.md`).
+through P2 + docs), `feat-supplier-invoices` (Purchases completed, ADR 0056) and `harness-hardening`
+(ADR 0057 — the harness keeps its own promises: `review:check`, `eval:validate`, incremental gates;
+the `.claude/settings.json` allowlist sync + `review-reminder.sh` registration are still pending —
+see the harness-verification-gates task notes); prior `review-followups` (2026-06-28 review,
+archived at `docs/archive/repo-code-review-2026-06-28.md`).
 
 ### Review 2026-07-03 — landed this session (details: git log on the branch)
 **P0:** a credit-note draft can no longer revert to a positive invoice (kind/creditsInvoiceId are
@@ -135,8 +138,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 56 ADRs (0001–0056) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 82 tasks (43 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 57 ADRs (0001–0057) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 83 tasks (44 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `design-visual-spike` [medium/M] — Visual-identity spike — illustration style + the companion's look (on carnival tokens + type)
 <!-- /AUTOGEN:repo-status -->
 

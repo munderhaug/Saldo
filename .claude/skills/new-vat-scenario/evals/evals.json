@@ -1,0 +1,27 @@
+{
+  "skill_name": "new-vat-scenario",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add reverse charge (snudd avregning) for services purchased from a foreign supplier.",
+      "expected_output": "Both VAT legs posted in the single status-driven posting function, codes from the SAF-T lists, covered by an exhaustive case test and a fast-check balance property.",
+      "assertions": [
+        "Both VAT legs (computed output and deductible input) are posted, not netted to a single line",
+        "The branch is added in the single status-driven posting function, not as scattered status conditionals",
+        "VAT codes and accounts are taken from the committed SAF-T lists, not hardcoded from memory",
+        "A fast-check property test asserts the voucher balances (sum debit = sum credit) for all amounts"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Representation expenses must have non-deductible input VAT regardless of the org's MVA status.",
+      "expected_output": "Representation input VAT folded into the expense (non-deductible) with an exhaustive table test and no hardcoded codes.",
+      "assertions": [
+        "Input VAT for representation is treated as non-deductible (added to the expense), independent of MVA status",
+        "An exhaustive table test covers the representation case",
+        "No VAT code or account number is hardcoded from memory",
+        "The resulting voucher still balances"
+      ]
+    }
+  ]
+}

@@ -15,7 +15,10 @@ Every VAT/posting change is test-first in the pure core.
      "input VAT deductible iff status ∈ registered_*").
 3. Implement the branch in the single status-driven posting function — no scattered conditionals.
 4. `pnpm --filter @saldo/domain test`.
-5. Run the `vat-reviewer` subagent on the change.
+5. Run the `vat-reviewer` subagent on the change, then **record the pass** with a
+   `Reviewed-by: vat-reviewer` trailer on a commit. `pnpm review:check` (a CI gate) FAILS any
+   `packages/domain/{vat,posting,rules}` diff that has no recorded review — the reviewer is a
+   mechanical gate now, not a reminder.
 
 ## Checklist
 - [ ] output VAT only when registered_*
@@ -37,4 +40,5 @@ Every VAT/posting change is test-first in the pure core.
 
 ## Done means (evidence required)
 - [ ] `pnpm --filter @saldo/domain test` green, incl. a fast-check property for the invariant
-- [ ] `vat-reviewer` subagent run with no violations
+- [ ] `vat-reviewer` subagent run with no violations, recorded via a `Reviewed-by: vat-reviewer`
+  commit trailer (`pnpm review:check` passes)

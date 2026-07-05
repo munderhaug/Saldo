@@ -27,7 +27,7 @@ import { t } from '~/copy';
 export type CompanionExpression = 'attentive' | 'pleased' | 'thinking' | 'unsure' | 'resting';
 
 /** The rungs of ADR 0058's degradation ladder — the only sizes the companion renders at. */
-export type CompanionSize = 96 | 64 | 32 | 20 | 12;
+type CompanionSize = 96 | 64 | 32 | 20 | 12;
 
 const BODY = 'var(--companion)';
 const INK = 'var(--companion-foreground)';

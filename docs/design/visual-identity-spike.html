@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Saldo — visual-identity spike: illustrasjonsstil + companion</title>
+    <style>
+      /* ── Carnival scale primitives (verbatim from apps/web/app/app.css — ADR 0025) ── */
+      :root {
+        --neutral-1: oklch(97.4% 0.012 255.5);
+        --neutral-2: oklch(96.9% 0.015 255.5);
+        --neutral-3: oklch(95.1% 0.024 255.5);
+        --neutral-4: oklch(92.9% 0.029 255.5);
+        --neutral-5: oklch(90.3% 0.03 255.5);
+        --neutral-6: oklch(87.1% 0.03 255.5);
+        --neutral-7: oklch(82.4% 0.03 255.5);
+        --neutral-8: oklch(76% 0.03 264.3);
+        --neutral-9: oklch(64% 0.029 273.2);
+        --neutral-10: oklch(52% 0.026 282);
+        --neutral-11: oklch(42% 0.022 290.9);
+        --neutral-12: oklch(26% 0.028 299.7);
+        --electric-4: oklch(94% 0.028 268);
+        --electric-5: oklch(91.6% 0.04 268);
+        --electric-6: oklch(88.6% 0.055 268);
+        --electric-9: oklch(49.6% 0.226 268);
+        --electric-12: oklch(25.5% 0.171 268);
+        --grape-4: oklch(94% 0.029 283.1);
+        --grape-5: oklch(91.6% 0.042 283.1);
+        --grape-6: oklch(88.6% 0.057 283.1);
+        --grape-9: oklch(56.8% 0.202 283.1);
+        --candy-4: oklch(94% 0.038 345.1);
+        --candy-5: oklch(91.6% 0.054 345.1);
+        --candy-6: oklch(88.6% 0.076 345.1);
+        --candy-9: oklch(72.3% 0.219 345.1);
+        --candy-11: oklch(50.5% 0.215 345.1);
+        --sky-3: oklch(96.1% 0.019 250.8);
+        --sky-4: oklch(94% 0.03 250.8);
+        --sky-5: oklch(91.6% 0.042 250.8);
+        --sky-6: oklch(88.6% 0.058 250.8);
+        --sky-11: oklch(50.5% 0.146 250.8);
+        --lilac-4: oklch(94% 0.039 311.7);
+        --lilac-5: oklch(91.6% 0.056 311.7);
+        --lilac-6: oklch(88.6% 0.077 311.7);
+        --lilac-9: oklch(65.9% 0.15 311.7);
+        --mint-4: oklch(94% 0.041 170.6);
+        --mint-5: oklch(91.6% 0.06 170.6);
+        --mint-6: oklch(88.6% 0.083 170.6);
+        --mint-11: oklch(50.5% 0.099 170.6);
+        --green-3: oklch(96.1% 0.032 153.7);
+        --green-11: oklch(50.5% 0.128 153.7);
+        --amber-3: oklch(96.1% 0.028 70.1);
+        --amber-9: oklch(76.9% 0.165 70.1);
+        --amber-11: oklch(50.5% 0.109 70.1);
+        --amber-12: oklch(25.5% 0.056 70.1);
+        --red-10: oklch(57.5% 0.222 19.9);
+        --paper: oklch(1 0 0);
+        /* Features drawn ON a step-9 solid stay white in both themes — mirrors --primary-foreground. */
+        --solid-fg: oklch(1 0 0);
+        --bg: var(--neutral-1);
+        --ink: var(--neutral-12);
+        --sub: var(--neutral-11);
+        --line: var(--neutral-6);
+        --card: var(--paper);
+      }
+      .dark {
+        --neutral-1: oklch(16.5% 0.018 255.5);
+        --neutral-2: oklch(19.5% 0.022 255.5);
+        --neutral-3: oklch(23.2% 0.026 255.5);
+        --neutral-4: oklch(27.2% 0.029 255.5);
+        --neutral-5: oklch(31.8% 0.03 255.5);
+        --neutral-6: oklch(37.5% 0.03 255.5);
+        --neutral-7: oklch(44% 0.03 255.5);
+        --neutral-8: oklch(52% 0.03 264.3);
+        --neutral-9: oklch(61% 0.029 273.2);
+        --neutral-10: oklch(68% 0.026 282);
+        --neutral-11: oklch(79% 0.022 290.9);
+        --neutral-12: oklch(94.5% 0.018 299.7);
+        --electric-4: oklch(28.5% 0.066 268);
+        --electric-5: oklch(33.3% 0.095 268);
+        --electric-6: oklch(39.1% 0.131 268);
+        --electric-9: oklch(49.6% 0.226 268);
+        --electric-12: oklch(94.5% 0.026 268);
+        --grape-4: oklch(28.5% 0.059 283.1);
+        --grape-5: oklch(33.3% 0.085 283.1);
+        --grape-6: oklch(39.1% 0.117 283.1);
+        --grape-9: oklch(56.8% 0.202 283.1);
+        --candy-4: oklch(28.5% 0.064 345.1);
+        --candy-5: oklch(33.3% 0.092 345.1);
+        --candy-6: oklch(39.1% 0.127 345.1);
+        --candy-9: oklch(72.3% 0.219 345.1);
+        --candy-11: oklch(80% 0.145 345.1);
+        --sky-3: oklch(24.3% 0.03 250.8);
+        --sky-4: oklch(28.5% 0.046 250.8);
+        --sky-5: oklch(33.3% 0.066 250.8);
+        --sky-6: oklch(39.1% 0.091 250.8);
+        --sky-11: oklch(80% 0.104 250.8);
+        --lilac-4: oklch(28.5% 0.044 311.7);
+        --lilac-5: oklch(33.3% 0.063 311.7);
+        --lilac-6: oklch(39.1% 0.087 311.7);
+        --lilac-9: oklch(65.9% 0.15 311.7);
+        --mint-4: oklch(28.5% 0.041 170.6);
+        --mint-5: oklch(33.3% 0.06 170.6);
+        --mint-6: oklch(39.1% 0.077 170.6);
+        --mint-11: oklch(80% 0.149 170.6);
+        --green-3: oklch(24.3% 0.032 153.7);
+        --green-11: oklch(80% 0.173 153.7);
+        --amber-3: oklch(24.3% 0.031 70.1);
+        --amber-9: oklch(76.9% 0.165 70.1);
+        --amber-11: oklch(80% 0.162 70.1);
+        --amber-12: oklch(94.5% 0.04 70.1);
+        --red-10: oklch(68% 0.209 19.9);
+        --paper: var(--neutral-2);
+        --card: var(--neutral-2);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        /* Uses the real families when installed; falls back to close system approximations
+       (report is offline-self-contained — the app self-hosts the real files, ADR 0026). */
+        font-family: 'IBM Plex Sans', 'IBM Plex Sans Variable', system-ui, sans-serif;
+        font-weight: 400;
+        line-height: 1.5;
+        font-variant-numeric: tabular-nums lining-nums;
+      }
+      .serif {
+        font-family: 'Fraunces', 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+        font-weight: 340;
+      }
+      strong,
+      b {
+        font-weight: 450;
+      } /* the ADR 0026 weight ceiling applies to the artifact too */
+      main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 2.5rem 1.5rem 6rem;
+      }
+      h1 {
+        font-size: 2.2rem;
+        line-height: 1.15;
+        margin: 0 0 0.35rem;
+      }
+      h2 {
+        font-size: 1.45rem;
+        margin: 3.2rem 0 0.3rem;
+      }
+      h3 {
+        font-size: 1.02rem;
+        font-weight: 450;
+        margin: 1.4rem 0 0.4rem;
+      }
+      h1,
+      h2 {
+        font-family: 'Fraunces', Georgia, serif;
+        font-weight: 340;
+      }
+      p {
+        max-width: 72ch;
+      }
+      .sub {
+        color: var(--sub);
+      }
+      .small {
+        font-size: 0.85rem;
+      }
+      .kicker {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.72rem;
+        color: var(--sub);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1.1rem 1.2rem;
+      }
+      .grid {
+        display: grid;
+        gap: 1rem;
+      }
+      .g3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .g2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      @media (max-width: 860px) {
+        .g3,
+        .g2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      .stage {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .verdict {
+        border-radius: 999px;
+        padding: 0.1rem 0.6rem;
+        font-size: 0.75rem;
+        display: inline-block;
+      }
+      .verdict.pick {
+        background: var(--green-3);
+        color: var(--green-11);
+      }
+      .verdict.no {
+        background: var(--neutral-3);
+        color: var(--sub);
+      }
+      ul {
+        padding-left: 1.15rem;
+        margin: 0.4rem 0;
+      }
+      li {
+        margin: 0.18rem 0;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.9rem;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.45rem 0.6rem;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        font-weight: 450;
+        color: var(--sub);
+        font-size: 0.8rem;
+      }
+      .sw {
+        display: inline-block;
+        width: 1.05rem;
+        height: 1.05rem;
+        border-radius: 5px;
+        vertical-align: -3px;
+        margin-right: 0.45rem;
+        border: 1px solid var(--line);
+      }
+      .money {
+        font-variant-numeric: tabular-nums lining-nums;
+        text-align: right;
+      }
+      .row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      figure {
+        margin: 0;
+        text-align: center;
+      }
+      figcaption {
+        font-size: 0.78rem;
+        color: var(--sub);
+        margin-top: 0.35rem;
+      }
+      button.copy,
+      button.theme {
+        font: inherit;
+        font-size: 0.8rem;
+        border: 1px solid var(--line);
+        background: var(--card);
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 0.3rem 0.7rem;
+        cursor: pointer;
+      }
+      details {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 0.6rem 0.9rem;
+        margin: 0.8rem 0;
+        background: var(--card);
+      }
+      summary {
+        cursor: pointer;
+        font-weight: 450;
+      }
+      pre {
+        white-space: pre-wrap;
+        font-size: 0.82rem;
+        background: var(--neutral-2);
+        border-radius: 8px;
+        padding: 0.8rem;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+      }
+      .note {
+        border-left: 3px solid var(--electric-9);
+        padding: 0.1rem 0 0.1rem 0.9rem;
+      }
+      /* mockups */
+      .mock {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--card);
+        padding: 1.2rem 1.3rem;
+      }
+      .mock .headline {
+        font-size: 2.4rem;
+        line-height: 1.1;
+        margin: 0.2rem 0 0.8rem;
+      }
+      .fence {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        border-radius: 9px;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.9rem;
+        margin-top: 0.45rem;
+      }
+      .btn {
+        display: inline-block;
+        border-radius: 9px;
+        padding: 0.5rem 1rem;
+        font-size: 0.92rem;
+        border: 1px solid transparent;
+      }
+      .btn.primary {
+        background: var(--electric-9);
+        color: var(--solid-fg);
+      }
+      .btn.ghost {
+        background: transparent;
+        border-color: var(--line);
+        color: var(--ink);
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.12rem 0.6rem;
+        font-size: 0.78rem;
+        background: var(--amber-3);
+        color: var(--amber-11);
+      }
+      .chip .dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: var(--amber-9);
+      }
+      .soberline {
+        border-top: 1px dashed var(--line);
+        margin: 2.2rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="topbar">
+        <div>
+          <p class="kicker">Saldo · design-visual-spike · 2026-07-05</p>
+          <h1>Illustrasjonsstil + companion</h1>
+          <p class="sub">
+            Bygget utelukkende på karneval-tokens (ADR 0025) og Fraunces/Plex-typografien (ADR
+            0026). Grunnlag: <code>docs/experience-principles.md</code>,
+            <code>.claude/rules/design-system.md</code>. Alle farger i denne filen er de faktiske
+            OKLCH-verdiene fra <code>app.css</code> — prøv mørk modus.
+          </p>
+        </div>
+        <button class="theme" onclick="document.documentElement.classList.toggle('dark')">
+          Lys / mørk
+        </button>
+      </div>
+
+      <h2>1 · Hva denne spiken avgjør</h2>
+      <p>
+        Tokens og typografi er landet. Det som mangler av den visuelle identiteten er
+        <strong>(a)</strong> en illustrasjonsstil som er «distinctive but legible» uten gradienter
+        og uten generisk AI-look, og <strong>(b)</strong> companionens utseende — den vennlige
+        guiden ADR 0025 åpnet for, som aldri blir gamification og som trekker seg unna ved
+        §5.5-øyeblikkene.
+      </p>
+
+      <h2>2 · Tre retninger, samme motiv</h2>
+      <p class="sub">
+        Motivet er hverdagsjobben: en kvittering som «faller på plass». Hver retning er tegnet kun
+        med token-farger.
+      </p>
+
+      <div class="g3 grid">
+        <div class="card">
+          <h3>A · Papirklipp <span class="verdict pick">valgt</span></h3>
+          <div class="stage">
+            <svg
+              width="260"
+              height="190"
+              viewBox="0 0 260 190"
+              role="img"
+              aria-label="Retning A: flate, lagvise geometriske former"
+            >
+              <circle cx="88" cy="108" r="70" fill="var(--sky-5)" />
+              <path d="M260,190 h-90 a90 90 0 0 1 90,-90 z" fill="var(--mint-5)" />
+              <path d="M22,54 a26 26 0 0 1 52 0 z" fill="var(--candy-9)" />
+              <path
+                d="M118,44 a8 8 0 0 1 8,-8 h60 a8 8 0 0 1 8,8 v96 l-9.5,8 -9.5,-8 -9.5,8 -9.5,-8 -9.5,8 -9.5,-8 -9.5,8 -9.5,-8 z"
+                fill="var(--paper)"
+              />
+              <rect x="132" y="58" width="42" height="5" rx="2.5" fill="var(--ink)" />
+              <rect x="132" y="72" width="50" height="5" rx="2.5" fill="var(--ink)" />
+              <rect x="132" y="86" width="34" height="5" rx="2.5" fill="var(--ink)" />
+              <rect x="132" y="112" width="50" height="7" rx="3.5" fill="var(--electric-9)" />
+              <circle cx="112" cy="148" r="17" fill="var(--electric-9)" />
+              <circle cx="112" cy="148" r="6" fill="var(--solid-fg)" />
+              <path d="M206,158 h22 l-11,-19 z" fill="var(--grape-9)" />
+            </svg>
+          </div>
+          <ul class="small">
+            <li>Flate, lagvise former: sirkler, halvsirkler, myke trekanter, avrundede staver.</li>
+            <li>
+              Store flater i den myke registeret (sky/lilac/mint 4–6); blikkfang i solidene (step
+              9).
+            </li>
+            <li>
+              Ingen konturer, gradienter eller skygger — kun «blekk»-mikrodetaljer i neutral-12.
+            </li>
+            <li>Trivielt token-ren, skalerer fra favicon til tom-tilstand, eierbar.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>B · Blekk + én farge <span class="verdict no">detaljene lånes</span></h3>
+          <div class="stage">
+            <svg
+              width="260"
+              height="190"
+              viewBox="0 0 260 190"
+              role="img"
+              aria-label="Retning B: monolinje med ett flatt fargefelt"
+            >
+              <circle cx="140" cy="100" r="58" fill="var(--candy-6)" />
+              <path
+                d="M108,42 a8 8 0 0 1 8,-8 h60 a8 8 0 0 1 8,8 v96 l-9.5,8 -9.5,-8 -9.5,8 -9.5,-8 -9.5,8 -9.5,-8 -9.5,8 -9.5,-8 z"
+                fill="none"
+                stroke="var(--ink)"
+                stroke-width="2.5"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M122,60 h40 M122,74 h48 M122,88 h32 M122,112 h48"
+                stroke="var(--ink)"
+                stroke-width="2.5"
+                stroke-linecap="round"
+              />
+              <circle cx="94" cy="146" r="16" fill="none" stroke="var(--ink)" stroke-width="2.5" />
+              <path
+                d="M50,60 q8,-6 16,0 M44,80 q8,-6 16,0"
+                stroke="var(--ink)"
+                stroke-width="2"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <ul class="small">
+            <li>Selvsikker neutral-12-linje + ett flatt «spot»-felt bak. Varm, redaksjonell.</li>
+            <li>
+              Risiko: linjetykkelse er vanskelig å holde konsistent på tvers av bidrag, og linjen
+              dør under ~24&nbsp;px.
+            </li>
+            <li>
+              Konklusjon: ikke hovedstil — men <strong>blekk-detaljene</strong> (ansikt, småting)
+              hentes inn i retning A.
+            </li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>C · Stille glyf <span class="verdict no">for anonym</span></h3>
+          <div class="stage">
+            <svg
+              width="260"
+              height="190"
+              viewBox="0 0 260 190"
+              role="img"
+              aria-label="Retning C: minimal enfarget glyf"
+            >
+              <circle cx="130" cy="95" r="62" fill="var(--neutral-3)" />
+              <path
+                d="M104,62 a6 6 0 0 1 6,-6 h40 a6 6 0 0 1 6,6 v62 l-8.7,7 -8.7,-7 -8.6,7 -8.7,-7 -8.6,7 -8.7,-7 z"
+                fill="var(--electric-9)"
+              />
+              <rect x="114" y="72" width="26" height="4" rx="2" fill="var(--solid-fg)" />
+              <rect x="114" y="84" width="32" height="4" rx="2" fill="var(--solid-fg)" />
+              <rect x="114" y="104" width="32" height="5" rx="2.5" fill="var(--solid-fg)" />
+            </svg>
+          </div>
+          <ul class="small">
+            <li>Nesten-ikonografi: én solid pr. flate. Trygt, billig, aldri feil.</li>
+            <li>
+              Men det er nøyaktig slik alle andre fintech-produkter ser ut — den feiler
+              «untraditional»-ambisjonen i ADR 0025 og bærer ingen companion.
+            </li>
+            <li>Beholdes som fallback-nivå for rene ikoner (ikonsettet, ikke illustrasjon).</li>
+          </ul>
+        </div>
+      </div>
+
+      <details>
+        <summary>Sammenlikning på tvers (hvorfor A vinner)</summary>
+        <table>
+          <thead>
+            <tr>
+              <th>Kriterium</th>
+              <th>A · Papirklipp</th>
+              <th>B · Blekk</th>
+              <th>C · Glyf</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Egenart («untraditional»)</td>
+              <td>Høy — eierbar geometri</td>
+              <td>Middels–høy</td>
+              <td>Lav</td>
+            </tr>
+            <tr>
+              <td>Overlever små størrelser</td>
+              <td>Ja — degraderer til rene former</td>
+              <td>Nei &lt; ~24 px</td>
+              <td>Ja</td>
+            </tr>
+            <tr>
+              <td>Produksjonskonsistens (mange bidragsytere/AI)</td>
+              <td>Høy — formgrammatikk, ikke strek</td>
+              <td>Lav</td>
+              <td>Høy</td>
+            </tr>
+            <tr>
+              <td>Mørk modus</td>
+              <td>Automatisk via tokens (solidene er tema-stabile)</td>
+              <td>OK</td>
+              <td>OK</td>
+            </tr>
+            <tr>
+              <td>Risiko</td>
+              <td>«Memphis-generisk» hvis grammatikken ikke disiplineres</td>
+              <td>Ujevn strek</td>
+              <td>Kald/anonym</td>
+            </tr>
+          </tbody>
+        </table>
+      </details>
+
+      <h2>3 · Grammatikken (retning A, med B-blekk)</h2>
+      <div class="card">
+        <h3>Formvokabular</h3>
+        <div class="stage" style="justify-content: flex-start; padding: 1rem">
+          <svg
+            width="520"
+            height="80"
+            viewBox="0 0 520 80"
+            role="img"
+            aria-label="Formvokabular: sirkel, halvsirkel, kvartsirkel, stav, myk trekant, sikksakk, punkt"
+          >
+            <circle cx="40" cy="40" r="28" fill="var(--sky-5)" />
+            <path d="M90,54 a28 28 0 0 1 56 0 z" fill="var(--lilac-6)" />
+            <path d="M170,68 v-56 a56 56 0 0 1 56,56 z" fill="var(--mint-5)" />
+            <rect x="248" y="30" width="64" height="20" rx="10" fill="var(--electric-9)" />
+            <path d="M336,64 h48 l-24,-42 z" fill="var(--grape-9)" />
+            <path
+              d="M404,52 l10,-14 10,14 10,-14 10,14 10,-14 10,14"
+              stroke="var(--ink)"
+              stroke-width="3"
+              fill="none"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle cx="492" cy="40" r="9" fill="var(--candy-9)" />
+          </svg>
+        </div>
+        <h3>Fargeoppskrift (kun tokens — aldri rå verdier)</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rolle</th>
+              <th>Steg</th>
+              <th>Prøver</th>
+              <th>Regel</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Store flater</td>
+              <td>sky / lilac / mint 4–6</td>
+              <td>
+                <span class="sw" style="background: var(--sky-5)"></span
+                ><span class="sw" style="background: var(--lilac-5)"></span
+                ><span class="sw" style="background: var(--mint-5)"></span>
+              </td>
+              <td>Det myke registeret bærer arealet; aldri solidene som bakteppe.</td>
+            </tr>
+            <tr>
+              <td>Blikkfang</td>
+              <td>electric / grape / candy 9</td>
+              <td>
+                <span class="sw" style="background: var(--electric-9)"></span
+                ><span class="sw" style="background: var(--grape-9)"></span
+                ><span class="sw" style="background: var(--candy-9)"></span>
+              </td>
+              <td>
+                Én–to solider pr. illustrasjon. candy-9 er for lys for hvit tekst — kun som form,
+                aldri som tekstflate.
+              </td>
+            </tr>
+            <tr>
+              <td>Blekk</td>
+              <td>neutral-12</td>
+              <td><span class="sw" style="background: var(--ink)"></span></td>
+              <td>
+                Mikrodetaljer: ansikt, kvitteringslinjer, sikksakk. Aldri konturer rundt
+                fargeflater.
+              </td>
+            </tr>
+            <tr>
+              <td>Papir</td>
+              <td>hvit / neutral-1</td>
+              <td>
+                <span class="sw" style="background: var(--paper)"></span
+                ><span class="sw" style="background: var(--neutral-1)"></span>
+              </td>
+              <td>Dokumenter og «ting» er papirhvite — samme underlag som tall og tabeller.</td>
+            </tr>
+            <tr>
+              <td>Aldri dekorativt</td>
+              <td>green / red / amber</td>
+              <td>
+                <span class="sw" style="background: var(--green-11)"></span
+                ><span class="sw" style="background: var(--red-10)"></span
+                ><span class="sw" style="background: var(--amber-9)"></span>
+              </td>
+              <td>
+                Semantiske tilstandsfarger (betalt/forfalt/obs) er reservert for tilstand — en
+                illustrasjon lyver ikke med dem.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ul class="small">
+          <li>
+            <strong>Aldri:</strong> gradienter, skygger, konturer, foto-realisme, emoji-som-ikon.
+          </li>
+          <li>
+            <strong>Hvor illustrasjon bor:</strong> tomtilstander, onboarding, forklaringer
+            (tap-to-explain), de opptjente toppøyeblikkene. <strong>Aldri</strong> inne i
+            penge-/tabellflater — tall er neutral-12 på kald hvit, alltid (design-system-regelen
+            står).
+          </li>
+          <li>
+            <strong>§5.5-øyeblikk:</strong> ingen illustrasjon i det hele tatt. Fraværet er
+            signalet.
+          </li>
+        </ul>
+      </div>
+
+      <h2>4 · Companionen</h2>
+      <p>
+        <strong>Konsept: balansepunktet.</strong> Saldo betyr <em>balanse</em> — companionen er en
+        sirkel, det enkleste som kan balansere. I hvilemodus <em>er</em> den produktets
+        ambient-status: prikken som sier «alt i orden». Arbeidsnavn: <strong>Øre</strong> — den
+        minste mynten (og domenets pengetype <code>Øre</code>), og homonymt med «øre»: den som
+        <em>lytter</em> når du forteller hva som skjedde («speak events, not entries»).
+      </p>
+
+      <div class="g3 grid">
+        <div class="card">
+          <h3>Balansekula <span class="verdict pick">valgt</span></h3>
+          <div class="stage">
+            <svg
+              width="150"
+              height="130"
+              viewBox="0 0 150 130"
+              role="img"
+              aria-label="Kandidat: rund ball som balanserer på en stav"
+            >
+              <rect x="25" y="104" width="100" height="14" rx="7" fill="var(--lilac-6)" />
+              <circle cx="75" cy="66" r="38" fill="var(--electric-9)" />
+              <circle cx="63" cy="60" r="5" fill="var(--solid-fg)" />
+              <circle cx="87" cy="60" r="5" fill="var(--solid-fg)" />
+              <path
+                d="M66,76 q9,7 18,0"
+                stroke="var(--solid-fg)"
+                stroke-width="3.5"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <p class="small">
+            Degraderer perfekt: 12 px = statusprikken. Kjønns- og aldersløs, umulig å føle seg dum
+            foran. Tegnes med to former og tre streker.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Myntstabelen <span class="verdict no">nei</span></h3>
+          <div class="stage">
+            <svg
+              width="150"
+              height="130"
+              viewBox="0 0 150 130"
+              role="img"
+              aria-label="Kandidat: stabel av mynter med ansikt"
+            >
+              <ellipse cx="75" cy="104" rx="34" ry="10" fill="var(--candy-6)" />
+              <ellipse cx="75" cy="88" rx="34" ry="10" fill="var(--candy-9)" />
+              <ellipse cx="75" cy="72" rx="34" ry="10" fill="var(--candy-6)" />
+              <ellipse cx="75" cy="50" rx="30" ry="16" fill="var(--candy-9)" />
+              <circle cx="66" cy="48" r="3.5" fill="var(--solid-fg)" />
+              <circle cx="84" cy="48" r="3.5" fill="var(--solid-fg)" />
+            </svg>
+          </div>
+          <p class="small">
+            Leser som finans-utklipp; «penger med ansikt» kan gjøre pengesnakk fjollete akkurat der
+            tillit skal bygges.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Fuglen <span class="verdict no">nei (nå)</span></h3>
+          <div class="stage">
+            <svg
+              width="150"
+              height="130"
+              viewBox="0 0 150 130"
+              role="img"
+              aria-label="Kandidat: liten rund fugl"
+            >
+              <circle cx="72" cy="70" r="34" fill="var(--mint-6)" />
+              <path d="M72,70 a20 14 0 0 1 30 8 l-30,2 z" fill="var(--mint-5)" />
+              <path d="M38,66 l-14,6 14,6 z" fill="var(--amber-9)" />
+              <circle cx="58" cy="60" r="4.5" fill="var(--ink)" />
+              <path
+                d="M60,104 v10 M84,104 v10"
+                stroke="var(--ink)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <p class="small">
+            Varm, men Duolingo-assosiasjonen er nøyaktig engasjementssjangeren ADR 0025 avviser, og
+            arten drar med seg maskot-forventninger.
+          </p>
+        </div>
+      </div>
+
+      <h3>Uttrykksark — seks tilstander, aldri én som anklager</h3>
+      <div class="card">
+        <div class="row" style="justify-content: space-between">
+          <figure>
+            <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Oppmerksom">
+              <circle cx="48" cy="50" r="32" fill="var(--electric-9)" />
+              <circle cx="38" cy="45" r="4.5" fill="var(--solid-fg)" />
+              <circle cx="58" cy="45" r="4.5" fill="var(--solid-fg)" />
+              <path
+                d="M40,59 q8,6 16,0"
+                stroke="var(--solid-fg)"
+                stroke-width="3"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+            <figcaption>Oppmerksom<br />(standard)</figcaption>
+          </figure>
+          <figure>
+            <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Fornøyd">
+              <circle cx="48" cy="50" r="32" fill="var(--electric-9)" />
+              <path
+                d="M32,45 q5,-6 10,0 M54,45 q5,-6 10,0"
+                stroke="var(--solid-fg)"
+                stroke-width="3"
+                fill="none"
+                stroke-linecap="round"
+              />
+              <path
+                d="M37,57 q11,10 22,0"
+                stroke="var(--solid-fg)"
+                stroke-width="3.5"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+            <figcaption>Fornøyd<br />(betalt, levert)</figcaption>
+          </figure>
+          <figure>
+            <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Tenker">
+              <circle cx="48" cy="52" r="32" fill="var(--electric-9)" />
+              <circle cx="42" cy="42" r="4.5" fill="var(--solid-fg)" />
+              <circle cx="60" cy="42" r="4.5" fill="var(--solid-fg)" />
+              <path
+                d="M42,64 h11"
+                stroke="var(--solid-fg)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <circle cx="74" cy="20" r="4" fill="var(--lilac-9)" />
+              <circle cx="82" cy="11" r="2.5" fill="var(--lilac-9)" />
+            </svg>
+            <figcaption>Tenker<br />(kvittering leses)</figcaption>
+          </figure>
+          <figure>
+            <svg
+              width="96"
+              height="96"
+              viewBox="0 0 96 96"
+              role="img"
+              aria-label="Usikker, eier feilen selv"
+            >
+              <circle cx="48" cy="50" r="32" fill="var(--electric-9)" />
+              <circle cx="38" cy="46" r="4" fill="var(--solid-fg)" />
+              <circle cx="58" cy="44" r="6" fill="var(--solid-fg)" />
+              <circle
+                cx="48"
+                cy="62"
+                r="3.5"
+                fill="none"
+                stroke="var(--solid-fg)"
+                stroke-width="3"
+              />
+            </svg>
+            <figcaption>«Ta en titt?»<br />(nysgjerrig, aldri alarm)</figcaption>
+          </figure>
+          <figure>
+            <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Hviler">
+              <circle cx="48" cy="50" r="32" fill="var(--electric-9)" />
+              <path
+                d="M33,47 h10 M53,47 h10"
+                stroke="var(--solid-fg)"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <text x="76" y="22" font-size="13" fill="var(--sub)" font-family="inherit">z</text>
+              <text x="84" y="12" font-size="9" fill="var(--sub)" font-family="inherit">z</text>
+            </svg>
+            <figcaption>Hviler<br />(«alt i orden» — earn irrelevance)</figcaption>
+          </figure>
+          <figure>
+            <svg
+              width="96"
+              height="96"
+              viewBox="0 0 96 96"
+              role="img"
+              aria-label="Borte ved konsekvensielle øyeblikk"
+            >
+              <circle
+                cx="48"
+                cy="50"
+                r="32"
+                fill="none"
+                stroke="var(--line)"
+                stroke-width="2"
+                stroke-dasharray="5 6"
+              />
+            </svg>
+            <figcaption>Borte<br />(§5.5 — fraværet er signalet)</figcaption>
+          </figure>
+        </div>
+        <p class="small sub">
+          Det finnes bevisst <strong>ingen</strong> sint, skuffet eller stresset variant. Systemet
+          eier all tvil (§3.4): det mest negative Øre kan uttrykke er sin egen nysgjerrige
+          usikkerhet.
+        </p>
+      </div>
+
+      <h3>Størrelsesstigen — companionen <em>er</em> statusprikken</h3>
+      <div class="card">
+        <div class="row">
+          <figure>
+            <svg width="96" height="96" viewBox="0 0 96 96">
+              <circle cx="48" cy="50" r="32" fill="var(--electric-9)" />
+              <circle cx="38" cy="45" r="4.5" fill="var(--solid-fg)" />
+              <circle cx="58" cy="45" r="4.5" fill="var(--solid-fg)" />
+              <path
+                d="M40,59 q8,6 16,0"
+                stroke="var(--solid-fg)"
+                stroke-width="3"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+            <figcaption>96 px — scene/topp</figcaption>
+          </figure>
+          <figure>
+            <svg width="64" height="64" viewBox="0 0 96 96">
+              <circle cx="48" cy="50" r="32" fill="var(--electric-9)" />
+              <circle cx="38" cy="45" r="4.5" fill="var(--solid-fg)" />
+              <circle cx="58" cy="45" r="4.5" fill="var(--solid-fg)" />
+              <path
+                d="M40,59 q8,6 16,0"
+                stroke="var(--solid-fg)"
+                stroke-width="3"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+            <figcaption>64 px — tomtilstand</figcaption>
+          </figure>
+          <figure>
+            <svg width="32" height="32" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="34" fill="var(--electric-9)" />
+              <circle cx="37" cy="44" r="6" fill="var(--solid-fg)" />
+              <circle cx="59" cy="44" r="6" fill="var(--solid-fg)" />
+            </svg>
+            <figcaption>32 px — kun øyne</figcaption>
+          </figure>
+          <figure>
+            <svg width="20" height="20" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="36" fill="var(--electric-9)" />
+              <circle cx="36" cy="44" r="7" fill="var(--solid-fg)" />
+              <circle cx="60" cy="44" r="7" fill="var(--solid-fg)" />
+            </svg>
+            <figcaption>20 px — antydning</figcaption>
+          </figure>
+          <figure>
+            <svg width="12" height="12" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="40" fill="var(--electric-9)" />
+            </svg>
+            <figcaption>12 px — statusprikken</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <h3>Atferdsregler (arves fra ADR 0025 — gjentatt her fordi de former utseendet)</h3>
+      <ul>
+        <li>
+          <strong>Borte ved §5.5.</strong> Penger ut, innlevering, ekte tvil → companionen
+          forsvinner helt. Ikke «alvorlig fjes» — fravær. Kontrasten er det som gjør varmen
+          troverdig ellers.
+        </li>
+        <li>
+          <strong>Avvisbar og aldri i veien.</strong> Kompetente brukere kan skru den av; den
+          blokkerer aldri en flyt, nager aldri, teller aldri (ingen streaks — earn irrelevance).
+        </li>
+        <li>
+          <strong>AI-merking følger talen, ikke fjeset.</strong> Sier Øre noe LLM-generert, er
+          ytringen AI-assistert og merkes + logges (ADR 0022/0036). Selve figuren er deterministisk
+          UI.
+        </li>
+        <li>
+          <strong>Aldri skårer/profilerer den et menneske</strong> (Annex III §5(b)); den foreslår
+          og forklarer, regelmotoren validerer, mennesket bekrefter (ADR 0002).
+        </li>
+      </ul>
+
+      <h2>5 · I kontekst</h2>
+      <div class="g2 grid">
+        <div class="mock" style="grid-column: 1 / -1">
+          <p class="kicker">Hjem — den ærlige-tall-avsløringen (topp: Fraunces tillatt)</p>
+          <p class="small sub" style="margin: 0.1rem 0 0">Din saldo etter det som ikke er ditt</p>
+          <p class="serif headline money" style="text-align: left">135 400 kr</p>
+          <div class="fence" style="background: var(--sky-4)">
+            <span>MVA du holder for Skatteetaten</span><span class="money">40 100 kr</span>
+          </div>
+          <div class="fence" style="background: var(--lilac-4)">
+            <span>Anslått skatt så langt</span><span class="money">24 800 kr</span>
+          </div>
+          <div class="row" style="margin-top: 1rem; align-items: center">
+            <svg width="28" height="28" viewBox="0 0 96 96" aria-hidden="true">
+              <circle cx="48" cy="48" r="34" fill="var(--electric-9)" />
+              <circle cx="37" cy="44" r="6" fill="var(--solid-fg)" />
+              <circle cx="59" cy="44" r="6" fill="var(--solid-fg)" />
+            </svg>
+            <p style="margin: 0">Dette er faktisk ditt. Bruk det med god samvittighet.</p>
+          </div>
+          <p class="small sub" style="margin-bottom: 0">
+            Gjerdene er myk-register-flater; tallet er neutral-12 på papir — illustrasjonsfargene
+            rører aldri selve tallet.
+          </p>
+        </div>
+
+        <div class="mock" style="text-align: center">
+          <p class="kicker" style="text-align: left">Hviletilstand</p>
+          <svg width="64" height="64" viewBox="0 0 96 96" role="img" aria-label="Øre hviler">
+            <circle cx="48" cy="50" r="32" fill="var(--electric-9)" />
+            <path
+              d="M33,47 h10 M53,47 h10"
+              stroke="var(--solid-fg)"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
+          </svg>
+          <p style="margin: 0.5rem 0 0.1rem">Alt klart.</p>
+          <p class="sub small" style="margin: 0">Ingenting trenger deg nå.</p>
+        </div>
+
+        <div class="mock">
+          <p class="kicker">Verdt et blikk-køen</p>
+          <p class="chip"><span class="dot"></span>Verdt et blikk</p>
+          <div class="row" style="align-items: center; margin-top: 0.6rem">
+            <svg width="24" height="24" viewBox="0 0 96 96" aria-hidden="true">
+              <circle cx="48" cy="48" r="34" fill="var(--electric-9)" />
+              <circle cx="36" cy="43" r="5" fill="var(--solid-fg)" />
+              <circle cx="58" cy="41" r="7" fill="var(--solid-fg)" />
+            </svg>
+            <p style="margin: 0; flex: 1">Jeg var ikke sikker på denne — gidder du ta en titt?</p>
+          </div>
+          <p class="sub small">Vipps · <span class="money">340 kr</span> · 2. juli</p>
+          <span class="btn ghost">Se på den</span>
+        </div>
+
+        <div class="mock" style="grid-column: 1 / -1">
+          <p class="kicker">§5.5 — innlevering (ingen companion, ingen serif, ingen spøk)</p>
+          <p style="font-size: 1.05rem; margin: 0.4rem 0 0.2rem">
+            Send MVA-meldingen for mars–april til Skatteetaten.
+          </p>
+          <p class="sub" style="margin: 0.1rem 0 1rem">
+            Å betale: <span class="money">12 400 kr</span>. Ingenting sendes før du bekrefter.
+          </p>
+          <span class="btn ghost">Avbryt</span>
+          <span class="btn primary">Send til Skatteetaten</span>
+          <p class="small sub" style="margin-bottom: 0">
+            Kontrasten mot resten av produktet er selve alvorssignalet.
+          </p>
+        </div>
+
+        <div class="mock" style="grid-column: 1 / -1">
+          <p class="kicker">
+            Opptjent topp — faktura betalt (Fraunces + behersket papirklipp-flourish)
+          </p>
+          <div class="row" style="align-items: center">
+            <svg
+              width="120"
+              height="96"
+              viewBox="0 0 120 96"
+              role="img"
+              aria-label="Øre fornøyd med behersket konfetti av former"
+            >
+              <path d="M12,26 a10 10 0 0 1 20 0 z" fill="var(--candy-9)" />
+              <rect x="96" y="18" width="16" height="7" rx="3.5" fill="var(--mint-6)" />
+              <circle cx="104" cy="66" r="5" fill="var(--lilac-9)" />
+              <circle cx="60" cy="54" r="30" fill="var(--electric-9)" />
+              <path
+                d="M45,49 q5,-6 10,0 M65,49 q5,-6 10,0"
+                stroke="var(--solid-fg)"
+                stroke-width="3"
+                fill="none"
+                stroke-linecap="round"
+              />
+              <path
+                d="M49,60 q11,10 22,0"
+                stroke="var(--solid-fg)"
+                stroke-width="3.5"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+            <div>
+              <p class="serif" style="font-size: 1.9rem; margin: 0">Betalt.</p>
+              <p style="margin: 0.2rem 0 0">
+                <span class="money">12 500 kr</span> fra Løvold Foto er på konto.
+              </p>
+            </div>
+          </div>
+          <p class="small sub" style="margin-bottom: 0">
+            Tre små former, ingen konfettiregn — toppene er sjeldne og beherskede (§5.2,
+            anti-mønstrene står).
+          </p>
+        </div>
+      </div>
+
+      <h2>6 · Torpedoen — søskenkarakter, samme grammatikk</h2>
+      <div class="card">
+        <div class="row" style="align-items: center">
+          <svg
+            width="200"
+            height="110"
+            viewBox="0 0 200 110"
+            role="img"
+            aria-label="Torpedo-karakteren: en vennlig pil-form i grape"
+          >
+            <path
+              d="M40,32 q10,-6 20,0 M30,52 q10,-6 20,0 M40,72 q10,-6 20,0"
+              stroke="var(--neutral-8)"
+              stroke-width="3"
+              fill="none"
+              stroke-linecap="round"
+            />
+            <path d="M96,30 L166,52 L96,74 Q84,52 96,30 z" fill="var(--grape-9)" />
+            <path d="M96,30 l-12,-10 4,16 z" fill="var(--candy-9)" />
+            <path d="M96,74 l-12,10 4,-16 z" fill="var(--candy-9)" />
+            <circle cx="118" cy="50" r="5" fill="var(--solid-fg)" />
+          </svg>
+          <div style="flex: 1; min-width: 260px">
+            <p class="small" style="margin: 0">
+              Skarpere silhuett (retning, fart), grape som kropp — men samme flate former og hvite
+              blekk-øye. Den peker alltid <strong>ut</strong> av skjermen, aldri mot brukeren. Vises
+              kun i purreflyten, utløses via foreslå→bekreft, og meldingene den faktisk sender er
+              profesjonelle og innenfor god inkassoskikk (ADR 0025 §6). Moroa er å
+              <em>sende</em> den.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h2>7 · Anbefaling</h2>
+      <div class="note">
+        <p>
+          <strong
+            >Velg papirklipp-grammatikken (A) med blekk-detaljer fra B, og balansekula «Øre» som
+            companion</strong
+          >
+          — med brukervalidering som port før endelig binding av navn og fjes (ADR 0025 krever det).
+          Grammatikk-, farge- og atferdsreglene over står uansett utfall av valideringen; det er
+          karakterens overflate som kan justeres billig.
+        </p>
+      </div>
+      <div style="position: relative">
+        <button
+          class="copy"
+          style="position: absolute; right: 0.6rem; top: 0.6rem"
+          onclick="navigator.clipboard.writeText(document.getElementById('summary').innerText)"
+        >
+          Kopiér
+        </button>
+        <pre id="summary">
+DECISION SUMMARY (feed-forward)
+- Illustration: flat "papirklipp" shape grammar — circles/half-/quarter-circles, rounded bars, soft
+  triangles, zigzag; layered flat fills; NO outlines/gradients/shadows; neutral-12 ink micro-details only.
+- Colour recipe (tokens only): fields = sky/lilac/mint 4–6 · focal = electric/grape/candy 9 (max 2 per
+  scene; candy-9 never a text surface) · ink = neutral-12 · paper = white/neutral-1 ·
+  green/red/amber NEVER decorative (semantic state only).
+- Placement: empty states, onboarding, tap-to-explain, earned peaks. Never inside money/table surfaces;
+  never at §5.5 moments (absence is the signal).
+- Companion: round "balance ball", working name Øre (øre coin + "ear" — it listens). Body electric-9,
+  features paper-white. Size ladder 96→64→32→20→12 px; at 12 px it IS the ambient status dot.
+  Expressions: attentive, pleased, thinking, curious-uncertain (system owns fault), resting, absent.
+  NO angry/disappointed/alarmed variant, ever. Dismissible; LLM speech is AI-labelled (ADR 0022/0036);
+  never scores/profiles a person.
+- Torpedo: sibling character, same grammar, grape dart, points outward, purre-flow only, propose→confirm.
+- Gate: validate companion face/name with real users before final commitment (grammar stands regardless).
+- Recorded as ADR 0058; rules distilled into .claude/rules/design-system.md.</pre>
+      </div>
+
+      <h3>Åpne spørsmål til brukervalidering (porten før endelig binding)</h3>
+      <ul>
+        <li>
+          Leser «Øre» som varm hjelper eller som barnslig — hos brukere med lav finansiell
+          selvtillit (kjernemålgruppen for prime-direktivet)?
+        </li>
+        <li>
+          Fungerer navnet Øre, eller vinner et rent beskrivende «hjelperen»? (Norsk først; navnet må
+          overleve dagligtale.)
+        </li>
+        <li>
+          Er fraværet ved §5.5 merkbart nok som alvorssignal, eller trengs en eksplisitt sober-ramme
+          i tillegg?
+        </li>
+        <li>Statusprikk-degraderingen: skaper det forvirring at «prikken» noen ganger har øyne?</li>
+      </ul>
+
+      <div class="soberline"></div>
+      <p class="small sub">
+        Selvstendig artefakt — ingen eksterne ressurser. Fargene er de committede OKLCH-tokenene;
+        skrifttypene faller tilbake til systemtilnærminger når Fraunces/IBM Plex Sans ikke er
+        installert lokalt (appen self-hoster de ekte, ADR 0026). Tall bruker tabular-nums. Kilder:
+        docs/experience-principles.md · .claude/rules/design-system.md · ADR 0025 · ADR 0026.
+      </p>
+    </main>
+  </body>
+</html>

@@ -180,7 +180,7 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
 - **Decisions:** 59 ADRs (0001–0059) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 84 tasks (46 done, 38 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Backlog:** 84 tasks (47 done, 37 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `aia-conformity-checklist` [medium/S] — EU AI Act: conformity self-assessment checklist
 <!-- /AUTOGEN:repo-status -->
 

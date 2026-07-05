@@ -1198,12 +1198,12 @@
         "apps/web/app/routes/orgs.$orgId.mva.tsx",
         "apps/web/app/integrations/skatteetaten/validation-client.server.ts"
       ],
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "P1-feature",
       "depends_on": ["feat-mva-melding"],
-      "notes": "The fail-closed validation client exists and is tested but no route calls it (review 2026-07-03 §15 — quarantined until wired). Add a sober 'Valider hos Skatteetaten' action (explicit click, never a silent loader call), render the typed verdict, keep the fail-closed not-configured path calm. Belongs naturally next to feat-altinn-mva-submission."
+      "notes": "Done 2026-07-05: explicit 'Valider hos Skatteetaten' action on the MVA screen (POST, assertSameOrigin, Zod-validated year) regenerates the melding XML via the shared mvaSystemInfo helper and renders the typed verdict; every fail-closed reason maps to calm keyed copy (mva.skatteetaten.*). The endpoint path stays provisional until Skatteetaten onboarding (ADR 0050)."
     }
   ]
 }

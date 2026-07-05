@@ -585,6 +585,21 @@ export const nb = {
   'mva.submitNote':
     'Dette er et utkast bygget fra regnskapet. Innlevering til Skatteetaten via Altinn kommer senere — last ned filen eller bruk den i «Min mva» for nå.',
   'mva.downloadXml': 'Last ned XML',
+  // Filing-adjacent → §5.5 sober register: plain, no flourish (wire-skatteetaten-validation).
+  'mva.skatteetaten.heading': 'Kontroll hos Skatteetaten',
+  'mva.skatteetaten.note':
+    'Kontroller utkastet mot Skatteetatens valideringstjeneste før du leverer. Dette er en kontroll, ikke en innlevering.',
+  'mva.skatteetaten.validate': 'Valider hos Skatteetaten',
+  'mva.skatteetaten.approved': 'Skatteetaten fant ingen avvik i meldingen.',
+  'mva.skatteetaten.deviations': 'Skatteetaten meldte avvik: {deviations}',
+  'mva.skatteetaten.not-configured':
+    'Valideringstjenesten er ikke koblet til i dette miljøet enda, så meldingen er bare kontrollert lokalt.',
+  'mva.skatteetaten.auth-failed':
+    'Valideringstjenesten godtok ikke tilgangen. Sjekk oppsettet av integrasjonen.',
+  'mva.skatteetaten.rate-limited': 'Valideringstjenesten ba om en pause. Prøv igjen om litt.',
+  'mva.skatteetaten.error': 'Fikk ikke kontakt med valideringstjenesten. Prøv igjen om litt.',
+  'mva.skatteetaten.invalid-response':
+    'Svaret fra valideringstjenesten kunne ikke tolkes. Prøv igjen om litt.',
 
   // ── SAF-T-eksport (feat-saft-export) — read-only finansfil bygget fra det posterte regnskapet ──
   'saft.title': 'SAF-T-eksport',
@@ -1380,6 +1395,21 @@ export const en = {
   'mva.submitNote':
     'This is a draft built from the ledger. Filing to the Tax Administration via Altinn comes later — download the file or use it in “Min mva” for now.',
   'mva.downloadXml': 'Download XML',
+  // Filing-adjacent → §5.5 sober register: plain, no flourish (wire-skatteetaten-validation).
+  'mva.skatteetaten.heading': 'Check with Skatteetaten',
+  'mva.skatteetaten.note':
+    'Check the draft against Skatteetaten’s validation service before you file. This is a check, not a submission.',
+  'mva.skatteetaten.validate': 'Validate with Skatteetaten',
+  'mva.skatteetaten.approved': 'Skatteetaten found no deviations in the return.',
+  'mva.skatteetaten.deviations': 'Skatteetaten reported deviations: {deviations}',
+  'mva.skatteetaten.not-configured':
+    'The validation service is not connected in this environment yet, so the return has only been checked locally.',
+  'mva.skatteetaten.auth-failed':
+    'The validation service did not accept the credentials. Check the integration setup.',
+  'mva.skatteetaten.rate-limited': 'The validation service asked for a pause. Try again shortly.',
+  'mva.skatteetaten.error': 'Could not reach the validation service. Try again shortly.',
+  'mva.skatteetaten.invalid-response':
+    'The response from the validation service could not be read. Try again shortly.',
 
   // ── SAF-T export (feat-saft-export) — read-only financial file built from the posted ledger ────
   'saft.title': 'SAF-T export',

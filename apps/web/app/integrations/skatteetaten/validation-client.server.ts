@@ -9,10 +9,9 @@
  * failures (auth, network, malformed response) are returned as a typed result, never thrown, so the
  * caller maps them to calm copy. This is NOT submission — Altinn 3 filing is `feat-altinn-mva-submission`.
  *
- * **PROVISIONAL — not yet wired to a route** (review 2026-07-03 §15). The MVA screen currently shows
- * the LOCAL validator's verdict only; this client is exercised by its tests and stays fail-closed.
- * Wiring an explicit "validate with Skatteetaten" action is tracked as `wire-skatteetaten-validation`
- * in the backlog (it belongs with the Altinn submission flow, not a silent loader call).
+ * Wired to the MVA screen's explicit "Valider hos Skatteetaten" action (wire-skatteetaten-validation)
+ * — an explicit click, never a silent loader call. The endpoint path below stays provisional until
+ * Skatteetaten onboarding confirms it.
  *
  * **Privacy.** A melding carries financial data; on failure we log only the error class, never the XML
  * or any figure. The bearer token comes from {@link skatteetatenConfig} (server env only).

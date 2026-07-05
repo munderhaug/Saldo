@@ -74,6 +74,30 @@ export const nb = {
     'Denne MVA-behandlingen krever at foretaket er registrert i Merverdiavgiftsregisteret.',
   'vouchers.new.errorGeneric': 'Jeg fikk ikke bokført føringen. Prøv igjen om et øyeblikk.',
 
+  // ── Inngående balanse (feat-opening-balances) — mid-year migration entry ──
+  'opening.title': 'Inngående balanse',
+  'opening.intro':
+    'Bytter du til Saldo midt i året? Fortell meg hva virksomheten eier og skylder ved byttet, så starter regnskapet riktig fra dag én.',
+  'opening.ownLegend': 'Det virksomheten eier',
+  'opening.oweLegend': 'Det virksomheten skylder',
+  'opening.bankLabel': 'Penger på konto',
+  'opening.receivableLabel': 'Kunder skylder deg',
+  'opening.fixturesLabel': 'Utstyr og inventar',
+  'opening.payableLabel': 'Du skylder leverandører',
+  'opening.vatLabel': 'Skyldig merverdiavgift',
+  'opening.amountHint': 'I kroner. La feltet stå tomt hvis det ikke gjelder deg.',
+  'opening.equityNote':
+    'Differansen mellom det du eier og det du skylder blir stående som egenkapitalen din — den delen av virksomheten som er din.',
+  // Append-only ledger, stated calmly — same promise as the manual voucher.
+  'opening.confirmNote':
+    'Åpningen bokføres som ett bilag og blir stående. Blir noe feil, retter vi det med en ny føring — ingenting overskrives.',
+  'opening.submit': 'Bokfør inngående balanse',
+  'opening.cancel': 'Avbryt',
+  'opening.errorInvalidInput':
+    'Jeg fikk ikke lest et av beløpene. Skriv dem som tall, f.eks. 12 500.',
+  'opening.errorEmpty': 'Fyll inn minst ett beløp, så bokfører jeg åpningen for deg.',
+  'opening.errorGeneric': 'Jeg fikk ikke bokført åpningen. Prøv igjen om et øyeblikk.',
+
   // ── AI transparency (shared) — the EU AI Act Art. 50 disclosure treatment for EVERY AI surface ──
   // The machine-readable "AI-assisted" label (Art. 50(2)); rendered by the shared <AiAssisted>
   // primitive so every current and future AI surface labels its proposals identically (ADR 0036).
@@ -902,6 +926,29 @@ export const en = {
   'vouchers.new.errorVatNotRegistered':
     'This VAT treatment requires the business to be in the VAT Register.',
   'vouchers.new.errorGeneric': "I couldn't book the entry. Try again in a moment.",
+
+  // ── Opening balance (feat-opening-balances) — mid-year migration entry ──
+  'opening.title': 'Opening balance',
+  'opening.intro':
+    'Switching to Saldo mid-year? Tell me what the business owns and owes at the switch, and the books start out right from day one.',
+  'opening.ownLegend': 'What the business owns',
+  'opening.oweLegend': 'What the business owes',
+  'opening.bankLabel': 'Money in the bank',
+  'opening.receivableLabel': 'Customers owe you',
+  'opening.fixturesLabel': 'Equipment and fixtures',
+  'opening.payableLabel': 'You owe suppliers',
+  'opening.vatLabel': 'VAT owed',
+  'opening.amountHint': 'In kroner. Leave a field empty if it does not apply to you.',
+  'opening.equityNote':
+    'The difference between what you own and what you owe stays as your equity — the part of the business that is yours.',
+  'opening.confirmNote':
+    'The opening is booked as one voucher and stays put. If something is off, we correct it with a new entry — nothing is overwritten.',
+  'opening.submit': 'Book the opening balance',
+  'opening.cancel': 'Cancel',
+  'opening.errorInvalidInput':
+    "I couldn't read one of the amounts. Write them as numbers, e.g. 12 500.",
+  'opening.errorEmpty': 'Fill in at least one amount and I will book the opening for you.',
+  'opening.errorGeneric': "I couldn't book the opening. Try again in a moment.",
 
   // ── AI transparency (shared, reference) ──
   'ai.assistedLabel': 'AI-assisted',

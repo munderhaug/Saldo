@@ -842,13 +842,18 @@
     {
       "id": "feat-opening-balances",
       "title": "Opening balances (inngående balanse) for mid-year migration",
-      "status": "todo",
+      "status": "done",
+      "implements_adr": ["0061"],
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": ["feat-org-onboarding", "feat-manual-voucher-entry"],
-      "notes": "Build-spec §8.1 (Phase 1). Let a user migrating mid-year enter opening balances so the ledger and the honest-number reveal are correct from day one (today the only way in is manual vouchers from zero). Must post a balanced opening voucher through the existing posting path + integrity triggers; an opening balance is still an append-only voucher (no ledger bypass).",
-      "refs": ["docs/saldo-build-specification.md", ".claude/rules/ledger-integrity.md"]
+      "notes": "Done 2026-07-05 (ADR 0061): /orgs/:orgId/opening — a curated own/owe surface in everyday words posting ONE balanced voucher through deriveOpeningBalance (pure, property-tested) + the rules gate + insertPostedVoucher; equity (2050) is the plug, no VAT codes on any line (VAT position carries as 2740 liability), voucher type stays 'manual' (a dedicated type would need a check-constraint migration — deferred in the ADR). Accepted cut: YTD result figures arrive as ordinary vouchers, not the opening.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        ".claude/rules/ledger-integrity.md",
+        "docs/decisions/0061-opening-balances.md"
+      ]
     },
     {
       "id": "feat-sales-invoicing",

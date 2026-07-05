@@ -17,6 +17,7 @@ export * from './invoice';
 export * from './supplier-invoice';
 export * from './owner-event';
 export * from './voucher';
+export * from './opening';
 export * from './receipt-extraction';
 export * from './banking';
 export * from './reconciliation';

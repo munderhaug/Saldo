@@ -47,6 +47,7 @@ export default [
   route('orgs/:orgId/saft', 'routes/orgs.$orgId.saft.tsx'),
   route('orgs/:orgId/saft.xml', 'routes/orgs.$orgId.saft[.xml].tsx'),
   route('orgs/:orgId/vouchers/new', 'routes/orgs.$orgId.vouchers.new.tsx'),
+  route('orgs/:orgId/opening', 'routes/orgs.$orgId.opening.tsx'),
   route('orgs/:orgId/receipts/new', 'routes/orgs.$orgId.receipts.new.tsx'),
   route('orgs/:orgId/settings', 'routes/orgs.$orgId.settings.tsx'),
   route('companion', 'routes/companion.tsx'),

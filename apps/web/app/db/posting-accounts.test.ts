@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  OPENING_ACCOUNTS,
   OWNER_ACCOUNTS,
   POSTING_ACCOUNTS,
   POSTING_VAT_CODES,
@@ -160,5 +161,27 @@ describe('designated posting accounts/codes are source-grounded', () => {
     for (const number of Object.values(OWNER_ACCOUNTS.cost)) {
       expect(typeOf(number)).toBe('expense'); // 7798 / 7100 / 7160
     }
+  });
+
+  // ── Opening balance (feat-opening-balances) ──
+  const openingAccounts = [
+    ...Object.values(OPENING_ACCOUNTS.own),
+    ...Object.values(OPENING_ACCOUNTS.owe),
+    OPENING_ACCOUNTS.equity,
+  ];
+
+  it.each(openingAccounts)('opening account %s exists in the committed kontoplan', (number) => {
+    expect(accountNumbers.has(number)).toBe(true);
+  });
+
+  it('opens ASSETS on the own side and LIABILITIES on the owe side, plugged to equity', () => {
+    const typeOf = (number: string) => STANDARD_ACCOUNTS.find((a) => a.number === number)?.type;
+    for (const number of Object.values(OPENING_ACCOUNTS.own)) {
+      expect(typeOf(number)).toBe('asset'); // 1920 / 1500 / 1250
+    }
+    for (const number of Object.values(OPENING_ACCOUNTS.owe)) {
+      expect(typeOf(number)).toBe('equity_liability'); // 2400 / 2740
+    }
+    expect(typeOf(OPENING_ACCOUNTS.equity)).toBe('equity_liability'); // 2050 Annen egenkapital
   });
 });

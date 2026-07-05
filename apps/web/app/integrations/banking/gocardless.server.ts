@@ -31,11 +31,7 @@ export type FetchTransactionsResult =
   | {
       readonly ok: false;
       readonly reason:
-        | 'not-configured'
-        | 'auth-failed'
-        | 'rate-limited'
-        | 'error'
-        | 'invalid-response';
+        'not-configured' | 'auth-failed' | 'rate-limited' | 'error' | 'invalid-response';
     };
 
 const TIMEOUT_MS = 30_000;

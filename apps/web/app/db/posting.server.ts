@@ -393,8 +393,7 @@ export async function recordReverseChargePurchase(
 }
 
 export type RecordOwnerEventResult =
-  | { ok: true; voucherId: string }
-  | { ok: false; reason: 'rule-violation' | 'chart-incomplete' };
+  { ok: true; voucherId: string } | { ok: false; reason: 'rule-violation' | 'chart-incomplete' };
 
 interface RecordOwnerEventInput {
   readonly organizationId: string;

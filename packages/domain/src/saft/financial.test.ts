@@ -282,8 +282,8 @@ describe('generateSaftFinancial — tax table + journals', () => {
       transactions: [
         {
           ...input.transactions[0]!,
-          lines: input.transactions[0]!.lines.map(
-            (l): SaftLineInput => (l.accountNumber === '2700' ? { ...l, vatCode: code('999') } : l),
+          lines: input.transactions[0]!.lines.map((l): SaftLineInput =>
+            l.accountNumber === '2700' ? { ...l, vatCode: code('999') } : l,
           ),
         },
       ],

@@ -49,11 +49,7 @@ export function headers() {
 function voucherTypeLabel(type: string): string {
   const known = ['sales', 'purchase', 'manual', 'bank', 'reversal'];
   const key = (known.includes(type) ? type : 'manual') as
-    | 'sales'
-    | 'purchase'
-    | 'manual'
-    | 'bank'
-    | 'reversal';
+    'sales' | 'purchase' | 'manual' | 'bank' | 'reversal';
   return t(`reports.voucherType.${key}` satisfies MessageKey);
 }
 

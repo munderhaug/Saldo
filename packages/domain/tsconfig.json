@@ -1,10 +1,15 @@
 {
+  // Full project — every source file including tests, so the editor and typescript-eslint's
+  // project service can type every file. Tests read committed SAF-T reference files via node:fs,
+  // which needs the node types (TS 6 no longer resolves `node:`-prefixed imports without them).
+  // The domain purity invariant (no I/O, no node globals in production code) is enforced by
+  // tsconfig.src.json, which `pnpm typecheck` runs first.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist",
     "lib": ["ES2023"],
-    "types": []
+    "types": ["node"]
   },
   "include": ["src"]
 }

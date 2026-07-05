@@ -39,8 +39,7 @@ export interface OrgOverview {
 }
 
 export type CreateOrgResult =
-  | { ok: true; orgId: string }
-  | { ok: false; reason: 'duplicate-org-nr' };
+  { ok: true; orgId: string } | { ok: false; reason: 'duplicate-org-nr' };
 
 /**
  * A Postgres unique-violation on the given constraint. postgres.js surfaces `code`/`constraint_name`

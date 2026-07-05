@@ -48,12 +48,7 @@ export function indexAccounts(
  * never produce it — asserted in the test).
  */
 export type AccountType =
-  | 'asset'
-  | 'equity_liability'
-  | 'revenue'
-  | 'expense'
-  | 'financial'
-  | 'other';
+  'asset' | 'equity_liability' | 'revenue' | 'expense' | 'financial' | 'other';
 
 export function classifyAccountType(id: AccountNo): AccountType {
   switch (id.charAt(0)) {

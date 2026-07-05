@@ -42,7 +42,7 @@ describe('escapeXml', () => {
 
   it('property: output never carries a bare ampersand or an illegal code point', () => {
     fc.assert(
-      fc.property(fc.fullUnicodeString(), (s) => {
+      fc.property(fc.string({ unit: 'binary' }), (s) => {
         const out = escapeXml(s);
         expect(/&(?!amp;|lt;|gt;|quot;)/.test(out)).toBe(false);
         const hasIllegal = Array.from(out).some((ch) =>

@@ -6,17 +6,32 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-07-05 — session `dependabot-dev-deps-migration` (the PR #61 dev-dependencies
-group landed as a real toolchain migration: TypeScript 6, ESLint 10, fast-check 4, vitest 4,
-@types/node 26, testcontainers 12, knip 6.24, prettier 3.9 + tailwind plugin 0.8, @react-router/dev 8
-aligned with the RR8 runtime — commit `865e062`, pushed to both the PR branch and
-`claude/dependabot-dev-deps-migration-y8rn77`; all local gates green incl. vat-reviewer pass; PR #61
-CI was in flight at handover). Prior sessions `review-2026-07-03-fixes` (the 2026-07-03 repo review,
+**Last updated:** 2026-07-05 — session `visual-identity-spike` (the `design-visual-spike` task:
+**ADR 0058** — the flat "papirklipp" illustration grammar + the round balance-ball companion, working
+name **Øre** — with the committed visual reference `docs/design/visual-identity-spike.html`
+(self-contained, real OKLCH tokens, light/dark verified by screenshot), the rules distilled into
+`.claude/rules/design-system.md`, and the `companion-user-validation` gate task added; landed via PR
+from `claude/visual-identity-spike-65veo9`). Earlier same day: session
+`dependabot-dev-deps-migration` — the PR #61 dev-dependencies group landed as a real toolchain
+migration (TypeScript 6, ESLint 10, fast-check 4, vitest 4, @types/node 26, testcontainers 12,
+knip 6.24, prettier 3.9 + tailwind plugin 0.8, @react-router/dev 8 aligned with the RR8 runtime),
+**merged to main as `36b4015`**. Prior sessions `review-2026-07-03-fixes` (the 2026-07-03 repo review,
 P0 through P2 + docs), `feat-supplier-invoices` (Purchases completed, ADR 0056) and `harness-hardening`
 (ADR 0057 — the harness keeps its own promises: `review:check`, `eval:validate`, incremental gates;
 the `.claude/settings.json` allowlist sync + `review-reminder.sh` registration are still pending —
 see the harness-verification-gates task notes); `review-followups` (2026-06-28 review,
 archived at `docs/archive/repo-code-review-2026-06-28.md`).
+
+### Visual identity (2026-07-05, ADR 0058)
+Illustration is the flat **papirklipp** grammar (fields = sky/lilac/mint 4–6, focal = brand step-9
+solids max two per scene, ink = neutral-12, paper-white props; no gradients/outlines/shadows; semantic
+green/red/amber never decorative; never inside money/tables, never at §5.5). The companion is the round
+balance ball **Øre** (electric-9 body, theme-stable white features, degrades 96→12 px where 12 px = the
+ambient status dot; no blame/alarm expressions; dismissible; LLM speech AI-labelled — ADR 0022/0036).
+The Torpedo is a sibling grape dart, purre-flow only. **Final name/face is gated on
+`companion-user-validation`** (real users) — the grammar and rules bind now; `feat-companion` is
+unblocked in the graph. When implementing, add `--companion`/`--companion-foreground` semantic tokens
+rather than referencing electric-9 raw (design-review note, 2026-07-05).
 
 ### Toolchain migration notes (2026-07-05, PR #61)
 The TS 6 `node:`-import resolution change moved the domain purity gate: `packages/domain/tsconfig.json`
@@ -152,9 +167,9 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 57 ADRs (0001–0057) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 83 tasks (44 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `design-visual-spike` [medium/M] — Visual-identity spike — illustration style + the companion's look (on carnival tokens + type)
+- **Decisions:** 58 ADRs (0001–0058) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 84 tasks (45 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `feat-companion` [high/L] — Friendly companion/guide system (the embodied voice)
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress

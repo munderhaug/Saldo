@@ -26,6 +26,18 @@ A restrained, trustworthy financial UI — not a mood-driven brand. Consistency 
   (`font-text`); no `font-medium`/`font-semibold`/`font-bold`. Build hierarchy from size + the serif/sans
   switch + colour (`neutral-12`/`neutral-11`), not weight. Both are self-hosted (`@fontsource-variable/*`,
   no CDN); tokens live in `app/app.css`.
+- **Illustration & the companion (ADR 0058; visual reference `docs/design/visual-identity-spike.html`):**
+  the flat **"papirklipp"** grammar — circles/half-/quarter-circles, rounded bars, soft triangles,
+  zigzag, as layered flat fills; **no outlines/gradients/shadows**; fine detail is neutral-12 "ink"
+  only. Colour recipe (tokens only): fields = sky/lilac/mint **4–6**; focal = electric/grape/candy
+  **9** (max two per scene; candy-9 never carries text); props are paper-white/neutral-1; the semantic
+  hues (green/red/amber) are **never decorative**. Illustration lives in empty states, onboarding,
+  tap-to-explain, and earned peaks — **never inside money/table surfaces, never at §5.5** (absence is
+  the sobriety signal). The companion is the round balance ball (working name **Øre**): electric-9
+  body, paper-white features, degrading 96→12 px where 12 px = the ambient status dot; expressions
+  never blame or alarm (the system owns fault); dismissible; LLM-spoken text is AI-labelled (ADR
+  0022/0036). The Torpedo is a sibling grape-9 dart, purre-flow only, always pointing outward. Final
+  name/face awaits `companion-user-validation`; the grammar and rules bind now.
 - **No AI-design "tells."** Default-shadcn-looking screens read as generic AI output, never ship that.
   Ship customized tokens/spacing/type — not stock components. Specifically avoid: the un-themed shadcn
   default look, "AI-purple" violet gradients, gradient hero text, unprompted neon glows, emoji used as

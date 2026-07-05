@@ -6,7 +6,18 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-07-05 — session `visual-identity-spike` (the `design-visual-spike` task:
+**Last updated:** 2026-07-05 — session `feat-companion` (**ADR 0059** — the companion/guide system,
+the embodied voice of ADR 0025 in ADR 0058's look: typed `<Companion>`/`<CompanionGuide>` components
+(`apps/web/app/components/companion.tsx` — closed expression set, honest 96→12 px ladder), the
+`--companion`/`--companion-foreground` semantic tokens (closes PR #66's design-review advisory), a
+cookie-backed no-JS dismissal via the `/companion` resource route with the settings way-back, and the
+first placements: home onboard/empty/à-jour header + the invoices empty list. Deterministic — NOT an
+AI system (Recital 12); every string addresses "hjelperen" structurally, so naming after
+`companion-user-validation` is a string change. All gates green locally (typecheck/lint/format/test/
+lint:repo/backlog/audit); design-review pass clean; the a11y-reviewer's two findings (guide-as-aside
+landmark demotion, 24px dismiss target) fixed in-session. **This branch was STACKED on the
+then-unmerged PR #66**: the spike commit was cherry-picked (identical content, clean merge whichever
+lands first). Earlier same day: session `visual-identity-spike` (the `design-visual-spike` task:
 **ADR 0058** — the flat "papirklipp" illustration grammar + the round balance-ball companion, working
 name **Øre** — with the committed visual reference `docs/design/visual-identity-spike.html`
 (self-contained, real OKLCH tokens, light/dark verified by screenshot), the rules distilled into
@@ -29,9 +40,9 @@ green/red/amber never decorative; never inside money/tables, never at §5.5). Th
 balance ball **Øre** (electric-9 body, theme-stable white features, degrades 96→12 px where 12 px = the
 ambient status dot; no blame/alarm expressions; dismissible; LLM speech AI-labelled — ADR 0022/0036).
 The Torpedo is a sibling grape dart, purre-flow only. **Final name/face is gated on
-`companion-user-validation`** (real users) — the grammar and rules bind now; `feat-companion` is
-unblocked in the graph. When implementing, add `--companion`/`--companion-foreground` semantic tokens
-rather than referencing electric-9 raw (design-review note, 2026-07-05).
+`companion-user-validation`** (real users) — the grammar and rules bind now. `feat-companion` is DONE
+(ADR 0059): the semantic-token advisory is closed and the character ships as the typed component —
+future surfaces compose `Companion`/`CompanionGuide` with a new copy key, nothing else.
 
 ### Toolchain migration notes (2026-07-05, PR #61)
 The TS 6 `node:`-import resolution change moved the domain purity gate: `packages/domain/tsconfig.json`
@@ -40,7 +51,8 @@ a project) and **`tsconfig.src.json` is the purity gate** (`types: []`, producti
 `pnpm typecheck` runs it first, so the no-I/O invariant stays mechanical. `fc.fullUnicodeString` →
 `fc.string({ unit: 'binary' })` (same code-point domain). `apps/web` dropped the TS-6-deprecated
 `baseUrl`. Advisory-only peer warnings to watch for upstream releases: eslint-plugin-jsx-a11y peers at
-eslint ^9 (passes on flat config), type-coverage peers at TS ≤5 (runs correctly on 6).
+eslint ^9 (passes on flat config), type-coverage peers at TS ≤5 (runs correctly on 6) — dependabot may
+open PRs for both; merging those closes the two warnings.
 
 ### Review 2026-07-03 — landed this session (details: git log on the branch)
 **P0:** a credit-note draft can no longer revert to a positive invoice (kind/creditsInvoiceId are

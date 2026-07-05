@@ -228,13 +228,17 @@
     {
       "id": "feat-org-active-context",
       "title": "Persisted active-org context (session-scoped current org)",
-      "status": "todo",
+      "status": "done",
+      "implements_adr": ["0060"],
       "value": "medium",
       "effort": "S",
       "phase": "P1-feature",
       "depends_on": ["feat-org-onboarding"],
-      "notes": "Remember the org a user is acting for across requests (cookie/session), so feature routes need not carry orgId in the path. Org selection (feat-org-onboarding) sets it; withUserOrg reads it.",
-      "refs": ["docs/decisions/0032-org-provisioning.md"]
+      "notes": "Done 2026-07-05 (ADR 0060): saldo_active_org cookie — a navigation hint, never an authz input. Set by the org-overview loader after membership is proven; home cross-checks it against the membership list and falls back to the first org. withUserOrg deliberately does NOT read it (ambient tenant rejected); org-less cookie-resolved routes rejected for now — see the ADR's alternatives.",
+      "refs": [
+        "docs/decisions/0032-org-provisioning.md",
+        "docs/decisions/0060-active-org-cookie.md"
+      ]
     },
     {
       "id": "feat-account-chart-curation",
@@ -424,12 +428,12 @@
     {
       "id": "ci-pr-template",
       "title": "Make the quality bar mechanical (PR template + migration-touches-test gate)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1",
       "depends_on": ["pr3-gates"],
-      "notes": "PR template requiring linked ADR/tests; a CI check that a migration PR also touches test/integrity/.",
+      "notes": "Done 2026-07-05: the PR template (.github/PULL_REQUEST_TEMPLATE.md, linked ADR/task + DoD checklist) already existed; the missing half — the migration-integrity-gate CI job — added to ci.yml: a PR touching db/migrations/ fails unless it also touches apps/web/test/integrity/ (PR-only, base...head diff).",
       "refs": ["docs/roadmap.md"]
     },
     {
@@ -570,24 +574,24 @@
     {
       "id": "aia-literacy-note",
       "title": "EU AI Act: proportionate AI-literacy note (Art 4, in force)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "compliance",
       "depends_on": [],
-      "notes": "A short dated competence note: what the AI features do, their limits, the propose-only/confirm model. Art 4 in force since 2 Feb 2025; proportionate for a solo/small team.",
-      "refs": ["docs/regulatory/eu-ai-act.md"]
+      "notes": "Done 2026-07-05: docs/regulatory/eu-ai-act-literacy.md — dated competence note (what the one AI feature does, its limits, the propose→validate→confirm chain, the Annex III(5)(b) line, residency fail-closed). Re-read triggers recorded in the note; sourced + verify-by per the regulatory convention.",
+      "refs": ["docs/regulatory/eu-ai-act.md", "docs/regulatory/eu-ai-act-literacy.md"]
     },
     {
       "id": "aia-conformity-checklist",
       "title": "EU AI Act: conformity self-assessment checklist",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "compliance",
       "depends_on": ["compliance-eu-ai-act"],
-      "notes": "A dated checklist re-run before each AI feature ships and at each Art 113 milestone: prohibitions clear (Art 5), still not high-risk (Art 6/Annex III), transparency met (Art 50).",
-      "refs": ["docs/regulatory/eu-ai-act.md"]
+      "notes": "Done 2026-07-05: docs/regulatory/eu-ai-act-conformity.md — 9-point checklist (scope boundary, Art 5, Art 6/Annex III, Art 50(1)/(2), propose-only, literacy, Art 53 upstream docs, EEA status) + append-only run log. First run logged against receipt extraction: pass on 1-7 and 9; item 8 pending by design until the LLM-hosting decision commits a model (aia-gpai-docs stays open, gated on that decision). Next scheduled run: 2 Aug 2026 (Art 113 general application).",
+      "refs": ["docs/regulatory/eu-ai-act.md", "docs/regulatory/eu-ai-act-conformity.md"]
     },
     {
       "id": "aia-highrisk-guard",
@@ -838,13 +842,18 @@
     {
       "id": "feat-opening-balances",
       "title": "Opening balances (inngående balanse) for mid-year migration",
-      "status": "todo",
+      "status": "done",
+      "implements_adr": ["0061"],
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
       "depends_on": ["feat-org-onboarding", "feat-manual-voucher-entry"],
-      "notes": "Build-spec §8.1 (Phase 1). Let a user migrating mid-year enter opening balances so the ledger and the honest-number reveal are correct from day one (today the only way in is manual vouchers from zero). Must post a balanced opening voucher through the existing posting path + integrity triggers; an opening balance is still an append-only voucher (no ledger bypass).",
-      "refs": ["docs/saldo-build-specification.md", ".claude/rules/ledger-integrity.md"]
+      "notes": "Done 2026-07-05 (ADR 0061): /orgs/:orgId/opening — a curated own/owe surface in everyday words posting ONE balanced voucher through deriveOpeningBalance (pure, property-tested) + the rules gate + insertPostedVoucher; equity (2050) is the plug, no VAT codes on any line (VAT position carries as 2740 liability), voucher type stays 'manual' (a dedicated type would need a check-constraint migration — deferred in the ADR). Accepted cut: YTD result figures arrive as ordinary vouchers, not the opening.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        ".claude/rules/ledger-integrity.md",
+        "docs/decisions/0061-opening-balances.md"
+      ]
     },
     {
       "id": "feat-sales-invoicing",
@@ -1198,12 +1207,12 @@
         "apps/web/app/routes/orgs.$orgId.mva.tsx",
         "apps/web/app/integrations/skatteetaten/validation-client.server.ts"
       ],
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "P1-feature",
       "depends_on": ["feat-mva-melding"],
-      "notes": "The fail-closed validation client exists and is tested but no route calls it (review 2026-07-03 §15 — quarantined until wired). Add a sober 'Valider hos Skatteetaten' action (explicit click, never a silent loader call), render the typed verdict, keep the fail-closed not-configured path calm. Belongs naturally next to feat-altinn-mva-submission."
+      "notes": "Done 2026-07-05: explicit 'Valider hos Skatteetaten' action on the MVA screen (POST, assertSameOrigin, Zod-validated year) regenerates the melding XML via the shared mvaSystemInfo helper and renders the typed verdict; every fail-closed reason maps to calm keyed copy (mva.skatteetaten.*). The endpoint path stays provisional until Skatteetaten onboarding (ADR 0050)."
     }
   ]
 }

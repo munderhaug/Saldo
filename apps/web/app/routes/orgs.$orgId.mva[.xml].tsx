@@ -6,28 +6,15 @@
  * submission (Altinn 3) is `feat-altinn-mva-submission`.
  */
 import { z } from 'zod';
-import {
-  ANNUAL_TERM,
-  buildMvaMeldingXml,
-  generateMvaMelding,
-  type MvaMeldingSystemInfo,
-} from '@saldo/domain';
+import { ANNUAL_TERM, buildMvaMeldingXml, generateMvaMelding } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.mva[.xml]';
 import { withUserOrg } from '~/auth/auth.server';
 import { aggregateVatByCode } from '~/db/mva-melding.server';
 import { readOrgOverview } from '~/db/organizations.server';
 import { asMvaStatus } from '~/lib/org-format';
 import { resolveYear } from '~/lib/fiscal-year';
+import { mvaSystemInfo } from '~/lib/mva-system-info.server';
 import { STANDARD_TAX_CODE_INDEX } from '~/db/provisioning.server';
-
-/** Identity of the generating system (`innsending.regnskapssystem`). The reference is per org+year. */
-function systemInfo(orgId: string, year: number): MvaMeldingSystemInfo {
-  return {
-    regnskapssystemsreferanse: `saldo-${orgId}-${year}`,
-    systemnavn: 'Saldo',
-    systemversjon: '0.0.0',
-  };
-}
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
@@ -53,7 +40,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   );
   if (!result.registered) throw new Response('Not found', { status: 404 }); // no melding to file
 
-  const xml = buildMvaMeldingXml(result.melding, systemInfo(params.orgId, year));
+  const xml = buildMvaMeldingXml(result.melding, mvaSystemInfo(params.orgId, year));
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',

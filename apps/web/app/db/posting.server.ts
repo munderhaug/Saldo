@@ -23,6 +23,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
   deductsInputVat,
   deriveDrawing,
+  deriveOpeningBalance,
   deriveOwnerOutlay,
   deriveReverseChargePurchase,
   deriveStandardExpense,
@@ -35,6 +36,7 @@ import {
   vatLineRule,
   øre,
   type AccountNo,
+  type OpeningEntry,
   type VatCode,
   type Voucher,
   type VoucherType,
@@ -151,6 +153,21 @@ export const OWNER_ACCOUNTS = {
   cost: { outlay: '7798', mileage: '7100', diett: '7160' },
 } as const;
 
+/**
+ * Designated accounts for the OPENING BALANCE (inngående balanse, feat-opening-balances, §8.1) — the
+ * curated migration set the surface offers in everyday words, plus the equity plug. What you OWN:
+ * bank 1920 (Bankinnskudd), receivable 1500 (Kundefordringer), fixtures 1250 (Inventar). What you
+ * OWE: payable 2400 (Leverandørgjeld), vatSettlement 2740 (Oppgjørskonto merverdiavgift — the VAT
+ * position carried over as a LIABILITY, deliberately not the transactional 2700/2710 accounts so an
+ * opening never lands on an MVA-melding). The difference plugs to 2050 (Annen egenkapital). All
+ * source-grounded in the committed kontoplan, verified by `posting-accounts.test.ts`.
+ */
+export const OPENING_ACCOUNTS = {
+  own: { bank: '1920', receivable: '1500', fixtures: '1250' },
+  owe: { payable: '2400', vatSettlement: '2740' },
+  equity: '2050',
+} as const;
+
 /** The designated accounts as the branded `AccountNo` shapes the domain derivation expects. */
 const INCOME_ACCOUNTS = {
   receivable: POSTING_ACCOUNTS.income.receivable as AccountNo,
@@ -173,6 +190,87 @@ interface RecordVoucherInput {
   /** Net amount in øre (excl. MVA when the org is registered). Already integer-validated at the boundary. */
   readonly net: number;
   readonly year: number;
+}
+
+export type RecordOpeningBalanceResult =
+  | { ok: true; voucherId: string }
+  | { ok: false; reason: 'empty' | 'invalid-amount' | 'rule-violation' | 'chart-incomplete' };
+
+interface RecordOpeningBalanceInput {
+  readonly organizationId: string;
+  /** Stated balances in øre by the curated opening line; zero means "not applicable" and is skipped. */
+  readonly balances: {
+    readonly bank: number;
+    readonly receivable: number;
+    readonly fixtures: number;
+    readonly payable: number;
+    readonly vatSettlement: number;
+  };
+  readonly year: number;
+}
+
+/**
+ * Record the opening balance (inngående balanse) as ONE posted voucher through the ordinary posting
+ * path — never a ledger bypass (feat-opening-balances). The leg layout is the pure
+ * `deriveOpeningBalance` (each stated balance on its natural side, the difference plugged to equity);
+ * no line carries a VAT code, so nothing here can reach an MVA-melding. The same append-only rules
+ * apply as to any voucher: a wrong opening is corrected by motbilag, not edited.
+ */
+export async function recordOpeningBalance(
+  tx: OrgTx,
+  input: RecordOpeningBalanceInput,
+): Promise<RecordOpeningBalanceResult> {
+  const { balances } = input;
+  const entries: OpeningEntry[] = [
+    { account: OPENING_ACCOUNTS.own.bank as AccountNo, side: 'own', amount: øre(balances.bank) },
+    {
+      account: OPENING_ACCOUNTS.own.receivable as AccountNo,
+      side: 'own',
+      amount: øre(balances.receivable),
+    },
+    {
+      account: OPENING_ACCOUNTS.own.fixtures as AccountNo,
+      side: 'own',
+      amount: øre(balances.fixtures),
+    },
+    {
+      account: OPENING_ACCOUNTS.owe.payable as AccountNo,
+      side: 'owe',
+      amount: øre(balances.payable),
+    },
+    {
+      account: OPENING_ACCOUNTS.owe.vatSettlement as AccountNo,
+      side: 'owe',
+      amount: øre(balances.vatSettlement),
+    },
+  ];
+
+  const derived = deriveOpeningBalance(entries, OPENING_ACCOUNTS.equity as AccountNo);
+  if (!derived.ok) return { ok: false, reason: derived.reason };
+
+  // The rules gate (ADR 0002), kept for chain uniformity — opening lines carry no VAT code, so the
+  // line-level VAT rule passes vacuously today; a future rule still gets its say here.
+  const [org] = await tx
+    .select({ mvaStatus: organization.mvaStatus })
+    .from(organization)
+    .where(eq(organization.id, input.organizationId))
+    .limit(1);
+  if (!org) return { ok: false, reason: 'chart-incomplete' };
+  const status = asMvaStatus(org.mvaStatus);
+  const verdict = runRules(
+    [vatLineRule({ status, codes: STANDARD_TAX_CODE_INDEX })],
+    derived.voucher,
+  );
+  if (!verdict.ok) return { ok: false, reason: 'rule-violation' };
+
+  const periodId = await ensureFiscalPeriod(tx, input.organizationId, input.year);
+  return insertPostedVoucher(
+    tx,
+    input.organizationId,
+    derived.voucher.type,
+    periodId,
+    derived.voucher,
+  );
 }
 
 /** Find the org's open fiscal period for `year`, creating a Jan–Dec one if it doesn't exist yet. */

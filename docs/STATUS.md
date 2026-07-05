@@ -6,28 +6,32 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-07-05 — session `feat-companion` (**ADR 0059** — the companion/guide system,
-the embodied voice of ADR 0025 in ADR 0058's look: typed `<Companion>`/`<CompanionGuide>` components
-(`apps/web/app/components/companion.tsx` — closed expression set, honest 96→12 px ladder), the
-`--companion`/`--companion-foreground` semantic tokens (closes PR #66's design-review advisory), a
-cookie-backed no-JS dismissal via the `/companion` resource route with the settings way-back, and the
-first placements: home onboard/empty/à-jour header + the invoices empty list. Deterministic — NOT an
-AI system (Recital 12); every string addresses "hjelperen" structurally, so naming after
-`companion-user-validation` is a string change. All gates green locally (typecheck/lint/format/test/
-lint:repo/backlog/audit); design-review pass clean; the a11y-reviewer's two findings (guide-as-aside
-landmark demotion, 24px dismiss target) fixed in-session. **This branch was STACKED on the
-then-unmerged PR #66**: the spike commit was cherry-picked (identical content, clean merge whichever
-lands first). Earlier same day: session `visual-identity-spike` (the `design-visual-spike` task:
-**ADR 0058** — the flat "papirklipp" illustration grammar + the round balance-ball companion, working
-name **Øre** — with the committed visual reference `docs/design/visual-identity-spike.html`
-(self-contained, real OKLCH tokens, light/dark verified by screenshot), the rules distilled into
-`.claude/rules/design-system.md`, and the `companion-user-validation` gate task added; landed via PR
-from `claude/visual-identity-spike-65veo9`). Earlier same day: session
-`dependabot-dev-deps-migration` — the PR #61 dev-dependencies group landed as a real toolchain
-migration (TypeScript 6, ESLint 10, fast-check 4, vitest 4, @types/node 26, testcontainers 12,
-knip 6.24, prettier 3.9 + tailwind plugin 0.8, @react-router/dev 8 aligned with the RR8 runtime),
-**merged to main as `36b4015`**. Prior sessions `review-2026-07-03-fixes` (the 2026-07-03 repo review,
-P0 through P2 + docs), `feat-supplier-invoices` (Purchases completed, ADR 0056) and `harness-hardening`
+**Last updated:** 2026-07-05 — session `app-readiness-sweep` (branch
+`claude/app-readiness-checklist-11hypa`, HEAD `0689cf0`, verified: typecheck/lint/format/test/
+lint:repo/backlog all green; Testcontainers suites skip here — no Docker in this container). Six
+backlog tasks landed, one commit each: **wire-skatteetaten-validation** (the MVA screen's explicit
+sober "Valider hos Skatteetaten" action over the fail-closed client; shared `mvaSystemInfo` helper
+so the validated XML is byte-identical to the download), **feat-org-active-context** (**ADR 0060**
+— `saldo_active_org` cookie, a navigation hint never an authz input: set by the org-overview loader
+after membership is proven, cross-checked by home against the membership list; `withUserOrg`
+deliberately never reads it), **aia-literacy-note** + **aia-conformity-checklist**
+(`docs/regulatory/eu-ai-act-literacy.md` + `eu-ai-act-conformity.md` — the Art. 4 competence record
+and the 9-point checklist with its first run logged; item 8/Art. 53 pending by design until the
+LLM-hosting decision commits a model, so `aia-gpai-docs` stays open, gated on that decision — next
+scheduled run 2 Aug 2026), **feat-opening-balances** (**ADR 0061** — `deriveOpeningBalance` in the
+domain (property-tested: always balanced, equity is the plug, no VAT codes), `/orgs/:orgId/opening`
+posting ONE voucher through the ordinary derive→rules→post chain; voucher type stays `'manual'` — a
+dedicated type needs a check-constraint migration, deferred in the ADR; a11y-reviewer pass clean),
+and **ci-pr-template** (the migration-integrity-gate CI job: a PR touching `db/migrations/` fails
+unless it also touches `apps/web/test/integrity/`). **Next up** (from the readiness assessment this
+session): the critical path to daily use is `feat-audit-log` → `feat-altinn-mva-submission` →
+`feat-year-end-close`, plus go-live ops (Cloudflare EU DPA, BankID/Vipps OIDC config,
+`companion-user-validation`, product name). Earlier same day: sessions `feat-companion` (**ADR
+0059** — the typed `<Companion>`/`<CompanionGuide>` system; landed as PR #67) and
+`visual-identity-spike` (**ADR 0058**, see the section below), and `dependabot-dev-deps-migration`
+(the PR #61 toolchain migration — TS 6, ESLint 10, fast-check 4, vitest 4 — merged as `36b4015`).
+Prior sessions `review-2026-07-03-fixes` (the 2026-07-03 repo review, P0 through P2 + docs),
+`feat-supplier-invoices` (Purchases completed, ADR 0056) and `harness-hardening`
 (ADR 0057 — the harness keeps its own promises: `review:check`, `eval:validate`, incremental gates;
 the `.claude/settings.json` allowlist sync + `review-reminder.sh` registration are still pending —
 see the harness-verification-gates task notes); `review-followups` (2026-06-28 review,
@@ -179,9 +183,9 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 59 ADRs (0001–0059) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 84 tasks (46 done, 38 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `aia-conformity-checklist` [medium/S] — EU AI Act: conformity self-assessment checklist
+- **Decisions:** 61 ADRs (0001–0061) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 84 tasks (52 done, 32 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `aia-gpai-docs` [medium/S] — EU AI Act: capture the upstream GPAI model's Annex XII docs (Art 53)
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress

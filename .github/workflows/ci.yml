@@ -74,6 +74,36 @@ jobs:
       - run: pnpm mva:validate # MVA-melding: generate + well-formedness + grounded subset + tie-out (real gate)
       - run: pnpm ehf:validate # EHF/PEPPOL: generate + well-formedness + BIS Billing 3.0 subset (real gate)
 
+  # The quality bar, mechanical (ci-pr-template): a PR that changes the SQL integrity layer must also
+  # touch the Testcontainers integrity tests — "ledger changes have an integrity test" is a gate, not
+  # a reminder (docs/quality-bar.md). PR-only: pushes to main have already passed it.
+  migration-integrity-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: A migration PR must touch test/integrity/
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=$(git diff --name-only "$BASE" "$HEAD")
+          echo "$changed"
+          if echo "$changed" | grep -q '^db/migrations/'; then
+            if echo "$changed" | grep -q '^apps/web/test/integrity/'; then
+              echo "migration + integrity test: OK"
+            else
+              echo "::error::This PR changes db/migrations/ but touches nothing under apps/web/test/integrity/."
+              echo "::error::Every schema/integrity change needs a Testcontainers test proving the bad case is blocked (docs/quality-bar.md)."
+              exit 1
+            fi
+          else
+            echo "no migration changes: gate not applicable"
+          fi
+
   # Build the production image and prove the PRUNED, non-root runtime actually boots and serves. This
   # is the verification gate that makes the prod-only deps prune safe (review 2026-06-28, H3): without
   # it the Dockerfile is never exercised in CI. Docker is pre-installed on ubuntu-latest, so no

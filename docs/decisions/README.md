@@ -64,6 +64,8 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0057 | Harness verification gates — reviewer gate, skill evals, incremental edit/turn-end gates | Accepted |
 | 0058 | Visual identity: the "papirklipp" illustration grammar + the round companion (working name Øre) | Accepted |
 | 0059 | The companion/guide system: deterministic, dismissible, token-bound | Accepted |
+| 0060 | Persisted active-org context as an authz-inert browser cookie | Accepted |
+| 0061 | Opening balances: one plugged voucher through the ordinary posting path | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

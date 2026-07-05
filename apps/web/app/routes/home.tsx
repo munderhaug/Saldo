@@ -11,6 +11,7 @@ import {
 import type { Route } from './+types/home';
 import { db } from '~/db/client';
 import { requireUser, withUserOrg } from '~/auth/auth.server';
+import { readActiveOrg } from '~/lib/active-org.server';
 import { listOrganizationsForUser } from '~/db/organizations.server';
 import { aggregateLedger } from '~/db/ledger.server';
 import { asMvaStatus } from '~/lib/org-format';
@@ -31,9 +32,10 @@ export function headers() {
 /**
  * Home is the honest-number reveal (experience-principles §6): "what's actually yours". It reads the
  * user's primary org's posted ledger for the current year through `withUserOrg` (membership proven) +
- * RLS, then composes the totals with the source-grounded tax estimate in the PURE domain. A persisted
- * active-org context is a separate task (`feat-org-active-context`); until then the alphabetically
- * first org is the primary, with a "switch business" link when there's more than one.
+ * RLS, then composes the totals with the source-grounded tax estimate in the PURE domain. The primary
+ * org is the persisted active-org context (ADR 0060) when it names one of the user's orgs — the hint
+ * is cross-checked against the membership list, never trusted — falling back to the alphabetically
+ * first, with a "switch business" link when there's more than one.
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
@@ -41,7 +43,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   const orgs = await listOrganizationsForUser(db, user.id);
   if (orgs.length === 0) return { kind: 'onboard' as const, companionOn };
 
-  const primary = orgs[0]!;
+  const remembered = readActiveOrg(request);
+  const primary = orgs.find((org) => org.id === remembered) ?? orgs[0]!;
   const year = systemClock.now().getFullYear();
   const status = asMvaStatus(primary.mvaStatus);
   const totals = await withUserOrg(request, primary.id, (tx) => aggregateLedger(tx, year));

@@ -20,6 +20,7 @@ export * from './posting/manual.js';
 export * from './posting/sales-invoice.js';
 export * from './posting/purchase-invoice.js';
 export * from './posting/owner.js';
+export * from './posting/opening.js';
 export * from './extraction/types.js';
 export * from './extraction/map.js';
 export * from './rules/types.js';

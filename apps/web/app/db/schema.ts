@@ -184,7 +184,7 @@ export const voucher = pgTable("voucher", {
 		}),
 	unique("voucher_id_org_uniq").on(table.id, table.organizationId),
 	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
-	check("voucher_type_check", sql`type = ANY (ARRAY['sales'::text, 'purchase'::text, 'manual'::text, 'bank'::text, 'reversal'::text])`),
+	check("voucher_type_check", sql`type = ANY (ARRAY['sales'::text, 'purchase'::text, 'manual'::text, 'bank'::text, 'reversal'::text, 'year_end'::text])`),
 ]);
 
 export const userSession = pgTable("user_session", {

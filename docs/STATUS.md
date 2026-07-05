@@ -19,14 +19,25 @@ sources re-captured 2026-07-05 (`docs/integrations/altinn-mva-innsending.md`, ve
 the old mva-meldingen site is UTDATERT-bannered but still the only technical source), the pure
 `buildMvaMeldingInnsendingXml` envelope, the `app/integrations/altinn` client (residency gate +
 the captured exchange→instance→upload→process/next sequence), the append-only `mva_filing` record
-audited in-tx, and the MVA screen's §5.5 "Send inn via Altinn". Onboarding follow-ons live in the
-task notes (ID-porten client, tt02 verification of the provisional bits, the in-app OIDC round-trip;
-watch systembruker). NOTE: this container HAS a local Postgres cluster — `SALDO_TEST_PG_URI=
-postgres://saldo:saldo@127.0.0.1:5432/postgres?sslmode=disable` runs the full integrity suite
-locally (177 tests incl. the new suites, all green this session); `service postgresql start` +
-create the `saldo` superuser role first (see the runbook's compose defaults). The critical path
-continues: `feat-year-end-close`, plus the go-live ops items (Cloudflare EU
-DPA, BankID/Vipps OIDC config, `companion-user-validation`, product name). Earlier same day:
+audited in-tx, and the MVA screen's §5.5 "Send inn via Altinn" (merged as PR #70 → `78fe4e1`).
+Onboarding follow-ons live in the task notes (ID-porten client, tt02 verification of the
+provisional bits, the in-app OIDC round-trip; watch systembruker).
+**feat-year-end-close landed (ADR 0064)**: the closing voucher IS the carry-forward —
+`deriveYearEndClose` (the deriveOpeningBalance shape) empties klasse 3–8 into the 2050 plug as ONE
+`year_end` voucher (new type + CHECK migration); `closeYear` posts it through the ordinary rules
+gate and LOCKS `fiscal_period` in the same tx (the ADR 0018 triggers finally have a writer).
+Reports stay honest by type (resultat `excludeYearEnd`; balanse's derived årsresultat → 0 by
+construction post-close; SAF-T multi-year opening balances become correct — the ADR 0052 deferral
+closes). `/orgs/:orgId/year-end` ships the figures (årsresultat = næringsinntekt = beregnet
+personinntekt basis per ADR 0029 + the tax set-aside), the checklist, and the §5.5 close.
+saldoavskrivning: the grounded a–j rate table + declining-balance schedule
+(`docs/regulatory/saldoavskrivning.md`). SPLIT OUT as tasks: `feat-asset-register`,
+`feat-naeringsspesifikasjon`. NOTE: this container HAS a local Postgres cluster —
+`SALDO_TEST_PG_URI=postgres://saldo:saldo@127.0.0.1:5432/postgres?sslmode=disable` runs the full
+integrity suite locally (all green this session); `service postgresql start` + create the `saldo`
+superuser role first (see the runbook's compose defaults). The critical path to daily use is now
+CODE-COMPLETE — what remains is go-live ops (Cloudflare EU DPA, BankID/Vipps OIDC config,
+Altinn/ID-porten onboarding, `companion-user-validation`, product name). Earlier same day:
 session `app-readiness-sweep` (branch `claude/app-readiness-checklist-11hypa`, merged as PR #68 →
 `e33d606`). Six
 backlog tasks landed, one commit each: **wire-skatteetaten-validation** (the MVA screen's explicit
@@ -203,8 +214,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 63 ADRs (0001–0063) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 84 tasks (54 done, 30 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 64 ADRs (0001–0064) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 86 tasks (55 done, 31 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `aia-gpai-docs` [medium/S] — EU AI Act: capture the upstream GPAI model's Annex XII docs (Art 53)
 <!-- /AUTOGEN:repo-status -->
 
@@ -220,8 +231,8 @@ SCAFFOLD label is gone. A `/orgs/:orgId/saft` view + `saft.xml` resource route p
 Deterministic — **NOT an AI system** (Recital 12). Domain exhaustive + property tests + a Testcontainers
 tie-out/RLS integration test (XSD-validates real seeded data). **Deferred (ADR 0052):** line-level
 `CustomerID`/`SupplierID` subledger refs; the optional `SourceDocuments` section; multi-year
-result-account opening balances (they carry prior-year cumulative until `feat-year-end-close` — a
-first-year export is fully honest); Altinn delivery. The prior **Reporting** (`feat-reporting`, ADR 0051) — landed via a
+result-account opening balances — CLOSED by ADR 0064 (the year-end close zeroes result accounts
+in-year, so cumulative opening balances are now correct); Altinn delivery. The prior **Reporting** (`feat-reporting`, ADR 0051) — landed via a
 reviewed PR; see `git log`. Resultat/balanse/hovedbok/reskontro/likviditet are derived **read-only**
 from the posted ledger: a new RLS-scoped `aggregateAccountBalances(year)` sums Σdebit/Σcredit per
 account, and the pure `@saldo/domain/reporting` functions compose the reports by kontoklasse. The hard
@@ -229,7 +240,7 @@ tie-outs (resultat + balanse balance — incl. klasse-8 privatuttak landing on e
 reskontro reconciles to the 1500 control account) are proven by a Testcontainers test; figures carry an
 accessible currency label (WCAG 2.2 AA). Deterministic — **NOT an AI system** (Recital 12). The hovedbok
 is the explicit depth-on-demand surface (§4.2). **Deferred (ADR 0051):** open AP + leverandørreskontro
-(`feat-supplier-invoices`); multi-year opening balances + year-end close (`feat-year-end-close`);
+(`feat-supplier-invoices` — DONE); year-end close (`feat-year-end-close` — DONE, ADR 0064);
 period-over-period comparison; the reskontro→control reconciliation line for manual/partial 1500 moves.
 
 The prior **MVA-melding generation** (`feat-mva-melding`, ADR 0050) — also landed. The VAT return is

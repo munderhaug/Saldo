@@ -1,0 +1,17 @@
+# Gitleaks config — extends the default ruleset, adds one path allowlist.
+#
+# db/reference/ is our immutable raw store of PRIMARY regulatory sources, captured verbatim (the
+# regulatory-update discipline). Skatteetaten's avskrivningssatser page embeds a Google reCAPTCHA
+# **site key** — which is PUBLIC by design (it ships in client-side HTML; only the paired secret key
+# is confidential). Gitleaks' generic-api-key rule flags its high entropy as a false positive.
+# Allowlist the one captured file so the finding doesn't block CI, without weakening any rule
+# elsewhere in the repo.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public reCAPTCHA site key in a verbatim-captured Skatteetaten regulatory source"
+paths = [
+  '''db/reference/skatt/2026-07-05-avskrivningssatser\.html''',
+]

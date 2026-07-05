@@ -164,6 +164,7 @@ const VOUCHER_TYPE_DESCRIPTION: Record<string, string> = {
   manual: 'Manuelt bilag',
   bank: 'Bank',
   reversal: 'Reversering',
+  year_end: 'Årsavslutning',
 };
 
 function describeVoucherType(type: string): string {

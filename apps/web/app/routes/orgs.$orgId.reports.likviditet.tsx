@@ -41,7 +41,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const asOf = new Date().toISOString().slice(0, 10);
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     overview: await readOrgOverview(tx, params.orgId),
-    balances: await aggregateAccountBalances(tx, year),
+    // CUMULATIVE (ADR 0064): available funds are POSITIONS carried across years, not one year's delta.
+    balances: await aggregateAccountBalances(tx, year, { cumulative: true }),
     open: await listOpenReceivables(tx),
   }));
   if (!data.overview) throw new Response('Not found', { status: 404 });

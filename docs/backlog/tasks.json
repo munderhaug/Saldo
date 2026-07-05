@@ -1034,15 +1034,18 @@
     {
       "id": "feat-year-end-close",
       "title": "Year-end close — carry-forward, næringsspesifikasjon figures, saldoavskrivning",
-      "status": "todo",
+      "status": "done",
+      "implements_adr": ["0064"],
       "value": "medium",
       "effort": "L",
       "phase": "P7",
       "depends_on": ["feat-reporting", "feat-tax-estimate"],
-      "notes": "Build-spec §8.6 + §8.10 + §16 Phase 7. Year-end close with balance carry-forward + period locking of the closed year (existing period-lock triggers); næringsspesifikasjon figure generation; beregnet personinntekt basis (builds on feat-tax-estimate, ADR 0029); saldoavskrivning (declining-balance depreciation) schedules; year-end checklist; export/handoff to Skatteetaten's pre-filled return (full submission API deferred — §16 'Later'). Skattemelding deadline 31 May.",
+      "notes": "Done 2026-07-05 (ADR 0064): the closing voucher IS the carry-forward — deriveYearEndClose (pure, the deriveOpeningBalance shape) empties every result-side account (klasse 3-8) into the 2050 equity plug as ONE 'year_end' voucher (new type + CHECK migration); closeYear posts it through the ordinary rules gate and LOCKS fiscal_period in the same tx (the ADR 0018 triggers finally have a writer). Reports stay honest by type: resultat/aggregation excludeYearEnd; balanse keeps full sums (closed year's derived arsresultat = 0 by construction); SAF-T multi-year opening balances become correct (closes the ADR 0052 deferral). /orgs/:orgId/year-end ships the figures (arsresultat = naeringsinntekt = beregnet personinntekt basis per ADR 0029 + the tax set-aside), the checklist, and the SS5.5 close. saldoavskrivning: the grounded a-j rate table + declining-balance schedule (docs/regulatory/saldoavskrivning.md; SS14-40/14-47 small-amount rules await their own capture). SPLIT OUT: feat-asset-register (persistence/UI feeding depreciation postings), feat-naeringsspesifikasjon (the full post mapping — needs its own captured structure). VAT-REVIEW FIXES IN-DIFF: balanse + likviditet now read CUMULATIVE positions (aggregateAccountBalances {cumulative} — single-year deltas would mispresent a multi-year ledger); closeYear serialized by pg_advisory_xact_lock on org+year (no concurrent double close); the year-end surface only offers the close when result-side activity exists.",
       "refs": [
         "docs/saldo-build-specification.md",
-        "docs/decisions/0029-enk-income-tax-estimate.md"
+        "docs/decisions/0029-enk-income-tax-estimate.md",
+        "docs/regulatory/saldoavskrivning.md",
+        "docs/decisions/0064-year-end-close.md"
       ]
     },
     {
@@ -1225,6 +1228,28 @@
       "phase": "P1-feature",
       "depends_on": ["feat-mva-melding"],
       "notes": "Done 2026-07-05: explicit 'Valider hos Skatteetaten' action on the MVA screen (POST, assertSameOrigin, Zod-validated year) regenerates the melding XML via the shared mvaSystemInfo helper and renders the typed verdict; every fail-closed reason maps to calm keyed copy (mva.skatteetaten.*). The endpoint path stays provisional until Skatteetaten onboarding (ADR 0050)."
+    },
+    {
+      "id": "feat-asset-register",
+      "title": "Asset register (anleggsmidler) feeding saldoavskrivning postings",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P7",
+      "depends_on": ["feat-year-end-close"],
+      "notes": "Split out of feat-year-end-close (ADR 0064). The pure rate table + declining-balance schedule exist (tax/saldo-depreciation.ts, grounded in docs/regulatory/saldoavskrivning.md); this task adds the persistence (an asset table: cost, saldogruppe, acquired date) + UI + the year-end depreciation POSTING (debit 60xx / credit 12xx net method — no contra account in the standard chart). Needs the SS14-40 straksfradrag + SS14-47 rest-saldo rules captured (statutory text) before encoding them.",
+      "refs": ["docs/regulatory/saldoavskrivning.md", "docs/decisions/0064-year-end-close.md"]
+    },
+    {
+      "id": "feat-naeringsspesifikasjon",
+      "title": "Naeringsspesifikasjon post mapping (full figure set for the tax return)",
+      "status": "todo",
+      "value": "medium",
+      "effort": "M",
+      "phase": "P7",
+      "depends_on": ["feat-year-end-close"],
+      "notes": "Split out of feat-year-end-close (ADR 0064). The year-end page ships the summary figures (driftsinntekter/driftskostnader/arsresultat/beregnet-personinntekt basis); this task captures the official naeringsspesifikasjon structure (Skatteetaten) as a dated source and maps accounts -> posts for the pre-filled-return handoff (submission API stays 'Later' per SS16).",
+      "refs": ["docs/saldo-build-specification.md", "docs/decisions/0064-year-end-close.md"]
     }
   ]
 }

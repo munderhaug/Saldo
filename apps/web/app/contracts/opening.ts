@@ -25,7 +25,6 @@ export const OPENING_FIELDS = [
   'payable',
   'vatSettlement',
 ] as const;
-export type OpeningField = (typeof OPENING_FIELDS)[number];
 
 export const openingBalanceInput = z.object({
   bank: openingAmount,

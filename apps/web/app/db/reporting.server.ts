@@ -14,7 +14,7 @@
  *  - `readAccountLedger` reads one account's posted entries for the year plus its incoming balance from
  *    prior periods — the hovedbok drill-down.
  */
-import { and, asc, eq, inArray, isNotNull, lt, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull, lt, lte, ne, sql } from 'drizzle-orm';
 import {
   type HovedbokEntry,
   type LedgerAccountBalance,
@@ -32,12 +32,23 @@ const toNum = (value: string | null): number => Number(value ?? 0);
 const OPEN_STATUSES = ['issued', 'sent', 'viewed', 'overdue'] as const;
 
 /**
- * Per-account debit/credit totals for one fiscal `year` over POSTED vouchers only (drafts excluded).
- * Only accounts that carried activity appear. Feeds resultat, balanse, and likviditet.
+ * Per-account debit/credit totals over POSTED vouchers only (drafts excluded). Only accounts that
+ * carried activity appear. Feeds resultat, balanse, and likviditet.
+ *
+ * Two dimensions (ADR 0064):
+ *  - `excludeYearEnd` drops the closing voucher: the resultat report (and the close derivation
+ *    itself) must read the year's REAL activity even after the close has emptied the result
+ *    accounts.
+ *  - `cumulative` sums every fiscal year up to AND including `year` — the POSITION view the balanse
+ *    and likviditet need in a continuous ledger, where balance-sheet accounts carry across years by
+ *    sum (no yearly opening voucher exists). Closed years' result accounts net zero inside the
+ *    cumulative sum, so the derived årsresultat computes to exactly the UNCLOSED remainder — no
+ *    special-casing, no double count against the equity the close posted.
  */
 export async function aggregateAccountBalances(
   tx: OrgTx,
   year: number,
+  opts: { readonly excludeYearEnd?: boolean; readonly cumulative?: boolean } = {},
 ): Promise<LedgerAccountBalance[]> {
   const rows = await tx
     .select({
@@ -50,7 +61,13 @@ export async function aggregateAccountBalances(
     .innerJoin(voucher, eq(voucher.id, posting.voucherId))
     .innerJoin(fiscalPeriod, eq(fiscalPeriod.id, voucher.periodId))
     .innerJoin(account, eq(account.id, posting.accountId))
-    .where(and(isNotNull(voucher.postedAt), eq(fiscalPeriod.year, year)))
+    .where(
+      and(
+        isNotNull(voucher.postedAt),
+        opts.cumulative ? lte(fiscalPeriod.year, year) : eq(fiscalPeriod.year, year),
+        ...(opts.excludeYearEnd ? [ne(voucher.type, 'year_end')] : []),
+      ),
+    )
     .groupBy(account.number, account.name);
 
   return rows.map((r) => ({

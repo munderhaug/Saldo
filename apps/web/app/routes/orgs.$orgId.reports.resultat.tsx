@@ -41,7 +41,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const year = resolveYear(request);
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     overview: await readOrgOverview(tx, params.orgId),
-    balances: await aggregateAccountBalances(tx, year),
+    // Exclude the year_end closing voucher (ADR 0064): after the close empties the result
+    // accounts, this report must still show the year's REAL activity.
+    balances: await aggregateAccountBalances(tx, year, { excludeYearEnd: true }),
   }));
   if (!data.overview) throw new Response('Not found', { status: 404 });
 

@@ -10,7 +10,7 @@ import type { Øre } from '../money/ore.js';
 export type AccountNo = string & { readonly __brand: 'accountNo' };
 export type VatCode = string & { readonly __brand: 'vatCode' };
 
-export type VoucherType = 'sales' | 'purchase' | 'manual' | 'bank' | 'reversal';
+export type VoucherType = 'sales' | 'purchase' | 'manual' | 'bank' | 'reversal' | 'year_end';
 
 export interface PostingLine {
   readonly account: AccountNo;

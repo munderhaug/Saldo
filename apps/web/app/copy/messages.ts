@@ -648,6 +648,36 @@ export const nb = {
   'mva.altinn.invalid-response':
     'Svaret fra Altinn kunne ikke tolkes. Kontroller innsendingen i Altinn før et nytt forsøk.',
 
+  // ── Årsavslutning (feat-year-end-close, ADR 0064) — §5.5: lukking er konsekvensielt, alt nøkternt ──
+  'yearEnd.title': 'Årsavslutning',
+  'yearEnd.period': 'Regnskapsår {year}',
+  'yearEnd.intro':
+    'Når året er ferdig, flyttes resultatet til egenkapitalen og året låses. Tallene her er grunnlaget for skattemeldingen.',
+  'yearEnd.figures.heading': 'Årets tall',
+  'yearEnd.figures.income': 'Driftsinntekter',
+  'yearEnd.figures.costs': 'Driftskostnader',
+  'yearEnd.figures.result': 'Årsresultat (næringsinntekt)',
+  'yearEnd.figures.taxEstimate': 'Anslått skatt å sette av',
+  'yearEnd.figures.taxNotCaptured': 'Satser for året er ikke lagt inn enda',
+  'yearEnd.figures.note':
+    'Årsresultatet er utgangspunktet for næringsspesifikasjonen og beregnet personinntekt. Anslaget bruker forutsetningene som er dokumentert i skatteoversikten — det er et anslag, ikke et vedtak.',
+  'yearEnd.checklist.heading': 'Før året lukkes',
+  'yearEnd.checklist.bank': 'Alle banktransaksjoner er avstemt.',
+  'yearEnd.checklist.receipts': 'Alle kvitteringer og leverandørfakturaer for året er bokført.',
+  'yearEnd.checklist.mva': 'Mva-meldingen for året er levert.',
+  'yearEnd.close.heading': 'Lukk året',
+  'yearEnd.close.note':
+    'Lukkingen fører årsresultatet til egenkapitalen og låser året. Etterpå kan ingenting bokføres i året — rettelser skjer i det nye året.',
+  'yearEnd.close.confirm': 'Lukk {year}',
+  'yearEnd.close.isClosed': 'Året er lukket. Resultatet er ført til egenkapitalen.',
+  'yearEnd.close.yearNotOver': 'Året er ikke ferdig enda. Lukking blir mulig etter nyttår.',
+  'yearEnd.close.nothingToClose': 'Ingen bokførte bevegelser i året — det er ingenting å lukke.',
+  'yearEnd.close.already-closed': 'Året er allerede lukket.',
+  'yearEnd.close.nothing-to-close': 'Ingen bokførte bevegelser i året — det er ingenting å lukke.',
+  'yearEnd.close.year-not-over': 'Året er ikke ferdig enda. Lukking blir mulig etter nyttår.',
+  'yearEnd.close.error': 'Lukkingen gikk ikke gjennom. Ingenting ble endret. Prøv igjen om litt.',
+  'yearEnd.back': 'Tilbake til rapportene',
+
   // ── SAF-T-eksport (feat-saft-export) — read-only finansfil bygget fra det posterte regnskapet ──
   'saft.title': 'SAF-T-eksport',
   'saft.period': 'Regnskapsår {year}',
@@ -713,6 +743,7 @@ export const nb = {
   'reports.hub.hovedbok.desc': 'Alle posteringer per konto.',
   'reports.hub.reskontro.desc': 'Utestående per kunde.',
   'reports.hub.likviditet.desc': 'Tilgjengelige midler.',
+  'reports.hub.yearEnd': 'Årsavslutning — lukk året og se skattetallene',
   // Kontoklasse-grupper (resultat/balanse)
   'reports.klasse.1': 'Eiendeler',
   'reports.klasse.2': 'Egenkapital og gjeld',
@@ -1509,6 +1540,36 @@ export const en = {
   'mva.altinn.invalid-response':
     'The response from Altinn could not be read. Check the submission in Altinn before retrying.',
 
+  // ── Year-end close (feat-year-end-close, ADR 0064) — §5.5: closing is consequential, all sober ──
+  'yearEnd.title': 'Year-end close',
+  'yearEnd.period': 'Financial year {year}',
+  'yearEnd.intro':
+    'When the year is done, the result moves to equity and the year is locked. The figures here are the basis for the tax return.',
+  'yearEnd.figures.heading': "The year's figures",
+  'yearEnd.figures.income': 'Operating income',
+  'yearEnd.figures.costs': 'Operating costs',
+  'yearEnd.figures.result': 'Result for the year (business income)',
+  'yearEnd.figures.taxEstimate': 'Estimated tax to set aside',
+  'yearEnd.figures.taxNotCaptured': "Rates for the year aren't captured yet",
+  'yearEnd.figures.note':
+    'The result is the starting point for the næringsspesifikasjon and beregnet personinntekt. The estimate uses the assumptions documented in the tax overview — it is an estimate, not an assessment.',
+  'yearEnd.checklist.heading': 'Before closing the year',
+  'yearEnd.checklist.bank': 'All bank transactions are reconciled.',
+  'yearEnd.checklist.receipts': 'All receipts and supplier invoices for the year are posted.',
+  'yearEnd.checklist.mva': 'The VAT return for the year has been filed.',
+  'yearEnd.close.heading': 'Close the year',
+  'yearEnd.close.note':
+    'Closing moves the result to equity and locks the year. Afterwards nothing can be posted into it — corrections happen in the new year.',
+  'yearEnd.close.confirm': 'Close {year}',
+  'yearEnd.close.isClosed': 'The year is closed. The result has been moved to equity.',
+  'yearEnd.close.yearNotOver': 'The year is not over yet. Closing opens after New Year.',
+  'yearEnd.close.nothingToClose': 'No posted activity in the year — there is nothing to close.',
+  'yearEnd.close.already-closed': 'The year is already closed.',
+  'yearEnd.close.nothing-to-close': 'No posted activity in the year — there is nothing to close.',
+  'yearEnd.close.year-not-over': 'The year is not over yet. Closing opens after New Year.',
+  'yearEnd.close.error': 'The close did not go through. Nothing was changed. Try again shortly.',
+  'yearEnd.back': 'Back to the reports',
+
   // ── SAF-T export (feat-saft-export) — read-only financial file built from the posted ledger ────
   'saft.title': 'SAF-T export',
   'saft.period': 'Financial year {year}',
@@ -1570,6 +1631,7 @@ export const en = {
   'reports.hub.hovedbok.desc': 'Every posting per account.',
   'reports.hub.reskontro.desc': 'Outstanding per customer.',
   'reports.hub.likviditet.desc': 'Available funds.',
+  'reports.hub.yearEnd': 'Year-end close — close the year and see the tax figures',
   // Account-class groups (P&L / balance sheet)
   'reports.klasse.1': 'Assets',
   'reports.klasse.2': 'Equity and liabilities',

@@ -41,7 +41,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const year = resolveYear(request);
   const data = await withUserOrg(request, params.orgId, async (tx) => ({
     overview: await readOrgOverview(tx, params.orgId),
-    balances: await aggregateAccountBalances(tx, year),
+    // CUMULATIVE (ADR 0064): the balanse shows POSITIONS — balance accounts carry across years by
+    // sum in a continuous ledger. Closed years' result accounts net zero inside the sum, so the
+    // derived årsresultat below is exactly the unclosed remainder.
+    balances: await aggregateAccountBalances(tx, year, { cumulative: true }),
   }));
   if (!data.overview) throw new Response('Not found', { status: 404 });
 

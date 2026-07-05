@@ -72,6 +72,14 @@ export default function ReportsHubRoute({ loaderData }: Route.ComponentProps) {
           </li>
         ))}
       </ul>
+      <p className="mt-4">
+        <Link
+          to={`/orgs/${orgId}/year-end?year=${year}`}
+          className="text-sm underline underline-offset-4"
+        >
+          {t('reports.hub.yearEnd')}
+        </Link>
+      </p>
     </ReportShell>
   );
 }

@@ -44,6 +44,7 @@ export default [
   ),
   route('orgs/:orgId/reports/reskontro', 'routes/orgs.$orgId.reports.reskontro.tsx'),
   route('orgs/:orgId/reports/likviditet', 'routes/orgs.$orgId.reports.likviditet.tsx'),
+  route('orgs/:orgId/year-end', 'routes/orgs.$orgId.year-end.tsx'),
   route('orgs/:orgId/saft', 'routes/orgs.$orgId.saft.tsx'),
   route('orgs/:orgId/saft.xml', 'routes/orgs.$orgId.saft[.xml].tsx'),
   route('orgs/:orgId/export.json', 'routes/orgs.$orgId.export[.json].tsx'),

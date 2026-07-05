@@ -16,6 +16,8 @@ import { aggregateLedger } from '~/db/ledger.server';
 import { asMvaStatus } from '~/lib/org-format';
 import { t } from '~/copy';
 import { Card, CardContent } from '~/components/ui/card';
+import { Companion, CompanionGuide } from '~/components/companion';
+import { companionEnabled } from '~/lib/companion-preference.server';
 
 export function meta() {
   return [{ title: t('app.name') }];
@@ -35,8 +37,9 @@ export function headers() {
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireUser(request);
+  const companionOn = companionEnabled(request);
   const orgs = await listOrganizationsForUser(db, user.id);
-  if (orgs.length === 0) return { kind: 'onboard' as const };
+  if (orgs.length === 0) return { kind: 'onboard' as const, companionOn };
 
   const primary = orgs[0]!;
   const year = systemClock.now().getFullYear();
@@ -46,6 +49,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   return {
     kind: 'reveal' as const,
+    companionOn,
     orgId: primary.id,
     orgName: primary.name,
     otherOrgs: orgs.length - 1,
@@ -65,6 +69,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     return (
       <main className="mx-auto grid max-w-xl gap-6 p-6 sm:p-10">
         <header className="grid gap-1">
+          {/* First meeting: the companion greets, attentive — the copy beside it carries the meaning. */}
+          {loaderData.companionOn && <Companion expression="attentive" size={64} />}
           <h1 className="font-serif text-3xl tracking-tight">{t('home.onboard.title')}</h1>
           <p className="text-muted-foreground">{t('home.onboard.body')}</p>
         </header>
@@ -78,14 +84,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { orgName, orgId, otherOrgs, year, isRegistered, hasActivity, overcommitted } = loaderData;
+  const { orgName, orgId, otherOrgs, year, isRegistered, hasActivity, overcommitted, companionOn } =
+    loaderData;
 
   return (
     <main className="mx-auto grid max-w-xl gap-6 p-6 sm:p-10">
-      <header className="grid gap-1">
-        <p className="font-text text-muted-foreground text-sm">{orgName}</p>
-        <h1 className="font-serif text-3xl tracking-tight">{t('home.heading')}</h1>
-        <p className="text-muted-foreground">{t('home.subhead')}</p>
+      <header className="flex items-center gap-4">
+        {/* "You're caught up" embodied: the companion resting — the ambient all-clear (ADR 0058).
+            It sits beside the heading, outside the money card: illustration never touches figures. */}
+        {companionOn && hasActivity && <Companion expression="resting" size={64} />}
+        <div className="grid gap-1">
+          <p className="font-text text-muted-foreground text-sm">{orgName}</p>
+          <h1 className="font-serif text-3xl tracking-tight">{t('home.heading')}</h1>
+          <p className="text-muted-foreground">{t('home.subhead')}</p>
+        </div>
       </header>
 
       {hasActivity ? (
@@ -128,7 +140,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <Card>
           <CardContent className="grid gap-3 pt-6">
             <h2 className="font-text text-lg">{t('home.empty.title')}</h2>
-            <p className="text-muted-foreground text-sm">{t('home.empty.body')}</p>
+            {/* The companion guides the very first posting; dismissed, the same words stand alone. */}
+            {companionOn ? (
+              <CompanionGuide message={t('home.empty.body')} redirectTo="/" />
+            ) : (
+              <p className="text-muted-foreground text-sm">{t('home.empty.body')}</p>
+            )}
             <Link
               to={`/orgs/${orgId}/vouchers/new`}
               className="bg-primary text-primary-foreground font-text inline-flex min-h-11 w-fit items-center rounded-md px-4 py-2 text-sm"

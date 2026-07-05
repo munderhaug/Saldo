@@ -167,9 +167,9 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 58 ADRs (0001–0058) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 84 tasks (45 done, 39 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
-- **Highest-value ready task:** `feat-companion` [high/L] — Friendly companion/guide system (the embodied voice)
+- **Decisions:** 59 ADRs (0001–0059) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 84 tasks (46 done, 38 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Highest-value ready task:** `aia-conformity-checklist` [medium/S] — EU AI Act: conformity self-assessment checklist
 <!-- /AUTOGEN:repo-status -->
 
 ## In progress

@@ -714,13 +714,18 @@
     {
       "id": "feat-companion",
       "title": "Friendly companion/guide system (the embodied voice)",
-      "status": "todo",
+      "status": "done",
       "value": "high",
       "effort": "L",
       "phase": "P1-feature",
       "depends_on": ["feat-keyed-microcopy", "design-visual-spike"],
       "notes": "ADR 0025: a friendly guide that explains in the user's terms and does jobs for them. Comprehension-not-engagement (never gamification); steps back at the §5.5 moments; dismissible; never blocks the competent user. If LLM-backed it's an AI system (Art 50 disclosure, ADR 0022).",
-      "refs": ["docs/decisions/0025-playful-guided-experience.md", "docs/experience-principles.md"]
+      "refs": [
+        "docs/decisions/0025-playful-guided-experience.md",
+        "docs/experience-principles.md",
+        "docs/decisions/0059-companion-guide-system.md"
+      ],
+      "implements_adr": ["0059"]
     },
     {
       "id": "feat-trade-analogies",

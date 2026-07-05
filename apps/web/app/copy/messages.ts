@@ -603,6 +603,18 @@ export const nb = {
   'saft.downloadXml': 'Last ned SAF-T (XML)',
   'saft.back': 'Tilbake til oversikten',
 
+  // ── Hjelperen — the deterministic companion (ADR 0058). Addressed STRUCTURALLY ("hjelperen"):
+  // the character's name awaits `companion-user-validation`, so naming it later is a string change
+  // here — never a key change. Dropping all playfulness at the §5.5 moments happens by the
+  // companion not rendering there, not by copy.
+  'companion.regionLabel': 'Hjelperen',
+  'companion.dismiss': 'Skjul hjelperen',
+  'companion.show': 'Vis hjelperen igjen',
+  'companion.settingTitle': 'Hjelperen',
+  'companion.settingBodyOn':
+    'Hjelperen dukker opp der det er tomt og peker deg videre. Den blander seg aldri inn når penger går ut eller noe sendes til myndighetene.',
+  'companion.settingBodyOff': 'Hjelperen er skjult. Hent den fram igjen når du vil.',
+
   // ── Innstillinger (org-payout-account) — kontonummer for innbetaling (EHF PayeeFinancialAccount) ──
   'settings.title': 'Innstillinger',
   'settings.intro': 'Kontonummeret kunder betaler til. Det tas med på fakturaen og i EHF-filen.',
@@ -1386,6 +1398,15 @@ export const en = {
     'The file is validated against the official SAF-T standard. Download it and pass it to your accountant or auditor.',
   'saft.downloadXml': 'Download SAF-T (XML)',
   'saft.back': 'Back to overview',
+
+  // ── The companion — deterministic guide (ADR 0058); addressed structurally, never by name ──────
+  'companion.regionLabel': 'The helper',
+  'companion.dismiss': 'Hide the helper',
+  'companion.show': 'Show the helper again',
+  'companion.settingTitle': 'The helper',
+  'companion.settingBodyOn':
+    'The helper shows up where things are empty and points you onward. It never gets involved when money leaves or something is filed with the authorities.',
+  'companion.settingBodyOff': 'The helper is hidden. Bring it back whenever you like.',
 
   // ── Settings (org-payout-account) — invoice payout account (EHF PayeeFinancialAccount) ─────────
   'settings.title': 'Settings',

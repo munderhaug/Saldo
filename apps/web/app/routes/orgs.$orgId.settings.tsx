@@ -6,6 +6,8 @@ import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { readOrgPayout, updateOrgPayout } from '~/db/organizations.server';
 import { orgPayoutInput, type OrgPayoutInput } from '~/contracts';
 import { OrgPayoutForm } from '~/components/org-payout-form';
+import { Companion } from '~/components/companion';
+import { companionEnabled } from '~/lib/companion-preference.server';
 import { t } from '~/copy';
 
 export function meta() {
@@ -23,7 +25,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   if (!ids.safeParse(params).success) throw new Response('Not found', { status: 404 });
   const org = await withUserOrg(request, params.orgId, (tx) => readOrgPayout(tx, params.orgId));
   if (!org) throw new Response('Not found', { status: 404 });
-  return { orgId: params.orgId, org };
+  return { orgId: params.orgId, org, companionOn: companionEnabled(request) };
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -50,7 +52,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function OrgSettingsRoute({ loaderData, actionData }: Route.ComponentProps) {
-  const { orgId, org } = loaderData;
+  const { orgId, org, companionOn } = loaderData;
   const defaultValues: OrgPayoutInput = {
     invoicePaymentAccount: org.invoicePaymentAccount ?? '',
     invoicePaymentAccountName: org.invoicePaymentAccountName ?? '',
@@ -64,6 +66,33 @@ export default function OrgSettingsRoute({ loaderData, actionData }: Route.Compo
       </header>
 
       <OrgPayoutForm defaultValues={defaultValues} error={actionData?.error} />
+
+      {/* The way back after a dismissal (ADR 0058: dismissible, never nags — re-inviting it is
+          the user's move). Browser-level preference; the form posts to the /companion action. */}
+      <section
+        aria-labelledby="companion-setting"
+        className="border-border grid gap-2 rounded-md border p-4"
+      >
+        <h2 id="companion-setting" className="font-text text-sm">
+          {t('companion.settingTitle')}
+        </h2>
+        <div className="flex items-start gap-3">
+          {companionOn && <Companion expression="attentive" size={32} />}
+          <p className="text-muted-foreground self-center text-sm">
+            {companionOn ? t('companion.settingBodyOn') : t('companion.settingBodyOff')}
+          </p>
+        </div>
+        <form method="post" action="/companion">
+          <input type="hidden" name="companion" value={companionOn ? 'off' : 'on'} />
+          <input type="hidden" name="redirectTo" value={`/orgs/${orgId}/settings`} />
+          <button
+            type="submit"
+            className="border-border font-text inline-flex min-h-11 w-fit items-center rounded-md border px-4 py-2 text-sm"
+          >
+            {companionOn ? t('companion.dismiss') : t('companion.show')}
+          </button>
+        </form>
+      </section>
 
       <Link
         to={`/orgs/${orgId}`}

@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, invoiceEmail, invoice, account, vatCode, fiscalPeriod, posting, voucher, invoiceCounter, appUser, userSession, contact, aiProvenance, product, invoiceLine, bankAccount, bankTransaction, supplierInvoice, supplierInvoiceLine, auditLog, membership } from "./schema";
+import { organization, invoiceEmail, invoice, account, vatCode, fiscalPeriod, posting, voucher, invoiceCounter, appUser, userSession, contact, aiProvenance, product, invoiceLine, bankAccount, bankTransaction, supplierInvoice, supplierInvoiceLine, auditLog, mvaFiling, membership } from "./schema";
 
 /**
  * Drizzle relations — HAND-MAINTAINED (do not blindly overwrite with `drizzle-kit introspect`).
@@ -52,6 +52,7 @@ export const organizationRelations = relations(organization, ({many}) => ({
 	supplierInvoices: many(supplierInvoice),
 	supplierInvoiceLines: many(supplierInvoiceLine),
 	auditLogs: many(auditLog),
+	mvaFilings: many(mvaFiling),
 	memberships: many(membership),
 }));
 
@@ -176,6 +177,13 @@ export const appUserRelations = relations(appUser, ({many}) => ({
 	userSessions: many(userSession),
 	auditLogs: many(auditLog),
 	memberships: many(membership),
+}));
+
+export const mvaFilingRelations = relations(mvaFiling, ({one}) => ({
+	organization: one(organization, {
+		fields: [mvaFiling.organizationId],
+		references: [organization.id]
+	}),
 }));
 
 export const auditLogRelations = relations(auditLog, ({one}) => ({

@@ -643,6 +643,29 @@ export const auditLog = pgTable("audit_log", {
 	check("audit_log_entity_table_check", sql`entity_table ~ '^[a-z_]+$'::text`),
 ]);
 
+export const mvaFiling = pgTable("mva_filing", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	year: integer().notNull(),
+	term: text().notNull(),
+	altinnPartyId: text("altinn_party_id").notNull(),
+	altinnInstanceId: text("altinn_instance_id").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("mva_filing_org_year_idx").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops"), table.year.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "mva_filing_organization_id_fkey"
+		}),
+	unique("mva_filing_organization_id_altinn_instance_id_key").on(table.organizationId, table.altinnInstanceId),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("mva_filing_year_check", sql`(year >= 2000) AND (year <= 2100)`),
+	check("mva_filing_term_check", sql`term ~ '^(aar|T[1-6])$'::text`),
+	check("mva_filing_altinn_party_id_check", sql`altinn_party_id <> ''::text`),
+	check("mva_filing_altinn_instance_id_check", sql`altinn_instance_id <> ''::text`),
+]);
+
 export const membership = pgTable("membership", {
 	userId: uuid("user_id").notNull(),
 	organizationId: uuid("organization_id").notNull(),

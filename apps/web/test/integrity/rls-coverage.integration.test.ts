@@ -47,6 +47,7 @@ describe.skipIf(!ledgerDbAvailable)('RLS coverage — every public table is lock
       'invoice_counter',
       'invoice_email',
       'invoice_line',
+      'mva_filing',
       'organization',
       'posting',
       'product',

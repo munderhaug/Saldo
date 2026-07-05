@@ -12,6 +12,7 @@ describe('audit actions — the closed set matches the SQL format', () => {
     'invoice.sent',
     'invoice.paid',
     'supplier_invoice.posted',
+    'mva_filing.submitted',
     'bank_transaction.reconciled',
     'contact.created',
     'contact.updated',

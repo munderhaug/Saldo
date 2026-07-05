@@ -625,6 +625,29 @@ export const nb = {
   'mva.skatteetaten.invalid-response':
     'Svaret fra valideringstjenesten kunne ikke tolkes. Prøv igjen om litt.',
 
+  // ── Innsending via Altinn (feat-altinn-mva-submission, ADR 0063) — §5.5: filing, all sober ──
+  'mva.altinn.heading': 'Send inn til Skatteetaten',
+  'mva.altinn.note':
+    'Innsendingen leveres via Altinn og gjelder mva-meldingen slik den vises her. Den kan ikke angres, men en korrigert melding kan sendes inn senere.',
+  'mva.altinn.submit': 'Send inn via Altinn',
+  'mva.altinn.refileSubmit': 'Send inn på nytt (korrigert melding)',
+  'mva.altinn.filed': 'Innsending {date} — se status og kvittering i Altinn.',
+  'mva.altinn.submitted': 'Meldingen er sendt inn. Kvitteringen ligger hos Altinn.',
+  'mva.altinn.already-filed':
+    'Denne terminen er allerede sendt inn. Bruk «Send inn på nytt» hvis en korrigert melding skal leveres.',
+  'mva.altinn.invalid-locally':
+    'Meldingen har avvik i den lokale kontrollen og ble ikke sendt inn. Rett avvikene først.',
+  'mva.altinn.not-configured':
+    'Innsending via Altinn er ikke koblet til i dette miljøet enda. Meldingen kan lastes ned og leveres i skatteetaten.no.',
+  'mva.altinn.auth-failed':
+    'Altinn godtok ikke tilgangen. Sjekk at innloggingen har rett rolle for innsending og signering.',
+  'mva.altinn.rejected':
+    'Skatteetaten avviste meldingen i innsendingskontrollen. Ingenting ble levert.',
+  'mva.altinn.error':
+    'Fikk ikke kontakt med Altinn. Meldingen ble ikke sendt inn. Prøv igjen om litt.',
+  'mva.altinn.invalid-response':
+    'Svaret fra Altinn kunne ikke tolkes. Kontroller innsendingen i Altinn før et nytt forsøk.',
+
   // ── SAF-T-eksport (feat-saft-export) — read-only finansfil bygget fra det posterte regnskapet ──
   'saft.title': 'SAF-T-eksport',
   'saft.period': 'Regnskapsår {year}',
@@ -1463,6 +1486,28 @@ export const en = {
   'mva.skatteetaten.error': 'Could not reach the validation service. Try again shortly.',
   'mva.skatteetaten.invalid-response':
     'The response from the validation service could not be read. Try again shortly.',
+
+  // ── Submission via Altinn (feat-altinn-mva-submission, ADR 0063) — §5.5: filing, all sober ──
+  'mva.altinn.heading': 'File with Skatteetaten',
+  'mva.altinn.note':
+    'The submission is delivered through Altinn and covers the VAT return exactly as shown here. It cannot be undone, but a corrected return can be filed later.',
+  'mva.altinn.submit': 'File through Altinn',
+  'mva.altinn.refileSubmit': 'File again (corrected return)',
+  'mva.altinn.filed': 'Submission {date} — see status and receipt in Altinn.',
+  'mva.altinn.submitted': 'The return has been filed. The receipt is available in Altinn.',
+  'mva.altinn.already-filed':
+    'This term has already been filed. Use “File again” if a corrected return should be delivered.',
+  'mva.altinn.invalid-locally':
+    'The return has deviations in the local check and was not filed. Fix the deviations first.',
+  'mva.altinn.not-configured':
+    'Filing through Altinn is not connected in this environment yet. The return can be downloaded and delivered at skatteetaten.no.',
+  'mva.altinn.auth-failed':
+    'Altinn did not accept the credentials. Check that the login has the required submission and signing role.',
+  'mva.altinn.rejected':
+    'Skatteetaten rejected the return in the submission check. Nothing was delivered.',
+  'mva.altinn.error': 'Could not reach Altinn. The return was not filed. Try again shortly.',
+  'mva.altinn.invalid-response':
+    'The response from Altinn could not be read. Check the submission in Altinn before retrying.',
 
   // ── SAF-T export (feat-saft-export) — read-only financial file built from the posted ledger ────
   'saft.title': 'SAF-T export',

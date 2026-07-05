@@ -113,6 +113,25 @@ export default function SaftExportRoute({ loaderData }: Route.ComponentProps) {
         </>
       )}
 
+      <section
+        aria-labelledby="full-export"
+        className="border-border grid gap-2 rounded-lg border p-4"
+      >
+        <h2 id="full-export" className="text-sm">
+          {t('export.full.heading')}
+        </h2>
+        <p className="text-muted-foreground text-sm">{t('export.full.intro')}</p>
+        <p>
+          <a
+            href={`/orgs/${orgId}/export.json`}
+            className="text-sm underline underline-offset-4"
+            download
+          >
+            {t('export.full.download')}
+          </a>
+        </p>
+      </section>
+
       <p>
         <Link to={`/orgs/${orgId}`} className="text-sm underline underline-offset-4">
           {t('saft.back')}

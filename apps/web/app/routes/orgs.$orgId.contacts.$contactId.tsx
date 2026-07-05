@@ -9,6 +9,7 @@ import {
   readContact,
   updateContact,
 } from '~/db/contacts.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { contactInput, roleFromFlags, type ContactInput } from '~/contracts';
 import { ContactForm } from '~/components/contact-form';
 import { t } from '~/copy';
@@ -62,9 +63,19 @@ export async function action({ request, params }: Route.ActionArgs) {
     return { error: t('contacts.form.errorInvalidOrgNr') };
   }
 
-  const ok = await withUserOrg(request, params.orgId, (tx) =>
-    updateContact(tx, params.orgId, params.contactId, parsed.data),
-  );
+  const ok = await withUserOrg(request, params.orgId, async (tx, { user }) => {
+    const updated = await updateContact(tx, params.orgId, params.contactId, parsed.data);
+    if (updated) {
+      // Sporbarhet (ADR 0062): register writes feed legal documents — attribute them.
+      await recordAuditEvent(tx, {
+        organizationId: params.orgId,
+        actorUserId: user.id,
+        action: 'contact.updated',
+        entityId: params.contactId,
+      });
+    }
+    return updated;
+  });
   if (!ok) throw new Response('Not found', { status: 404 });
   return redirect(`/orgs/${params.orgId}/contacts`);
 }

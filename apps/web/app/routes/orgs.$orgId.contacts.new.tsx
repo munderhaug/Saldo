@@ -4,6 +4,7 @@ import { isValidOrgNr, orgNr as toOrgNr, proposeMvaStatusFromVatRegister } from 
 import type { Route } from './+types/orgs.$orgId.contacts.new';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { createContact, listAccountOptions, listVatCodeOptions } from '~/db/contacts.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { lookupByOrgNr } from '~/integrations/enhetsregisteret/client.server';
 import { contactInput, type ContactInput } from '~/contracts';
 import { ContactForm } from '~/components/contact-form';
@@ -78,7 +79,16 @@ export async function action({ request, params }: Route.ActionArgs) {
     return { error: t('contacts.form.errorInvalidOrgNr') };
   }
 
-  await withUserOrg(request, params.orgId, (tx) => createContact(tx, params.orgId, parsed.data));
+  await withUserOrg(request, params.orgId, async (tx, { user }) => {
+    const contactId = await createContact(tx, params.orgId, parsed.data);
+    // Sporbarhet (ADR 0062): register writes feed legal documents — attribute them.
+    await recordAuditEvent(tx, {
+      organizationId: params.orgId,
+      actorUserId: user.id,
+      action: 'contact.created',
+      entityId: contactId,
+    });
+  });
   return redirect(`/orgs/${params.orgId}/contacts`);
 }
 

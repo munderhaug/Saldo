@@ -9,6 +9,7 @@ import { chargesOutputVat, parseKroner, systemClock } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.vouchers.new';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { recordManualVoucher } from '~/db/posting.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { organization } from '~/db/schema';
 import { asMvaStatus } from '~/lib/org-format';
 import { manualVoucherInput, VOUCHER_KINDS, type ManualVoucherInput } from '~/contracts';
@@ -63,14 +64,24 @@ export async function action({ request, params }: Route.ActionArgs) {
   const net = parseKroner(parsed.data.amount)!;
   const year = systemClock.now().getFullYear();
 
-  const result = await withUserOrg(request, params.orgId, (tx) =>
-    recordManualVoucher(tx, {
+  const result = await withUserOrg(request, params.orgId, async (tx, { user }) => {
+    const posted = await recordManualVoucher(tx, {
       organizationId: params.orgId,
       kind: parsed.data.kind,
       net,
       year,
-    }),
-  );
+    });
+    if (posted.ok) {
+      // Sporbarhet (ADR 0062): the post and its attribution commit atomically.
+      await recordAuditEvent(tx, {
+        organizationId: params.orgId,
+        actorUserId: user.id,
+        action: 'voucher.posted',
+        entityId: posted.voucherId,
+      });
+    }
+    return posted;
+  });
   if (!result.ok) {
     return {
       error:

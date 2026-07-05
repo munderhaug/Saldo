@@ -12,6 +12,7 @@ import {
   updateDraft,
   type SupplierInvoiceDetail,
 } from '~/db/supplier-invoices.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { supplierInvoiceInput, type SupplierInvoiceInput } from '~/contracts';
 import { supplierInvoiceFormToObject } from '~/lib/supplier-invoice-form-data';
 import { SupplierInvoiceForm } from '~/components/supplier-invoice-form';
@@ -63,9 +64,19 @@ export async function action({ request, params }: Route.ActionArgs) {
   const intent = form.get('intent');
 
   if (intent === 'post') {
-    const result = await withUserOrg(request, params.orgId, (tx) =>
-      postSupplierInvoice(tx, params.orgId, params.purchaseId),
-    );
+    const result = await withUserOrg(request, params.orgId, async (tx, { user }) => {
+      const posted = await postSupplierInvoice(tx, params.orgId, params.purchaseId);
+      if (posted.ok) {
+        // Sporbarhet (ADR 0062): the post and its attribution commit atomically.
+        await recordAuditEvent(tx, {
+          organizationId: params.orgId,
+          actorUserId: user.id,
+          action: 'supplier_invoice.posted',
+          entityId: params.purchaseId,
+        });
+      }
+      return posted;
+    });
     if (!result.ok) return { error: t(`purchases.error.${result.error}`) };
     return redirect(`/orgs/${params.orgId}/purchases/${params.purchaseId}`);
   }

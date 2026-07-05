@@ -642,6 +642,12 @@ export const nb = {
   'saft.downloadXml': 'Last ned SAF-T (XML)',
   'saft.back': 'Tilbake til oversikten',
 
+  // ── Full dataeksport (ADR 0062) — hele regnskapet som rå, maskinlesbar JSON (anti-innlåsing) ──
+  'export.full.heading': 'Alle dataene dine',
+  'export.full.intro':
+    'Hele regnskapet som én maskinlesbar fil — kontakter, produkter, fakturaer, bilag, banktransaksjoner og sporingsloggen. Dataene er dine; du kan ta dem med deg når som helst.',
+  'export.full.download': 'Last ned alle data (JSON)',
+
   // ── Hjelperen — the deterministic companion (ADR 0058). Addressed STRUCTURALLY ("hjelperen"):
   // the character's name awaits `companion-user-validation`, so naming it later is a string change
   // here — never a key change. Dropping all playfulness at the §5.5 moments happens by the
@@ -1474,6 +1480,12 @@ export const en = {
     'The file is validated against the official SAF-T standard. Download it and pass it to your accountant or auditor.',
   'saft.downloadXml': 'Download SAF-T (XML)',
   'saft.back': 'Back to overview',
+
+  // ── Full data export (ADR 0062) — the whole ledger as raw, machine-readable JSON (anti-lock-in) ──
+  'export.full.heading': 'All your data',
+  'export.full.intro':
+    'The whole ledger as one machine-readable file — contacts, products, invoices, vouchers, bank transactions and the audit trail. The data is yours; take it with you at any time.',
+  'export.full.download': 'Download all data (JSON)',
 
   // ── The companion — deterministic guide (ADR 0058); addressed structurally, never by name ──────
   'companion.dismiss': 'Hide the helper',

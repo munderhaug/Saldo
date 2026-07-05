@@ -6,9 +6,22 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-07-05 — session `app-readiness-sweep` (branch
-`claude/app-readiness-checklist-11hypa`, HEAD `0689cf0`, verified: typecheck/lint/format/test/
-lint:repo/backlog all green; Testcontainers suites skip here — no Docker in this container). Six
+**Last updated:** 2026-07-05 — session `app-readiness-critical-path` (branch
+`claude/app-readiness-critical-path-5hvy1m`; PR #68 verified green and squash-merged as `e33d606`
+first). **feat-audit-log landed (ADR 0062)**: the append-only `audit_log` (FORCE RLS + SELECT/INSERT-
+only grant, the ai_provenance pattern) with `recordAuditEvent` — a closed `entity.act` union written
+in the SAME tenant tx as every consequential write (all five voucher-posting paths, invoice
+issue/send/paid, supplier-invoice post, reconcile confirm, contact/product/org register writes;
+drafts deliberately unaudited) — plus the full raw export (`readFullExport` +
+`/orgs/:orgId/export.json`, versioned JSON, linked from the SAF-T page — the GDPR Art. 20
+anti-lock-in half). NOTE: this container HAS a local Postgres cluster — `SALDO_TEST_PG_URI=
+postgres://saldo:saldo@127.0.0.1:5432/postgres?sslmode=disable` runs the full integrity suite
+locally (171 tests, all green this session); `service postgresql start` + create the `saldo`
+superuser role first (see the runbook's compose defaults). The critical path continues:
+`feat-altinn-mva-submission` → `feat-year-end-close`, plus the go-live ops items (Cloudflare EU
+DPA, BankID/Vipps OIDC config, `companion-user-validation`, product name). Earlier same day:
+session `app-readiness-sweep` (branch `claude/app-readiness-checklist-11hypa`, merged as PR #68 →
+`e33d606`). Six
 backlog tasks landed, one commit each: **wire-skatteetaten-validation** (the MVA screen's explicit
 sober "Valider hos Skatteetaten" action over the fail-closed client; shared `mvaSystemInfo` helper
 so the validated XML is byte-identical to the download), **feat-org-active-context** (**ADR 0060**
@@ -183,8 +196,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 61 ADRs (0001–0061) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 84 tasks (52 done, 32 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 62 ADRs (0001–0062) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 84 tasks (53 done, 31 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `aia-gpai-docs` [medium/S] — EU AI Act: capture the upstream GPAI model's Annex XII docs (Art 53)
 <!-- /AUTOGEN:repo-status -->
 
@@ -242,8 +255,8 @@ account + secrets + `BANKING_EU_RESIDENT=true` in the deploy env (no egress exer
 Earlier deferrals still open: invoice **email/EHF go-live** (`feat-invoice-pdf-email`, ADR 0046 — Postmark
 EU account/DPA/SPF-DKIM-DMARC, EHF subset → full VEFA in `feat-peppol-send`); supplier invoices
 (`feat-supplier-invoices`); recurring/reminders (`feat-recurring-invoices-reminders`); below-threshold
-§ 3-30 self-accounting (`vat-threshold-watcher`); the project-wide privacy gap — data export
-(`feat-audit-trail-export`) + GDPR erasure (`feat-gdpr-erasure`).
+§ 3-30 self-accounting (`vat-threshold-watcher`); the remaining privacy gap — GDPR erasure
+(`feat-gdpr-erasure`; the data-export half is DONE, ADR 0062).
 
 ## Next up
 **The task graph is the source of truth — `pnpm backlog` (`next` / `ready` / `list`), per ADR 0019.**

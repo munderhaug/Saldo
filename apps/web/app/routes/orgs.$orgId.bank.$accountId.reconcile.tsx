@@ -24,6 +24,7 @@ import {
   type SuggestedMatch,
   type TxSuggestion,
 } from '~/db/reconciliation.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { confirmMatchInput } from '~/contracts';
 import { t } from '~/copy';
 import {
@@ -75,9 +76,19 @@ export async function action({ request, params }: Route.ActionArgs): Promise<Act
   const parsed = confirmMatchInput.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) return { ok: false, error: t('recon.error.invalid') };
 
-  const result = await withUserOrg(request, params.orgId, (tx) =>
-    reconcileMatch(tx, params.orgId, parsed.data),
-  );
+  const result = await withUserOrg(request, params.orgId, async (tx, { user }) => {
+    const matched = await reconcileMatch(tx, params.orgId, parsed.data);
+    if (matched.ok) {
+      // Sporbarhet (ADR 0062): the confirm and its attribution commit atomically.
+      await recordAuditEvent(tx, {
+        organizationId: params.orgId,
+        actorUserId: user.id,
+        action: 'bank_transaction.reconciled',
+        entityId: parsed.data.bankTransactionId,
+      });
+    }
+    return matched;
+  });
   if (!result.ok) return { ok: false, error: t(`recon.error.${result.reason}`) };
   return { ok: true, invoiceId: result.invoiceId };
 }

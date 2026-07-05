@@ -12,6 +12,7 @@ import { getMemberships } from '../auth/users.server.js';
 import type { OrgPayoutInput } from '../contracts/organization.js';
 import { account, membership, organization, vatCode } from './schema.js';
 import { STANDARD_ACCOUNTS, STANDARD_VAT_CODES } from './provisioning.server.js';
+import { recordAuditEvent } from './audit.server.js';
 
 /** An org's identifying header (no membership role). */
 interface OrgHeader {
@@ -89,6 +90,13 @@ export async function createOrganization(
       await tx
         .insert(membership)
         .values({ userId: input.userId, organizationId: orgId, role: 'owner' });
+      // Sporbarhet (ADR 0062): the org's birth is attributed to its creator, in the same bootstrap tx.
+      await recordAuditEvent(tx, {
+        organizationId: orgId,
+        actorUserId: input.userId,
+        action: 'organization.created',
+        entityId: orgId,
+      });
     });
     return { ok: true, orgId };
   } catch (error) {

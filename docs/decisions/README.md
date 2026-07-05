@@ -66,6 +66,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0059 | The companion/guide system: deterministic, dismissible, token-bound | Accepted |
 | 0060 | Persisted active-org context as an authz-inert browser cookie | Accepted |
 | 0061 | Opening balances: one plugged voucher through the ordinary posting path | Accepted |
+| 0062 | Audit trail (sporbarhet) + full data export: append-only audit_log, raw JSON export | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

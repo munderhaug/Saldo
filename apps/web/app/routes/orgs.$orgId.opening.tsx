@@ -9,6 +9,7 @@ import { parseKroner, systemClock } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.opening';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { recordOpeningBalance } from '~/db/posting.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { organization } from '~/db/schema';
 import { openingBalanceInput, OPENING_FIELDS, type OpeningBalanceInput } from '~/contracts';
 import { t } from '~/copy';
@@ -64,8 +65,8 @@ export async function action({ request, params }: Route.ActionArgs) {
   const toOre = (value: string) => (value === '' ? 0 : parseKroner(value)!);
   const year = systemClock.now().getFullYear();
 
-  const result = await withUserOrg(request, params.orgId, (tx) =>
-    recordOpeningBalance(tx, {
+  const result = await withUserOrg(request, params.orgId, async (tx, { user }) => {
+    const posted = await recordOpeningBalance(tx, {
       organizationId: params.orgId,
       balances: {
         bank: toOre(parsed.data.bank),
@@ -75,8 +76,18 @@ export async function action({ request, params }: Route.ActionArgs) {
         vatSettlement: toOre(parsed.data.vatSettlement),
       },
       year,
-    }),
-  );
+    });
+    if (posted.ok) {
+      // Sporbarhet (ADR 0062): the post and its attribution commit atomically.
+      await recordAuditEvent(tx, {
+        organizationId: params.orgId,
+        actorUserId: user.id,
+        action: 'voucher.posted',
+        entityId: posted.voucherId,
+      });
+    }
+    return posted;
+  });
   if (!result.ok) {
     return {
       error: result.reason === 'empty' ? t('opening.errorEmpty') : t('opening.errorGeneric'),

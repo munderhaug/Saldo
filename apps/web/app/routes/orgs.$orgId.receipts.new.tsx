@@ -40,6 +40,7 @@ import { llmConfig } from '~/integrations/llm/config.server';
 import { AiAssisted } from '~/components/ui/ai-assisted';
 import { recordManualVoucher } from '~/db/posting.server';
 import { aiProvenanceLogFields, recordAiProvenance } from '~/db/ai-provenance.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { organization } from '~/db/schema';
 import { requestLogger } from '~/observability/logger.server';
 import { asMvaStatus } from '~/lib/org-format';
@@ -166,7 +167,7 @@ export async function action({
     // Post AND record provenance in ONE tenant transaction: the voucher and its provenance commit
     // atomically (AI never writes the ledger — the provenance sits ALONGSIDE the human-confirmed post,
     // ADR 0002/0037).
-    const result = await withUserOrg(request, params.orgId, async (tx) => {
+    const result = await withUserOrg(request, params.orgId, async (tx, { user }) => {
       const posted = await recordManualVoucher(tx, {
         organizationId: params.orgId,
         kind: parsed.data.kind,
@@ -180,6 +181,13 @@ export async function action({
         model: parsed.data.model,
         modelVersion: parsed.data.modelVersion,
         confidence: parsed.data.confidence,
+      });
+      // Sporbarhet (ADR 0062): the human who confirmed the AI proposal is the actor of record.
+      await recordAuditEvent(tx, {
+        organizationId: params.orgId,
+        actorUserId: user.id,
+        action: 'voucher.posted',
+        entityId: posted.voucherId,
       });
       return posted;
     });

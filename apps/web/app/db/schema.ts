@@ -618,6 +618,31 @@ export const organization = pgTable("organization", {
 	check("organization_mva_status_check", sql`mva_status = ANY (ARRAY['under_threshold'::text, 'unntatt'::text, 'registered_standard'::text, 'registered_zero_rated'::text])`),
 ]);
 
+export const auditLog = pgTable("audit_log", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: uuid("organization_id").notNull(),
+	actorUserId: uuid("actor_user_id").notNull(),
+	action: text().notNull(),
+	entityTable: text("entity_table").notNull(),
+	entityId: uuid("entity_id").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("audit_log_org_created_idx").using("btree", table.organizationId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "audit_log_organization_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.actorUserId],
+			foreignColumns: [appUser.id],
+			name: "audit_log_actor_user_id_fkey"
+		}),
+	pgPolicy("org_isolation", { as: "permissive", for: "all", to: ["public"], using: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`, withCheck: sql`(organization_id = (current_setting('app.current_org'::text, true))::uuid)`  }),
+	check("audit_log_action_check", sql`action ~ '^[a-z_]+\.[a-z_]+$'::text`),
+	check("audit_log_entity_table_check", sql`entity_table ~ '^[a-z_]+$'::text`),
+]);
+
 export const membership = pgTable("membership", {
 	userId: uuid("user_id").notNull(),
 	organizationId: uuid("organization_id").notNull(),

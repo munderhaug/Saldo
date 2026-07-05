@@ -228,13 +228,17 @@
     {
       "id": "feat-org-active-context",
       "title": "Persisted active-org context (session-scoped current org)",
-      "status": "todo",
+      "status": "done",
+      "implements_adr": ["0060"],
       "value": "medium",
       "effort": "S",
       "phase": "P1-feature",
       "depends_on": ["feat-org-onboarding"],
-      "notes": "Remember the org a user is acting for across requests (cookie/session), so feature routes need not carry orgId in the path. Org selection (feat-org-onboarding) sets it; withUserOrg reads it.",
-      "refs": ["docs/decisions/0032-org-provisioning.md"]
+      "notes": "Done 2026-07-05 (ADR 0060): saldo_active_org cookie — a navigation hint, never an authz input. Set by the org-overview loader after membership is proven; home cross-checks it against the membership list and falls back to the first org. withUserOrg deliberately does NOT read it (ambient tenant rejected); org-less cookie-resolved routes rejected for now — see the ADR's alternatives.",
+      "refs": [
+        "docs/decisions/0032-org-provisioning.md",
+        "docs/decisions/0060-active-org-cookie.md"
+      ]
     },
     {
       "id": "feat-account-chart-curation",

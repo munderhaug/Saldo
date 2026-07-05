@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { data, Link } from 'react-router';
 import { z } from 'zod';
 import {
   createColumnHelper,
@@ -8,6 +8,8 @@ import {
 } from '@tanstack/react-table';
 import type { Route } from './+types/orgs.$orgId';
 import { withUserOrg } from '~/auth/auth.server';
+import { buildActiveOrgCookie, readActiveOrg } from '~/lib/active-org.server';
+import { isProd } from '~/env';
 import { readOrgOverview, type VatCodeRow } from '~/db/organizations.server';
 import { directionLabel, formatOrgNr, mvaStatusDesc, mvaStatusLabel } from '~/lib/org-format';
 import { t } from '~/copy';
@@ -27,13 +29,18 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 /** This org may hold an ENK's personal data (name/org-nr); keep it off any shared/edge cache. */
-export function headers() {
-  return { 'Cache-Control': 'private, no-store' };
+export function headers({ loaderHeaders }: Route.HeadersArgs) {
+  const h: Record<string, string> = { 'Cache-Control': 'private, no-store' };
+  const cookie = loaderHeaders.get('Set-Cookie');
+  if (cookie) h['Set-Cookie'] = cookie;
+  return h;
 }
 
 /**
  * Authed, tenant-scoped overview: `withUserOrg` proves membership (403 otherwise) and sets the RLS
- * tenant context, so the provisioned kontoplan + VAT codes are read scoped to this org.
+ * tenant context, so the provisioned kontoplan + VAT codes are read scoped to this org. Opening an
+ * org is the selection gesture — it persists the active-org context (ADR 0060) AFTER membership is
+ * proven, so the cookie only ever names an org the user could open.
  */
 export async function loader({ request, params }: Route.LoaderArgs) {
   if (!z.string().uuid().safeParse(params.orgId).success) {
@@ -43,7 +50,10 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     readOrgOverview(tx, params.orgId),
   );
   if (!overview) throw new Response('Not found', { status: 404 });
-  return overview;
+  if (readActiveOrg(request) === params.orgId) return data(overview);
+  return data(overview, {
+    headers: { 'Set-Cookie': buildActiveOrgCookie(params.orgId, isProd) },
+  });
 }
 
 const column = createColumnHelper<VatCodeRow>();

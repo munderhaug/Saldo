@@ -607,7 +607,6 @@ export const nb = {
   // the character's name awaits `companion-user-validation`, so naming it later is a string change
   // here — never a key change. Dropping all playfulness at the §5.5 moments happens by the
   // companion not rendering there, not by copy.
-  'companion.regionLabel': 'Hjelperen',
   'companion.dismiss': 'Skjul hjelperen',
   'companion.show': 'Vis hjelperen igjen',
   'companion.settingTitle': 'Hjelperen',
@@ -1400,7 +1399,6 @@ export const en = {
   'saft.back': 'Back to overview',
 
   // ── The companion — deterministic guide (ADR 0058); addressed structurally, never by name ──────
-  'companion.regionLabel': 'The helper',
   'companion.dismiss': 'Hide the helper',
   'companion.show': 'Show the helper again',
   'companion.settingTitle': 'The helper',

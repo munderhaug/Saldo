@@ -154,10 +154,15 @@ interface CompanionGuideProps {
  *
  * Behaviour rules (ADR 0058 §4, inherited from ADR 0025): dismissible — the plain `<form>` posts
  * the preference to `/companion` (server-authoritative, works without JS) and the message TEXT
- * stays when the character goes, so dismissing never removes information; never blocking — it is
- * an `<aside>` in normal flow, never an overlay; never nagging — no counters, no streaks, and once
- * dismissed it stays away until the user brings it back (settings). Never render this at the §5.5
- * consequential moments: absence is the sobriety signal.
+ * stays when the character goes, so dismissing never removes information; never blocking — plain
+ * flow content, never an overlay; never nagging — no counters, no streaks, and once dismissed it
+ * stays away until the user brings it back (settings). Never render this at the §5.5 consequential
+ * moments: absence is the sobriety signal.
+ *
+ * Deliberately NOT a landmark: the message is primary flow content (often the reason an empty page
+ * is empty), and an `<aside>` would demote it to a skippable `complementary` region for exactly the
+ * screen-reader users who navigate by landmark (a11y review, 2026-07-05). The character is
+ * decorative and the dismiss button names itself.
  */
 export function CompanionGuide({
   message,
@@ -165,7 +170,7 @@ export function CompanionGuide({
   expression = 'attentive',
 }: CompanionGuideProps) {
   return (
-    <aside aria-label={t('companion.regionLabel')} className="flex items-start gap-3">
+    <div className="flex items-start gap-3">
       <Companion expression={expression} size={64} />
       <div className="grid gap-1 self-center">
         <p className="text-sm">{message}</p>
@@ -174,12 +179,12 @@ export function CompanionGuide({
           <input type="hidden" name="redirectTo" value={redirectTo} />
           <button
             type="submit"
-            className="text-muted-foreground font-text inline-flex min-h-6 items-center text-xs underline-offset-4 hover:underline"
+            className="text-muted-foreground font-text inline-flex min-h-11 items-center text-xs underline-offset-4 hover:underline"
           >
             {t('companion.dismiss')}
           </button>
         </form>
       </div>
-    </aside>
+    </div>
   );
 }

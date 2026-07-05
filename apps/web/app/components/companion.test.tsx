@@ -80,9 +80,10 @@ describe('CompanionGuide — dismissible, never blocking (ADR 0058 behaviour rul
     <CompanionGuide message="Så snart du registrerer inntekt, viser jeg det her." redirectTo="/" />,
   );
 
-  it('is a labelled aside in normal flow — never an overlay, never a dialog', () => {
-    expect(html).toMatch(/<aside[^>]*aria-label=/);
-    expect(html).toContain(t('companion.regionLabel'));
+  it('is plain flow content — never an overlay/dialog, and never a landmark that AT users skip', () => {
+    // No <aside>: the message is primary content (a11y review 2026-07-05 — a complementary
+    // landmark would hide it from landmark navigation while the dismissed state shows it plainly).
+    expect(html).not.toContain('<aside');
     expect(html).not.toContain('role="dialog"');
   });
 

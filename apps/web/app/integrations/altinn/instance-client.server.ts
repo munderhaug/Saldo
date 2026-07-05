@@ -30,7 +30,7 @@ import { altinnInstance, type AltinnInstance } from '~/contracts';
 import { logger } from '~/observability/logger.server';
 import { altinnConfig, type AltinnConfig } from './config.server';
 
-export type SubmitFailureReason =
+type SubmitFailureReason =
   /**
    * `auth-failed` covers a bad/expired token AND a missing Altinn role (upload or signing);
    * `rejected` is the app's validation 409 at a process step; `error` is network/timeout/5xx.
@@ -53,7 +53,7 @@ export type CompleteInstanceResult =
   | { readonly ok: true }
   | { readonly ok: false; readonly reason: Exclude<SubmitFailureReason, 'not-configured'> };
 
-export interface InstanceHandle {
+interface InstanceHandle {
   readonly altinnToken: string;
   readonly instanceUrl: string;
   /** The instance-created data element the envelope is PUT onto. */

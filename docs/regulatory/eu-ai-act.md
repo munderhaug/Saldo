@@ -124,7 +124,8 @@ Since **2 Feb 2025**, "providers and deployers of AI systems shall take measures
 best extent, a sufficient level of **AI literacy** of their staff and other persons dealing with the
 operation and use of AI systems on their behalf" (Art. 4). For a solo ENK / small team this is a
 **proportionate** duty: a short, dated competence note covering what the AI features do, their
-limits, and the propose-only/confirm model. Tracked as a backlog item (§9).
+limits, and the propose-only/confirm model — delivered as
+[eu-ai-act-literacy.md](eu-ai-act-literacy.md) (2026-07-05).
 
 ## 7. Timeline (Art. 113) — now vs later
 
@@ -163,8 +164,8 @@ posture in **ADR 0022**.
 | AIA-1 | **AI-interaction disclosure** in the UI (tell users they're interacting with AI) | Product | with the first AI feature; by 2 Aug 2026 | Art. 50(1) |
 | AIA-2 | **AI-output provenance**: every AI-proposed value labelled "AI-assisted" + logged with model/version/confidence | Product + repo | with the first AI feature | Art. 50(2) |
 | AIA-3 | **Upstream GPAI documentation**: capture the chosen model's Annex XII docs under `db/reference/llm/` | Repo | at the Phase-4 LLM-hosting decision | Art. 53 |
-| AIA-4 | **AI-literacy note** (proportionate competence record) | Governance | near-term (already in force) | Art. 4 |
-| AIA-5 | **Conformity self-assessment checklist** re-run before each AI feature ships and at each Art. 113 milestone | Governance | this PR (checklist) → per release | Art. 5/6/50 |
+| AIA-4 | **AI-literacy note** (proportionate competence record) | Governance | **delivered 2026-07-05** — [eu-ai-act-literacy.md](eu-ai-act-literacy.md) | Art. 4 |
+| AIA-5 | **Conformity self-assessment checklist** re-run before each AI feature ships and at each Art. 113 milestone | Governance | **delivered 2026-07-05** — [eu-ai-act-conformity.md](eu-ai-act-conformity.md) (first run logged) → per release | Art. 5/6/50 |
 | AIA-6 | **High-risk guard**: no AI feature scores/profiles a natural person (creditworthiness) | Repo (invariant + rule) | **delivered this PR**; revisit if AI scope expands | Annex III(5)(b), Art. 6(3) |
 
 The durable invariant from AIA-2/AIA-6 is recorded in AGENTS.md and enforced at the point of change

@@ -574,24 +574,24 @@
     {
       "id": "aia-literacy-note",
       "title": "EU AI Act: proportionate AI-literacy note (Art 4, in force)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "compliance",
       "depends_on": [],
-      "notes": "A short dated competence note: what the AI features do, their limits, the propose-only/confirm model. Art 4 in force since 2 Feb 2025; proportionate for a solo/small team.",
-      "refs": ["docs/regulatory/eu-ai-act.md"]
+      "notes": "Done 2026-07-05: docs/regulatory/eu-ai-act-literacy.md — dated competence note (what the one AI feature does, its limits, the propose→validate→confirm chain, the Annex III(5)(b) line, residency fail-closed). Re-read triggers recorded in the note; sourced + verify-by per the regulatory convention.",
+      "refs": ["docs/regulatory/eu-ai-act.md", "docs/regulatory/eu-ai-act-literacy.md"]
     },
     {
       "id": "aia-conformity-checklist",
       "title": "EU AI Act: conformity self-assessment checklist",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "S",
       "phase": "compliance",
       "depends_on": ["compliance-eu-ai-act"],
-      "notes": "A dated checklist re-run before each AI feature ships and at each Art 113 milestone: prohibitions clear (Art 5), still not high-risk (Art 6/Annex III), transparency met (Art 50).",
-      "refs": ["docs/regulatory/eu-ai-act.md"]
+      "notes": "Done 2026-07-05: docs/regulatory/eu-ai-act-conformity.md — 9-point checklist (scope boundary, Art 5, Art 6/Annex III, Art 50(1)/(2), propose-only, literacy, Art 53 upstream docs, EEA status) + append-only run log. First run logged against receipt extraction: pass on 1-7 and 9; item 8 pending by design until the LLM-hosting decision commits a model (aia-gpai-docs stays open, gated on that decision). Next scheduled run: 2 Aug 2026 (Art 113 general application).",
+      "refs": ["docs/regulatory/eu-ai-act.md", "docs/regulatory/eu-ai-act-conformity.md"]
     },
     {
       "id": "aia-highrisk-guard",

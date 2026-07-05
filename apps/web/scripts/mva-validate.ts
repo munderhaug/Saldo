@@ -7,12 +7,18 @@
  * onboarding-gated validation API (wired fail-closed in `app/integrations/skatteetaten/`); it is NOT
  * full XSD validation against the committed schema (that lands with onboarding + egress).
  *
+ * The **innsending envelope** (`mvaMeldingInnsending`, ADR 0063) IS fully XSD-validated here —
+ * its schema is committed and self-contained (`db/reference/skatt/mva-melding/innsending/`), so the
+ * SAF-T precedent applies (xmllint-wasm, no egress).
+ *
  * Exit 0 when the sample is well-formed AND rule-clean; 1 otherwise (so CI fails on a regression).
  */
 import { readFileSync } from 'node:fs';
 import { XMLValidator } from 'fast-xml-parser';
+import { validateXML } from 'xmllint-wasm';
 import {
   ANNUAL_TERM,
+  buildMvaMeldingInnsendingXml,
   buildMvaMeldingXml,
   generateMvaMelding,
   indexTaxCodes,
@@ -49,7 +55,34 @@ function sampleAggregates(): VatCodeAggregate[] {
   ];
 }
 
-function main(): number {
+/** Full XSD validation of the innsending envelope against the committed v1.0 schema (ADR 0063). */
+async function validateEnvelope(): Promise<boolean> {
+  const envelope = buildMvaMeldingInnsendingXml({
+    orgNr: '974760673',
+    year: 2026,
+    term: ANNUAL_TERM,
+    opprettetAv: 'Saldo',
+  });
+  const schema = readFileSync(
+    new URL(
+      '../../../db/reference/skatt/mva-melding/innsending/no.skatteetaten.fastsetting.avgift.mva.mvameldinginnsending.v1.0.xsd',
+      import.meta.url,
+    ),
+    'utf8',
+  );
+  const result = await validateXML({
+    xml: [{ fileName: 'envelope.xml', contents: envelope }],
+    schema: [{ fileName: 'mvameldinginnsending.xsd', contents: schema }],
+  });
+  if (result.valid) {
+    console.log('✓ mva:validate — innsending envelope is XSD-valid (committed v1.0 schema)');
+    return true;
+  }
+  for (const e of result.errors) console.error(`✗ envelope XSD: ${e.message}`);
+  return false;
+}
+
+async function main(): Promise<number> {
   const result = generateMvaMelding(
     sampleAggregates(),
     { orgNr: orgNr('974760673'), year: 2026, term: ANNUAL_TERM, mvaStatus: 'registered_standard' },
@@ -83,6 +116,8 @@ function main(): number {
     for (const v of verdict.violations) console.error(`✗ ${v.rule}: ${v.message}`);
   }
 
+  if (!(await validateEnvelope())) ok = false;
+
   if (!ok) {
     console.error(
       'mva:validate FAILED. Note: this is the grounded subset + well-formedness + tie-out, NOT full ' +
@@ -92,4 +127,4 @@ function main(): number {
   return ok ? 0 : 1;
 }
 
-process.exit(main());
+process.exit(await main());

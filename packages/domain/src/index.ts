@@ -44,6 +44,7 @@ export * from './reconciliation/settlement.js';
 export * from './mva-melding/term.js';
 export * from './mva-melding/melding.js';
 export * from './mva-melding/xml.js';
+export * from './mva-melding/innsending.js';
 export * from './mva-melding/validate.js';
 export * from './reporting/account-balance.js';
 export * from './reporting/resultat.js';

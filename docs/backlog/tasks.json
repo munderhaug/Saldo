@@ -1120,13 +1120,19 @@
     {
       "id": "feat-altinn-mva-submission",
       "title": "MVA-melding submission via Altinn 3 / ID-porten (onboarding-gated)",
-      "status": "todo",
+      "status": "done",
+      "implements_adr": ["0063"],
       "value": "medium",
       "effort": "L",
       "phase": "P9",
       "depends_on": ["feat-mva-melding"],
-      "notes": "Build-spec §8.8 + §9 + §16 Phase 9. Submit the validated MVA-melding via the Altinn 3 instance API, authenticated through ID-porten OIDC (Altinn token exchanged from ID-porten). Onboarding-gated; CAUTION (§9): the Altinn 2->3 transition and the systembruker/tilgangspakke model are in flux — confirm the current onboarding flow at build time. Open decision: PEPPOL/Altinn onboarding model (roadmap Part 6).",
-      "refs": ["docs/saldo-build-specification.md", "docs/integrations/README.md"]
+      "notes": "Done 2026-07-05 (ADR 0063): the person-flow-shaped submission built FAIL-CLOSED — buildMvaMeldingInnsendingXml (pure v1.0 envelope, schema-grounded, reuses MvaTerm), the app/integrations/altinn client (residency+config gate; the captured exchange→instance→upload→process/next sequence, Zod at the boundary, typed failures), the append-only mva_filing record (FORCE RLS, one row per instance, audited 'mva_filing.submitted' in the same tx), and the MVA screen's §5.5 'Send inn via Altinn' section (local validator gates submission). Sources re-captured 2026-07-05 (db/reference/skatt/mva-melding/innsending/, docs/integrations/altinn-mva-innsending.md, verify-by 2026-10-05). ONBOARDING FOLLOW-ONS (open): ID-porten client + scope grants + tt02 verification of the provisional bits (dataType casing, prod app id), then the in-app per-user ID-porten OIDC round-trip; watch the systembruker/tilgangspakke transition. New env vars need the hand-maintained .env.example update.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "docs/integrations/README.md",
+        "docs/integrations/altinn-mva-innsending.md",
+        "docs/decisions/0063-altinn-mva-submission.md"
+      ]
     },
     {
       "id": "feat-peppol-send",

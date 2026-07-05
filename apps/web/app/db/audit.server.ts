@@ -23,6 +23,7 @@ export type AuditAction =
   | 'invoice.sent'
   | 'invoice.paid'
   | 'supplier_invoice.posted'
+  | 'mva_filing.submitted'
   | 'bank_transaction.reconciled'
   | 'contact.created'
   | 'contact.updated'

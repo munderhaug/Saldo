@@ -14,11 +14,18 @@ in the SAME tenant tx as every consequential write (all five voucher-posting pat
 issue/send/paid, supplier-invoice post, reconcile confirm, contact/product/org register writes;
 drafts deliberately unaudited) — plus the full raw export (`readFullExport` +
 `/orgs/:orgId/export.json`, versioned JSON, linked from the SAF-T page — the GDPR Art. 20
-anti-lock-in half). NOTE: this container HAS a local Postgres cluster — `SALDO_TEST_PG_URI=
+anti-lock-in half). **feat-altinn-mva-submission landed (ADR 0063)**: the fail-closed filing flow —
+sources re-captured 2026-07-05 (`docs/integrations/altinn-mva-innsending.md`, verify-by 2026-10-05;
+the old mva-meldingen site is UTDATERT-bannered but still the only technical source), the pure
+`buildMvaMeldingInnsendingXml` envelope, the `app/integrations/altinn` client (residency gate +
+the captured exchange→instance→upload→process/next sequence), the append-only `mva_filing` record
+audited in-tx, and the MVA screen's §5.5 "Send inn via Altinn". Onboarding follow-ons live in the
+task notes (ID-porten client, tt02 verification of the provisional bits, the in-app OIDC round-trip;
+watch systembruker). NOTE: this container HAS a local Postgres cluster — `SALDO_TEST_PG_URI=
 postgres://saldo:saldo@127.0.0.1:5432/postgres?sslmode=disable` runs the full integrity suite
-locally (171 tests, all green this session); `service postgresql start` + create the `saldo`
-superuser role first (see the runbook's compose defaults). The critical path continues:
-`feat-altinn-mva-submission` → `feat-year-end-close`, plus the go-live ops items (Cloudflare EU
+locally (177 tests incl. the new suites, all green this session); `service postgresql start` +
+create the `saldo` superuser role first (see the runbook's compose defaults). The critical path
+continues: `feat-year-end-close`, plus the go-live ops items (Cloudflare EU
 DPA, BankID/Vipps OIDC config, `companion-user-validation`, product name). Earlier same day:
 session `app-readiness-sweep` (branch `claude/app-readiness-checklist-11hypa`, merged as PR #68 →
 `e33d606`). Six
@@ -196,8 +203,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 62 ADRs (0001–0062) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 84 tasks (53 done, 31 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 63 ADRs (0001–0063) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 84 tasks (54 done, 30 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `aia-gpai-docs` [medium/S] — EU AI Act: capture the upstream GPAI model's Annex XII docs (Art 53)
 <!-- /AUTOGEN:repo-status -->
 

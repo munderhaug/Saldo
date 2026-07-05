@@ -13,6 +13,7 @@ import { renderToBuffer } from '@react-pdf/renderer';
 import { withUserOrg } from '~/auth/auth.server';
 import { readInvoiceDocument, recordEmailSend } from '~/db/invoice-document.server';
 import { transitionInvoice } from '~/db/invoices.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { sendEmail } from '~/integrations/email/client.server';
 import { InvoicePdf } from '~/documents/invoice-pdf';
 import { t } from '~/copy';
@@ -64,7 +65,7 @@ export async function sendInvoiceEmail(
     return { ok: false, reason: 'not-configured' };
   }
 
-  await withUserOrg(request, organizationId, async (tx) => {
+  await withUserOrg(request, organizationId, async (tx, { user }) => {
     await recordEmailSend(tx, organizationId, invoiceId, {
       recipient,
       status: result.ok ? 'sent' : 'failed',
@@ -74,6 +75,14 @@ export async function sendInvoiceEmail(
     // The send is what moves a document to «sent» (the manual mark is a fallback). A no-op if the
     // lifecycle doesn't allow it (e.g. already sent → re-send records the attempt without a transition).
     if (result.ok) await transitionInvoice(tx, invoiceId, 'sent');
+    // Sporbarhet (ADR 0062): every send attempt (a §5.5 act) is attributed, success or failure —
+    // the invoice_email row holds the outcome; this row holds the actor.
+    await recordAuditEvent(tx, {
+      organizationId,
+      actorUserId: user.id,
+      action: 'invoice.sent',
+      entityId: invoiceId,
+    });
   });
 
   return result.ok ? { ok: true, recipient } : { ok: false, reason: 'send-failed' };

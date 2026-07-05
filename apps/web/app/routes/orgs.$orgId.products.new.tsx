@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { Route } from './+types/orgs.$orgId.products.new';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { createProduct, listAccountOptions, listVatCodeOptions } from '~/db/products.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { productInput, type ProductInput } from '~/contracts';
 import { ProductForm } from '~/components/product-form';
 import { t } from '~/copy';
@@ -44,7 +45,16 @@ export async function action({ request, params }: Route.ActionArgs) {
   });
   if (!parsed.success) return { error: t('products.form.errorInvalidInput') };
 
-  await withUserOrg(request, params.orgId, (tx) => createProduct(tx, params.orgId, parsed.data));
+  await withUserOrg(request, params.orgId, async (tx, { user }) => {
+    const productId = await createProduct(tx, params.orgId, parsed.data);
+    // Sporbarhet (ADR 0062): register writes feed legal documents — attribute them.
+    await recordAuditEvent(tx, {
+      organizationId: params.orgId,
+      actorUserId: user.id,
+      action: 'product.created',
+      entityId: productId,
+    });
+  });
   return redirect(`/orgs/${params.orgId}/products`);
 }
 

@@ -21,6 +21,8 @@ This is financial + personal data. Treat privacy as a first-class constraint (sp
   lawful basis (legal obligation) and the retention exception.
 - Erasure applies to data NOT under statutory hold (e.g. marketing fields, unposted drafts). Implement
   deletion/anonymisation paths only for those; never UPDATE/DELETE posted rows.
+- The audit trail is under the same hold (sporbarhet, ADR 0062): an `app_user` with audited acts inside
+  the 5-year window may only be ANONYMISED, never deleted — attribution degrades to a bare UUID.
 
 ## Always
 - Provide a full **data export** (SAF-T + raw) — anti-lock-in and the GDPR access right.

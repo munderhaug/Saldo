@@ -4,6 +4,7 @@ import { isValidBankAccount } from '@saldo/domain';
 import type { Route } from './+types/orgs.$orgId.settings';
 import { assertSameOrigin, withUserOrg } from '~/auth/auth.server';
 import { readOrgPayout, updateOrgPayout } from '~/db/organizations.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { orgPayoutInput, type OrgPayoutInput } from '~/contracts';
 import { OrgPayoutForm } from '~/components/org-payout-form';
 import { Companion } from '~/components/companion';
@@ -44,9 +45,19 @@ export async function action({ request, params }: Route.ActionArgs) {
     return { error: t('settings.errorInvalidAccount') };
   }
 
-  const ok = await withUserOrg(request, params.orgId, (tx) =>
-    updateOrgPayout(tx, params.orgId, parsed.data),
-  );
+  const ok = await withUserOrg(request, params.orgId, async (tx, { user }) => {
+    const updated = await updateOrgPayout(tx, params.orgId, parsed.data);
+    if (updated) {
+      // Sporbarhet (ADR 0062): the payout account rides every outgoing invoice — attribute the change.
+      await recordAuditEvent(tx, {
+        organizationId: params.orgId,
+        actorUserId: user.id,
+        action: 'organization.updated',
+        entityId: params.orgId,
+      });
+    }
+    return updated;
+  });
   if (!ok) throw new Response('Not found', { status: 404 });
   return redirect(`/orgs/${params.orgId}`);
 }

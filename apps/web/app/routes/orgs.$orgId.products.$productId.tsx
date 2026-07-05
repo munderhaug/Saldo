@@ -9,6 +9,7 @@ import {
   readProduct,
   updateProduct,
 } from '~/db/products.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { productInput, type ProductInput } from '~/contracts';
 import { ProductForm } from '~/components/product-form';
 import { t } from '~/copy';
@@ -49,9 +50,19 @@ export async function action({ request, params }: Route.ActionArgs) {
   });
   if (!parsed.success) return { error: t('products.form.errorInvalidInput') };
 
-  const ok = await withUserOrg(request, params.orgId, (tx) =>
-    updateProduct(tx, params.orgId, params.productId, parsed.data),
-  );
+  const ok = await withUserOrg(request, params.orgId, async (tx, { user }) => {
+    const updated = await updateProduct(tx, params.orgId, params.productId, parsed.data);
+    if (updated) {
+      // Sporbarhet (ADR 0062): register writes feed legal documents — attribute them.
+      await recordAuditEvent(tx, {
+        organizationId: params.orgId,
+        actorUserId: user.id,
+        action: 'product.updated',
+        entityId: params.productId,
+      });
+    }
+    return updated;
+  });
   if (!ok) throw new Response('Not found', { status: 404 });
   return redirect(`/orgs/${params.orgId}/products`);
 }

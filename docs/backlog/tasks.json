@@ -896,7 +896,7 @@
       "effort": "M",
       "phase": "P3",
       "depends_on": ["feat-contacts-register"],
-      "notes": "Build-spec §11 + .claude/rules/data-handling.md. Project-wide gap the privacy reviewer keeps flagging (data-export is partly tracked under feat-audit-trail-export; erasure is not). Implement deletion/anonymisation ONLY for personal data not under statutory hold: contact register fields, unposted invoice drafts, marketing/notes fields — NEVER posted ledger rows or issued invoice/credit-note snapshots (5-year bokføringslov retention; the immutability triggers must keep blocking them). Document the lawful basis (legal obligation) + the retention exception, and explicitly name the held columns (e.g. invoice.customer_*). Companion to the data-export half of feat-audit-trail-export (GDPR Art. 20 vs Art. 17).",
+      "notes": "Build-spec §11 + .claude/rules/data-handling.md. Project-wide gap the privacy reviewer keeps flagging (data-export is partly tracked under feat-audit-trail-export; erasure is not). Implement deletion/anonymisation ONLY for personal data not under statutory hold: contact register fields, unposted invoice drafts, marketing/notes fields — NEVER posted ledger rows or issued invoice/credit-note snapshots (5-year bokføringslov retention; the immutability triggers must keep blocking them). Document the lawful basis (legal obligation) + the retention exception, and explicitly name the held columns (e.g. invoice.customer_*). Companion to the data-export half of feat-audit-trail-export (GDPR Art. 20 vs Art. 17). COORDINATION (ADR 0062): an app_user whose audited acts fall inside the 5-year sporbarhet window may only be ANONYMISED, never deleted — audit_log.actor_user_id FK blocks the delete mechanically, and post-hold attribution deliberately degrades to a bare UUID.",
       "refs": ["docs/saldo-build-specification.md", ".claude/rules/data-handling.md"]
     },
     {
@@ -1092,13 +1092,19 @@
     {
       "id": "feat-audit-log",
       "title": "Immutable audit trail (sporbarhet) + full data export (anti-lock-in)",
-      "status": "todo",
+      "status": "done",
+      "implements_adr": ["0062"],
       "value": "medium",
       "effort": "M",
       "phase": "P8",
       "depends_on": ["feat-manual-voucher-entry"],
-      "notes": "Build-spec §8.11 + §11. Append-only audit_log capturing the actor (authenticated app_user) on every consequential write — the bokføringsforskrift sporbarhet requirement and the non-repudiation gap flagged in the security audit (audit-trail actor capture is currently 'intended'). Plus a full data export (SAF-T + raw) to prevent lock-in (GDPR Art. 20). audit_log is FORCE-RLS + append-only grant, like ai_provenance (ADR 0037).",
-      "refs": ["docs/saldo-build-specification.md", "SECURITY.md", ".claude/rules/data-handling.md"]
+      "notes": "Done 2026-07-05 (ADR 0062): append-only audit_log (FORCE RLS, SELECT+INSERT-only grant like ai_provenance) with recordAuditEvent — a closed 'entity.act' union written in the SAME tenant tx as every consequential write (voucher posts incl. receipts/opening/owner, invoice issue/send/paid, supplier-invoice post, reconcile confirm, contact/product/org register writes; drafts deliberately unaudited). Full raw export: readFullExport + /orgs/:orgId/export.json (versioned JSON, RLS-scoped, linked from the SAF-T page) — the GDPR Art. 20 anti-lock-in half. Integrity test proves atomic attribution, SQL-closed action format, RLS isolation, append-only grant, scoped export.",
+      "refs": [
+        "docs/saldo-build-specification.md",
+        "SECURITY.md",
+        ".claude/rules/data-handling.md",
+        "docs/decisions/0062-audit-trail-and-full-export.md"
+      ]
     },
     {
       "id": "feat-accountant-access",

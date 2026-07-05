@@ -24,6 +24,7 @@ import {
   transitionInvoice,
   updateDraft,
 } from '~/db/invoices.server';
+import { recordAuditEvent } from '~/db/audit.server';
 import { invoiceInput, type InvoiceInput } from '~/contracts';
 import { sendInvoiceEmail } from '~/documents/send-invoice.server';
 import { invoiceFormToObject } from '~/lib/invoice-form-data';
@@ -128,11 +129,24 @@ export async function action({ request, params }: Route.ActionArgs) {
 
   if (intent === 'issue') {
     const today = new Date().toISOString().slice(0, 10);
-    const result = await withUserOrg(request, params.orgId, async (tx) => {
+    const result = await withUserOrg(request, params.orgId, async (tx, { user }) => {
       const invoice = await readInvoice(tx, params.invoiceId);
       const issueDate = invoice?.issueDate ?? today;
       const dueDate = invoice?.dueDate ?? addDays(issueDate, 14);
-      return issueInvoice(tx, params.orgId, params.invoiceId, { issueDate, dueDate });
+      const issued = await issueInvoice(tx, params.orgId, params.invoiceId, {
+        issueDate,
+        dueDate,
+      });
+      if (issued.ok) {
+        // Sporbarhet (ADR 0062): the issue and its attribution commit atomically.
+        await recordAuditEvent(tx, {
+          organizationId: params.orgId,
+          actorUserId: user.id,
+          action: 'invoice.issued',
+          entityId: params.invoiceId,
+        });
+      }
+      return issued;
     });
     if (!result.ok) {
       return {
@@ -148,9 +162,19 @@ export async function action({ request, params }: Route.ActionArgs) {
   if (intent === 'transition') {
     const to = z.enum(INVOICE_STATUSES).safeParse(field('to'));
     if (!to.success) return { error: t('invoices.form.errorInvalidInput') };
-    await withUserOrg(request, params.orgId, (tx) =>
-      transitionInvoice(tx, params.invoiceId, to.data),
-    );
+    await withUserOrg(request, params.orgId, async (tx, { user }) => {
+      const moved = await transitionInvoice(tx, params.invoiceId, to.data);
+      // Only the consequential transitions are book-relevant acts: sent (out the door) and paid.
+      if (moved && (to.data === 'sent' || to.data === 'paid')) {
+        await recordAuditEvent(tx, {
+          organizationId: params.orgId,
+          actorUserId: user.id,
+          action: to.data === 'sent' ? 'invoice.sent' : 'invoice.paid',
+          entityId: params.invoiceId,
+        });
+      }
+      return moved;
+    });
     return redirect(detailUrl);
   }
 

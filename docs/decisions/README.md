@@ -62,6 +62,7 @@ Changing a current stack choice (`docs/tech-stack.md`) requires a new ADR supers
 | 0055 | Dev password login requires explicit DEV_AUTH=true (never in prod) | Accepted |
 | 0056 | Supplier invoices, expense rules, owner draws & mileage — AP document + non-deductible fork + equity events | Accepted |
 | 0057 | Harness verification gates — reviewer gate, skill evals, incremental edit/turn-end gates | Accepted |
+| 0058 | Visual identity: the "papirklipp" illustration grammar + the round companion (working name Øre) | Accepted |
 
 Each ADR's own Context/Decision is the record, and supersession is tracked in the ADR's Status field
 (e.g. 0008 → 0015). `docs/roadmap.md` narrates how the Phase-0 decisions fit together. Approaches that

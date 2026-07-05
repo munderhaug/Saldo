@@ -684,13 +684,32 @@
     {
       "id": "design-visual-spike",
       "title": "Visual-identity spike — illustration style + the companion's look (on carnival tokens + type)",
-      "status": "todo",
+      "status": "done",
       "value": "medium",
       "effort": "M",
       "phase": "P1-feature",
+      "implements_adr": ["0058"],
       "depends_on": ["design-tokens-carnival", "design-typography"],
-      "notes": "Typography is now done (ADR 0026). Remaining: illustration style and the companion character on top of the carnival OKLCH tokens + the Fraunces/Plex type system. Validate with real users before committing a specific companion; keep money/tables legible (neutral ink on cold-white).",
-      "refs": ["docs/decisions/0025-playful-guided-experience.md", ".claude/rules/design-system.md"]
+      "notes": "DONE (ADR 0058): flat 'papirklipp' shape grammar (fields = sky/lilac/mint 4-6, focal = brand step-9 solids, ink = neutral-12, no gradients/outlines) + the round balance-ball companion (working name Øre, body electric-9, degrades to the 12px status dot, no blame expressions, absent at §5.5). Visual reference committed at docs/design/visual-identity-spike.html. Final name/face gated on companion-user-validation.",
+      "refs": [
+        "docs/decisions/0058-visual-identity-illustration-companion.md",
+        "docs/design/visual-identity-spike.html",
+        ".claude/rules/design-system.md"
+      ]
+    },
+    {
+      "id": "companion-user-validation",
+      "title": "Validate the companion (Øre) with real users before final commitment",
+      "status": "todo",
+      "value": "medium",
+      "effort": "S",
+      "phase": "P1-feature",
+      "depends_on": ["design-visual-spike"],
+      "notes": "The gate ADR 0025/0058 require before the character's surface (name, face) is final: does Øre read warm or childish for low-financial-confidence users; does the name survive daily speech; is §5.5 absence a perceivable sobriety signal; does the status-dot degradation ('the dot sometimes has eyes') confuse? Grammar/colour/behaviour rules stand regardless of outcome.",
+      "refs": [
+        "docs/decisions/0058-visual-identity-illustration-companion.md",
+        "docs/design/visual-identity-spike.html"
+      ]
     },
     {
       "id": "feat-companion",

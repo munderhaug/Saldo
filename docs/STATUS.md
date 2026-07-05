@@ -6,12 +6,26 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-07-04 — sessions `review-2026-07-03-fixes` (the 2026-07-03 repo review, P0
-through P2 + docs), `feat-supplier-invoices` (Purchases completed, ADR 0056) and `harness-hardening`
+**Last updated:** 2026-07-05 — session `dependabot-dev-deps-migration` (the PR #61 dev-dependencies
+group landed as a real toolchain migration: TypeScript 6, ESLint 10, fast-check 4, vitest 4,
+@types/node 26, testcontainers 12, knip 6.24, prettier 3.9 + tailwind plugin 0.8, @react-router/dev 8
+aligned with the RR8 runtime — commit `865e062`, pushed to both the PR branch and
+`claude/dependabot-dev-deps-migration-y8rn77`; all local gates green incl. vat-reviewer pass; PR #61
+CI was in flight at handover). Prior sessions `review-2026-07-03-fixes` (the 2026-07-03 repo review,
+P0 through P2 + docs), `feat-supplier-invoices` (Purchases completed, ADR 0056) and `harness-hardening`
 (ADR 0057 — the harness keeps its own promises: `review:check`, `eval:validate`, incremental gates;
 the `.claude/settings.json` allowlist sync + `review-reminder.sh` registration are still pending —
-see the harness-verification-gates task notes); prior `review-followups` (2026-06-28 review,
+see the harness-verification-gates task notes); `review-followups` (2026-06-28 review,
 archived at `docs/archive/repo-code-review-2026-06-28.md`).
+
+### Toolchain migration notes (2026-07-05, PR #61)
+The TS 6 `node:`-import resolution change moved the domain purity gate: `packages/domain/tsconfig.json`
+is now the full project (tests get node types; typescript-eslint's project service needs every file in
+a project) and **`tsconfig.src.json` is the purity gate** (`types: []`, production sources only) —
+`pnpm typecheck` runs it first, so the no-I/O invariant stays mechanical. `fc.fullUnicodeString` →
+`fc.string({ unit: 'binary' })` (same code-point domain). `apps/web` dropped the TS-6-deprecated
+`baseUrl`. Advisory-only peer warnings to watch for upstream releases: eslint-plugin-jsx-a11y peers at
+eslint ^9 (passes on flat config), type-coverage peers at TS ≤5 (runs correctly on 6).
 
 ### Review 2026-07-03 — landed this session (details: git log on the branch)
 **P0:** a credit-note draft can no longer revert to a positive invoice (kind/creditsInvoiceId are
@@ -41,8 +55,8 @@ explicitly quarantined until `wire-skatteetaten-validation`.
 remaining bespoke labelled fields beyond the amount inputs, and per-table `aria-label`s at call sites
 (the component accepts one). `recordReverseChargePurchase` is intentionally kept for the
 supplier-invoices PR (#58, since merged), and `saftClosingBalanceNet` is kept as the SAF-T export integrity
-tie-out (both were flagged dead). The review report lives on branch `claude/repo-code-review-bbupxz`
-(`docs/repo-code-review-2026-07-03.md` there); every finding was cross-checked against it after it
+tie-out (both were flagged dead). The review report landed on main via #62
+(`docs/repo-code-review-2026-07-03.md`); every finding was cross-checked against it after it
 surfaced, and the last gaps (db:lint pipe swallow, lockfile-pinned squawk/cdxgen, quote-aware SAF-T
 splitter, the orgs.new/bank.new local Field copies, likviditet total row, CardTitle-as-heading,
 manifest orientation lock, remaining tech-stack rows, the 2026-06-23 audit archived, the
@@ -255,3 +269,8 @@ Don't re-derive "what's next" in prose here; this is orientation, not the record
 - **Build-spec consolidation** — `docs/saldo-build-specification.md` still has a stale dir tree + inlined
   harness copies (tracked: `docs-consolidate-build-spec`).
 - **Local commits are unsigned** (no signing key here); they verify on push through the proxy.
+- **Six superseded remote branches can't be deleted from a session** — `git push --delete` gets a
+  hard 403 from the git proxy (tried in the 2026-07-04 merge session and again 2026-07-05; batched
+  and single), and the GitHub MCP toolset has no delete-ref tool. Needs the owner, via UI or `gh`:
+  `claude/phase-0-foundation-gej8rk`, `claude/vigilant-curie-gydm6s`, `claude/upbeat-darwin-hepsel`,
+  `claude/tech-stack-review-kspak0`, `claude/neonctl-init-qdn54p`, `claude/quality-hardening`.

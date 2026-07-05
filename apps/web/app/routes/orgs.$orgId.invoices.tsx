@@ -18,6 +18,8 @@ import {
   invoiceStatusLabel,
 } from '~/lib/invoice-format';
 import { t } from '~/copy';
+import { CompanionGuide } from '~/components/companion';
+import { companionEnabled } from '~/lib/companion-preference.server';
 import {
   Table,
   TableBody,
@@ -42,13 +44,13 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     throw new Response('Not found', { status: 404 });
   }
   const invoices = await withUserOrg(request, params.orgId, (tx) => listInvoices(tx));
-  return { orgId: params.orgId, invoices };
+  return { orgId: params.orgId, invoices, companionOn: companionEnabled(request) };
 }
 
 const column = createColumnHelper<InvoiceListRow>();
 
 export default function InvoicesRoute({ loaderData }: Route.ComponentProps) {
-  const { orgId, invoices } = loaderData;
+  const { orgId, invoices, companionOn } = loaderData;
 
   const columns = [
     column.accessor('invoiceNumber', {
@@ -114,7 +116,14 @@ export default function InvoicesRoute({ loaderData }: Route.ComponentProps) {
       </header>
 
       {invoices.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{t('invoices.empty.body')}</p>
+        companionOn ? (
+          <CompanionGuide
+            message={t('invoices.empty.body')}
+            redirectTo={`/orgs/${orgId}/invoices`}
+          />
+        ) : (
+          <p className="text-muted-foreground text-sm">{t('invoices.empty.body')}</p>
+        )
       ) : (
         <Table>
           <TableCaption>{t('invoices.listCaption', { count: invoices.length })}</TableCaption>

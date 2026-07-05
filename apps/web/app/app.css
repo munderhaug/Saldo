@@ -295,6 +295,11 @@
   --overdue-foreground: oklch(1 0 0);
   --headsup: var(--amber-9);
   --headsup-foreground: var(--amber-12);
+
+  /* The companion (ADR 0058): electric-9 body + paper-white "ink" features, both theme-stable —
+     the character never flips dark. Components go through these, never the scale steps raw. */
+  --companion: var(--electric-9);
+  --companion-foreground: oklch(1 0 0);
 }
 
 .dark {
@@ -334,6 +339,8 @@
   --color-overdue-foreground: var(--overdue-foreground);
   --color-headsup: var(--headsup);
   --color-headsup-foreground: var(--headsup-foreground);
+  --color-companion: var(--companion);
+  --color-companion-foreground: var(--companion-foreground);
 
   --color-neutral-1: var(--neutral-1);
   --color-neutral-2: var(--neutral-2);

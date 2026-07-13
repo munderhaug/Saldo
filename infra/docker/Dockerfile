@@ -2,7 +2,7 @@
 # (ADR 0015); the Hetzner/Kamal self-host is the ADR 0008 sovereignty fallback.
 # Base image pinned by digest (review 2026-06-28) for reproducible builds; the tag is kept so
 # Dependabot `docker` bumps tag+digest together. Digest = the multi-arch index for `node:22-slim`.
-FROM node:22-slim@sha256:813a7480f28fdadac1f7f5c824bcdad435b5bc1322a5968bbbdef8d058f9dff4 AS base
+FROM node:22-slim@sha256:53ada149d435c38b14476cb57e4a7da73c15595aba79bd6971b547ceb6d018bf AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable

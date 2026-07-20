@@ -58,19 +58,19 @@
     }
   },
   "devDependencies": {
-    "@cyclonedx/cdxgen": "12.7.0",
+    "@cyclonedx/cdxgen": "12.8.0",
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.1.0",
-    "dbmate": "^2.21.0",
-    "eslint": "^10.6.0",
+    "@types/node": "^26.1.1",
+    "dbmate": "^2.34.1",
+    "eslint": "^10.7.0",
     "eslint-plugin-jsx-a11y": "^6.10.0",
-    "knip": "6.24.0",
-    "prettier": "^3.9.4",
-    "prettier-plugin-tailwindcss": "^0.8.0",
-    "squawk-cli": "2.59.0",
-    "turbo": "^2.10.3",
+    "knip": "6.27.0",
+    "prettier": "^3.9.5",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "squawk-cli": "2.60.0",
+    "turbo": "^2.10.5",
     "type-coverage": "2.29.7",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.62.1"
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.64.0"
   }
 }

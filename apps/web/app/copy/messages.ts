@@ -152,6 +152,10 @@ export const nb = {
   'auth.login.errorInvalidInput': 'Sjekk e-post og passord.',
   'auth.login.errorBadCredentials': 'Feil e-post eller passord.',
   'auth.login.errorRateLimited': 'For mange forsøk. Vent litt og prøv igjen.',
+  'auth.login.register': 'Opprett konto',
+  'auth.login.registerHint':
+    'Første gang her? Fyll inn e-post og et passord, og velg «Opprett konto».',
+  'auth.login.errorEmailTaken': 'E-postadressen er allerede i bruk. Logg inn i stedet.',
   'auth.login.oidcNotConfigured': 'BankID er ikke konfigurert.',
   'auth.login.passwordDisabled': 'Passordpålogging er slått av.',
 
@@ -1026,6 +1030,10 @@ export const en = {
   'auth.login.errorInvalidInput': 'Check your email and password.',
   'auth.login.errorBadCredentials': 'Wrong email or password.',
   'auth.login.errorRateLimited': 'Too many attempts. Wait a moment and try again.',
+  'auth.login.register': 'Create account',
+  'auth.login.registerHint':
+    'First time here? Enter an email and a password, then choose “Create account”.',
+  'auth.login.errorEmailTaken': 'That email address is already in use. Log in instead.',
   'auth.login.oidcNotConfigured': 'BankID is not configured.',
   'auth.login.passwordDisabled': 'Password login is disabled.',
 

@@ -14,6 +14,9 @@ pnpm db:introspect            # generate apps/web/app/db/schema.ts from the DB
 pnpm dev                      # RR7 dev server on http://localhost:3000
 ```
 
+First run: with `DEV_AUTH=true` in `.env`, create the first account via «Opprett konto» on the login
+page (ADR 0064 — the dev provider only; production auth is BankID/Vipps via OIDC).
+
 ## Everyday commands
 | Task | Command |
 |---|---|

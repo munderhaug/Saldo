@@ -4,6 +4,7 @@ import { db } from '~/db/client';
 import { devAuthEnabled, isProd, oidcConfigured } from '~/env';
 import { assertSameOrigin, getOptionalUser } from '~/auth/auth.server';
 import { authenticateWithPassword } from '~/auth/dev-auth.server';
+import { createUserWithPassword, findUserByEmail } from '~/auth/users.server';
 import { checkLoginRate, loginCallerKey } from '~/auth/login-throttle.server';
 import { createSession, generateSessionToken } from '~/auth/session.server';
 import { buildSessionCookie } from '~/auth/cookies.server';
@@ -46,6 +47,34 @@ export async function action({ request }: Route.ActionArgs) {
   if (!parsed.success) {
     log.warn({ provider: 'password', outcome: 'invalid_input' }, 'login failed');
     return { error: t('auth.login.errorInvalidInput') };
+  }
+
+  // First-run account creation for the dev provider (same ADR 0055 gate as password login — never in
+  // production). Registration necessarily reveals whether an email is taken; that is inherent to any
+  // sign-up and acceptable on this dev-only surface. Same throttle as login, keyed identically.
+  if (form.get('intent') === 'register') {
+    if (!checkLoginRate(loginCallerKey(request), parsed.data.email)) {
+      log.warn({ provider: 'password', outcome: 'rate_limited' }, 'registration throttled');
+      return { error: t('auth.login.errorRateLimited') };
+    }
+    if (await findUserByEmail(db, parsed.data.email)) {
+      log.warn({ provider: 'password', outcome: 'email_taken' }, 'registration failed');
+      return { error: t('auth.login.errorEmailTaken') };
+    }
+    let user;
+    try {
+      user = await createUserWithPassword(db, parsed.data.email, parsed.data.password);
+    } catch {
+      // Lost a race with a concurrent registration on the email unique constraint — same outcome.
+      log.warn({ provider: 'password', outcome: 'email_taken' }, 'registration failed');
+      return { error: t('auth.login.errorEmailTaken') };
+    }
+    const token = generateSessionToken();
+    const session = await createSession(db, token, user.id);
+    log.info({ provider: 'password', userId: user.id }, 'registration succeeded');
+    return redirect('/', {
+      headers: { 'Set-Cookie': buildSessionCookie(token, session.expiresAt, isProd) },
+    });
   }
 
   // Brute-force throttle: per source IP AND per account (normalized email). Applied before the
@@ -121,6 +150,18 @@ export default function Login() {
           )}
           <SubmitButton className="bg-primary text-primary-foreground font-text rounded-md px-4 py-2 text-sm">
             {t('auth.login.submit')}
+          </SubmitButton>
+          {/* First-run path: the same fields register a new account (dev provider only, ADR 0055). */}
+          <p id="register-hint" className="text-muted-foreground text-sm">
+            {t('auth.login.registerHint')}
+          </p>
+          <SubmitButton
+            name="intent"
+            value="register"
+            aria-describedby="register-hint"
+            className="border-input bg-background font-text rounded-md border px-4 py-2 text-sm"
+          >
+            {t('auth.login.register')}
           </SubmitButton>
         </Form>
       )}

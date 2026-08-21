@@ -1225,6 +1225,21 @@
       "phase": "P1-feature",
       "depends_on": ["feat-mva-melding"],
       "notes": "Done 2026-07-05: explicit 'Valider hos Skatteetaten' action on the MVA screen (POST, assertSameOrigin, Zod-validated year) regenerates the melding XML via the shared mvaSystemInfo helper and renders the typed verdict; every fail-closed reason maps to calm keyed copy (mva.skatteetaten.*). The endpoint path stays provisional until Skatteetaten onboarding (ADR 0050)."
+    },
+    {
+      "id": "feat-dev-auth-registration",
+      "title": "First-run account creation on the dev password provider",
+      "status": "done",
+      "implements_adr": ["0064"],
+      "value": "high",
+      "effort": "S",
+      "phase": "P1-feature",
+      "depends_on": ["pr5-auth"],
+      "notes": "Done 2026-08-21 (ADR 0064): «Opprett konto» register intent on the login action, gated by the same devAuthEnabled flag as password login (DEV_AUTH=true AND !isProd, ADR 0055). Shared credentialsInput contract + the same login throttle; taken-email refusal incl. the unique-constraint race; session started on success. Route-tested (test/routes/auth-login.route.test.ts). Found while verifying the full create→issue→send invoice flow end-to-end — the ONLY functional gap: the flow itself (gapless issue, balanced AR voucher, PDF over STARTTLS SMTP, invoice_email log, audit trail) verified working against a live local stack.",
+      "refs": [
+        "docs/decisions/0064-dev-auth-registration.md",
+        "docs/decisions/0055-dev-auth-explicit-opt-in.md"
+      ]
     }
   ]
 }

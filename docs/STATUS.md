@@ -6,7 +6,23 @@
 > is `git log` + the ADRs — per-session history is NOT accumulated here (that bloat is the thing this
 > doc keeps fighting). Volatile counts are generated into the `AUTOGEN:repo-status` block, never typed.
 
-**Last updated:** 2026-07-05 — session `app-readiness-critical-path` (branch
+**Last updated:** 2026-08-21 — session `saldo-invoice-functionality` (branch
+`claude/saldo-invoice-functionality-gfm5li`). Goal: the app is functional for **creating and sending
+invoices** — verified END-TO-END against a live local stack (local Postgres as `saldo_app`, dev auth,
+a STARTTLS SMTP sink with `NODE_EXTRA_CA_CERTS`): login → org create → contact → invoice draft →
+issue (gapless nr 1, KID, balanced AR voucher 1500/2700/3000) → send (PDF attached, Norwegian
+subject/body, lifecycle → sent, `invoice_email` + `audit_log` rows). The ONLY functional gap found:
+**no way to create the first user** (dev login only authenticates; OIDC needs a live tenant). Closed
+as **feat-dev-auth-registration (ADR 0064)**: an «Opprett konto» register intent on the login action,
+gated by the same `devAuthEnabled` flag (ADR 0055 — `DEV_AUTH=true` AND `!isProd`), same throttle +
+`credentialsInput`, taken-email refusal incl. the unique race; route-tested
+(`test/routes/auth-login.route.test.ts`) and live-verified. Runbook gained the first-run note. Watch
+out locally: the route/integrity harness ALTERs the cluster-global `saldo_app` password — re-run
+`ALTER ROLE saldo_app PASSWORD ...` after a test run if a long-lived dev server starts failing auth.
+Go-live for real email delivery still needs the Postmark EU account + DPA + SPF/DKIM/DMARC (ADR
+0045/0046 — config-only: `EMAIL_REGION=eu` + `EMAIL_SMTP_*` + `EMAIL_FROM`).
+
+Previous session (2026-07-05): `app-readiness-critical-path` (branch
 `claude/app-readiness-critical-path-5hvy1m`; PR #68 verified green and squash-merged as `e33d606`
 first). **feat-audit-log landed (ADR 0062)**: the append-only `audit_log` (FORCE RLS + SELECT/INSERT-
 only grant, the ai_provenance pattern) with `recordAuditEvent` — a closed `entity.act` union written
@@ -203,8 +219,8 @@ The volatile facts below are rendered from committed sources (ADR files + the ta
 `tools/status-block.mjs` and gated by `pnpm lint:repo` — they cannot drift from the graph (ADR 0031).
 <!-- AUTOGEN:repo-status -->
 <!-- Generated from committed sources by tools/status-block.mjs — DO NOT EDIT BY HAND; run `pnpm status:refresh`. -->
-- **Decisions:** 63 ADRs (0001–0063) — index in [`docs/decisions/README.md`](decisions/README.md).
-- **Backlog:** 84 tasks (54 done, 30 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
+- **Decisions:** 64 ADRs (0001–0064) — index in [`docs/decisions/README.md`](decisions/README.md).
+- **Backlog:** 85 tasks (55 done, 30 todo) — the DAG is [`docs/backlog/tasks.json`](backlog/tasks.json) (`pnpm backlog`).
 - **Highest-value ready task:** `aia-gpai-docs` [medium/S] — EU AI Act: capture the upstream GPAI model's Annex XII docs (Art 53)
 <!-- /AUTOGEN:repo-status -->
 

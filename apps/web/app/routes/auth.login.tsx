@@ -134,6 +134,9 @@ export default function Login() {
             <label htmlFor="password" className="font-text text-sm">
               {t('auth.login.password')}
             </label>
+            {/* One field serves both login (primary; Enter submits it) and «Opprett konto», so
+                current-password is a deliberate trade-off: a register click won't get a generated
+                password from the manager. Accepted on this dev-only surface (ADR 0064). */}
             <input
               id="password"
               name="password"
